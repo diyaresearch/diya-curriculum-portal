@@ -41,6 +41,13 @@ const Navbar = () => {
       } else {
         console.log("User already exists in Firestore:", user.email);
       }
+      const token = await user.getIdToken();
+      const authInfo = {
+        userID: user.uid,
+        isAuth: true,
+        jwt: token,
+      };
+      localStorage.setItem("auth", JSON.stringify(authInfo));
     } catch (err) {
       console.error(err);
     }
