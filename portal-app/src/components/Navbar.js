@@ -11,13 +11,26 @@ import { auth, db } from "../firebase/firebaseConfig";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
+        // Fetch user data from Firestore
+        const fetchUserData = async () => {
+          const userRef = doc(db, "users", user.uid);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            setUserData(userSnap.data());
+          } else {
+            console.error("User does not exist in Firestore");
+          }
+        };
+        fetchUserData();
       } else {
         setUser(null);
+        setUserData(null);
       }
     });
     return () => unsubscribe();
@@ -61,6 +74,10 @@ const Navbar = () => {
     }
   };
 
+  const getUsernameFromEmail = (email) => {
+    return email.split('@')[0];
+  };
+
   return (
     <nav className="bg-gray-800 p-4 flex justify-between items-center">
       <div className="text-white text-xl">DIYA Curriculum Portal</div>
@@ -92,12 +109,17 @@ const Navbar = () => {
             </button>
           </>
         ) : (
-          <button
-            onClick={handleSignOut}
-            className="bg-white text-gray-800 px-4 py-2 rounded"
-          >
-            Logout
-          </button>
+          <>
+            <span className="text-white mr-4">
+              Welcome {getUsernameFromEmail(user.email)}, logged in as {userData?.role}.
+            </span>
+            <button
+              onClick={handleSignOut}
+              className="bg-white text-gray-800 px-4 py-2 rounded"
+            >
+              Logout
+            </button>
+          </>
         )}
       </div>
     </nav>
