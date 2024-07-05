@@ -62,7 +62,13 @@ const Navbar = () => {
       };
       localStorage.setItem("auth", JSON.stringify(authInfo));
     } catch (err) {
-      console.error(err);
+      if (err.code === "auth/popup-closed-by-user") {
+        alert(
+          "You closed the popup window. Please try signing in or signing up again and do not close the window."
+        );
+      } else {
+        console.error(err);
+      }
     }
   };
 
@@ -75,7 +81,7 @@ const Navbar = () => {
   };
 
   const getUsernameFromEmail = (email) => {
-    return email.split('@')[0];
+    return email.split("@")[0];
   };
 
   return (
@@ -111,7 +117,8 @@ const Navbar = () => {
         ) : (
           <>
             <span className="text-white mr-4">
-              Welcome {getUsernameFromEmail(user.email)}, logged in as {userData?.role}.
+              Welcome {getUsernameFromEmail(user.email)}, logged in as{" "}
+              {userData?.role}.
             </span>
             <button
               onClick={handleSignOut}
