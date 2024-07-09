@@ -4,7 +4,7 @@ const { db, storage } = require("../config/firebaseConfig");
 const router = express.Router();
 
 // POST route for submitting content
-router.post("/content", upload.single("file"), async (req, res) => {
+router.post("/content", async (req, res) => {
   try {
     // Extract data from request body
     const { Title, Category, Type, Level, Duration, isPublic, Abstract } =
