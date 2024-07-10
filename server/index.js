@@ -1,6 +1,6 @@
 const express = require("express");
 const unitsRoutes = require("./routes/units");
-const contentRoutes = require("./controllers/content_submission");
+const contentRoutes = require("./routes/units");
 
 const app = express();
 app.use(express.json());
