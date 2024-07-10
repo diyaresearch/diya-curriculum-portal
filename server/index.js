@@ -1,9 +1,12 @@
 const express = require("express");
+const cors = require("cors");
+
 const unitsRoutes = require("./routes/units");
 const contentRoutes = require("./routes/units");
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 app.use("/api", unitsRoutes); // Prefix all routes with /api
 app.use("/api", contentRoutes);
