@@ -38,6 +38,7 @@ const Navbar = () => {
 
   const handleGoogleAuth = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' }); 
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
@@ -63,6 +64,11 @@ const Navbar = () => {
           console.log("User already exists in Firestore:", user.email);
         }
       }
+
+      const updatedUserSnap = await getDoc(userRef);
+      setUserData(updatedUserSnap.data());
+      console.log("User data updated in state:", updatedUserSnap.data());
+
       const token = await user.getIdToken();
       const authInfo = {
         userID: user.uid,
