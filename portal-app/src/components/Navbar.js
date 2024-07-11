@@ -38,6 +38,7 @@ const Navbar = () => {
 
   const handleGoogleAuth = async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' }); 
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
@@ -48,12 +49,26 @@ const Navbar = () => {
       if (!userSnap.exists()) {
         await setDoc(userRef, {
           email: user.email,
+          fullName: user.displayName,
           role: "consumer",
         });
         console.log("User added to Firestore:", user.email);
       } else {
-        console.log("User already exists in Firestore:", user.email);
+        if (!userSnap.data().fullName) {
+          await setDoc(userRef, {
+            ...userSnap.data(),
+            fullName: user.displayName,
+          });
+          console.log("User full name updated in Firestore:", user.displayName);
+        } else {
+          console.log("User already exists in Firestore:", user.email);
+        }
       }
+
+      const updatedUserSnap = await getDoc(userRef);
+      setUserData(updatedUserSnap.data());
+      console.log("User data updated in state:", updatedUserSnap.data());
+
       const token = await user.getIdToken();
       const authInfo = {
         userID: user.uid,
@@ -80,9 +95,6 @@ const Navbar = () => {
     }
   };
 
-  const getUsernameFromEmail = (email) => {
-    return email.split("@")[0];
-  };
 
   return (
     <nav className="bg-gray-800 p-4 flex justify-between items-center">
@@ -117,7 +129,7 @@ const Navbar = () => {
         ) : (
           <>
             <span className="text-white mr-4">
-              Welcome {getUsernameFromEmail(user.email)}, logged in as{" "}
+              Welcome {userData?.fullName}, logged in as{" "}
               {userData?.role}.
             </span>
             <button
