@@ -22,7 +22,7 @@ const HomeContainer = ({ user }) => {
         {
           title: "Example two",
           category: "Mathematics",
-          type: "Lecture",
+          type: "Lectures",
           level: "Basic",
           duration: "45min",
           date: "2024-07-08",
