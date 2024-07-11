@@ -2,7 +2,7 @@ import React from "react";
 import content_creator from "../assets/content_creator.png";
 import educator from "../assets/educator.png";
 
-const HomePage = () => {
+const HomePage = ({ user }) => {
   return (
     <div className="text-center mt-10">
       <div className="bg-gray-200 p-10 rounded-lg shadow-lg">
@@ -10,7 +10,9 @@ const HomePage = () => {
           <div>
             <img src={educator} alt="Educator Icon" className="mx-auto" />
             <p className="mt-4">
-              Manage teaching materials & generate lesson plans
+              {user
+                ? "Try our new AI generator for lesson plans!"
+                : "Manage teaching materials & generate lesson plans"}
             </p>
           </div>
           <div>
@@ -19,7 +21,11 @@ const HomePage = () => {
               alt="Content Creator Icon"
               className="mx-auto"
             />
-            <p className="mt-4">Upload educational contents</p>
+            <p className="mt-4">
+              {user
+                ? "Apply to be a content contributor"
+                : "Upload educational contents"}
+            </p>
           </div>
         </div>
       </div>
