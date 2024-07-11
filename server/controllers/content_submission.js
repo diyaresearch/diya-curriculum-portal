@@ -57,9 +57,10 @@ const post_content = async (req, res) => {
           // The file upload is complete.
           // Get the public URL of the uploaded file
           fileUrl = `https://storage.googleapis.com/curriculum-portal-1ce8f.appspot.com/projectFiles/${filename}`;
+          //curriculum-portal-1ce8f.appspot.com/projectFiles
 
           // Now save other data to Firestore
-          await saveContentToFirestore(
+          gs: await saveContentToFirestore(
             Title,
             Category,
             Type,
