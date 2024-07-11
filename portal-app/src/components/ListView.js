@@ -7,6 +7,9 @@ const categories = [
   "Computer Science",
   "Languages",
   "Arts",
+  "Physical",
+  "Education",
+  "Health",
 ];
 
 const types = [
