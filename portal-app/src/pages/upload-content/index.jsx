@@ -25,7 +25,7 @@ export const UploadContent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const url = "http://localhost:3000/api/content/"; // Replace with your backend endpoint URL
+    const url = "http://localhost:3001/api/content/"; // Replace with your backend endpoint URL
 
     try {
       const formDataToSend = new FormData();
