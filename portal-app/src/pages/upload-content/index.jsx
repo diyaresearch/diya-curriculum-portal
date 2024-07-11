@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import Modal from "react-modal";
+
+Modal.setAppElement("#root");
 
 export const UploadContent = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +15,8 @@ export const UploadContent = () => {
   });
 
   const [file, setFile] = useState(null);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -24,7 +29,7 @@ export const UploadContent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const url = "http://localhost:3001/api/content/"; // Replace with your backend endpoint URL
 
     try {
@@ -47,7 +52,7 @@ export const UploadContent = () => {
         throw new Error("Error submitting content");
       }
 
-      console.log("Content submitted successfully");
+      setModalMessage("Content submitted successfully");
       // Optionally reset form fields after successful submission
       setFormData({
         Title: "",
@@ -61,9 +66,32 @@ export const UploadContent = () => {
       setFile(null);
       document.getElementById("file-name").textContent = "";
     } catch (error) {
-      console.error("Error submitting content:", error);
+      setModalMessage("Error submitting content:" + error.message);
       // Handle error (show message to user, etc.)
+    } finally {
+      setModalIsOpen(true);
     }
+  };
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+  };
+
+  const customStyles = {
+    content: {
+      top: "50%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      marginRight: "-50%",
+      transform: "translate(-50%, -50%)",
+      width: "400px",
+      padding: "20px",
+      textAlign: "center",
+    },
+    overlay: {
+      backgroundColor: "rgba(0, 0, 0, 0.75)",
+    },
   };
 
   return (
@@ -218,7 +246,12 @@ export const UploadContent = () => {
             <div className="flex items-center">
               <label className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded cursor-pointer focus:outline-none focus:shadow-outline">
                 Browse...
-                <input className="hidden" id="file" type="file" onChange={handleFileChange}/>
+                <input
+                  className="hidden"
+                  id="file"
+                  type="file"
+                  onChange={handleFileChange}
+                />
               </label>
               <span className="ml-2 text-gray-700" id="file-name"></span>
             </div>
@@ -232,6 +265,20 @@ export const UploadContent = () => {
             </button>
           </div>
         </form>
+        <Modal
+          isOpen={modalIsOpen}
+          onRequestClose={closeModal}
+          style={customStyles}
+          contentLabel="Submission Result"
+        >
+          <h2>{modalMessage}</h2>
+          <button
+            onClick={closeModal}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Close
+          </button>
+        </Modal>
       </div>
     </div>
   );
