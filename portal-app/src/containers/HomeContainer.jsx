@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import HomePage from "../components/HomePage";
 import Navbar from "../components/Navbar";
 import ResourcesPage from "../components/ResourcesPage";
@@ -6,31 +7,21 @@ import ListView from "../components/ListView";
 
 const HomeContainer = ({ user }) => {
   const [content, setContent] = useState([]);
+
   useEffect(() => {
-    // Fetch the content for logged-in users
     if (user) {
-      // Replace with actual content fetching logic
-      const fetchedContent = [
-        {
-          title: "Example one",
-          category: "Science",
-          type: "Quiz",
-          level: "Advanced",
-          duration: "30min",
-          date: "2024-07-09",
-        },
-        {
-          title: "Example two",
-          category: "Mathematics",
-          type: "Lectures",
-          level: "Basic",
-          duration: "45min",
-          date: "2024-07-08",
-        },
-      ];
-      setContent(fetchedContent);
+      // Fetch content from the backend API
+      axios.get('http://localhost:3001/api/units')
+        .then(response => {
+          console.log('Fetched data:', response.data); // Debugging: Log fetched data
+          setContent(response.data);
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+        });
     }
   }, [user]);
+
   return (
     <div>
       <Navbar user={user} />
@@ -39,4 +30,5 @@ const HomeContainer = ({ user }) => {
     </div>
   );
 };
+
 export default HomeContainer;
