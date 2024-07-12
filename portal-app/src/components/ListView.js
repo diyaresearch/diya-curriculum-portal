@@ -13,7 +13,7 @@ const categories = [
 ];
 
 const types = [
-  "Lectures",
+  "Lecture",
   "Assignments",
   "Quiz",
   "Projects",
@@ -23,7 +23,8 @@ const types = [
 const levels = ["Basic", "Intermediate", "Advanced"];
 
 const ListView = ({ content }) => {
-  const [filteredContent, setFilteredContent] = useState(content);
+  const [filteredContent, setFilteredContent] = useState([]);
+
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
@@ -32,23 +33,27 @@ const ListView = ({ content }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
+    setFilteredContent(content);
+  }, [content]);
+
+  useEffect(() => {
     filterContent();
   }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
 
   const filterContent = () => {
     let filtered = content;
     if (selectedCategory) {
-      filtered = filtered.filter((item) => item.category === selectedCategory);
+      filtered = filtered.filter((item) => item.Category === selectedCategory);
     }
     if (selectedType) {
-      filtered = filtered.filter((item) => item.type === selectedType);
+      filtered = filtered.filter((item) => item.Type === selectedType);
     }
     if (selectedLevel) {
-      filtered = filtered.filter((item) => item.level === selectedLevel);
+      filtered = filtered.filter((item) => item.Level === selectedLevel);
     }
     if (searchTerm) {
       filtered = filtered.filter((item) =>
-        item.title.toLowerCase().includes(searchTerm.toLowerCase())
+        item.Title.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     setFilteredContent(filtered);
@@ -130,30 +135,32 @@ const ListView = ({ content }) => {
         placeholder="Search for ..."
         className="mt-4 p-2 border rounded w-1/2"
       />
-      <table className="table-auto w-full mt-4">
-        <thead>
-          <tr>
-            <th className="border-b-2 p-2">Title</th>
-            <th className="border-b-2 p-2">Category</th>
-            <th className="border-b-2 p-2">Type</th>
-            <th className="border-b-2 p-2">Level</th>
-            <th className="border-b-2 p-2">Duration</th>
-            <th className="border-b-2 p-2">Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedContent.map((item, index) => (
-            <tr key={index}>
-              <td className="border-b p-2">{item.title}</td>
-              <td className="border-b p-2">{item.category}</td>
-              <td className="border-b p-2">{item.type}</td>
-              <td className="border-b p-2">{item.level}</td>
-              <td className="border-b p-2">{item.duration}</td>
-              <td className="border-b p-2">{item.date}</td>
+      <div className="overflow-x-auto">
+        <table className="table-auto w-full mt-4" style={{ tableLayout: 'fixed' }}>
+          <thead>
+            <tr>
+              <th className="border-b-2 p-2 w-1/6">Title</th>
+              <th className="border-b-2 p-2 w-1/6">Category</th>
+              <th className="border-b-2 p-2 w-1/6">Type</th>
+              <th className="border-b-2 p-2 w-1/6">Level</th>
+              <th className="border-b-2 p-2 w-1/6">Duration</th>
+              <th className="border-b-2 p-2 w-1/6">Date</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {paginatedContent.map((item, index) => (
+              <tr key={index}>
+                <td className="border-b p-2">{item.Title}</td>
+                <td className="border-b p-2">{item.Category}</td>
+                <td className="border-b p-2">{item.Type}</td>
+                <td className="border-b p-2">{item.Level}</td>
+                <td className="border-b p-2">{item.Duration}</td>
+                <td className="border-b p-2">{item.date || 'N/A'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <div className="flex justify-between items-center mt-4">
         <select
           value={itemsPerPage}
