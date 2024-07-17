@@ -8,7 +8,7 @@ const resources = [
   { title: "Software Testing", img: software_testing },
 ];
 
-const ResourcesPage = () => {
+const Resources = () => {
   return (
     <div className="text-center mt-10">
       <h2 className="text-2xl font-bold">
@@ -32,4 +32,4 @@ const ResourcesPage = () => {
   );
 };
 
-export default ResourcesPage;
+export default Resources;
