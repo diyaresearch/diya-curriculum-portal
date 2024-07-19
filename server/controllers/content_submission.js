@@ -1,46 +1,44 @@
 const { db } = require("../config/firebaseConfig");
 const multer = require("multer");
-// const { v4: uuidv4 } = require("uuid"); // for getting unique id for the file name
 const { storage } = require("../config/firebaseConfig");
 
 const upload = multer({
-  storage: multer.memoryStorage(), // Store file in memory
-  // dest: "uploads/",
+  storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // Max file size 5MB (adjust as necessary)
+    fileSize: 5 * 1024 * 1024,
   },
 });
 
-//const upload = multer({ dest: "uploads/" });
-
-// Function to handle POST request for submitting content
 const post_content = async (req, res) => {
+  console.log("Received content upload request");
   try {
-    // Multer middleware handles file upload
     upload.single("file")(req, res, async (err) => {
       if (err instanceof multer.MulterError) {
-        // A Multer error occurred (e.g., file size limit exceeded)
         console.error("Multer error:", err);
         return res.status(400).send("File upload error");
       } else if (err) {
-        // An unknown error occurred during file upload
         console.error("Unknown error during file upload:", err);
         return res.status(500).send("Unknown error");
       }
-      // Extract data from request body
-      const { Title, Category, Type, Level, Duration, isPublic, Abstract } =
-        req.body;
+
+      const { Title, Category, Type, Level, Duration, isPublic, Abstract } = req.body;
       const file = req.file;
       if (!Title || !Category || !Type || !Level || !Duration || !Abstract) {
+        console.error("Missing required fields");
         return res.status(400).send("Missing required fields");
-      } // Validate the presence of required fields if necessary
+      }
+
+      const Author = req.user ? req.user.uid : null; // Extract the Author ID from the authenticated user
+      if (!Author) {
+        console.error("Author ID is missing");
+        return res.status(401).send("Unauthorized");
+      }
+      console.log("Author ID:", Author);
+
       let fileUrl = "";
       if (file) {
         const bucket = storage.bucket();
-
-        // Upload file to Firebase Storage
         const filename = `${Date.now()}_${file.originalname}`;
-        // const filename = `${uuidv4()}_${file.originalname}`;
         const fileUpload = bucket.file(filename);
         const blobStream = fileUpload.createWriteStream({
           metadata: {
@@ -54,43 +52,18 @@ const post_content = async (req, res) => {
         });
 
         blobStream.on("finish", async () => {
-          // The file upload is complete.
-          // Get the public URL of the uploaded file
           fileUrl = `https://storage.googleapis.com/curriculum-portal-1ce8f.appspot.com/projectFiles/${filename}`;
-          //curriculum-portal-1ce8f.appspot.com/projectFiles
-
-          // Now save other data to Firestore
-          gs: await saveContentToFirestore(
-            Title,
-            Category,
-            Type,
-            Level,
-            Duration,
-            isPublic,
-            Abstract,
-            fileUrl
+          await saveContentToFirestore(
+            Title, Category, Type, Level, Duration, isPublic, Abstract, fileUrl, Author
           );
-
-          // Send response to client
           res.status(201).send("Content submitted successfully");
         });
 
-        // Pipe the file data into the write stream
         blobStream.end(file.buffer);
       } else {
-        // No file uploaded, save other data to Firestore without fileUrl
         await saveContentToFirestore(
-          Title,
-          Category,
-          Type,
-          Level,
-          Duration,
-          isPublic,
-          Abstract,
-          fileUrl
+          Title, Category, Type, Level, Duration, isPublic, Abstract, fileUrl, Author
         );
-
-        // Send response to client
         res.status(201).send("Content submitted successfully");
       }
     });
@@ -99,20 +72,33 @@ const post_content = async (req, res) => {
     res.status(500).send("Error submitting content");
   }
 };
-// Function to save content data to Firestore
+
+async function getNextUnitID() {
+  const counterRef = db.collection("counters").doc("unitIdCounter");
+
+  return db.runTransaction(async (transaction) => {
+    const counterDoc = await transaction.get(counterRef);
+    if (!counterDoc.exists) {
+      throw new Error("Counter document does not exist");
+    }
+
+    const lastNumber = counterDoc.data().lastNumber;
+    const newNumber = lastNumber + 1;
+    transaction.update(counterRef, { lastNumber: newNumber });
+    return `diya${newNumber}`;
+  });
+}
+
 async function saveContentToFirestore(
-  Title,
-  Category,
-  Type,
-  Level,
-  Duration,
-  isPublic,
-  Abstract,
-  fileUrl
+  Title, Category, Type, Level, Duration, isPublic, Abstract, fileUrl, Author
 ) {
-  //eSave data to Firestore
   const contentRef = db.collection("content");
+
+  const newUnitID = await getNextUnitID();
+  console.log("Generated UnitID:", newUnitID);
+
   const data = {
+    UnitID: newUnitID,
     Title,
     Category,
     Type,
@@ -120,10 +106,14 @@ async function saveContentToFirestore(
     Duration,
     isPublic,
     Abstract,
-    fileUrl, // Optional: Add if you want to store file URL in Firestore
+    fileUrl,
+    Author,  // Use the custom user ID
+    LastModified: new Date().toISOString(),
   };
-  // Save data to Firestore
+  console.log("Document data to save:", data);
+
   await contentRef.add(data);
+  console.log("Document successfully saved to Firestore");
 }
 
 module.exports = {
