@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Modal from "react-modal";
+import { getAuth } from "firebase/auth";
 
 Modal.setAppElement("#root");
 
@@ -29,9 +30,20 @@ export const UploadContent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      setModalMessage("User not authenticated");
+      setModalIsOpen(true);
+      return;
+    }
+  
+    const userId = user.uid;
+    const token = await user.getIdToken();
+  
     const url = "http://localhost:3001/api/content/"; // Replace with your backend endpoint URL
-
+  
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("Title", formData.Title);
@@ -42,18 +54,21 @@ export const UploadContent = () => {
       formDataToSend.append("isPublic", formData.isPublic);
       formDataToSend.append("Abstract", formData.Abstract);
       formDataToSend.append("file", file);
-
+      formDataToSend.append("Author", userId); // Include the user ID
+  
       const response = await fetch(url, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in the request headers
+        },
         body: formDataToSend,
       });
-
+  
       if (!response.ok) {
         throw new Error("Error submitting content");
       }
-
+  
       setModalMessage("Content submitted successfully");
-      // Optionally reset form fields after successful submission
       setFormData({
         Title: "",
         Category: "",
@@ -66,8 +81,7 @@ export const UploadContent = () => {
       setFile(null);
       document.getElementById("file-name").textContent = "";
     } catch (error) {
-      setModalMessage("Error submitting content:" + error.message);
-      // Handle error (show message to user, etc.)
+      setModalMessage("Error submitting content: " + error.message);
     } finally {
       setModalIsOpen(true);
     }
