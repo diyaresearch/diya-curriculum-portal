@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 const categories = [
   "Mathematics",
   "Science",
@@ -81,7 +81,7 @@ const ListView = ({ content }) => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
+  const navigate = useNavigate();
   return (
     <div className="text-center mt-10">
       <h2 className="text-2xl font-bold">
@@ -145,6 +145,8 @@ const ListView = ({ content }) => {
               <th className="border-b-2 p-2 w-1/6">Level</th>
               <th className="border-b-2 p-2 w-1/6">Duration</th>
               <th className="border-b-2 p-2 w-1/6">Date</th>
+              <th className="border-b-2 p-2 w-1/6">Edit option</th>
+              <th className="border-b-2 p-2 w-1/6">ID</th>
             </tr>
           </thead>
           <tbody>
@@ -156,6 +158,17 @@ const ListView = ({ content }) => {
                 <td className="border-b p-2">{item.Level}</td>
                 <td className="border-b p-2">{item.Duration}</td>
                 <td className="border-b p-2">{item.date || 'N/A'}</td>
+                <td className="border-b p-2">{item.id}</td>
+                <td className="border-b p-2">
+                { 
+                  <button
+                    onClick={() => navigate(`/edit-content/${item.id}`)} // Navigate to "/edit-content" on button click
+                    // className="font-bold py-2 px-4 rounded bg-blue-500 text-white"
+                  >
+                  Edit
+          </button>
+                }
+              </td>
               </tr>
             ))}
           </tbody>
