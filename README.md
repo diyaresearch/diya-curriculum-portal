@@ -45,7 +45,6 @@ Ensure you have the following installed on your local development machine:
 
 ```bash
 git clone https://github.com/diyaresearch/diya-curriculum-portal.git
-cd DIYA_Curriculum-Portal
 ```
 
 ### Install Dependencies
