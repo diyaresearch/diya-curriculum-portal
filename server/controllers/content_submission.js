@@ -21,7 +21,8 @@ const post_content = async (req, res) => {
         return res.status(500).send("Unknown error");
       }
 
-      const { Title, Category, Type, Level, Duration, isPublic, Abstract } = req.body;
+      const { Title, Category, Type, Level, Duration, isPublic, Abstract } =
+        req.body;
       const file = req.file;
       if (!Title || !Category || !Type || !Level || !Duration || !Abstract) {
         console.error("Missing required fields");
@@ -54,7 +55,15 @@ const post_content = async (req, res) => {
         blobStream.on("finish", async () => {
           fileUrl = `https://storage.googleapis.com/curriculum-portal-1ce8f.appspot.com/projectFiles/${filename}`;
           await saveContentToFirestore(
-            Title, Category, Type, Level, Duration, isPublic, Abstract, fileUrl, Author
+            Title,
+            Category,
+            Type,
+            Level,
+            Duration,
+            isPublic,
+            Abstract,
+            fileUrl,
+            Author
           );
           res.status(201).send("Content submitted successfully");
         });
@@ -62,7 +71,15 @@ const post_content = async (req, res) => {
         blobStream.end(file.buffer);
       } else {
         await saveContentToFirestore(
-          Title, Category, Type, Level, Duration, isPublic, Abstract, fileUrl, Author
+          Title,
+          Category,
+          Type,
+          Level,
+          Duration,
+          isPublic,
+          Abstract,
+          fileUrl,
+          Author
         );
         res.status(201).send("Content submitted successfully");
       }
@@ -90,7 +107,15 @@ async function getNextUnitID() {
 }
 
 async function saveContentToFirestore(
-  Title, Category, Type, Level, Duration, isPublic, Abstract, fileUrl, Author
+  Title,
+  Category,
+  Type,
+  Level,
+  Duration,
+  isPublic,
+  Abstract,
+  fileUrl,
+  Author
 ) {
   const contentRef = db.collection("content");
 
@@ -107,7 +132,7 @@ async function saveContentToFirestore(
     isPublic,
     Abstract,
     fileUrl,
-    Author,  // Use the custom user ID
+    Author, // Use the custom user ID
     LastModified: new Date().toISOString(),
   };
   console.log("Document data to save:", data);
