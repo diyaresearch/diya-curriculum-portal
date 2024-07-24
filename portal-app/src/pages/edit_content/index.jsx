@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
-import { useParams } from 'react-router-dom';
+import { useParams } from "react-router-dom";
 
 Modal.setAppElement("#root");
 
@@ -14,14 +14,14 @@ export const EditContent = () => {
     isPublic: false,
     Abstract: "",
   });
-  const { id } = useParams(); 
+  const { id } = useParams();
   const [file, setFile] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
   useEffect(() => {
     const fetchContent = async () => {
-      const contentId = id;  
+      const contentId = id;
       const url = `http://localhost:3001/api/unit/${contentId}`;
 
       try {
@@ -56,7 +56,7 @@ export const EditContent = () => {
     setFile(e.target.files[0]);
     document.getElementById("file-name").textContent = e.target.files[0].name;
   };
-//   const navigate = useNavigate()
+  //   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -78,19 +78,17 @@ export const EditContent = () => {
       }
 
       const response = await fetch(url, {
-        method: `PUT`,
+        method: `POST`,
         // method: `POST`,
         body: formDataToSend,
         headers: {
-            // 'Content-Type': 'multipart/form-data',
-          },
-      }
-    );
-   
-    console.log(response);
+          // 'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log(response);
       if (!response.ok) {
         throw new Error("Error updating content");
-       
       }
 
       setModalMessage("Content updated successfully");

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import TileItem from "./TileItem";
+
 const categories = [
   "Mathematics",
   "Science",
@@ -135,44 +137,21 @@ const ListView = ({ content }) => {
         placeholder="Search for ..."
         className="mt-4 p-2 border rounded w-1/2"
       />
-      <div className="overflow-x-auto">
-        <table className="table-auto w-full mt-4" style={{ tableLayout: 'fixed' }}>
-          <thead>
-            <tr>
-              <th className="border-b-2 p-2 w-1/6">Title</th>
-              <th className="border-b-2 p-2 w-1/6">Category</th>
-              <th className="border-b-2 p-2 w-1/6">Type</th>
-              <th className="border-b-2 p-2 w-1/6">Level</th>
-              <th className="border-b-2 p-2 w-1/6">Duration</th>
-              <th className="border-b-2 p-2 w-1/6">Date</th>
-              <th className="border-b-2 p-2 w-1/6">Edit option</th>
-              <th className="border-b-2 p-2 w-1/6">ID</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedContent.map((item, index) => (
-              <tr key={index}>
-                <td className="border-b p-2">{item.Title}</td>
-                <td className="border-b p-2">{item.Category}</td>
-                <td className="border-b p-2">{item.Type}</td>
-                <td className="border-b p-2">{item.Level}</td>
-                <td className="border-b p-2">{item.Duration}</td>
-                <td className="border-b p-2">{item.date || 'N/A'}</td>
-                <td className="border-b p-2">{item.id}</td>
-                <td className="border-b p-2">
-                { 
-                  <button
-                    onClick={() => navigate(`/edit-content/${item.id}`)} // Navigate to "/edit-content" on button click
-                    // className="font-bold py-2 px-4 rounded bg-blue-500 text-white"
-                  >
-                  Edit
-          </button>
-                }
-              </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="container mx-auto p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {paginatedContent.map((item, index) => (
+            <TileItem
+              key={index}
+              id={item.id}
+              title={item.Title}
+              category={item.Category}
+              type={item.Type}
+              level={item.Level}
+              duration={item.Duration}
+              date={item.date}
+            />
+          ))}
+        </div>
       </div>
       <div className="flex justify-between items-center mt-4">
         <select
