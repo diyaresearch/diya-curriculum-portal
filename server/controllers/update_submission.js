@@ -38,6 +38,7 @@ const updateUnitById = async (req, res) => {
       Duration,
       isPublic,
       Abstract,
+      LastModified: new Date().toISOString(),
     };
 
     if (req.file) {

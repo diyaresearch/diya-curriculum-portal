@@ -19,6 +19,7 @@ const updateUnitById = async (req, res) => {
         Duration,
         isPublic,
         Abstract,
+        LastModified: new Date().toISOString(),
       });
     } else if (req.method === "POST") {
       await db.collection("content").doc().set({
@@ -29,6 +30,7 @@ const updateUnitById = async (req, res) => {
         Duration,
         isPublic,
         Abstract,
+        LastModified: new Date().toISOString(),
       });
     }
 
