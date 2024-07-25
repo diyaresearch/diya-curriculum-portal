@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TileItem from "./TileItem";
+import Overlay from "./Overlay";
 
 const categories = [
   "Mathematics",
@@ -26,7 +27,7 @@ const levels = ["Basic", "Intermediate", "Advanced"];
 
 const ListView = ({ content }) => {
   const [filteredContent, setFilteredContent] = useState([]);
-
+  const [selectedContent, setSelectedContent] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
@@ -83,6 +84,12 @@ const ListView = ({ content }) => {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  const handleTileClick = (id) => {
+    const contentItem = content.find((item) => item.id === id);
+    setSelectedContent(contentItem);
+  };
+
   const navigate = useNavigate();
   return (
     <div className="text-center mt-10">
@@ -149,6 +156,7 @@ const ListView = ({ content }) => {
               level={item.Level}
               duration={item.Duration}
               date={item.date}
+              onClick={handleTileClick}
             />
           ))}
         </div>
@@ -183,6 +191,12 @@ const ListView = ({ content }) => {
           </button>
         </div>
       </div>
+      {selectedContent && (
+        <Overlay
+          content={selectedContent}
+          onClose={() => setSelectedContent(null)}
+        />
+      )}
     </div>
   );
 };
