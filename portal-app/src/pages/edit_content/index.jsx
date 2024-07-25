@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 Modal.setAppElement("#root");
 
@@ -14,10 +14,13 @@ export const EditContent = () => {
     isPublic: false,
     Abstract: "",
   });
+
   const { id } = useParams();
   const [file, setFile] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+
+  const navigator = useNavigate();
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -66,37 +69,38 @@ export const EditContent = () => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append(`Title`, formData.Title);
-      formDataToSend.append(`Category`, formData.Category);
-      formDataToSend.append(`Type`, formData.Type);
-      formDataToSend.append(`Level`, formData.Level);
-      formDataToSend.append(`Duration`, formData.Duration);
-      formDataToSend.append(`isPublic`, formData.isPublic);
-      formDataToSend.append(`Abstract`, formData.Abstract);
+      formDataToSend.append("Title", formData.Title);
+      formDataToSend.append("Category", formData.Category);
+      formDataToSend.append("Type", formData.Type);
+      formDataToSend.append("Level", formData.Level);
+      formDataToSend.append("Duration", formData.Duration);
+      formDataToSend.append("isPublic", formData.isPublic);
+      formDataToSend.append("Abstract", formData.Abstract);
       if (file) {
         formDataToSend.append("file", file);
       }
 
       const response = await fetch(url, {
         method: `POST`,
-        // method: `POST`,
         body: formDataToSend,
         headers: {
           // 'Content-Type': 'multipart/form-data',
         },
       });
 
-      console.log(response);
       if (!response.ok) {
         throw new Error("Error updating content");
       }
 
       setModalMessage("Content updated successfully");
+      setModalIsOpen(true);
+      setTimeout(() => {
+        navigator("/");
+      }, 2000);
     } catch (error) {
       setModalMessage("Error updating content:" + error.message);
-      // Handle error (show message to user, etc.)
-    } finally {
       setModalIsOpen(true);
+      // Handle error (show message to user, etc.)
     }
   };
 
@@ -234,7 +238,7 @@ export const EditContent = () => {
               className="mr-2 leading-tight"
               type="checkbox"
               id="isPublic"
-              checked={formData.isPublic}
+              checked={!!formData.isPublic}
               onChange={(e) =>
                 setFormData({ ...formData, isPublic: e.target.checked })
               }
