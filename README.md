@@ -43,6 +43,8 @@ Ensure you have the following installed on your local development machine:
 
 ### Clone the Repository
 
+It is a private repository, make sure you have the access to it.
+
 ```bash
 git clone https://github.com/diyaresearch/diya-curriculum-portal.git
 ```
@@ -89,7 +91,33 @@ REACT_APP_FIREBASE_APP_ID=your-app-id
 3. Click "Generate new private key" and download the serviceAccountKey.json file.
 4. Place the serviceAccountKey.json file in the server directory.
 
-### Running the Backend
+### Start the application
+
+To start the application, you can run the start script we provide.
+
+Make sure you give the access to the script:
+
+```sh
+chmod +x start.sh
+```
+
+Run the script:
+
+```sh
+./start.sh
+```
+
+The application will be available at the following URL:
+
+```
+http://localhost:3000
+```
+
+Make sure that port 3000 and 3001 are available and not being used by other services.
+
+Or you can start the frontend and backend separately.
+
+#### Running the Backend
 
 Navigate to the server directory and start the backend server:
 
@@ -100,7 +128,7 @@ npm start
 yarn start
 ```
 
-### Running the Frontend
+#### Running the Frontend
 
 Navigate to the portal-app directory and start the React app:
 
