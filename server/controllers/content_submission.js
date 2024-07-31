@@ -53,7 +53,7 @@ const post_content = async (req, res) => {
         });
 
         blobStream.on("finish", async () => {
-          fileUrl = `https://storage.googleapis.com/curriculum-portal-1ce8f.appspot.com/projectFiles/${filename}`;
+          fileUrl = fileUpload.publicUrl();
           await saveContentToFirestore(
             Title,
             Category,
