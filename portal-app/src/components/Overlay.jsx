@@ -7,8 +7,15 @@ const Overlay = ({ content, onClose }) => {
   const [showOptions, setShowOptions] = useState(false);
   if (!content) return null;
 
+  const handleSaveLink = () => {
+    const url = `${window.location.origin}/view-content/${content.UnitID}`;
+    navigator.clipboard.writeText(url).then(() => {
+      alert("Link saved to clipboard!");
+    });
+  };
+
   return (
-    <div className="fixed bottom-0 right-0 bg-white p-4 border shadow=lg w-2/3 h-4/5 z-50">
+    <div className="fixed bottom-0 right-0 bg-white p-4 border shadow-lg w-2/3 h-4/5 z-50">
       <div className="flex justify-between items-center">
         <h2 className="text-4xl font-bold">{content.Title}</h2>
         <div className="flex space-x-2">
@@ -22,14 +29,14 @@ const Overlay = ({ content, onClose }) => {
             {showOptions && (
               <div className="absolute right-0 bg-white border shadow-md mt-2 rounded w-48">
                 <button
-                  onClick={() => alert("Open in New Tab")}
+                  onClick={() => window.open(`/view-content/${content.UnitID}`, '_blank')}
                   className="block px-4 py-2"
                 >
                   Open in New Tab
                 </button>
                 <hr />
                 <button
-                  onClick={() => alert("Save the Link")}
+                  onClick={handleSaveLink}
                   className="block px-4 py-2"
                 >
                   Save the Link
