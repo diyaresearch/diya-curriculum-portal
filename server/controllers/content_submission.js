@@ -39,7 +39,7 @@ const post_content = async (req, res) => {
       let fileUrl = "";
       if (file) {
         const bucket = storage.bucket();
-        const filename = `${Date.now()}_${file.originalname}`;
+        const filename = `projectFiles/${Date.now()}_${file.originalname}`;
         const fileUpload = bucket.file(filename);
         const blobStream = fileUpload.createWriteStream({
           metadata: {
