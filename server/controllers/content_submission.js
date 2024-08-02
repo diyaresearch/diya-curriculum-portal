@@ -39,7 +39,7 @@ const post_content = async (req, res) => {
       let fileUrl = "";
       if (file) {
         const bucket = storage.bucket();
-        const filename = `${Date.now()}_${file.originalname}`;
+        const filename = `projectFiles/${Date.now()}_${file.originalname}`;
         const fileUpload = bucket.file(filename);
         const blobStream = fileUpload.createWriteStream({
           metadata: {
@@ -53,7 +53,7 @@ const post_content = async (req, res) => {
         });
 
         blobStream.on("finish", async () => {
-          fileUrl = `https://storage.googleapis.com/curriculum-portal-1ce8f.appspot.com/projectFiles/${filename}`;
+          fileUrl = fileUpload.publicUrl();
           await saveContentToFirestore(
             Title,
             Category,

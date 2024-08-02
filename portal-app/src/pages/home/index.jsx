@@ -17,7 +17,7 @@ const Home = () => {
       axios
         .get("http://localhost:3001/api/units")
         .then((response) => {
-          console.log("Fetched data:", response.data); // Debugging: Log fetched data
+          // console.log("Fetched data:", response.data); Debugging: Log fetched data
           setContent(response.data);
         })
         .catch((error) => {
