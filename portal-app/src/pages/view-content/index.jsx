@@ -23,7 +23,7 @@ const ViewContent = () => {
       .then((response) => response.json())
       .then((data) => setContent(data))
       .catch((error) => {
-        console.error('Error fetching content:', error);
+        console.error("Error fetching content:", error);
         setError(error.message);
       });
   }, [UnitID]);
@@ -32,14 +32,26 @@ const ViewContent = () => {
   if (!content) return <div>Loading...</div>;
 
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold">{content.Title}</h1>
-      <p>Category: {content.Category}</p>
-      <p>Type: {content.Type}</p>
-      <p>Level: {content.Level}</p>
-      <p>Duration: {content.Duration}</p>
-      <div className="mt-4 p-3 border rounded">
-        <div className="text-left">{content.Abstract}</div>
+    <div className="p-8 bg-white shadow-lg rounded-lg">
+      <h1 className="text-4xl font-bold text-gray-900 mb-4">{content.Title}</h1>
+      <p className="text-lg text-gray-700">
+        <span className="font-semibold">Category: </span>
+        {content.Category}
+      </p>
+      <p className="text-lg text-gray-700">
+        <span className="font-semibold">Type: </span>
+        {content.Type}
+      </p>
+      <p className="text-lg text-gray-700">
+        <span className="font-semibold">Level: </span>
+        {content.Level}
+      </p>
+      <p className="text-lg text-gray-700">
+        <span className="font-semibold">Duration: </span>
+        {content.Duration}
+      </p>
+      <div className="mt-6 p-4 border rounded-lg bg-gray-50">
+        <div className="text-left text-gray-800">{content.Abstract}</div>
       </div>
     </div>
   );
