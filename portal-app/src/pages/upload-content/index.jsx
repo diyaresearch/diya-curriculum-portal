@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
 
@@ -19,6 +20,8 @@ export const UploadContent = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
+  const navigator = useNavigate();
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
@@ -30,7 +33,7 @@ export const UploadContent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
@@ -38,12 +41,12 @@ export const UploadContent = () => {
       setModalIsOpen(true);
       return;
     }
-  
+
     const userId = user.uid;
     const token = await user.getIdToken();
-  
+
     const url = "http://localhost:3001/api/content/"; // Replace with your backend endpoint URL
-  
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("Title", formData.Title);
@@ -55,7 +58,7 @@ export const UploadContent = () => {
       formDataToSend.append("Abstract", formData.Abstract);
       formDataToSend.append("file", file);
       formDataToSend.append("Author", userId); // Include the user ID
-  
+
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -63,11 +66,11 @@ export const UploadContent = () => {
         },
         body: formDataToSend,
       });
-  
+
       if (!response.ok) {
         throw new Error("Error submitting content");
       }
-  
+
       setModalMessage("Content submitted successfully");
       setFormData({
         Title: "",
@@ -80,9 +83,12 @@ export const UploadContent = () => {
       });
       setFile(null);
       document.getElementById("file-name").textContent = "";
+      setModalIsOpen(true);
+      setTimeout(() => {
+        navigator("/");
+      }, 2000);
     } catch (error) {
       setModalMessage("Error submitting content: " + error.message);
-    } finally {
       setModalIsOpen(true);
     }
   };
