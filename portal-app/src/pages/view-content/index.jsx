@@ -1,31 +1,44 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { storage } from "../../firebase/firebaseConfig";
+import { ref, getDownloadURL } from "firebase/storage";
 
 const ViewContent = () => {
   const { UnitID } = useParams(); // Get UnitID from the URL
   const [content, setContent] = useState(null);
+  const [fileUrl, setFileUrl] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Fetch all units to map UnitID to id
-    fetch(`http://localhost:3001/api/units`) // Fetch all units to get mapping of UnitID to id
-      .then((response) => response.json())
-      .then((units) => {
-        // Find the unit with the matching UnitID
+    const fetchContent = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/api/units");
+        const units = await response.json();
+
         const unit = units.find((unit) => unit.UnitID === UnitID);
         if (unit) {
-          // Now fetch the content using the id
-          return fetch(`http://localhost:3001/api/unit/${unit.id}`);
+          const contentResponse = await fetch(
+            `http://localhost:3001/api/unit/${unit.id}`
+          );
+          const data = await contentResponse.json();
+          setContent(data);
+
+          if (unit.fileUrl) {
+            const fileRef = ref(storage, unit.fileUrl);
+            const downloadURL = await getDownloadURL(fileRef);
+            console.log(downloadURL);
+            setFileUrl(downloadURL);
+          }
         } else {
           throw new Error("Unit not found");
         }
-      })
-      .then((response) => response.json())
-      .then((data) => setContent(data))
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching content:", error);
         setError(error.message);
-      });
+      }
+    };
+
+    fetchContent();
   }, [UnitID]);
 
   if (error) return <div>{error}</div>;
@@ -53,6 +66,21 @@ const ViewContent = () => {
       <div className="mt-6 p-4 border rounded-lg bg-gray-50">
         <div className="text-left text-gray-800">{content.Abstract}</div>
       </div>
+      {fileUrl && (
+        <div className="mt-6">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+            File Preview
+          </h2>
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            Open File
+          </a>
+        </div>
+      )}
     </div>
   );
 };
