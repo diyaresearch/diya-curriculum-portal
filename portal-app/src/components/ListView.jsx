@@ -16,7 +16,7 @@ const categories = [
 ];
 
 const types = [
-  "Lecture",
+  "Lectures",
   "Assignments",
   "Quiz",
   "Projects",
@@ -167,9 +167,8 @@ const ListView = ({ content }) => {
           onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
           className="p-2 border rounded"
         >
-          <option value={5}>5 / page</option>
-          <option value={10}>10 / page</option>
-          <option value={20}>20 / page</option>
+          <option value={12}>12 / page</option>
+          <option value={24}>24 / page</option>
         </select>
         <div>
           <button
