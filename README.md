@@ -38,8 +38,17 @@ DIYA Curriculum Portal is a platform served for the educators and content creato
 
 Ensure you have the following installed on your local development machine:
 
-- Node.js
-- npm or yarn
+- **Node.js**: You can download and install Node.js from the [official Node.js website](https://nodejs.org/). Choose the version that best suits your development environment (LTS is recommended for most users).
+- **npm or yarn**:
+
+  - **npm** is included with Node.js, so it will be installed automatically when you install Node.js.
+  - **yarn** can be installed globally after installing Node.js using the following command:
+
+  ```bash
+  npm install -g yarn
+  ```
+
+  For more details, you can refer to the [npm documentation](https://docs.npmjs.com/) or the [Yarn documentation](https://yarnpkg.com/getting-started)
 
 ### Clone the Repository
 
