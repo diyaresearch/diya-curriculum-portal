@@ -9,7 +9,7 @@ const upload = multer({
   },
 });
 
-const post_content = async (req, res) => {
+const createUnit = async (req, res) => {
   console.log("Received content upload request");
   try {
     upload.single("file")(req, res, async (err) => {
@@ -142,5 +142,5 @@ async function saveContentToFirestore(
 }
 
 module.exports = {
-  post_content,
+  createUnit,
 };

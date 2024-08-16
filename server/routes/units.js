@@ -1,6 +1,6 @@
 const express = require("express");
 const { getAllUnits, getUnitById } = require("../controllers/unitsController");
-const { post_content } = require("../controllers/content_submission");
+const { createUnit } = require("../controllers/content_submission");
 const { updateUnitById } = require("../controllers/update_submission");
 const authenticateUser = require("../middleware/authenticateUser");
 
@@ -9,8 +9,7 @@ router.use(express.json());
 
 router.get("/units", getAllUnits);
 router.get("/unit/:id", getUnitById);
-// router.post("/content", post_content);
+router.post("/unit", authenticateUser, createUnit); // Apply middleware here
 router.post("/update/:id", updateUnitById);
-router.post("/content", authenticateUser, post_content); // Apply middleware here
 
 module.exports = router;
