@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import TileItem from "./TileItem";
 import Overlay from "./Overlay";
 
@@ -16,7 +15,7 @@ const categories = [
 ];
 
 const types = [
-  "Lecture",
+  "Lectures",
   "Assignments",
   "Quiz",
   "Projects",
@@ -32,7 +31,7 @@ const ListView = ({ content }) => {
   const [selectedType, setSelectedType] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -90,7 +89,6 @@ const ListView = ({ content }) => {
     setSelectedContent(contentItem);
   };
 
-  const navigate = useNavigate();
   return (
     <div className="text-center mt-10">
       <h2 className="text-2xl font-bold">
@@ -167,9 +165,8 @@ const ListView = ({ content }) => {
           onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
           className="p-2 border rounded"
         >
-          <option value={5}>5 / page</option>
-          <option value={10}>10 / page</option>
-          <option value={20}>20 / page</option>
+          <option value={12}>12 / page</option>
+          <option value={24}>24 / page</option>
         </select>
         <div>
           <button
