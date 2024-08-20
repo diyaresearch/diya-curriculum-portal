@@ -20,6 +20,31 @@ const getAllLessons = async (req, res) => {
   }
 };
 
+const getAllSections = async (req, res) => {
+  try {
+    const sectionsRef = db
+      .collection("lesson")
+      .doc("XnZzLBMIeKE5dsRXZ5nJ")
+      .collection("sections");
+    const snapshot = await sectionsRef.get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: "No matching documents." });
+    }
+
+    const sections = [];
+    snapshot.forEach((doc) => {
+      sections.push({ id: doc.id, data: doc.data() });
+    });
+
+    res.status(200).json(sections);
+  } catch (error) {
+    console.error("Error getting documents:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   getAllLessons,
+  getAllSections,
 };
