@@ -20,6 +20,24 @@ const getAllLessons = async (req, res) => {
   }
 };
 
+const getLessonById = async (req, res) => {
+  const lessonId = req.params.lessonId;
+
+  try {
+    const lessonRef = db.collection("lesson").doc(lessonId);
+    const doc = await lessonRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: "Lesson not found." });
+    }
+
+    res.status(200).json({ id: doc.id, ...doc.data() });
+  } catch (error) {
+    console.error("Error fetching lesson:", error);
+    res.status(500).send(error.message);
+  }
+};
+
 const getAllSections = async (req, res) => {
   try {
     const sectionsRef = db
@@ -95,6 +113,7 @@ const postLesson = async (req, res) => {
 
 module.exports = {
   getAllLessons,
+  getLessonById,
   getAllSections,
   getSections,
   postLesson,
