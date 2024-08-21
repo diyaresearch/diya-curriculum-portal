@@ -17,8 +17,11 @@ const HomePage = ({ user }) => {
             />
             <p className="mt-4">
               {user ? (
-                <button className="font-bold py-2 px-4 rounded">
-                  Try our new AI generator for lesson plans!
+                <button
+                  onClick={() => navigate("/lesson-generator")}
+                  className="font-bold py-2 px-4 rounded"
+                >
+                  Try our Lesson Plan Generator!
                 </button>
               ) : (
                 "Manage teaching materials & generate lesson plans"
