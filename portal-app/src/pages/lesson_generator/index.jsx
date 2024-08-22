@@ -119,10 +119,10 @@ export const LessonGenerator = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Error submitting content");
+        throw new Error("Error generating lesson plan");
       }
 
-      setModalMessage("Content submitted successfully");
+      setModalMessage("Lesson plan generated successfully");
       setFormData({
         title: "",
         subject: "",
@@ -139,7 +139,7 @@ export const LessonGenerator = () => {
         navigate("/");
       }, 2000);
     } catch (error) {
-      setModalMessage("Error submitting content: " + error.message);
+      setModalMessage("Error generating lesson plan: " + error.message);
       setModalIsOpen(true);
     }
   };
@@ -177,6 +177,23 @@ export const LessonGenerator = () => {
       ...selectedMaterials,
       [sectionIndex]: updatedSectionMaterials,
     });
+  };
+
+  const customStyles = {
+    content: {
+      top: "50%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      marginRight: "-50%",
+      transform: "translate(-50%, -50%)",
+      width: "400px",
+      padding: "20px",
+      textAlign: "center",
+    },
+    overlay: {
+      backgroundColor: "rgba(0, 0, 0, 0.75)",
+    },
   };
 
   return (
@@ -406,6 +423,20 @@ export const LessonGenerator = () => {
             onSelectMaterial={onSelectMaterial}
           />
         )}
+        <Modal
+          isOpen={modalIsOpen}
+          onRequestClose={closeModal}
+          style={customStyles}
+          contentLabel="Submission Result"
+        >
+          <h2>{modalMessage}</h2>
+          <button
+            onClick={closeModal}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Close
+          </button>
+        </Modal>
       </div>
     </div>
   );
