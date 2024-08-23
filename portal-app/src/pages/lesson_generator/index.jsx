@@ -127,7 +127,7 @@ export const LessonGenerator = () => {
         title: "",
         subject: "",
         level: "",
-        objectives: [],
+        objectives: [""],
         duration: "",
         sections: [],
         description: "",
@@ -135,9 +135,6 @@ export const LessonGenerator = () => {
       setSections([{ intro: "", contentIds: [] }]);
       setSelectedMaterials({});
       setModalIsOpen(true);
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
     } catch (error) {
       setModalMessage("Error generating lesson plan: " + error.message);
       setModalIsOpen(true);
@@ -203,6 +200,7 @@ export const LessonGenerator = () => {
           <button
             type="button"
             className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
+            onClick={() => navigate("/my-plans")}
           >
             My Plans
           </button>
