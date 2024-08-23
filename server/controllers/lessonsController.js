@@ -90,9 +90,15 @@ const postLesson = async (req, res) => {
   try {
     const formData = req.body;
 
+    const authorId = req.user ? req.user.uid : null;
+
+    if (!authorId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
     const lessonRef = db.collection("lesson").doc();
 
     await lessonRef.set({
+      authorId: authorId,
       title: formData.title,
       subject: formData.subject,
       level: formData.level,
@@ -100,6 +106,7 @@ const postLesson = async (req, res) => {
       duration: formData.duration,
       sections: formData.sections,
       description: formData.description,
+      createdAt: new Date().toISOString(),
     });
 
     res
