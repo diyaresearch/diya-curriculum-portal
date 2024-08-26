@@ -119,6 +119,26 @@ const postLesson = async (req, res) => {
   }
 };
 
+const deleteLessonById = async (req, res) => {
+  const lessonId = req.params.lessonId;
+
+  try {
+    const lessonRef = db.collection("lesson").doc(lessonId);
+    const doc = await lessonRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: "Lesson not found." });
+    }
+
+    await lessonRef.delete();
+
+    res.status(200).json({ message: "Lesson deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting lesson:", error);
+    res.status(500).send(error.message);
+  }
+};
+
 const downloadPDF = async (req, res) => {
   const lessonId = req.params.lessonId;
 
@@ -204,26 +224,6 @@ const downloadPDF = async (req, res) => {
   } catch (error) {
     console.error("Error generating PDF:", error);
     res.status(500).json({ error: "Failed to generate PDF" });
-  }
-};
-
-const deleteLessonById = async (req, res) => {
-  const lessonId = req.params.lessonId;
-
-  try {
-    const lessonRef = db.collection("lesson").doc(lessonId);
-    const doc = await lessonRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ message: "Lesson not found." });
-    }
-
-    await lessonRef.delete();
-
-    res.status(200).json({ message: "Lesson deleted successfully." });
-  } catch (error) {
-    console.error("Error deleting lesson:", error);
-    res.status(500).send(error.message);
   }
 };
 
