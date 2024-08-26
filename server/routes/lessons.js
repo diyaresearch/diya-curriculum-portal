@@ -16,7 +16,6 @@ router.get("/lessons", getAllLessons);
 router.get("/lesson/:lessonId", getLessonById);
 router.get("/sections", getAllSections);
 router.get("/lessons/sections", getSections);
-router.post("/lesson", postLesson);
 router.get("/lessons/:lessonId/download", downloadPDF);
 router.post("/lesson", authenticateUser, postLesson);
 router.delete("/lesson/:lessonId", deleteLessonById);
