@@ -6,7 +6,9 @@ import "./index.css";
 import { EditContent } from "./pages/edit_content";
 import Home from "./pages/home";
 import { UploadContent } from "./pages/upload-content";
-import ViewContent  from "./pages/view-content";
+import ViewContent from "./pages/view-content";
+import LessonGenerator from "./pages/lesson_generator";
+import MyPlans from "./pages/my_plan";
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
         <Route path="/upload-content" element={<UploadContent />} />
         <Route path="/edit-content/:id" element={<EditContent />} />
         <Route path="/view-content/:UnitID" element={<ViewContent />} />
+        <Route path="/lesson-generator" element={<LessonGenerator />} />
+        <Route path="/my-plans" element={<MyPlans />} />
       </Routes>
     </BrowserRouter>
   );

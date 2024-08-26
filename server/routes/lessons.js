@@ -6,6 +6,8 @@ const { getAllSections } = require("../controllers/lessonsController");
 const { getSections } = require("../controllers/lessonsController");
 const { postLesson } = require("../controllers/lessonsController");
 const { downloadPDF } = require("../controllers/lessonsController");
+const { deleteLessonById } = require("../controllers/lessonsController");
+const authenticateUser = require("../middleware/authenticateUser");
 
 const router = express.Router();
 router.use(express.json());
@@ -16,5 +18,7 @@ router.get("/sections", getAllSections);
 router.get("/lessons/sections", getSections);
 router.post("/lesson", postLesson);
 router.get("/lessons/:lessonId/download", downloadPDF);
+router.post("/lesson", authenticateUser, postLesson);
+router.delete("/lesson/:lessonId", deleteLessonById);
 
 module.exports = router;
