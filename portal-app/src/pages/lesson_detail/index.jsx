@@ -8,7 +8,62 @@ export const LessonDetail = () => {
   const navigate = useNavigate();
   const { lessonId } = useParams();
   const [contentDetails, setContentDetails] = useState({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+  const handleDownload = async () => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        navigate("/lesson-generator");
+        return;
+      }
 
+      const token = await user.getIdToken();
+      const response = await axios.get(
+        `http://localhost:3001/api/lessons/${lessonId}/download`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "lesson.pdf");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      alert("Failed to download the lesson plan.");
+    }
+  };
+  const handleConfirmDelete = async () => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        navigate("/lesson-generator");
+        return;
+      }
+
+      const token = await user.getIdToken();
+      await axios.delete(`http://localhost:3001/api/lesson/${lessonId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      alert("Lesson plan deleted successfully.");
+      navigate("/my-plans");
+    } catch (error) {
+      console.error("Error deleting lesson:", error);
+      alert("Failed to delete the lesson plan.");
+    } finally {
+      closeModal();
+    }
+  };
   useEffect(() => {
     const fetchLesson = async () => {
       try {
@@ -132,17 +187,44 @@ export const LessonDetail = () => {
           <button
             type="button"
             className="bg-red-500 text-white py-2 px-4 rounded-full border border-red-700 hover:bg-red-700"
+            onClick={openModal}
           >
             Delete
           </button>
           <button
             type="button"
             className="bg-blue-500 text-white py-2 px-4 rounded-full border border-blue-700 hover:bg-blue-700"
+            onClick={handleDownload}
           >
             Download
           </button>
         </div>
       </div>
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h2 className="text-xl mb-4">
+              Are you sure you want to delete this lesson plan?
+            </h2>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                className="bg-gray-500 text-white py-2 px-4 rounded-full border border-gray-700 hover:bg-gray-700"
+                onClick={closeModal}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="bg-red-500 text-white py-2 px-4 rounded-full border border-red-700 hover:bg-red-700"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
