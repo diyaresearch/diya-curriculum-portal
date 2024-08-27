@@ -53,7 +53,8 @@ const createUnit = async (req, res) => {
         });
 
         blobStream.on("finish", async () => {
-          fileUrl = fileUpload.publicUrl();
+          await fileUpload.makePublic();
+          const fileUrl = fileUpload.publicUrl();
           await saveContentToFirestore(
             Title,
             Category,
