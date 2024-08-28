@@ -29,6 +29,7 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const [selectedTiles, setSelectedTiles] = useState({});
@@ -39,7 +40,7 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
 
   useEffect(() => {
     filterContent();
-  }, [selectedCategory, selectedType, selectedLevel, content]);
+  }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
 
   const filterContent = () => {
     let filtered = content;
@@ -51,6 +52,11 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
     }
     if (selectedLevel) {
       filtered = filtered.filter((item) => item.Level === selectedLevel);
+    }
+    if (searchTerm) {
+      filtered = filtered.filter((item) =>
+        item.Title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     setFilteredContent(filtered);
   };
@@ -74,7 +80,7 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center ">
       <div
-        className="bg-white p-6 rounded-lg relative overflow-hidden"
+        className="bg-white p-3 rounded-lg relative overflow-hidden  overflow-y-auto"
         style={{ width: "43%", height: "94%" }}
       >
         <div
@@ -128,41 +134,52 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {paginatedContent.map((item, index) => {
-              const isSelected = selectedTiles[item.id];
-              return (
-                <div key={index} className="relative">
-                  <TileItem
-                    id={item.id}
-                    title={item.Title}
-                    category={item.Category}
-                    type={item.Type}
-                    level={item.Level}
-                    duration={item.Duration}
-                    date={item.date}
-                    onClick={() => onSelectMaterial(item)}
-                  />
-                  <button
-                    onClick={() => {
-                      setSelectedTiles((prevState) => ({
-                        ...prevState,
-                        [item.id]: !isSelected,
-                      }));
-                      onSelectMaterial(item);
-                    }}
-                    className={`absolute bottom-2 right-2 py-1 px-3 rounded ${
-                      isSelected
-                        ? "bg-red-500 text-white"
-                        : "bg-blue-500 text-white"
-                    }`}
-                  >
-                    {isSelected ? "Unselect" : "Select"}
-                  </button>
-                </div>
-              );
-            })}
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search for ..."
+            className="mt-4 p-2 border rounded w-full"
+          />
+
+          <div className="container mx-auto mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {paginatedContent.map((item, index) => {
+                const isSelected = selectedTiles[item.id];
+                return (
+                  <div key={index} className="relative">
+                    <TileItem
+                      id={item.id}
+                      title={item.Title}
+                      category={item.Category}
+                      type={item.Type}
+                      level={item.Level}
+                      duration={item.Duration}
+                      date={item.date}
+                      onClick={() => onSelectMaterial(item)}
+                    />
+                    <button
+                      onClick={() => {
+                        setSelectedTiles((prevState) => ({
+                          ...prevState,
+                          [item.id]: !isSelected,
+                        }));
+                        onSelectMaterial(item);
+                      }}
+                      className={`absolute bottom-2 right-2 py-1 px-3 rounded ${
+                        isSelected
+                          ? "bg-red-500 text-white"
+                          : "bg-blue-500 text-white"
+                      }`}
+                    >
+                      {isSelected ? "Unselect" : "Select"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+
           <div className="flex justify-between items-center mt-4">
             <button
               onClick={() => handlePageChange("prev")}
