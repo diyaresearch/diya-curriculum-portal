@@ -187,8 +187,14 @@ const downloadPDF = async (req, res) => {
         const section = lessonData.sections[sectionIndex];
         docPdf
           .fontSize(12)
+          .fillColor("black")
           .text(`Section ${sectionIndex + 1}`, { underline: true });
         docPdf.moveDown();
+
+        if (section.intro) {
+          docPdf.fontSize(12).text(`Intro: ${section.intro}`);
+          docPdf.moveDown();
+        }
 
         if (section.contentIds && section.contentIds.length > 0) {
           let documentCount = 1;
@@ -201,6 +207,7 @@ const downloadPDF = async (req, res) => {
               const fileUrl = contentData.fileUrl;
               docPdf
                 .fontSize(12)
+                .fillColor("black")
                 .text(`Document ${documentCount}: `, { continued: true });
               docPdf.fontSize(12).fillColor("blue").text("Document link", {
                 link: fileUrl,
@@ -209,12 +216,18 @@ const downloadPDF = async (req, res) => {
 
               documentCount++;
             } else {
-              docPdf.fontSize(12).text(`Content ID: ${contentId} not found.`);
+              docPdf
+                .fontSize(12)
+                .fillColor("black")
+                .text(`Content ID: ${contentId} not found.`);
             }
             docPdf.moveDown();
           }
         } else {
-          docPdf.fontSize(12).text("No content available for this section.");
+          docPdf
+            .fontSize(12)
+            .fillColor("black")
+            .text("No content available for this section.");
           docPdf.moveDown();
         }
       }
