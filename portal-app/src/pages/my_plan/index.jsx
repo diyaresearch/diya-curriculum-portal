@@ -52,7 +52,7 @@ export const MyPlans = () => {
         }
 
         const token = await user.getIdToken();
-        const response = await axios.get("http://localhost:3001/api/lessons", {
+        const response = await axios.get("https://curriculum-portal-api.uc.r.appspot.com/api/lessons", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const userPlans = response.data.filter(
