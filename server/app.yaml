@@ -1,0 +1,14 @@
+runtime: nodejs18
+
+# This service name can be 'default' or a custom name
+service: default
+
+# The instance class defines the compute resources allocated to the service
+instance_class: F2
+
+# Environment variables
+env_variables:
+  NODE_ENV: 'production'
+
+# The entry point for your app
+entrypoint: npm start
