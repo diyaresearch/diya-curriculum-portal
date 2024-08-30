@@ -25,7 +25,7 @@ export const EditContent = () => {
   useEffect(() => {
     const fetchContent = async () => {
       const contentId = id;
-      const url = `http://localhost:3001/api/unit/${contentId}`;
+      const url = `https://curriculum-portal-api.uc.r.appspot.com/api/unit/${contentId}`;
 
       try {
         const response = await fetch(url);
@@ -65,7 +65,7 @@ export const EditContent = () => {
     e.preventDefault();
 
     const contentId = id;
-    const url = `http://localhost:3001/api/update/${contentId}`;
+    const url = `https://curriculum-portal-api.uc.r.appspot.com/api/update/${contentId}`;
 
     try {
       const formDataToSend = new FormData();
