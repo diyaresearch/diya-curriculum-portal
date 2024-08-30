@@ -45,7 +45,7 @@ export const UploadContent = () => {
     const userId = user.uid;
     const token = await user.getIdToken();
 
-    const url = "http://localhost:3001/api/unit/"; // Replace with your backend endpoint URL
+    const url = "https://curriculum-portal-api.uc.r.appspot.com/api/unit/"; // Replace with your backend endpoint URL
 
     try {
       const formDataToSend = new FormData();
