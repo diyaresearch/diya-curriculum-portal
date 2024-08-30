@@ -77,6 +77,10 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
     currentPage * itemsPerPage
   );
 
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString();
+  };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center ">
       <div
@@ -155,7 +159,7 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
                       type={item.Type}
                       level={item.Level}
                       duration={item.Duration}
-                      date={item.date}
+                      date={formatDate(item.LastModified)}
                       onClick={() => onSelectMaterial(item)}
                     />
                     <button
@@ -166,7 +170,7 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
                         }));
                         onSelectMaterial(item);
                       }}
-                      className={`absolute bottom-2 right-2 py-1 px-3 rounded ${
+                      className={`absolute bottom-3 right-2 py-1 px-3 rounded ${
                         isSelected
                           ? "bg-red-500 text-white"
                           : "bg-blue-500 text-white"

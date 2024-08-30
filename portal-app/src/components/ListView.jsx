@@ -91,9 +91,8 @@ const ListView = ({ content }) => {
 
   const formatDate = (isoString) => {
     const date = new Date(isoString);
-    return date.toLocaleString();
+    return date.toLocaleDateString();
   };
-
   return (
     <div className="text-center mt-10">
       <h2 className="text-2xl font-bold">
