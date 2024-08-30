@@ -29,16 +29,15 @@ const Overlay = ({ content, onClose }) => {
             {showOptions && (
               <div className="absolute right-0 bg-white border shadow-md mt-2 rounded w-48">
                 <button
-                  onClick={() => window.open(`/view-content/${content.UnitID}`, '_blank')}
+                  onClick={() =>
+                    window.open(`/view-content/${content.UnitID}`, "_blank")
+                  }
                   className="block px-4 py-2"
                 >
                   Open in New Tab
                 </button>
                 <hr />
-                <button
-                  onClick={handleSaveLink}
-                  className="block px-4 py-2"
-                >
+                <button onClick={handleSaveLink} className="block px-4 py-2">
                   Save the Link
                 </button>
                 <hr />
@@ -60,7 +59,7 @@ const Overlay = ({ content, onClose }) => {
         <p>Category: {content.Category}</p>
         <p>Type: {content.Type}</p>
         <p>Level: {content.Level}</p>
-        <p>Duration: {content.Duration}</p>
+        <p>Duration: {content.Duration}min</p>
         <div className="mt-4 p-3 border rounded h-[150px] w-full overflow-auto">
           <div className="text-left">{content.Abstract}</div>
         </div>

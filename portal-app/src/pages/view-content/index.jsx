@@ -61,7 +61,7 @@ const ViewContent = () => {
       </p>
       <p className="text-lg text-gray-700">
         <span className="font-semibold">Duration: </span>
-        {content.Duration}
+        {content.Duration}min
       </p>
       <div className="mt-6 p-4 border rounded-lg bg-gray-50">
         <div className="text-left text-gray-800">{content.Abstract}</div>
