@@ -89,6 +89,11 @@ const ListView = ({ content }) => {
     setSelectedContent(contentItem);
   };
 
+  const formatDate = (isoString) => {
+    const date = new Date(isoString);
+    return date.toLocaleString();
+  };
+
   return (
     <div className="text-center mt-10">
       <h2 className="text-2xl font-bold">
@@ -153,7 +158,7 @@ const ListView = ({ content }) => {
               type={item.Type}
               level={item.Level}
               duration={item.Duration}
-              date={item.date}
+              date={formatDate(item.LastModified)}
               onClick={handleTileClick}
             />
           ))}
