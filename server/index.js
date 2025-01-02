@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+// read dotenv
+require('dotenv').config();
 
 const unitsRoutes = require("./routes/units");
 const contentRoutes = require("./routes/units");
@@ -7,7 +9,12 @@ const lessonsRoutes = require("./routes/lessons");
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+// Get the allowed origin from the .env file
+const corsOptions = {
+  origin: `${process.env.ALLOW_ORIGIN}`
+};
+app.use(cors(corsOptions));
 
 app.use("/api", unitsRoutes); // Prefix all routes with /api
 app.use("/api", contentRoutes);
