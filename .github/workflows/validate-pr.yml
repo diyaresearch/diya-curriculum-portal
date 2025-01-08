@@ -1,0 +1,36 @@
+name: Validate Pull Request
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code (optional, for context in future steps)
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # Step 2: Validate PR title and description
+      - name: Validate PR title and description
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            const prBody = context.payload.pull_request.body || "";
+
+            #const issuePattern = /Closes #\d+/; // Regex to check for 'Closes #<issue-number>'
+            const issuePattern = /(Closes|Fixes|Resolves) #\d+/;
+
+            #if (!prTitle.match(issuePattern) && !prBody.match(issuePattern)) {
+            if (!prTitle.match(issuePattern)) {
+              core.setFailed(
+                "Pull request must include a reference to an issue in the title or body (e.g., 'Closes #<issue-number>')."
+              );
+            }
+
