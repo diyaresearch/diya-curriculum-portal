@@ -1,3 +1,6 @@
+## Ticket Reference
+- [ ] Issue Number: Closes #<issue-number>
+
 ## Description
 - [ ] Briefly describe the purpose of this PR.
 - [ ] Mention any dependencies or pre-requisites.
