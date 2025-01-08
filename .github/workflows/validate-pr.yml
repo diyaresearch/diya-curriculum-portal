@@ -22,13 +22,11 @@ jobs:
         with:
           script: |
             const prTitle = context.payload.pull_request.title;
-            const prBody = context.payload.pull_request.body || "";
-
-            const issuePattern = [Issue #\d+] /(Closes|Fixes|Resolves)
+            const issuePattern = /^\[Issue #\d+\] .+/;
 
             if (!prTitle.match(issuePattern)) {
               core.setFailed(
-                "Pull request must include a reference to an issue in the title or body (e.g., 'Closes #<issue-number>')."
+                "Pull request title must start with '[Issue #<number>]' format (e.g., '[Issue #123] Add new feature')."
               );
             }
 
