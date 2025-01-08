@@ -24,10 +24,8 @@ jobs:
             const prTitle = context.payload.pull_request.title;
             const prBody = context.payload.pull_request.body || "";
 
-            #const issuePattern = /Closes #\d+/; // Regex to check for 'Closes #<issue-number>'
             const issuePattern = /(Closes|Fixes|Resolves) #\d+/;
 
-            #if (!prTitle.match(issuePattern) && !prBody.match(issuePattern)) {
             if (!prTitle.match(issuePattern)) {
               core.setFailed(
                 "Pull request must include a reference to an issue in the title or body (e.g., 'Closes #<issue-number>')."
