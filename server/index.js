@@ -1,7 +1,16 @@
 const express = require("express");
 const cors = require("cors");
 // read dotenv
-require('dotenv').config();
+//require('dotenv').config();
+
+const dotenv = require('dotenv');
+
+// Determine env to default (development if not specified)
+const env = process.env.NODE_ENV || 'development';
+
+// Load appropriate env file
+dotenv.config({path: `.env.${env}` });
+console.log(`Loaded environment: ${env}`);
 
 const unitsRoutes = require("./routes/units");
 const contentRoutes = require("./routes/units");
