@@ -1,6 +1,7 @@
 import React from "react";
 import content_creator from "../assets/content_creator.png";
 import educator from "../assets/educator.png";
+import lesson_plans from "../assets/lesson_plans.png";
 import { useNavigate } from "react-router-dom";
 
 const HomePage = ({ user }) => {
@@ -13,7 +14,7 @@ const HomePage = ({ user }) => {
             <img
               src={educator}
               alt="Educator Icon"
-              className="mx-auto  max-w-xs w-40 h-40"
+              className="mx-auto max-w-xs w-40 h-40"
             />
             <p className="mt-4">
               {user ? (
@@ -32,7 +33,7 @@ const HomePage = ({ user }) => {
             <img
               src={content_creator}
               alt="Content Creator Icon"
-              className="mx-auto  max-w-xs w-40 h-40"
+              className="mx-auto max-w-xs w-40 h-40"
             />
             <p className="mt-4">
               {user ? (
@@ -44,6 +45,25 @@ const HomePage = ({ user }) => {
                 </button>
               ) : (
                 "Upload educational contents"
+              )}
+            </p>
+          </div>
+          <div>
+            <img
+              src={lesson_plans}
+              alt="Lesson Plans Icon"
+              className="mx-auto max-w-xs w-40 h-40"
+            />
+            <p className="mt-4">
+              {user ? (
+                <button
+                  onClick={() => navigate("/my-plans")}
+                  className="font-bold py-2 px-4 rounded"
+                >
+                  View My Lesson Plans
+                </button>
+              ) : (
+                "View and manage your lesson plans"
               )}
             </p>
           </div>
