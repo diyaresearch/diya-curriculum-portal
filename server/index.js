@@ -20,18 +20,22 @@ const app = express();
 app.use(express.json())
 
 // Get the allowed origin from the .env file
-const allowedOrigins = `${process.env.ALLOW_ORIGIN}`
+const allowedOrigins = [
+  'https://curriculum-portal-1ce8f.web.app',
+  'http://localhost:3000'  // For local development
+];
 
 app.use(cors({
-    origin: function(origin, callback) {
-        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+  origin: function(origin, callback) {
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+          callback(null, true);
+      } else {
+          callback(new Error('Not allowed by CORS'));
+      }
+      callback(null, true)
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use("/api", unitsRoutes);
