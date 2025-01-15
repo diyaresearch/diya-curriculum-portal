@@ -9,7 +9,6 @@ const getAllLessons = async (req, res) => {
       res.status(200).json([]);
       return;
     }
-
     const lessons = [];
     lessonsSnapshot.forEach((doc) => {
       lessons.push({ id: doc.id, ...doc.data() });
