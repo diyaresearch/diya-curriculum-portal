@@ -13,10 +13,10 @@ export const EditContent = () => {
     Duration: "",
     isPublic: false,
     Abstract: "",
+    fileUrl: "",
   });
 
   const { id } = useParams();
-  const [file, setFile] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
@@ -25,7 +25,7 @@ export const EditContent = () => {
   useEffect(() => {
     const fetchContent = async () => {
       const contentId = id;
-      const url = `https://curriculum-portal-api.uc.r.appspot.com/api/unit/${contentId}`;
+      const url = `https://curriculum-portal-1ce8f.uc.r.appspot.com/api/unit/${contentId}`;
 
       try {
         const response = await fetch(url);
@@ -41,6 +41,7 @@ export const EditContent = () => {
           Duration: data.Duration,
           isPublic: data.isPublic,
           Abstract: data.Abstract,
+          fileUrl: data.fileUrl,
         });
       } catch (error) {
         console.error("Error fetching content:", error);
@@ -55,17 +56,11 @@ export const EditContent = () => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    document.getElementById("file-name").textContent = e.target.files[0].name;
-  };
-  //   const navigate = useNavigate()
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const contentId = id;
-    const url = `https://curriculum-portal-api.uc.r.appspot.com/api/update/${contentId}`;
+    const url = `https://curriculum-portal-1ce8f.uc.r.appspot.com/api/update/${contentId}`;
 
     try {
       const formDataToSend = new FormData();
@@ -76,9 +71,7 @@ export const EditContent = () => {
       formDataToSend.append("Duration", formData.Duration);
       formDataToSend.append("isPublic", formData.isPublic);
       formDataToSend.append("Abstract", formData.Abstract);
-      if (file) {
-        formDataToSend.append("file", file);
-      }
+      formDataToSend.append("fileUrl", formData.fileUrl);
 
       const response = await fetch(url, {
         method: `POST`,
@@ -270,22 +263,19 @@ export const EditContent = () => {
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="file"
+              htmlFor="fileUrl"
             >
-              Upload File:
+              File Url:
             </label>
-            <div className="flex items-center">
-              <label className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded cursor-pointer focus:outline-none focus:shadow-outline">
-                Browse...
-                <input
-                  className="hidden"
-                  id="file"
-                  type="file"
-                  onChange={handleFileChange}
-                />
-              </label>
-              <span className="ml-2 text-gray-700" id="file-name"></span>
-            </div>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="fileUrl"
+              type="text"
+              placeholder="File Url"
+              value={formData.fileUrl}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className="flex items-center justify-center">
             <button

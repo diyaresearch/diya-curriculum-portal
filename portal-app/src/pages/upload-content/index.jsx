@@ -14,9 +14,9 @@ export const UploadContent = () => {
     Duration: "",
     isPublic: false,
     Abstract: "",
+    fileUrl: "",
   });
 
-  const [file, setFile] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
@@ -24,11 +24,6 @@ export const UploadContent = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    document.getElementById("file-name").textContent = e.target.files[0].name;
   };
 
   const handleSubmit = async (e) => {
@@ -45,8 +40,9 @@ export const UploadContent = () => {
     const userId = user.uid;
     const token = await user.getIdToken();
 
-    const url = "https://curriculum-portal-api.uc.r.appspot.com/api/unit/"; // Replace with your backend endpoint URL
-
+    const url = "https://curriculum-portal-1ce8f.uc.r.appspot.com/api/unit/"; // Replace with your backend endpoint URL
+    // const url = "http://localhost:3001/api/unit/";
+    
     try {
       const formDataToSend = new FormData();
       formDataToSend.append("Title", formData.Title);
@@ -56,7 +52,7 @@ export const UploadContent = () => {
       formDataToSend.append("Duration", formData.Duration);
       formDataToSend.append("isPublic", formData.isPublic);
       formDataToSend.append("Abstract", formData.Abstract);
-      formDataToSend.append("file", file);
+      formDataToSend.append("fileUrl", formData.fileUrl);
       formDataToSend.append("Author", userId); // Include the user ID
 
       const response = await fetch(url, {
@@ -80,9 +76,8 @@ export const UploadContent = () => {
         Duration: "",
         isPublic: false,
         Abstract: "",
+        fileUrl: "",
       });
-      setFile(null);
-      document.getElementById("file-name").textContent = "";
       setModalIsOpen(true);
       setTimeout(() => {
         navigator("/");
@@ -259,22 +254,19 @@ export const UploadContent = () => {
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="file"
+              htmlFor="fileUrl"
             >
-              Upload File:
+              Content Url:
             </label>
-            <div className="flex items-center">
-              <label className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded cursor-pointer focus:outline-none focus:shadow-outline">
-                Browse...
-                <input
-                  className="hidden"
-                  id="file"
-                  type="file"
-                  onChange={handleFileChange}
-                />
-              </label>
-              <span className="ml-2 text-gray-700" id="file-name"></span>
-            </div>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="fileUrl"
+              type="text"
+              placeholder="File Url"
+              value={formData.fileUrl}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className="flex items-center justify-center">
             <button

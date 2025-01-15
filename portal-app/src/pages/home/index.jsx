@@ -15,7 +15,7 @@ const Home = () => {
     if (user) {
       // Fetch content from the backend API
       axios
-        .get("https://curriculum-portal-api.uc.r.appspot.com/api/units")
+        .get("https://curriculum-portal-1ce8f.uc.r.appspot.com/api/units")
         .then((response) => {
           // console.log("Fetched data:", response.data); Debugging: Log fetched data
           setContent(response.data);

@@ -12,13 +12,13 @@ const ViewContent = () => {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const response = await fetch("https://curriculum-portal-api.uc.r.appspot.com/api/units");
+        const response = await fetch("https://curriculum-portal-1ce8f.uc.r.appspot.com/api/units");
         const units = await response.json();
 
         const unit = units.find((unit) => unit.UnitID === UnitID);
         if (unit) {
           const contentResponse = await fetch(
-            `https://curriculum-portal-api.uc.r.appspot.com/api/unit/${unit.id}`
+            `https://curriculum-portal-1ce8f.uc.r.appspot.com/api/unit/${unit.id}`
           );
           const data = await contentResponse.json();
           setContent(data);
