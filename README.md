@@ -2,6 +2,9 @@
 
 A full-stack curriculum portal built with React, Express, and Firebase. This project provides a platform for managing and viewing educational materials.
 
+## Version
+1.0
+
 ## Table of Contents
 
 - [Introduction](#introduction)

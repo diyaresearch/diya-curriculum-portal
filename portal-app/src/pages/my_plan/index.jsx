@@ -84,7 +84,7 @@ export const MyPlans = () => {
   );
 
   const handleExit = () => {
-    navigate("/lesson-generator");
+    navigate("/");
   };
 
   return (
