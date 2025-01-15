@@ -22,7 +22,7 @@ export const LessonDetail = () => {
 
       const token = await user.getIdToken();
       const response = await axios.get(
-        `https://curriculum-portal-api.uc.r.appspot.com/api/lessons/${lessonId}/download`,
+        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons/${lessonId}/download`,
         {
           headers: { Authorization: `Bearer ${token}` },
           responseType: "blob",
@@ -51,7 +51,7 @@ export const LessonDetail = () => {
       }
 
       const token = await user.getIdToken();
-      await axios.delete(`https://curriculum-portal-api.uc.r.appspot.com/api/lesson/${lessonId}`, {
+      await axios.delete(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -76,7 +76,7 @@ export const LessonDetail = () => {
 
         const token = await user.getIdToken();
         const response = await axios.get(
-          `https://curriculum-portal-api.uc.r.appspot.com/api/lesson/${lessonId}`,
+          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -86,7 +86,7 @@ export const LessonDetail = () => {
         const contentPromises = lessonData.sections.flatMap((section) =>
           section.contentIds.map(async (contentId) => {
             const contentResponse = await axios.get(
-              `https://curriculum-portal-api.uc.r.appspot.com/api/unit/${contentId}`
+              `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${contentId}`
             );
             return { contentId, ...contentResponse.data };
           })
