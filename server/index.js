@@ -1,5 +1,16 @@
 const express = require("express");
 const cors = require("cors");
+// read dotenv
+//require('dotenv').config();
+
+const dotenv = require('dotenv');
+
+// Determine env to default (development if not specified)
+const env = process.env.NODE_ENV || 'development';
+
+// Load appropriate env file
+dotenv.config({path: `.env.${env}` });
+console.log(`Loaded environment: ${env}`);
 
 const unitsRoutes = require("./routes/units");
 const contentRoutes = require("./routes/units");
@@ -7,6 +18,12 @@ const lessonsRoutes = require("./routes/lessons");
 
 const app = express();
 app.use(express.json());
+
+// Get the allowed origin from the .env file
+const corsOptions = {
+  origin: `${process.env.ALLOW_ORIGIN}`
+};
+app.use(cors(corsOptions));
 
 const allowedOrigins = [
     'https://curriculum-portal-1ce8f.web.app',
