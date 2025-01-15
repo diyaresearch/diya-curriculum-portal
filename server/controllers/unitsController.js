@@ -14,7 +14,7 @@ const getAllUnits = async (req, res) => {
       res.status(200).json([]);
       return;
     }
-
+    
     const units = [];
     unitsSnapshot.forEach(doc => {
       units.push({ id: doc.id, ...doc.data() });
