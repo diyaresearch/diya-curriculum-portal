@@ -20,6 +20,7 @@ npm start &
 cd ../server
 echo "Installing dependencies for Express server..."
 npm install
+npm install cors
 echo "Starting Express server..."
 npm start &
 

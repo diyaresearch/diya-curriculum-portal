@@ -121,9 +121,9 @@ export const LessonDetail = () => {
           <button
             type="button"
             className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
-            onClick={() => navigate("/my-plans")}
+            onClick={() => navigate("/")}
           >
-            Back to Plans
+            Back to Home
           </button>
         </div>
         <h1 className="text-3xl text-center mb-4">Lesson Plan</h1>
