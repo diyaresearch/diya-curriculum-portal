@@ -30,7 +30,7 @@ export const LessonGenerator = () => {
 
   useEffect(() => {
     axios
-      .get("https://curriculum-portal-1ce8f.uc.r.appspot.com/api/units")
+      .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`)
       .then((response) => {
         setPortalContent(response.data);
       })
@@ -90,7 +90,7 @@ export const LessonGenerator = () => {
     const userId = user.uid;
     const token = await user.getIdToken();
 
-    const url = "https://curriculum-portal-1ce8f.uc.r.appspot.com/api/lesson/";
+    const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/`;
 
     try {
       const lessonData = {
