@@ -42,7 +42,47 @@ const getUnitById = async (req, res) => {
   }
 };
 
+const deleteUnit = async (req, res) => {
+  try {
+    const unitId = req.params.id;
+    
+    // Check if unit exists
+    const unitDoc = await db.collection('content').doc(unitId).get();
+    if (!unitDoc.exists) {
+      return res.status(404).send('Unit not found');
+    }
+
+    // Check if unit is used in any lesson plans
+    const lessonsSnapshot = await db.collection('lesson').get();
+    const lessons = [];
+    lessonsSnapshot.forEach(doc => {
+      const lesson = doc.data();
+      if (lesson.sections) {
+        lesson.sections.forEach(section => {
+          if (section.contentIds && section.contentIds.includes(unitId)) {
+            lessons.push(lesson.title);
+          }
+        });
+      }
+    });
+
+    if (lessons.length > 0) {
+      return res.status(400).send(
+        `Cannot delete unit as it is used in the following lesson plans: ${lessons.join(', ')}`
+      );
+    }
+
+    // Delete the unit
+    await db.collection('content').doc(unitId).delete();
+    res.status(200).send('Unit deleted successfully');
+  } catch (error) {
+    console.error('Error deleting unit:', error);
+    res.status(500).send(error.message);
+  }
+};
+
 module.exports = {
   getAllUnits,
-  getUnitById
+  getUnitById,
+  deleteUnit,
 };
