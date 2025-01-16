@@ -1,7 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-// read dotenv
-//require('dotenv').config();
 
 const dotenv = require('dotenv');
 
@@ -20,24 +18,23 @@ const app = express();
 app.use(express.json())
 
 // Get the allowed origin from the .env file
-const allowedOrigins = [
-  'https://curriculum-portal-1ce8f.web.app',
-  'http://localhost:3000'  // For local development
-];
+const allowedOrigins = process.env.SERVER_ALLOW_ORIGIN
+  ? process.env.SERVER_ALLOW_ORIGIN.split(',').map(url => url.trim())
+  : [];
 
 console.log("allowedOrigin:", allowedOrigins)
 
 app.use(cors({
   origin: function(origin, callback) {
       if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        console.log("callback true:", origin)
+        console.log("callback allowed:", origin)
           callback(null, true);
       } else {
-        console.log("callback false:", origin)
+        console.log("callback not allowed:", origin)
           callback(new Error('Not allowed by CORS'));
       }
   },
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
