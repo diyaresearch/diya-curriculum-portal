@@ -149,7 +149,6 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
           <div className="container mx-auto mt-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {paginatedContent.map((item, index) => {
-                const isSelected = selectedTiles[item.id];
                 return (
                   <div key={index} className="relative">
                     <TileItem
@@ -161,22 +160,30 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
                       duration={item.Duration}
                       date={formatDate(item.LastModified)}
                       onClick={() => onSelectMaterial(item)}
+                      onSelect={(id) => {
+                        setSelectedTiles((prevState) => ({
+                          ...prevState,
+                          [id]: !prevState[id],
+                        }));
+                      }}
+                      isSelected={selectedTiles[item.id] || false}
+                      isLessonGenerator={true}
                     />
                     <button
                       onClick={() => {
                         setSelectedTiles((prevState) => ({
                           ...prevState,
-                          [item.id]: !isSelected,
+                          [item.id]: !selectedTiles[item.id],
                         }));
                         onSelectMaterial(item);
                       }}
                       className={`absolute bottom-3 right-2 py-1 px-3 rounded ${
-                        isSelected
+                        selectedTiles[item.id]
                           ? "bg-red-500 text-white"
                           : "bg-blue-500 text-white"
                       }`}
                     >
-                      {isSelected ? "Unselect" : "Select"}
+                      {selectedTiles[item.id] ? "Unselect" : "Select"}
                     </button>
                   </div>
                 );
