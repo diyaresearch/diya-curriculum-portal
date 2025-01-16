@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import TileItem from "./TileItem";
 import Overlay from "./Overlay";
+import { getAuth } from "firebase/auth";
 
 const categories = [
   "Mathematics",
@@ -33,16 +34,10 @@ const ListView = ({ content }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [deleteError, setDeleteError] = useState("");
 
-  useEffect(() => {
-    setFilteredContent(content);
-  }, [content]);
-
-  useEffect(() => {
-    filterContent();
-  }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
-
-  const filterContent = () => {
+  const filterContent = useCallback(() => {
     let filtered = content;
     if (selectedCategory) {
       filtered = filtered.filter((item) => item.Category === selectedCategory);
@@ -59,7 +54,15 @@ const ListView = ({ content }) => {
       );
     }
     setFilteredContent(filtered);
-  };
+  }, [content, selectedCategory, selectedType, selectedLevel, searchTerm]);
+
+  useEffect(() => {
+    setFilteredContent(content);
+  }, [content]);
+
+  useEffect(() => {
+    filterContent();
+  }, [filterContent]);
 
   const resetFilters = () => {
     setSelectedCategory("");
@@ -93,6 +96,75 @@ const ListView = ({ content }) => {
     const date = new Date(isoString);
     return date.toLocaleDateString();
   };
+
+  const handleDeleteUnit = async (id) => {
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      const token = await user.getIdToken();
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      setFilteredContent(filteredContent.filter(item => item.id !== id));
+      setDeleteError("");
+    } catch (error) {
+      setDeleteError(error.message);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      if (!window.confirm(`Are you sure you want to delete ${selectedItems.size} selected items?`)) {
+        return;
+      }
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      const token = await user.getIdToken();
+      const deletePromises = Array.from(selectedItems).map(id =>
+        fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+      );
+
+      const results = await Promise.all(deletePromises);
+      const failedDeletions = results.filter(r => !r.ok);
+
+      if (failedDeletions.length > 0) {
+        throw new Error(`Failed to delete ${failedDeletions.length} items`);
+      }
+
+      setFilteredContent(filteredContent.filter(item => !selectedItems.has(item.id)));
+      setSelectedItems(new Set());
+      setDeleteError("");
+    } catch (error) {
+      setDeleteError(error.message);
+    }
+  };
+
   return (
     <div className="text-center mt-10">
       <h2 className="text-2xl font-bold">
@@ -139,13 +211,40 @@ const ListView = ({ content }) => {
           Reset
         </button>
       </div>
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search for ..."
-        className="mt-4 p-2 border rounded w-1/2"
-      />
+      <div className="flex justify-center items-center mt-4 space-x-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search for ..."
+          className="p-2 border rounded w-1/2"
+        />
+        {selectedItems.size > 0 && (
+          <button
+            onClick={handleBulkDelete}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200 flex items-center space-x-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            <span>Delete Selected ({selectedItems.size})</span>
+          </button>
+        )}
+      </div>
+      {deleteError && (
+        <div className="text-red-500 mb-4">{deleteError}</div>
+      )}
       <div className="container mx-auto p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {paginatedContent.map((item, index) => (
@@ -159,6 +258,17 @@ const ListView = ({ content }) => {
               duration={item.Duration}
               date={formatDate(item.LastModified)}
               onClick={handleTileClick}
+              onDelete={handleDeleteUnit}
+              isSelected={selectedItems.has(item.id)}
+              onSelect={(id) => {
+                const newSelected = new Set(selectedItems);
+                if (newSelected.has(id)) {
+                  newSelected.delete(id);
+                } else {
+                  newSelected.add(id);
+                }
+                setSelectedItems(newSelected);
+              }}
             />
           ))}
         </div>
