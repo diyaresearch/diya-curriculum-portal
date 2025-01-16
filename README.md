@@ -150,3 +150,60 @@ npm start
 # or
 yarn start
 ```
+
+## Checking Deployment Version and Viewing Logs
+
+### Checking Deployment Version
+
+To verify the currently deployed version of your application in Google Cloud:
+
+1. Log in to Google Cloud Console. Make sure you are in the curriculun-portal project.
+
+2. Navigate to App Engine: Search App Engine, and then go to Versions from the left-hand navigation menu.
+
+3. View Current Deployment: The table will display a list of all deployed versions, with the active version marked under the Traffic column. The active version is the one currently serving traffic. 
+
+### Viewing Logs
+
+#### View Logs from Google Cloud Console
+
+1. Log in to Google Cloud Console. Make sure you are in the curriculun-portal project.
+
+2. Navigate to Logs Explorer: Search Logs Explorer then you can see the logs.
+
+3. Filter Logs:
+Use the filters to narrow down the logs:
+Resource Type: Select App Engine or the relevant resource.
+Version: Filter logs for a specific deployment version.
+Use the search bar to enter specific keywords or request IDs for deeper analysis.
+
+4. View Logs:
+Click on a log entry to view detailed information, including stack traces, payloads, and timestamps.
+
+5. Optional: Export Logs:
+Use the export functionality to save logs for further analysis or integration with third-party tools.
+
+#### View Logs Using Google Cloud SDK
+
+1. Open the terminal or Google Cloud SDK Shell.
+
+2. To view logs for App Engine, use the following command:
+```bash
+gcloud app logs read
+```
+
+3. To filter logs by severity (e.g., errors or warnings):
+```bash
+gcloud app logs read --severity=ERROR
+```
+
+4. To view logs for a specific version:
+```bash
+gcloud app logs read --version=<VERSION_ID>
+```
+Replace <VERSION_ID> with the version name from your deployment.
+
+5. To stream logs in real-time:
+```bash
+gcloud app logs tail
+```
