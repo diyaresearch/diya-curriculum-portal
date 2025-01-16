@@ -63,6 +63,15 @@ const Overlay = ({ content, onClose }) => {
         <div className="mt-4 p-3 border rounded h-[150px] w-full overflow-auto">
           <div className="text-left">{content.Abstract}</div>
         </div>
+        <div>
+          <h3 className="text-lg mb-2">Content Url:</h3> {/* Reduce spacing using mb-2 */}
+          <div 
+            className="p-3 border rounded w-full overflow-auto"
+            style={{ minHeight: '50px', maxHeight: '200px' }} /* Adjust height dynamically */
+          >
+            <div className="text-left break-words">{content.fileUrl}</div> {/* Ensure long URLs wrap */}
+          </div>
+        </div>
         <div className="mt-4 p-2 border rounded">
           <h3 className="text-lg">Add your comment here:</h3>
           <br />
