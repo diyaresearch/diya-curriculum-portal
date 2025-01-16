@@ -12,6 +12,6 @@ const upload = multer().none(); // To handle fields without files
 router.get("/units", getAllUnits);
 router.get("/unit/:id", getUnitById);
 router.post("/unit", authenticateUser, upload, createUnit); // Apply middleware here
-router.post("/update/:id", updateUnitById);
+router.post("/update/:id", upload, updateUnitById);
 
 module.exports = router;
