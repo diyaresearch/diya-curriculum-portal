@@ -22,6 +22,7 @@ const allowedOrigins = process.env.SERVER_ALLOW_ORIGIN
   ? process.env.SERVER_ALLOW_ORIGIN.split(',').map(url => url.trim())
   : [];
 
+
 console.log("allowedOrigin:", allowedOrigins)
 
 app.use(cors({
