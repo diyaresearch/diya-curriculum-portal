@@ -36,3 +36,35 @@
     transform: rotate(360deg);
   }
 }
+
+/* PDF Viewer Styles */
+.react-pdf__Document {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.react-pdf__Page {
+  max-width: 100%;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  margin: 1em;
+}
+
+.react-pdf__Page canvas {
+  max-width: 100%;
+  height: auto !important;
+}
+
+/* Loading and Error states */
+.react-pdf__message {
+  padding: 20px;
+  color: #666;
+}
+
+/* Zoom controls */
+.react-pdf__zoom-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
