@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { storage } from "../../firebase/firebaseConfig";
-import { ref, getDownloadURL } from "firebase/storage";
 
 const ViewContent = () => {
   const { UnitID } = useParams(); // Get UnitID from the URL
   const [content, setContent] = useState(null);
-  const [fileUrl, setFileUrl] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -22,13 +19,6 @@ const ViewContent = () => {
           );
           const data = await contentResponse.json();
           setContent(data);
-
-          if (unit.fileUrl) {
-            const fileRef = ref(storage, unit.fileUrl);
-            const downloadURL = await getDownloadURL(fileRef);
-            console.log(downloadURL);
-            setFileUrl(downloadURL);
-          }
         } else {
           throw new Error("Unit not found");
         }
@@ -66,18 +56,18 @@ const ViewContent = () => {
       <div className="mt-6 p-4 border rounded-lg bg-gray-50">
         <div className="text-left text-gray-800">{content.Abstract}</div>
       </div>
-      {fileUrl && (
+      {content.fileUrl && (
         <div className="mt-6">
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-            File Preview
+            Content Preview
           </h2>
           <a
-            href={fileUrl}
+            href={content.fileUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 underline"
           >
-            Open File
+            Click to Open File
           </a>
         </div>
       )}
