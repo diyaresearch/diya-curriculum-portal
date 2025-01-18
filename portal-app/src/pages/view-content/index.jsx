@@ -4,7 +4,6 @@ import { storage } from "../../firebase/firebaseConfig";
 import { ref, getDownloadURL } from "firebase/storage";
 import { Document, Page, pdfjs } from "react-pdf";
 import { FaFilePdf, FaVideo, FaExternalLinkAlt } from "react-icons/fa";
-import Navbar from "../../components/Navbar";
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -107,8 +106,6 @@ const ViewContent = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           {/* Content Header */}
