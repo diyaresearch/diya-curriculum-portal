@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 import HomePage from "../../components/HomePage";
-import Navbar from "../../components/Navbar";
 import Resources from "../../components/Resources";
 import ListView from "../../components/ListView";
 import useUserData from "../../hooks/useUserData";
@@ -27,7 +26,6 @@ const Home = () => {
   }, [user]);
   return (
     <div>
-      <Navbar user={user} />
       <HomePage user={user} />
       {user ? <ListView content={content} /> : <Resources />}
     </div>
