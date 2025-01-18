@@ -98,7 +98,8 @@ const Navbar = () => {
 
 
   return (
-    <nav className="bg-gray-800 p-4 flex justify-between items-center">
+    <nav style={{ width: "100%" }} 
+    className="bg-gray-800 p-4 flex justify-between items-center">
       <div className="flex items-center space-x-2">
         <img
           src={logo}

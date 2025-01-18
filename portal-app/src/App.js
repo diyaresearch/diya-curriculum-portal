@@ -10,18 +10,22 @@ import ViewContent from "./pages/view-content";
 import LessonGenerator from "./pages/lesson_generator";
 import MyPlans from "./pages/my_plan";
 import LessonDetail from "./pages/lesson_detail";
+import Layout from "./components/Layout";
+
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/upload-content" element={<UploadContent />} />
-        <Route path="/edit-content/:id" element={<EditContent />} />
-        <Route path="/view-content/:UnitID" element={<ViewContent />} />
-        <Route path="/lesson-generator" element={<LessonGenerator />} />
-        <Route path="/my-plans" element={<MyPlans />} />
-        <Route path="/lesson/:lessonId" element={<LessonDetail />} />
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/upload-content" element={<UploadContent />} />
+          <Route path="/edit-content/:id" element={<EditContent />} />
+          <Route path="/view-content/:UnitID" element={<ViewContent />} />
+          <Route path="/lesson-generator" element={<LessonGenerator />} />
+          <Route path="/my-plans" element={<MyPlans />} />
+          <Route path="/lesson/:lessonId" element={<LessonDetail />} />
+        </Routes>
+      </Layout>
     </BrowserRouter>
   );
 }
