@@ -2,6 +2,13 @@ const { db } = require("../config/firebaseConfig");
 const multer = require("multer");
 const { storage } = require("../config/firebaseConfig");
 
+// Define the collections
+const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const TABLE_COUNTERS =  SCHEMA_QUALIFIER + "counters"; 
+const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
+
+console.log('content_submission tables are', TABLE_CONTENT, TABLE_COUNTERS)
+
 const createUnit = async (req, res) => {
   console.log("Received content upload request");
   try {
@@ -39,7 +46,7 @@ const createUnit = async (req, res) => {
 
 async function getNextUnitID() {
   console.log("in getNextUnitID")
-  const counterRef = db.collection("counters").doc("unitIdCounter");
+  const counterRef = db.collection(TABLE_COUNTERS).doc("unitIdCounter");
   
 
   return db.runTransaction(async (transaction) => {
@@ -66,7 +73,7 @@ async function saveContentToFirestore(
   fileUrl,
   Author
 ) {
-  const contentRef = db.collection("content");
+  const contentRef = db.collection(TABLE_CONTENT);
   const newUnitID = await getNextUnitID();
   console.log("after getNextUnitID")
   console.log("Generated UnitID:", newUnitID);

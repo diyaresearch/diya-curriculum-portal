@@ -1,5 +1,11 @@
 const { db } = require("../config/firebaseConfig");
 
+// Define the collections
+const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
+
+console.log('updateController tables are', TABLE_CONTENT)
+
 // Update a specific unit by ID without file
 const updateUnitById = async (req, res) => {
   try {
@@ -11,7 +17,7 @@ const updateUnitById = async (req, res) => {
       return res.status(400).send("Missing required fields");
     }
     if (req.method === "PUT") {
-      await db.collection("content").doc(id).update({
+      await db.collection(TABLE_CONTENT).doc(id).update({
         Title,
         Category,
         Type,
@@ -22,7 +28,7 @@ const updateUnitById = async (req, res) => {
         LastModified: new Date().toISOString(),
       });
     } else if (req.method === "POST") {
-      await db.collection("content").doc().set({
+      await db.collection(TABLE_CONTENT).doc().set({
         Title,
         Category,
         Type,

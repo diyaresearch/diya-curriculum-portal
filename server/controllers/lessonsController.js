@@ -1,10 +1,18 @@
 const { db, storage } = require("../config/firebaseConfig");
 const PDFDocument = require("pdfkit");
 
+// Define the collections
+const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
+const TABLE_LESSON =  SCHEMA_QUALIFIER + "lesson"; 
+const TABLE_SECTIONS = SCHEMA_QUALIFIER + "sections";
+
+console.log('lessonsController tables are', TABLE_CONTENT, TABLE_LESSON, TABLE_SECTIONS)
+
 // Get all lessons
 const getAllLessons = async (req, res) => {
   try {
-    const lessonsSnapshot = await db.collection("lesson").get();
+    const lessonsSnapshot = await db.collection(TABLE_LESSON).get();
     if (lessonsSnapshot.empty) {
       res.status(200).json([]);
       return;
@@ -24,7 +32,7 @@ const getLessonById = async (req, res) => {
   const lessonId = req.params.lessonId;
 
   try {
-    const lessonRef = db.collection("lesson").doc(lessonId);
+    const lessonRef = db.collection(TABLE_LESSON).doc(lessonId);
     const doc = await lessonRef.get();
 
     if (!doc.exists) {
@@ -41,9 +49,9 @@ const getLessonById = async (req, res) => {
 const getAllSections = async (req, res) => {
   try {
     const sectionsRef = db
-      .collection("lesson")
+      .collection(TABLE_LESSON)
       .doc("XnZzLBMIeKE5dsRXZ5nJ")
-      .collection("sections");
+      .collection(TABLE_SECTIONS);
     const snapshot = await sectionsRef.get();
 
     if (snapshot.empty) {
@@ -64,7 +72,7 @@ const getAllSections = async (req, res) => {
 
 const getSections = async (req, res) => {
   try {
-    const lessonRef = db.collection("lesson").doc("oeVhJ5KBtbrfk5z3XUdT");
+    const lessonRef = db.collection(TABLE_LESSON).doc("oeVhJ5KBtbrfk5z3XUdT");
     const doc = await lessonRef.get();
 
     if (!doc.exists) {
@@ -95,7 +103,7 @@ const postLesson = async (req, res) => {
     if (!authorId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
-    const lessonRef = db.collection("lesson").doc();
+    const lessonRef = db.collection(TABLE_LESSON).doc();
 
     await lessonRef.set({
       authorId: authorId,
@@ -122,7 +130,7 @@ const deleteLessonById = async (req, res) => {
   const lessonId = req.params.lessonId;
 
   try {
-    const lessonRef = db.collection("lesson").doc(lessonId);
+    const lessonRef = db.collection(TABLE_LESSON).doc(lessonId);
     const doc = await lessonRef.get();
 
     if (!doc.exists) {
@@ -142,7 +150,7 @@ const downloadPDF = async (req, res) => {
   const lessonId = req.params.lessonId;
 
   try {
-    const lessonRef = db.collection("lesson").doc(lessonId);
+    const lessonRef = db.collection(TABLE_LESSON).doc(lessonId);
     const doc = await lessonRef.get();
 
     if (!doc.exists) {
@@ -198,7 +206,7 @@ const downloadPDF = async (req, res) => {
         if (section.contentIds && section.contentIds.length > 0) {
           let documentCount = 1;
           for (let contentId of section.contentIds) {
-            const contentRef = db.collection("content").doc(contentId);
+            const contentRef = db.collection(TABLE_CONTENT).doc(contentId);
             const contentDoc = await contentRef.get();
 
             if (contentDoc.exists) {

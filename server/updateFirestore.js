@@ -1,6 +1,13 @@
 const admin = require('firebase-admin');
 const { db } = require("./config/firebaseConfig");
 
+// Define the collections
+const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const TABLE_COUNTERS =  SCHEMA_QUALIFIER + "counters"; 
+const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
+
+console.log('updateFirestore tables are', TABLE_CONTENT, TABLE_COUNTERS)
+
 // Initialize Firebase Admin SDK if not already initialized
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -10,7 +17,7 @@ if (!admin.apps.length) {
 }
 
 async function getNextUnitID() {
-  const counterRef = db.collection("counters").doc("unitIdCounter");
+  const counterRef = db.collection(TABLE_COUNTERS).doc("unitIdCounter");
 
   return db.runTransaction(async (transaction) => {
     const counterDoc = await transaction.get(counterRef);
@@ -26,7 +33,7 @@ async function getNextUnitID() {
 }
 
 async function updateDocuments() {
-  const contentRef = db.collection('content');
+  const contentRef = db.collection(TABLE_CONTENT)
   const snapshot = await contentRef.get();
 
   const batch = db.batch();
