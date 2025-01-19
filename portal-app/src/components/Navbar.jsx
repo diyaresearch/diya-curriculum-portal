@@ -10,6 +10,12 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/firebaseConfig";
 import logo from "../assets/DIYA_Logo.png";
 
+// Define the users collection
+const SCHEMA_QUALIFIER = `${process.env.REACT_APP_DATABASE_SCHEMA_QUALIFIER}`;
+const TABLE_USERS =  SCHEMA_QUALIFIER + "users"; 
+
+console.log('table users is', TABLE_USERS)
+
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
@@ -20,7 +26,7 @@ const Navbar = () => {
         setUser(user);
         // Fetch user data from Firestore
         const fetchUserData = async () => {
-          const userRef = doc(db, "users", user.uid);
+          const userRef = doc(db, TABLE_USERS, user.uid);
           const userSnap = await getDoc(userRef);
           if (userSnap.exists()) {
             setUserData(userSnap.data());
@@ -44,7 +50,7 @@ const Navbar = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      const userRef = doc(db, "users", user.uid);
+      const userRef = doc(db, TABLE_USERS, user.uid);
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
