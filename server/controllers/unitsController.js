@@ -1,5 +1,12 @@
 const { db } = require('../config/firebaseConfig');
 
+// Define the collections
+const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
+const TABLE_LESSON =  SCHEMA_QUALIFIER + "lesson"; 
+
+console.log('unitsController tables are', TABLE_CONTENT, TABLE_LESSON)
+
 // Get all units
 const getAllUnits = async (req, res) => {
   // Add CORS headers
@@ -9,7 +16,7 @@ const getAllUnits = async (req, res) => {
   // res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); // Add any other headers as needed
   
   try {
-    const unitsSnapshot = await db.collection('content').get();
+    const unitsSnapshot = await db.collection(TABLE_CONTENT).get();
     if (unitsSnapshot.empty) {
       res.status(200).json([]);
       return;
@@ -30,7 +37,7 @@ const getAllUnits = async (req, res) => {
 const getUnitById = async (req, res) => {
   try {
     const unitId = req.params.id;
-    const unitDoc = await db.collection('content').doc(unitId).get();
+    const unitDoc = await db.collection(TABLE_CONTENT).doc(unitId).get();
     if (!unitDoc.exists) {
       res.status(404).send('Unit not found');
       return;
@@ -47,13 +54,13 @@ const deleteUnit = async (req, res) => {
     const unitId = req.params.id;
     
     // Check if unit exists
-    const unitDoc = await db.collection('content').doc(unitId).get();
+    const unitDoc = await db.collection(TABLE_CONTENT).doc(unitId).get();
     if (!unitDoc.exists) {
       return res.status(404).send('Unit not found');
     }
 
     // Check if unit is used in any lesson plans
-    const lessonsSnapshot = await db.collection('lesson').get();
+    const lessonsSnapshot = await db.collection(TABLE_LESSON).get();
     const lessons = [];
     lessonsSnapshot.forEach(doc => {
       const lesson = doc.data();
@@ -73,7 +80,7 @@ const deleteUnit = async (req, res) => {
     }
 
     // Delete the unit
-    await db.collection('content').doc(unitId).delete();
+    await db.collection(TABLE_CONTENT).doc(unitId).delete();
     res.status(200).send('Unit deleted successfully');
   } catch (error) {
     console.error('Error deleting unit:', error);

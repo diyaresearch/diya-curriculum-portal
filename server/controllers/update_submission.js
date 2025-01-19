@@ -2,6 +2,12 @@
 
 const { db } = require("../config/firebaseConfig");
 
+// Define the collections
+const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
+
+console.log('update_submission tables are', TABLE_CONTENT)
+
 // Update a specific unit by ID
 const updateUnitById = async (req, res) => {
   try {
@@ -20,9 +26,9 @@ const updateUnitById = async (req, res) => {
       fileUrl,
       LastModified: new Date().toISOString(),
     };
-    console.log(111111111, updateData)
+    console.log("update Data is", updateData)
 
-    await db.collection("content").doc(id).update(updateData);
+    await db.collection(TABLE_CONTENT).doc(id).update(updateData);
     res.status(200).send("Content updated successfully");
   } catch (error) {
     console.error("Error:", error);
