@@ -55,9 +55,11 @@ export const MyPlans = () => {
         const response = await axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const userPlans = response.data.filter(
-          (plan) => plan.authorId === user.uid
-        );
+        // Make all lesson plans public
+       const userPlans = response.data;
+         //response.data.filter(
+        //   (plan) => plan.authorId === user.uid
+        // );
         setPlans(userPlans);
       } catch (error) {
         console.error("Error fetching plans:", error);
