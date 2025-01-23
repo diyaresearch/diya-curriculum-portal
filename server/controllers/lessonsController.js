@@ -145,12 +145,6 @@ const updateLesson = async (req, res) => {
 
     const lessonData = lessonSnapshot.data();
 
-    if (lessonData.authorId !== authorId) {
-      return res
-        .status(403)
-        .json({ error: "Forbidden: You are not authorized to update this lesson" });
-    }
-
     const updateData = {
       title: formData.title || lessonData.title,
       subject: formData.subject || lessonData.subject,
@@ -159,7 +153,6 @@ const updateLesson = async (req, res) => {
       duration: formData.duration || lessonData.duration,
       sections: formData.sections || lessonData.sections,
       description: formData.description || lessonData.description,
-      updatedAt: new Date().toISOString(),
     };
 
     await lessonRef.update(updateData);
