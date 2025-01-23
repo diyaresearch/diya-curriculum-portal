@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import axios from "axios";
-import { FaFilePdf, FaVideo, FaExternalLinkAlt, FaDownload, FaTrash } from "react-icons/fa";
+import { FaFilePdf, FaVideo, FaExternalLinkAlt, FaDownload, FaTrash, FaEdit } from "react-icons/fa";
 
 export const LessonDetail = () => {
   const [lesson, setLesson] = useState(null);
@@ -185,9 +185,9 @@ export const LessonDetail = () => {
                 </button>
                 <button
                   onClick={() => navigate(`/edit-lesson/${lessonId}`)}
-                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  <FaTrash className="mr-2" />
+                  <FaEdit className="mr-2" />
                   Edit Plan
                 </button>
                 <button

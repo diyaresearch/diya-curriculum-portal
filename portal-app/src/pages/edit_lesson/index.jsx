@@ -28,6 +28,11 @@ export const EditLesson = () => {
   const [selectedMaterials, setSelectedMaterials] = useState({});
   const navigate = useNavigate();
   const { lessonId } = useParams();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   useEffect(() => {
     axios
@@ -66,18 +71,20 @@ export const EditLesson = () => {
       });
   }, [lessonId]);
 
-    
+  const handleUpdate = (e) => {
+    e.preventDefault();
+  };
 
   const handleExit = () => {
-    navigate("/");
+    navigate(`/lesson/${lessonId}`);
   };
 
   const handleChange = (e) => {
-    const { lessonId, value } = e.target;
+    const { id, value } = e.target;
     setFormData({
       ...formData,
-      [lessonId]:
-      lessonId === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
+      [id]:
+      id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
     });
   };
 
@@ -105,9 +112,7 @@ export const EditLesson = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
@@ -146,15 +151,15 @@ export const EditLesson = () => {
         },
         body: JSON.stringify(lessonData),
       });
-      console.log(response)
       if (!response.ok) {
         throw new Error("Error generating lesson plan");
       }
 
       setModalMessage("Lesson plan updated successfully");
+      setConfirmationModalOpen(false);
       setModalIsOpen(true);
     } catch (error) {
-        console.log(error)
+        setConfirmationModalOpen(false);
         if (error.response && error.response.data && error.response.data.error) {
             setModalMessage("Error updating lesson plan: " + error.response.data.error);
           } else {
@@ -162,10 +167,6 @@ export const EditLesson = () => {
           }
           setModalIsOpen(true);
     }
-  };
-
-  const closeModal = () => {
-    setModalIsOpen(false);
   };
 
   const onSelectMaterial = (material) => {
@@ -229,7 +230,7 @@ export const EditLesson = () => {
           </button>
         </div>
         <h2 className="text-2xl mb-4 text-center">Edit Lesson Plan</h2>
-        <form onSubmit={handleSubmit}>
+        <form>
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
@@ -424,12 +425,36 @@ export const EditLesson = () => {
           <div className="flex items-center justify-center">
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-full"
-              type="submit"
+              type="button"
+              onClick={() => setConfirmationModalOpen(true)}
             >
               Update
             </button>
           </div>
         </form>
+        {/* Confirmation Modal */}
+        {confirmationModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Update Lesson Plan</h2>
+              <p className="text-gray-600 mb-6">Are you sure you want to update this lesson plan? This action cannot be undone.</p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setConfirmationModalOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  Update Plan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {showOverlay && (
           <OverlayTileView
             content={portalContent}
@@ -445,7 +470,7 @@ export const EditLesson = () => {
         >
           <h2>{modalMessage}</h2>
           <button
-            onClick={closeModal}
+            onClick={() => setModalIsOpen(false)}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
             Close
