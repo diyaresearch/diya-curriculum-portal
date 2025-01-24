@@ -27,6 +27,7 @@ export const LessonGenerator = () => {
   const [sections, setSections] = useState([{ intro: "", contentIds: [] }]);
   const [selectedMaterials, setSelectedMaterials] = useState({});
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     axios
@@ -78,6 +79,9 @@ export const LessonGenerator = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     const auth = getAuth();
     const user = auth.currentUser;
@@ -135,6 +139,7 @@ export const LessonGenerator = () => {
       setSections([{ intro: "", contentIds: [] }]);
       setSelectedMaterials({});
       setModalIsOpen(true);
+      setIsSubmitting(false);
     } catch (error) {
       setModalMessage("Error generating lesson plan: " + error.message);
       setModalIsOpen(true);
@@ -143,6 +148,7 @@ export const LessonGenerator = () => {
 
   const closeModal = () => {
     setModalIsOpen(false);
+    navigate("/my-plans");
   };
 
   const onSelectMaterial = (material) => {
@@ -409,8 +415,9 @@ export const LessonGenerator = () => {
             <button
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-full"
               type="submit"
+              disabled={isSubmitting}
             >
-              Generate
+              {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
         </form>
