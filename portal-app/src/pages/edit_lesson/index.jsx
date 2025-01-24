@@ -76,7 +76,7 @@ export const EditLesson = () => {
   };
 
   const handleExit = () => {
-    navigate(`/lesson/${lessonId}`);
+    navigate("/my-plans");
   };
 
   const handleChange = (e) => {
