@@ -24,7 +24,7 @@ const types = [
 
 const levels = ["Basic", "Intermediate", "Advanced"];
 
-const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
+const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTiles = {} }) => {
   const [filteredContent, setFilteredContent] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedType, setSelectedType] = useState("");
@@ -32,7 +32,7 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
-  const [selectedTiles, setSelectedTiles] = useState({});
+  const [selectedTiles, setSelectedTiles] = useState(initialSelectedTiles|| []);
 
   useEffect(() => {
     setFilteredContent(content);
@@ -166,24 +166,25 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
                           [id]: !prevState[id],
                         }));
                       }}
-                      isSelected={selectedTiles[item.id] || false}
+                      isSelected={Array.isArray(selectedTiles) && selectedTiles.includes(item.id)}
                       isLessonGenerator={true}
                     />
                     <button
                       onClick={() => {
-                        setSelectedTiles((prevState) => ({
-                          ...prevState,
-                          [item.id]: !selectedTiles[item.id],
-                        }));
+                        setSelectedTiles((prevState) =>
+                          prevState.includes(item.id)
+                            ? prevState.filter((id) => id !== item.id)
+                            : [...prevState, item.id]
+                        );
                         onSelectMaterial(item);
                       }}
                       className={`absolute bottom-3 right-2 py-1 px-3 rounded ${
-                        selectedTiles[item.id]
+                        Array.isArray(selectedTiles) && selectedTiles.includes(item.id)
                           ? "bg-red-500 text-white"
                           : "bg-blue-500 text-white"
                       }`}
                     >
-                      {selectedTiles[item.id] ? "Unselect" : "Select"}
+                      {Array.isArray(selectedTiles) && selectedTiles.includes(item.id) ? "Unselect" : "Select"}
                     </button>
                   </div>
                 );
