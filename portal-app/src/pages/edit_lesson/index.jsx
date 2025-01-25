@@ -28,10 +28,9 @@ export const EditLesson = () => {
   const [selectedMaterials, setSelectedMaterials] = useState({});
   const navigate = useNavigate();
   const { lessonId } = useParams();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [setIsModalOpen] = useState(false);
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
-
-  const openModal = () => setIsModalOpen(true);
+  
   const closeModal = () => setIsModalOpen(false);
 
   useEffect(() => {
@@ -47,33 +46,40 @@ export const EditLesson = () => {
     axios
       .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`)
       .then((response) => {
-      const lessonData = response.data;
-      setFormData({
-      title: lessonData.title || "",
-      subject: lessonData.subject || "",
-      level: lessonData.level || "",
-      objectives: lessonData.objectives || [""],
-      duration: lessonData.duration || "",
-      sections: lessonData.sections || [],
-      description: lessonData.description || "",
-      });
-      setObjectives(lessonData.objectives || [""]);
-      setSections(lessonData.sections || [{ intro: "", contentIds: [] }]);
-      setSelectedMaterials(
-      lessonData.sections.reduce((acc, section, index) => {
-        acc[index] = section.contentIds || [];
-        return acc;
-      }, {})
-      );
+        const lessonData = response.data;
+        setFormData({
+          title: lessonData.title || "",
+          subject: lessonData.subject || "",
+          level: lessonData.level || "",
+          objectives: lessonData.objectives || [""],
+          duration: lessonData.duration || "",
+          sections: lessonData.sections || [],
+          description: lessonData.description || "",
+        });
+        setObjectives(lessonData.objectives || [""]);
+        setSections(lessonData.sections || [{ intro: "", contentIds: [] }]);
       })
       .catch((error) => {
         console.error("Error fetching lesson data:", error);
       });
   }, [lessonId]);
 
-  const handleUpdate = (e) => {
-    e.preventDefault();
-  };
+  useEffect(() => {
+    if (sections.length > 0) {
+      setSelectedMaterials(
+        sections.reduce((acc, section, index) => {
+          const contentIdsArray = Array.isArray(section.contentIds)
+            ? section.contentIds
+            : [section.contentIds]; // Ensure `contentIds` is an array
+          acc[index] = contentIdsArray.map((contentId) => {
+            const materialDetails = portalContent.find((item) => item.id === contentId);
+            return materialDetails || { id: contentId };
+          });
+          return acc;
+        }, {})
+      );
+    }
+  }, [sections, portalContent]);
 
   const handleExit = () => {
     navigate("/my-plans");
@@ -460,6 +466,7 @@ export const EditLesson = () => {
             content={portalContent}
             onClose={() => setShowOverlay(false)}
             onSelectMaterial={onSelectMaterial}
+            initialSelectedTiles={Object.values(selectedMaterials || {}).flat().map((item) => item.id)}
           />
         )}
         <Modal
