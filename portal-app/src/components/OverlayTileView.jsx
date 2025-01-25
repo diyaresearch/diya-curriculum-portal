@@ -159,7 +159,7 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
                       level={item.Level}
                       duration={item.Duration}
                       date={formatDate(item.LastModified)}
-                      onClick={() => onSelectMaterial(item)}
+                      onClick={() => {}} //do not need this function in this page
                       onSelect={(id) => {
                         setSelectedTiles((prevState) => ({
                           ...prevState,
@@ -192,23 +192,33 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
           </div>
 
           <div className="flex justify-between items-center mt-4">
-            <button
-              onClick={() => handlePageChange("prev")}
-              disabled={currentPage === 1}
-              className="p-2 bg-gray-300 rounded"
-            >
-              Prev
-            </button>
-            <span className="p-2">Page {currentPage}</span>
-            <button
-              onClick={() => handlePageChange("next")}
-              disabled={
-                currentPage === Math.ceil(filteredContent.length / itemsPerPage)
-              }
-              className="p-2 bg-gray-300 rounded"
-            >
-              Next
-            </button>
+            <div className="w-1/2 flex justify-between items-center">
+              <button
+                onClick={() => handlePageChange("prev")}
+                disabled={currentPage === 1}
+                className="p-2 bg-gray-300 rounded"
+              >
+                Prev
+              </button>
+              <span className="p-2">Page {currentPage}</span>
+              <button
+                onClick={() => handlePageChange("next")}
+                disabled={
+                  currentPage === Math.ceil(filteredContent.length / itemsPerPage)
+                }
+                className="p-2 bg-gray-300 rounded"
+              >
+                Next
+              </button>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={onClose}
+                className="text-lg bg-blue-500 text-white py-1 px-4 rounded-md hover:bg-blue-700 transition duration-200"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
       </div>
