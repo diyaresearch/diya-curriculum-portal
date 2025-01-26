@@ -108,11 +108,11 @@ const Navbar = () => {
     className="bg-gray-800 p-4 flex justify-between items-center">
       <div className="flex items-center space-x-2">
         <a href="https://diya-research.org" target="_blank" rel="noopener noreferrer"> 
-          <img>
+          <img
           src={logo}
           alt="Logo"
           style={{ height: "113px", width: "90px" }}
-          </img>
+          />
         </a> 
       </div>
 
