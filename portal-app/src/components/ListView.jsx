@@ -4,7 +4,7 @@ import Overlay from "./Overlay";
 import { getAuth } from "firebase/auth";
 
 const categories = [
-  "Data Science & AI",
+  "Python",
   "Physics",
   "Chemistry",
   "Biology",
