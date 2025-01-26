@@ -4,15 +4,12 @@ import Overlay from "./Overlay";
 import { getAuth } from "firebase/auth";
 
 const categories = [
-  "Mathematics",
-  "Science",
-  "Social Studies",
-  "Computer Science",
-  "Languages",
-  "Arts",
-  "Physical",
-  "Education",
-  "Health",
+  "Data Science & AI",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Economics",
+  "Earth Science",
 ];
 
 const types = [
