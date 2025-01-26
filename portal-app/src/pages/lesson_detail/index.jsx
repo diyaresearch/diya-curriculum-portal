@@ -54,6 +54,12 @@ export const LessonDetail = () => {
         return;
       }
 
+      if (user.uid != '767Tnvj1DKSUrxshqUv4VvMIkxp1'){
+        console.error("No permissions to delete lesson");
+        alert("Contact Admin to delete the lesson plan.");
+        return;
+      }
+
       const token = await user.getIdToken();
       await axios.delete(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`, {
         headers: { Authorization: `Bearer ${token}` },
