@@ -107,18 +107,18 @@ const Navbar = () => {
     <nav style={{ width: "100%" }} 
     className="bg-gray-800 p-4 flex justify-between items-center">
       <div className="flex items-center space-x-2">
-        <a href="https://diya-research.org/" target="_blank" rel="noopener noreferrer">
-          <img
+        <a href="https://diya-research.org" target="_blank" rel="noopener noreferrer"> 
+          <img>
           src={logo}
           alt="Logo"
           style={{ height: "113px", width: "90px" }}
-        />
-      </a>
+          </img>
+        </a> 
       </div>
 
       <div className="space-x-4 text-white">
         <a
-          href="https://curriculum-portal-1ce8f.web.app/"
+          href="https://curriculum-portal-1ce8f.web.app/" // Added a link to DIYA Ed Portal 
           target="_blank"
           rel="noopener noreferrer"
           className="hover:underline"
