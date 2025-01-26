@@ -427,6 +427,7 @@ export const LessonGenerator = () => {
             content={portalContent}
             onClose={() => setShowOverlay(false)}
             onSelectMaterial={onSelectMaterial}
+            initialSelectedTiles={Object.values(selectedMaterials || {}).flat().map((item) => item.id)}            
           />
         )}
         <Modal
