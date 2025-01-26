@@ -24,7 +24,7 @@ const types = [
 
 const levels = ["Basic", "Intermediate", "Advanced"];
 
-const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
+const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTiles = {} }) => {
   const [filteredContent, setFilteredContent] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedType, setSelectedType] = useState("");
@@ -32,7 +32,7 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
-  const [selectedTiles, setSelectedTiles] = useState({});
+  const [selectedTiles, setSelectedTiles] = useState(initialSelectedTiles|| []);
 
   useEffect(() => {
     setFilteredContent(content);
@@ -159,31 +159,32 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
                       level={item.Level}
                       duration={item.Duration}
                       date={formatDate(item.LastModified)}
-                      onClick={() => onSelectMaterial(item)}
+                      onClick={() => {}} //do not need this function in this page
                       onSelect={(id) => {
                         setSelectedTiles((prevState) => ({
                           ...prevState,
                           [id]: !prevState[id],
                         }));
                       }}
-                      isSelected={selectedTiles[item.id] || false}
+                      isSelected={Array.isArray(selectedTiles) && selectedTiles.includes(item.id)}
                       isLessonGenerator={true}
                     />
                     <button
                       onClick={() => {
-                        setSelectedTiles((prevState) => ({
-                          ...prevState,
-                          [item.id]: !selectedTiles[item.id],
-                        }));
+                        setSelectedTiles((prevState) =>
+                          prevState.includes(item.id)
+                            ? prevState.filter((id) => id !== item.id)
+                            : [...prevState, item.id]
+                        );
                         onSelectMaterial(item);
                       }}
                       className={`absolute bottom-3 right-2 py-1 px-3 rounded ${
-                        selectedTiles[item.id]
+                        Array.isArray(selectedTiles) && selectedTiles.includes(item.id)
                           ? "bg-red-500 text-white"
                           : "bg-blue-500 text-white"
                       }`}
                     >
-                      {selectedTiles[item.id] ? "Unselect" : "Select"}
+                      {Array.isArray(selectedTiles) && selectedTiles.includes(item.id) ? "Unselect" : "Select"}
                     </button>
                   </div>
                 );
@@ -192,23 +193,33 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial }) => {
           </div>
 
           <div className="flex justify-between items-center mt-4">
-            <button
-              onClick={() => handlePageChange("prev")}
-              disabled={currentPage === 1}
-              className="p-2 bg-gray-300 rounded"
-            >
-              Prev
-            </button>
-            <span className="p-2">Page {currentPage}</span>
-            <button
-              onClick={() => handlePageChange("next")}
-              disabled={
-                currentPage === Math.ceil(filteredContent.length / itemsPerPage)
-              }
-              className="p-2 bg-gray-300 rounded"
-            >
-              Next
-            </button>
+            <div className="w-1/2 flex justify-between items-center">
+              <button
+                onClick={() => handlePageChange("prev")}
+                disabled={currentPage === 1}
+                className="p-2 bg-gray-300 rounded"
+              >
+                Prev
+              </button>
+              <span className="p-2">Page {currentPage}</span>
+              <button
+                onClick={() => handlePageChange("next")}
+                disabled={
+                  currentPage === Math.ceil(filteredContent.length / itemsPerPage)
+                }
+                className="p-2 bg-gray-300 rounded"
+              >
+                Next
+              </button>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={onClose}
+                className="text-lg bg-blue-500 text-white py-1 px-4 rounded-md hover:bg-blue-700 transition duration-200"
+              >
+                Save
+              </button>
+            </div>
           </div>
         </div>
       </div>
