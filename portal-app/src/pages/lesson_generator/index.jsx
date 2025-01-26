@@ -252,15 +252,12 @@ export const LessonGenerator = () => {
               required
             >
               <option>Select a subject</option>
-              <option value="Mathematics">Mathematics</option>
-              <option value="Science">Science</option>
-              <option value="Social Studies">Social Studies</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="Languages">Languages</option>
-              <option value="Arts">Arts</option>
-              <option value="Physical">Physical</option>
-              <option value="Education">Education</option>
-              <option value="Health">Health</option>
+              <option value="Python">Python</option> // New Category
+              <option value="Physics">Physics</option>
+              <option value="Chemisty">Chemisty</option>
+              <option value="Biology">Biology</option>
+              <option value="Economics">Economics</option>
+              <option value="Earth Science">Earth Science</option>
             </select>
           </div>
           <div className="mb-4">
