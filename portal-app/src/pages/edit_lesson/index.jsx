@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
 import OverlayTileView from "../../components/OverlayTileView";
@@ -7,7 +7,7 @@ import axios from "axios";
 
 Modal.setAppElement("#root");
 
-export const LessonGenerator = () => {
+export const EditLesson = () => {
   const [formData, setFormData] = useState({
     title: "",
     subject: "",
@@ -27,7 +27,11 @@ export const LessonGenerator = () => {
   const [sections, setSections] = useState([{ intro: "", contentIds: [] }]);
   const [selectedMaterials, setSelectedMaterials] = useState({});
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { lessonId } = useParams();
+  const [setIsModalOpen] = useState(false);
+  const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
+  
+  const closeModal = () => setIsModalOpen(false);
 
   useEffect(() => {
     axios
@@ -38,10 +42,47 @@ export const LessonGenerator = () => {
       .catch((error) => {
         console.error("Error fetching portal content:", error);
       });
-  }, []);
+
+    axios
+      .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`)
+      .then((response) => {
+        const lessonData = response.data;
+        setFormData({
+          title: lessonData.title || "",
+          subject: lessonData.subject || "",
+          level: lessonData.level || "",
+          objectives: lessonData.objectives || [""],
+          duration: lessonData.duration || "",
+          sections: lessonData.sections || [],
+          description: lessonData.description || "",
+        });
+        setObjectives(lessonData.objectives || [""]);
+        setSections(lessonData.sections || [{ intro: "", contentIds: [] }]);
+      })
+      .catch((error) => {
+        console.error("Error fetching lesson data:", error);
+      });
+  }, [lessonId]);
+
+  useEffect(() => {
+    if (sections.length > 0) {
+      setSelectedMaterials(
+        sections.reduce((acc, section, index) => {
+          const contentIdsArray = Array.isArray(section.contentIds)
+            ? section.contentIds
+            : [section.contentIds]; // Ensure `contentIds` is an array
+          acc[index] = contentIdsArray.map((contentId) => {
+            const materialDetails = portalContent.find((item) => item.id === contentId);
+            return materialDetails || { id: contentId };
+          });
+          return acc;
+        }, {})
+      );
+    }
+  }, [sections, portalContent]);
 
   const handleExit = () => {
-    navigate("/");
+    navigate("/my-plans");
   };
 
   const handleChange = (e) => {
@@ -49,7 +90,7 @@ export const LessonGenerator = () => {
     setFormData({
       ...formData,
       [id]:
-        id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
+      id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
     });
   };
 
@@ -77,12 +118,7 @@ export const LessonGenerator = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-
+  const handleSubmit = async () => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
@@ -90,11 +126,17 @@ export const LessonGenerator = () => {
       setModalIsOpen(true);
       return;
     }
+        
+    if (user.uid != '767Tnvj1DKSUrxshqUv4VvMIkxp1'){
+      console.error("No permissions to update lesson");
+      alert("Contact the Admin to update the lesson plan.");
+      return;
+    }
 
     const userId = user.uid;
     const token = await user.getIdToken();
 
-    const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/`;
+    const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`;
 
     try {
       const lessonData = {
@@ -114,41 +156,29 @@ export const LessonGenerator = () => {
       };
 
       const response = await fetch(url, {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(lessonData),
       });
-
       if (!response.ok) {
         throw new Error("Error generating lesson plan");
       }
 
-      setModalMessage("Lesson plan generated successfully");
-      setFormData({
-        title: "",
-        subject: "",
-        level: "",
-        objectives: [""],
-        duration: "",
-        sections: [],
-        description: "",
-      });
-      setSections([{ intro: "", contentIds: [] }]);
-      setSelectedMaterials({});
+      setModalMessage("Lesson plan updated successfully");
+      setConfirmationModalOpen(false);
       setModalIsOpen(true);
-      setIsSubmitting(false);
     } catch (error) {
-      setModalMessage("Error generating lesson plan: " + error.message);
-      setModalIsOpen(true);
+        setConfirmationModalOpen(false);
+        if (error.response && error.response.data && error.response.data.error) {
+            setModalMessage("Error updating lesson plan: " + error.response.data.error);
+          } else {
+            setModalMessage("Error updating lesson plan: " + (error.message || "An unknown error occurred"));
+          }
+          setModalIsOpen(true);
     }
-  };
-
-  const closeModal = () => {
-    setModalIsOpen(false);
-    navigate("/my-plans");
   };
 
   const onSelectMaterial = (material) => {
@@ -206,20 +236,13 @@ export const LessonGenerator = () => {
           <button
             type="button"
             className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
-            onClick={() => navigate("/my-plans")}
-          >
-            My Plans
-          </button>
-          <button
-            type="button"
-            className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
             onClick={handleExit}
           >
             Exit
           </button>
         </div>
-        <h2 className="text-2xl mb-4 text-center">Lesson Plan Generator</h2>
-        <form onSubmit={handleSubmit}>
+        <h2 className="text-2xl mb-4 text-center">Edit Lesson Plan</h2>
+        <form>
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
@@ -252,12 +275,15 @@ export const LessonGenerator = () => {
               required
             >
               <option>Select a subject</option>
-              <option value="Python">Python</option>
-              <option value="Physics">Physics</option>
-              <option value="Chemistry">Chemisty</option>
-              <option value="Biology">Biology</option>
-              <option value="Economics">Economics</option>
-              <option value="Earth Science">Earth Science</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="Science">Science</option>
+              <option value="Social Studies">Social Studies</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Languages">Languages</option>
+              <option value="Arts">Arts</option>
+              <option value="Physical">Physical</option>
+              <option value="Education">Education</option>
+              <option value="Health">Health</option>
             </select>
           </div>
           <div className="mb-4">
@@ -410,24 +436,43 @@ export const LessonGenerator = () => {
           </div>
           <div className="flex items-center justify-center">
             <button
-              className={`py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-full font-bold ${
-                isSubmitting
-                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                  : "bg-blue-500 hover:bg-blue-700 text-white"
-              }`}
-              type="submit"
-              disabled={isSubmitting}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-full"
+              type="button"
+              onClick={() => setConfirmationModalOpen(true)}
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              Update
             </button>
           </div>
         </form>
+        {/* Confirmation Modal */}
+        {confirmationModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Update Lesson Plan</h2>
+              <p className="text-gray-600 mb-6">Are you sure you want to update this lesson plan? This action cannot be undone.</p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setConfirmationModalOpen(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {showOverlay && (
           <OverlayTileView
             content={portalContent}
             onClose={() => setShowOverlay(false)}
             onSelectMaterial={onSelectMaterial}
-            initialSelectedTiles={Object.values(selectedMaterials || {}).flat().map((item) => item.id)}            
+            initialSelectedTiles={Object.values(selectedMaterials || {}).flat().map((item) => item.id)}
           />
         )}
         <Modal
@@ -438,7 +483,7 @@ export const LessonGenerator = () => {
         >
           <h2>{modalMessage}</h2>
           <button
-            onClick={closeModal}
+            onClick={() => setModalIsOpen(false)}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
             Close
@@ -449,4 +494,4 @@ export const LessonGenerator = () => {
   );
 };
 
-export default LessonGenerator;
+export default EditLesson;
