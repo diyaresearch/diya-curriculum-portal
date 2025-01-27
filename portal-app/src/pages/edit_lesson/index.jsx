@@ -126,6 +126,12 @@ export const EditLesson = () => {
       setModalIsOpen(true);
       return;
     }
+        
+    if (user.uid != '767Tnvj1DKSUrxshqUv4VvMIkxp1'){
+      console.error("No permissions to update lesson");
+      alert("Contact the Admin to update the lesson plan.");
+      return;
+    }
 
     const userId = user.uid;
     const token = await user.getIdToken();
