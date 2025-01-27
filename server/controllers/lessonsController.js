@@ -126,6 +126,46 @@ const postLesson = async (req, res) => {
   }
 };
 
+const updateLesson = async (req, res) => {
+  try {
+    const lessonId = req.params.lessonId;
+    const formData = req.body;
+    const authorId = req.body.author ? req.body.author : null;
+
+    if (!authorId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const lessonRef = db.collection(TABLE_LESSON).doc(lessonId);
+    const lessonSnapshot = await lessonRef.get();
+
+    if (!lessonSnapshot.exists) {
+      return res.status(404).json({ error: "Lesson not found" });
+    }
+
+    const lessonData = lessonSnapshot.data();
+
+    const updateData = {
+      title: formData.title || lessonData.title,
+      subject: formData.subject || lessonData.subject,
+      level: formData.level || lessonData.level,
+      objectives: formData.objectives || lessonData.objectives,
+      duration: formData.duration || lessonData.duration,
+      sections: formData.sections || lessonData.sections,
+      description: formData.description || lessonData.description,
+    };
+
+    await lessonRef.update(updateData);
+
+    res
+      .status(201)
+      .json({ message: "Lesson updated successfully", id: lessonRef.id });
+  } catch (error) {
+    console.error("Error updating lesson:", error);
+    res.status(500).json({ error: "Failed to update lesson" });
+  }
+};
+
 const deleteLessonById = async (req, res) => {
   const lessonId = req.params.lessonId;
 
@@ -253,6 +293,7 @@ module.exports = {
   getAllSections,
   getSections,
   postLesson,
+  updateLesson,
   deleteLessonById,
   downloadPDF,
 };
