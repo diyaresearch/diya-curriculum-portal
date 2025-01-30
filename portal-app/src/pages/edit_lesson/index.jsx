@@ -127,7 +127,7 @@ export const EditLesson = () => {
       return;
     }
         
-    if (user.uid != '767Tnvj1DKSUrxshqUv4VvMIkxp1'){
+    if (user.uid !== '767Tnvj1DKSUrxshqUv4VvMIkxp1'){
       console.error("No permissions to update lesson");
       alert("Contact the Admin to update the lesson plan.");
       return;
