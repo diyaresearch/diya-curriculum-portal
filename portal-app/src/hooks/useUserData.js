@@ -26,10 +26,10 @@ const useUserData = () => {
       if (user) {
         try {
           const token = await user.getIdToken();
-          console.log(`${process.env.REACT_APP_SERVER_URL}/api/user/me`)
+          console.log(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/me`)
 
           // Fetch user data from backend
-          const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/api/user/me`, {
+          const response = await axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
@@ -59,7 +59,7 @@ const useUserData = () => {
 
       // Register user in backend
       const response = await axios.post(
-        `${process.env.REACT_APP_SERVER_URL}/api/user/register`,
+        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/register`,
         { email: user.email, fullName: user.displayName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
