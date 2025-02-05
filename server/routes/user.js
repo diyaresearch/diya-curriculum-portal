@@ -4,12 +4,15 @@ const admin = require("firebase-admin");
 
 const router = express.Router();
 
+const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const TABLE_USERS =  SCHEMA_QUALIFIER + "users"; 
+
 // Get current user details
 router.get("/me", authenticateUser, async (req, res) => {
   try {
     const userId = req.user.uid;
     const db = admin.firestore();
-    const userRef = db.collection("users").doc(userId);
+    const userRef = db.collection(TABLE_USERS).doc(userId);
     const userSnap = await userRef.get();
 
     if (!userSnap.exists) {
@@ -30,7 +33,7 @@ router.post("/register", authenticateUser, async (req, res) => {
     const { email, fullName, role = "consumer" } = req.body;
 
     const db = admin.firestore();
-    const userRef = db.collection("users").doc(userId);
+    const userRef = db.collection(TABLE_USERS).doc(userId);
     const userSnap = await userRef.get();
 
     if (!userSnap.exists) {
