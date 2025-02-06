@@ -11,6 +11,26 @@ console.log('table users is', TABLE_USERS)
 
 const Navbar = () => {
   const { user, userData, handleGoogleAuth, handleSignOut, loading } = useUserData();
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    institution: "",
+    userType: "Teacher",
+    jobTitle: "",
+    subjects: "",
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSignUpSubmit = async (e) => {
+    e.preventDefault();
+    alert("Form submitted successfully!");
+    setIsSignUpModalOpen(false);
+    handleGoogleAuth();
+  };
 
   return (
     <nav style={{ width: "100%" }} 
@@ -245,7 +265,7 @@ const Navbar = () => {
               Sign in
             </button>
             <button
-              onClick={handleGoogleAuth}
+              onClick={() => setIsSignUpModalOpen(true)}
               className="bg-white text-gray-800 px-4 py-2 rounded"
             >
               Sign up
@@ -266,6 +286,104 @@ const Navbar = () => {
           </>
         )}
       </div>
+      {isSignUpModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+            <h2 className="text-2xl font-bold mb-6 text-center">Sign-Up</h2>
+            <form onSubmit={handleSignUpSubmit}>
+              <div className="flex mb-4 space-x-4">
+                <div className="w-1/2">
+                  <label className="block text-gray-700">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    required
+                  />
+                </div>
+                <div className="w-1/2">
+                  <label className="block text-gray-700">Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">I am a</label>
+                <select
+                  name="userType"
+                  value={formData.userType}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                >
+                  <option value="Teacher">Teacher</option>
+                  {/* Add Student in the future */}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Institution</label>
+                <input
+                  type="text"
+                  name="institution"
+                  value={formData.institution}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Job Role</label>
+                <textarea
+                  name="jobTitle"
+                  value={formData.jobTitle}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  rows="2"
+                  placeholder="E.g., Principal, Supervisor, etc."
+                  required
+                ></textarea>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Subjects</label>
+                <select
+                  name="subjects"
+                  value={formData.subjects}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                >
+                  <option value="">Select a subject</option>
+                  <option value="Python">Python</option>
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Biology">Biology</option>
+                  <option value="Earth Science">Earth Science</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+              >
+                Submit
+              </button>
+            </form>
+            <button
+              onClick={() => setIsSignUpModalOpen(false)}
+              className="mt-4 w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
