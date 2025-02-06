@@ -54,7 +54,7 @@ export const LessonDetail = () => {
         return;
       }
 
-      if (user.uid != '767Tnvj1DKSUrxshqUv4VvMIkxp1'){
+      if (user.uid !== '767Tnvj1DKSUrxshqUv4VvMIkxp1'){
         console.error("No permissions to delete lesson");
         alert("Contact Admin to delete the lesson plan.");
         return;
