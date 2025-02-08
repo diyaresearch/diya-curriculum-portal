@@ -18,9 +18,14 @@ const useUserData = () => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
+  const [firstVisit, setFirstVisit] = useState(true); 
 
   useEffect(() => {
+    let isMounted = true; // Prevent state updates on unmounted components
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+
       if (user) {
         try {
           const token = await user.getIdToken();
@@ -33,17 +38,25 @@ const useUserData = () => {
 
           setUser(user);
           setUserData(response.data);
+          setAuthError("");
         } catch (error) {
           console.error("Error fetching user data:", error);
+          if (!firstVisit) { // Only show error if it is NOT the first visit
+            setAuthError("Failed to fetch user data. Please try again.");
+          }
         }
       } else {
         setUser(null);
         setUserData(null);
       }
       setLoading(false);
+      setFirstVisit(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
 
   // This function is for signin
@@ -64,8 +77,15 @@ const useUserData = () => {
 
       setUser(user);
       setUserData(response.data);
+      setAuthError("");
     } catch (error) {
       console.error("Error with Google Sign-In:", error);
+      //  error handling
+      if (error.response?.status === 404) {
+        setAuthError("This Google account is not registered. Please sign up first.");
+      } else {
+        setAuthError("An error occurred during sign-in. Please try again.");
+      }
     }
   };
 
@@ -97,7 +117,7 @@ const useUserData = () => {
     }
   };
 
-  return { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, loading };
+  return { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError, loading };
 };
 
 export default useUserData;

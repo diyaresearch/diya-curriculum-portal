@@ -8,6 +8,7 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
+import Modal from "react-modal";
 
 // Define the users collection
 const SCHEMA_QUALIFIER = `${process.env.REACT_APP_DATABASE_SCHEMA_QUALIFIER}`;
@@ -16,7 +17,7 @@ const TABLE_USERS =  SCHEMA_QUALIFIER + "users";
 console.log('table users is', TABLE_USERS)
 
 const Navbar = () => {
-  const { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, loading } = useUserData();
+  const { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError, loading } = useUserData();
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -72,6 +73,10 @@ const Navbar = () => {
       console.error("Signup error:", error.response?.data?.message || error.message);
       alert("Signup failed. Please check your information and try again.");
     }
+  };
+
+  const closeAuthErrorModal = () => {
+    setAuthError(""); // Clear the error when closing the modal
   };
 
   return (
@@ -328,6 +333,7 @@ const Navbar = () => {
           </>
         )}
       </div>
+      {/* User Signup Modal */}
       {isSignUpModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
@@ -425,6 +431,23 @@ const Navbar = () => {
             </button>
           </div>
         </div>
+      )}
+      {/* Authentication Error Modal */}
+      {authError && (
+        <Modal
+          isOpen={!!authError}
+          onRequestClose={closeAuthErrorModal}
+          className="bg-white p-6 rounded shadow-md w-1/3 mx-auto mt-20"
+          overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+        >
+          <h2 className="text-xl font-bold mb-4 text-center">Authentication Error</h2>
+          <p className="text-red-500 text-center">{authError}</p>
+          <div className="flex justify-center mt-4">
+            <button onClick={closeAuthErrorModal} className="bg-gray-500 text-white px-4 py-2 rounded">
+              Close
+            </button>
+          </div>
+        </Modal>
       )}
     </nav>
   );
