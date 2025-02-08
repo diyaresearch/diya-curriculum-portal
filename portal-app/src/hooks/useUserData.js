@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  getAuth,
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db } from "../firebase/firebaseConfig";
+import { auth } from "../firebase/firebaseConfig";
 import axios from "axios";
 
 // Define the users collection
@@ -48,6 +46,7 @@ const useUserData = () => {
     return () => unsubscribe();
   }, []);
 
+  // This function is for signin
   const handleGoogleAuth = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
@@ -57,10 +56,9 @@ const useUserData = () => {
       const user = result.user;
       const token = await user.getIdToken();
 
-      // Register user in backend
-      const response = await axios.post(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/register`,
-        { email: user.email, fullName: user.displayName },
+      // Authenticate user with the backend
+      const response = await axios.get(
+        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -68,6 +66,24 @@ const useUserData = () => {
       setUserData(response.data);
     } catch (error) {
       console.error("Error with Google Sign-In:", error);
+    }
+  };
+
+  // reload after first time signup
+  const refreshUserData = async () => {
+    if (auth.currentUser) {
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const response = await axios.get(
+          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/me`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setUser(auth.currentUser);
+        setUserData(response.data);
+      } catch (error) {
+        console.error("Error refreshing user data:", error);
+      }
     }
   };
 
@@ -81,7 +97,7 @@ const useUserData = () => {
     }
   };
 
-  return { user, userData, handleGoogleAuth, handleSignOut, loading };
+  return { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, loading };
 };
 
 export default useUserData;
