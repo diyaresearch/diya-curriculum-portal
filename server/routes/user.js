@@ -30,7 +30,17 @@ router.get("/me", authenticateUser, async (req, res) => {
 router.post("/register", authenticateUser, async (req, res) => {
   try {
     const userId = req.user.uid;
-    const { email, fullName, role = "consumer" } = req.body;
+    const { 
+      email, 
+      fullName, 
+      firstName,
+      lastName,
+      institution,
+      userType,
+      jobTitle,
+      subjects,
+      role = "teacherDefault" } = req.body;
+    console.log(req.body)
 
     const db = admin.firestore();
     const userRef = db.collection(TABLE_USERS).doc(userId);
@@ -40,6 +50,12 @@ router.post("/register", authenticateUser, async (req, res) => {
       await userRef.set({
         email,
         fullName,
+        firstName,
+        lastName,
+        institution,
+        userType,
+        jobTitle,
+        subjects,
         role,
       });
       return res.status(201).json({ message: "User registered successfully", fullName, role });
