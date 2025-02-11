@@ -145,15 +145,11 @@ export const UploadContent = () => {
               required
             >
               <option>Select a category</option>
-              <option value="Mathematics">Mathematics</option>
-              <option value="Science">Science</option>
-              <option value="Social Studies">Social Studies</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="Languages">Languages</option>
-              <option value="Arts">Arts</option>
-              <option value="Physical">Physical</option>
-              <option value="Education">Education</option>
-              <option value="Health">Health</option>
+              <option value="Python">Python</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="Earth Science">Earth Science</option>
             </select>
           </div>
           <div className="mb-4">
@@ -284,7 +280,9 @@ export const UploadContent = () => {
         >
           <h2>{modalMessage}</h2>
           <button
-            onClick={closeModal}
+            onClick={() => {
+              window.location.href = process.env.REACT_APP_HOME_PAGE;
+            }}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
             Close
