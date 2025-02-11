@@ -1,14 +1,14 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import {
-  GoogleAuthProvider,
-  onAuthStateChanged,
-  signInWithPopup,
-  signOut,
-} from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
-import { auth, db } from "../firebase/firebaseConfig";
+import useUserData from "../hooks/useUserData";
 import logo from "../assets/DIYA_Logo.png";
+import axios from "axios";
+import {
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import { auth } from "../firebase/firebaseConfig";
+import Modal from "react-modal";
 
 // Define the users collection
 const SCHEMA_QUALIFIER = `${process.env.REACT_APP_DATABASE_SCHEMA_QUALIFIER}`;
@@ -17,91 +17,67 @@ const TABLE_USERS =  SCHEMA_QUALIFIER + "users";
 console.log('table users is', TABLE_USERS)
 
 const Navbar = () => {
-  const [user, setUser] = useState(null);
-  const [userData, setUserData] = useState(null);
+  const { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError, loading } = useUserData();
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    institution: "",
+    userType: "Teacher",
+    jobTitle: "",
+    subjects: "",
+  });
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-        // Fetch user data from Firestore
-        const fetchUserData = async () => {
-          const userRef = doc(db, TABLE_USERS, user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            setUserData(userSnap.data());
-          } else {
-            console.error("User does not exist in Firestore");
-          }
-        };
-        fetchUserData();
-      } else {
-        setUser(null);
-        setUserData(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-  const handleGoogleAuth = async () => {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' }); 
+  const handleSignUpSubmit = async (e) => {
+    e.preventDefault();
+  
     try {
+      // Authenticate the user with Google
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+  
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-
-      const userRef = doc(db, TABLE_USERS, user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          email: user.email,
-          fullName: user.displayName,
-          role: "consumer",
-        });
-        console.log("User added to Firestore:", user.email);
-      } else {
-        if (!userSnap.data().fullName) {
-          await setDoc(userRef, {
-            ...userSnap.data(),
-            fullName: user.displayName,
-          });
-          console.log("User full name updated in Firestore:", user.displayName);
-        } else {
-          console.log("User already exists in Firestore:", user.email);
-        }
-      }
-
-      const updatedUserSnap = await getDoc(userRef);
-      setUserData(updatedUserSnap.data());
-      console.log("User data updated in state:", updatedUserSnap.data());
-
       const token = await user.getIdToken();
-      const authInfo = {
-        userID: user.uid,
-        isAuth: true,
-        jwt: token,
-      };
-      localStorage.setItem("auth", JSON.stringify(authInfo));
-    } catch (err) {
-      if (err.code === "auth/popup-closed-by-user") {
-        alert(
-          "You closed the popup window. Please try signing in or signing up again and do not close the window."
-        );
+  
+      // Register user profile in the backend with the token
+      const response = await axios.post(
+        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/register`,
+        {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          institution: formData.institution,
+          userType: formData.userType,
+          jobTitle: formData.jobTitle,
+          subjects: formData.subjects,
+          email: user.email, 
+          fullName: user.displayName,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }, 
+        }
+      );
+  
+      if (response.status === 201) {
+        alert("Profile created successfully! You are now logged in.");
+        setIsSignUpModalOpen(false);
+        refreshUserData();
       } else {
-        console.error(err);
+        throw new Error("Signup failed. Please try again.");
       }
+    } catch (error) {
+      console.error("Signup error:", error.response?.data?.message || error.message);
+      alert("Signup failed. Please check your information and try again.");
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-    } catch (err) {
-      console.error(err);
-    }
+  const closeAuthErrorModal = () => {
+    setAuthError(""); // Clear the error when closing the modal
   };
-
 
   return (
     <nav style={{ width: "100%" }} 
@@ -336,7 +312,7 @@ const Navbar = () => {
               Sign in
             </button>
             <button
-              onClick={handleGoogleAuth}
+              onClick={() => setIsSignUpModalOpen(true)}
               className="bg-white text-gray-800 px-4 py-2 rounded"
             >
               Sign up
@@ -357,6 +333,122 @@ const Navbar = () => {
           </>
         )}
       </div>
+      {/* User Signup Modal */}
+      {isSignUpModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+            <h2 className="text-2xl font-bold mb-6 text-center">Sign-Up</h2>
+            <form onSubmit={handleSignUpSubmit}>
+              <div className="flex mb-4 space-x-4">
+                <div className="w-1/2">
+                  <label className="block text-gray-700">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    required
+                  />
+                </div>
+                <div className="w-1/2">
+                  <label className="block text-gray-700">Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">I am a</label>
+                <select
+                  name="userType"
+                  value={formData.userType}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                >
+                  <option value="Teacher">Teacher</option>
+                  {/* Add Student in the future */}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Institution</label>
+                <input
+                  type="text"
+                  name="institution"
+                  value={formData.institution}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Job Role</label>
+                <textarea
+                  name="jobTitle"
+                  value={formData.jobTitle}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  rows="2"
+                  placeholder="E.g., Principal, Supervisor, etc."
+                  required
+                ></textarea>
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700">Subjects</label>
+                <select
+                  name="subjects"
+                  value={formData.subjects}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                >
+                  <option value="">Select a subject</option>
+                  <option value="Python">Python</option>
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Biology">Biology</option>
+                  <option value="Earth Science">Earth Science</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+              >
+                Submit
+              </button>
+            </form>
+            <button
+              onClick={() => setIsSignUpModalOpen(false)}
+              className="mt-4 w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Authentication Error Modal */}
+      {authError && (
+        <Modal
+          isOpen={!!authError}
+          onRequestClose={closeAuthErrorModal}
+          className="bg-white p-6 rounded shadow-md w-1/3 mx-auto mt-20"
+          overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+        >
+          <h2 className="text-xl font-bold mb-4 text-center">Authentication Error</h2>
+          <p className="text-red-500 text-center">{authError}</p>
+          <div className="flex justify-center mt-4">
+            <button onClick={closeAuthErrorModal} className="bg-gray-500 text-white px-4 py-2 rounded">
+              Close
+            </button>
+          </div>
+        </Modal>
+      )}
     </nav>
   );
 };
