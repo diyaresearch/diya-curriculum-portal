@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 
 const TileItem = ({
   id,
@@ -14,6 +13,7 @@ const TileItem = ({
   isSelected,
   onSelect,
   isLessonGenerator,
+  userRole,
 }) => {
   const handleDelete = (e) => {
     e.stopPropagation();
@@ -39,7 +39,7 @@ const TileItem = ({
       onClick={handleContentClick}
     >
       <div className="absolute top-2 right-2 flex gap-2">
-        {!isLessonGenerator && (
+        {!isLessonGenerator && userRole === "admin" && (
           <button
             onClick={handleDelete}
             className="text-gray-400 hover:text-red-500 transition-colors duration-200"
@@ -62,7 +62,7 @@ const TileItem = ({
           </button>
         )}
       </div>
-      {!isLessonGenerator && (
+      {!isLessonGenerator && userRole === "admin" && (
         <div className="absolute top-2 left-2" onClick={(e) => e.stopPropagation()}>
           <input
             type="checkbox"
