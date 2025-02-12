@@ -2,6 +2,13 @@ import React from "react";
 import { useEffect, useState } from "react";
 import useUserData from "../hooks/useUserData";
 import logo from "../assets/DIYA_Logo.png";
+import axios from "axios";
+import {
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import { auth } from "../firebase/firebaseConfig";
+import Modal from "react-modal";
 
 // Define the users collection
 const SCHEMA_QUALIFIER = `${process.env.REACT_APP_DATABASE_SCHEMA_QUALIFIER}`;
@@ -10,7 +17,7 @@ const TABLE_USERS =  SCHEMA_QUALIFIER + "users";
 console.log('table users is', TABLE_USERS)
 
 const Navbar = () => {
-  const { user, userData, handleGoogleAuth, handleSignOut, loading } = useUserData();
+  const { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError, loading } = useUserData();
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -27,9 +34,49 @@ const Navbar = () => {
 
   const handleSignUpSubmit = async (e) => {
     e.preventDefault();
-    alert("Form submitted successfully!");
-    setIsSignUpModalOpen(false);
-    handleGoogleAuth();
+  
+    try {
+      // Authenticate the user with Google
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+  
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const token = await user.getIdToken();
+  
+      // Register user profile in the backend with the token
+      const response = await axios.post(
+        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/register`,
+        {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          institution: formData.institution,
+          userType: formData.userType,
+          jobTitle: formData.jobTitle,
+          subjects: formData.subjects,
+          email: user.email, 
+          fullName: user.displayName,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }, 
+        }
+      );
+  
+      if (response.status === 201) {
+        alert("Profile created successfully! You are now logged in.");
+        setIsSignUpModalOpen(false);
+        refreshUserData();
+      } else {
+        throw new Error("Signup failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Signup error:", error.response?.data?.message || error.message);
+      alert("Signup failed. Please check your information and try again.");
+    }
+  };
+
+  const closeAuthErrorModal = () => {
+    setAuthError(""); // Clear the error when closing the modal
   };
 
   return (

@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-  getAuth,
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db } from "../firebase/firebaseConfig";
+import { auth } from "../firebase/firebaseConfig";
 import axios from "axios";
 
 // Define the users collection
@@ -20,9 +18,14 @@ const useUserData = () => {
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
+  const [firstVisit, setFirstVisit] = useState(true); 
 
   useEffect(() => {
+    let isMounted = true; // Prevent state updates on unmounted components
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!isMounted) return;
+
       if (user) {
         try {
           const token = await user.getIdToken();
@@ -35,19 +38,27 @@ const useUserData = () => {
 
           setUser(user);
           setUserData(response.data);
+          setAuthError("");
         } catch (error) {
           console.error("Error fetching user data:", error);
+          if (!firstVisit) { // Only show error if it is NOT the first visit
+            setAuthError("Failed to fetch user data. Please try again.");
+          }
         }
       } else {
         setUser(null);
         setUserData(null);
       }
       setLoading(false);
+      setFirstVisit(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, []);
-
+  // This function is for signin
   const handleGoogleAuth = async () => {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
@@ -57,17 +68,41 @@ const useUserData = () => {
       const user = result.user;
       const token = await user.getIdToken();
 
-      // Register user in backend
-      const response = await axios.post(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/register`,
-        { email: user.email, fullName: user.displayName },
+      // Authenticate user with the backend
+      const response = await axios.get(
+        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/me`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setUser(user);
       setUserData(response.data);
+      setAuthError("");
     } catch (error) {
       console.error("Error with Google Sign-In:", error);
+      //  error handling
+      if (error.response?.status === 404) {
+        setAuthError("This Google account is not registered. Please sign up first.");
+      } else {
+        setAuthError("An error occurred during sign-in. Please try again.");
+      }
+    }
+  };
+
+  // reload after first time signup
+  const refreshUserData = async () => {
+    if (auth.currentUser) {
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const response = await axios.get(
+          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/me`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setUser(auth.currentUser);
+        setUserData(response.data);
+      } catch (error) {
+        console.error("Error refreshing user data:", error);
+      }
     }
   };
 
@@ -81,7 +116,7 @@ const useUserData = () => {
     }
   };
 
-  return { user, userData, handleGoogleAuth, handleSignOut, loading };
+  return { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError, loading };
 };
 
 export default useUserData;
