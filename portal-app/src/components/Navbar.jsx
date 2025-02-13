@@ -333,10 +333,16 @@ const Navbar = () => {
           </>
         )}
       </div>
-      {/* User Signup Modal */}
       {isSignUpModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+          <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full relative">
+            {/* X button in the top-right corner */}
+            <button
+              onClick={() => setIsSignUpModalOpen(false)}
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-lg font-bold"
+            >
+              ✕
+            </button>
             <h2 className="text-2xl font-bold mb-6 text-center">Sign-Up</h2>
             <form onSubmit={handleSignUpSubmit}>
               <div className="flex mb-4 space-x-4">
@@ -423,31 +429,8 @@ const Navbar = () => {
                 Submit
               </button>
             </form>
-            <button
-              onClick={() => setIsSignUpModalOpen(false)}
-              className="mt-4 w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
-            >
-              Close
-            </button>
           </div>
         </div>
-      )}
-      {/* Authentication Error Modal */}
-      {authError && (
-        <Modal
-          isOpen={!!authError}
-          onRequestClose={closeAuthErrorModal}
-          className="bg-white p-6 rounded shadow-md w-1/3 mx-auto mt-20"
-          overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
-        >
-          <h2 className="text-xl font-bold mb-4 text-center">Authentication Error</h2>
-          <p className="text-red-500 text-center">{authError}</p>
-          <div className="flex justify-center mt-4">
-            <button onClick={closeAuthErrorModal} className="bg-gray-500 text-white px-4 py-2 rounded">
-              Close
-            </button>
-          </div>
-        </Modal>
       )}
     </nav>
   );
