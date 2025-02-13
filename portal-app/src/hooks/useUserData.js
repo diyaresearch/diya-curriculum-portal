@@ -58,7 +58,6 @@ const useUserData = () => {
       unsubscribe();
     };
   }, []);
-
   // This function is for signin
   const handleGoogleAuth = async () => {
     const provider = new GoogleAuthProvider();
