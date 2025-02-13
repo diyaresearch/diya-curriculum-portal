@@ -42,6 +42,7 @@ router.post("/register", authenticateUser, async (req, res) => {
       role = "teacherDefault" } = req.body;
     console.log(req.body)
 
+
     const db = admin.firestore();
     const userRef = db.collection(TABLE_USERS).doc(userId);
     const userSnap = await userRef.get();
