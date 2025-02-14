@@ -24,8 +24,8 @@ const types = [
 const levels = ["Basic", "Intermediate", "Advanced"];
 
 const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTiles = {}}) => {
-  const { userData } = useUserData(); // ✅ Get user data
-  const userRole = userData?.role;    // ✅ Extract role
+  const { userData } = useUserData(); // Get user data
+  const userRole = userData?.role;    // Extract role
   const navigate = useNavigate();
 
   const [filteredContent, setFilteredContent] = useState(content);
