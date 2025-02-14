@@ -12,6 +12,7 @@ import EditLesson from "./pages/edit_lesson";
 import MyPlans from "./pages/my_plan";
 import LessonDetail from "./pages/lesson_detail";
 import Layout from "./components/Layout";
+import UserProfilePage from "./pages/profile_detail";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
           <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
           <Route path="/my-plans" element={<MyPlans />} />
           <Route path="/lesson/:lessonId" element={<LessonDetail />} />
+          <Route path="/user-profile" element={<UserProfilePage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
