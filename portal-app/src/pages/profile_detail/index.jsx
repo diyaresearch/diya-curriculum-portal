@@ -77,7 +77,6 @@ const UserProfile = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setContent(contentRes.data);
-      console.log(111111111, contentRes.data);
 
       const notificationsRes = await axios.get(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/admin/notifications`,
@@ -400,40 +399,27 @@ const UserProfile = () => {
               </div>
             )}
 
-            {/* {activeTab === "Content" && (
-              <div>
-                <h4 className="font-semibold mb-2">Content Overview</h4>
-                <ul className="list-disc pl-5">
-                  {content.map((item) => (
-                    <li key={item.id}>
-                      {item.title} - {item.type} - {item.isPublic ? "Public" : "Private"} -{" "}
-                      {item.createdAt}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )} */}
             {activeTab === "Content" && (
               <div className="max-w-5xl mx-auto bg-white p-10 rounded-lg shadow-md">
                 <h4 className="font-semibold mb-4">Content management for admin, comming soon</h4>
                 <table className="min-w-full table-auto border-collapse border border-gray-300">
                   <thead>
                     <tr className="bg-gray-200">
-                      <th className="border border-gray-300 px-4 py-2 text-center">User Name</th>
-                      <th className="border border-gray-300 px-4 py-2 text-center">Email</th>
+                      <th className="border border-gray-300 px-4 py-2 text-center">User Email</th>
                       <th className="border border-gray-300 px-4 py-2 text-center">Lesson Plan</th>
                       <th className="border border-gray-300 px-4 py-2 text-center">Visibility</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {content.map((item) => (
+                    {/* The content of the tavle will be updated later */}
+                    {/* {content.map((item) => (
                       <tr key={item.id} className="hover:bg-gray-100 text-center">
                         <td className="border border-gray-300 px-4 py-2">{item.Author}</td>
                         <td className="border border-gray-300 px-4 py-2">{item.userEmail}</td>
                         <td className="border border-gray-300 px-4 py-2">{item.Title}</td>
                         <td className="border border-gray-300 px-4 py-2">{item.isPublic}</td>
                       </tr>
-                    ))}
+                    ))} */}
                   </tbody>
                 </table>
               </div>
