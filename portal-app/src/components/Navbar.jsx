@@ -327,20 +327,6 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            {/* <button onClick={handleProfileClick} className="flex items-center space-x-2 hover:underline">
-              <img
-                src={defaultUserIcon}
-                alt="User Profile"
-                className="w-8 h-8 rounded-full border border-gray-300"
-              />
-              <span>{userData?.fullName || "Profile"}</span>
-            </button>
-            <button
-              onClick={handleSignOut}
-              className="bg-white text-gray-800 px-4 py-2 rounded"
-            >
-              Logout
-            </button> */}
             <div className="flex items-center space-x-6">
               {/* User Profile */}
               <button onClick={handleProfileClick} className="flex items-center space-x-2 hover:underline">
