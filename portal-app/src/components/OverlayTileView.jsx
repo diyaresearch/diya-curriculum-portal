@@ -39,9 +39,6 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTi
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   
 
-  // Define upload page URL with fallback
-  const uploadPageUrl = process.env.REACT_APP_UPLOAD_CONTENT_PAGE || "/upload-content";
-
   useEffect(() => {
     setFilteredContent(content);
   }, [content]);
@@ -91,8 +88,8 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTi
       console.log("Showing upgrade popup for teacherDefault");
       setShowUpgradePopup(true);
     } else if (userRole === "teacherPlus" || userRole === "admin") {
-      console.log("Navigating to:", uploadPageUrl);
-      navigate(uploadPageUrl);
+      console.log("Navigating to:/upload-content");
+      navigate("/upload-content");
     } else {
       console.warn("Unrecognized user role:", userRole);
     }
