@@ -6,7 +6,7 @@ import useUserData from "../hooks/useUserData";
 const categories = [
   "Python", // New Category
   "Physics",
-  "Chemisty",
+  "Chemistry",
   "Biology",
   "Economics",
   "Earth Science",
