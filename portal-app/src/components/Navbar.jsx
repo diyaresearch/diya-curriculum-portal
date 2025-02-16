@@ -65,9 +65,11 @@ const Navbar = () => {
       );
   
       if (response.status === 201) {
-        alert("Profile created successfully! You are now logged in.");
         setIsSignUpModalOpen(false);
         refreshUserData();
+        setTimeout(() => {
+          window.close();
+        }, 1000);
       } else {
         throw new Error("Signup failed. Please try again.");
       }
