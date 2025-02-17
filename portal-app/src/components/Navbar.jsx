@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useUserData from "../hooks/useUserData";
 import logo from "../assets/DIYA_Logo.png";
 import axios from "axios";
@@ -9,6 +9,8 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 import Modal from "react-modal";
+import { useNavigate } from "react-router-dom";
+import defaultUserIcon from "../assets/default_user_icon.png";
 
 // Define the users collection
 const SCHEMA_QUALIFIER = `${process.env.REACT_APP_DATABASE_SCHEMA_QUALIFIER}`;
@@ -17,7 +19,7 @@ const TABLE_USERS =  SCHEMA_QUALIFIER + "users";
 console.log('table users is', TABLE_USERS)
 
 const Navbar = () => {
-  const { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError, loading } = useUserData();
+  const { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError } = useUserData();
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -79,6 +81,11 @@ const Navbar = () => {
 
   const closeAuthErrorModal = () => {
     setAuthError(""); // Clear the error when closing the modal
+  };
+
+  const navigate = useNavigate();
+  const handleProfileClick = () => {
+    navigate("/user-profile");
   };
 
   return (
@@ -322,16 +329,37 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <span className="text-white mr-4">
-              Welcome {userData?.fullName}, logged in as{" "}
-              {userData?.role}.
-            </span>
+            {/* <button onClick={handleProfileClick} className="flex items-center space-x-2 hover:underline">
+              <img
+                src={defaultUserIcon}
+                alt="User Profile"
+                className="w-8 h-8 rounded-full border border-gray-300"
+              />
+              <span>{userData?.fullName || "Profile"}</span>
+            </button>
             <button
               onClick={handleSignOut}
               className="bg-white text-gray-800 px-4 py-2 rounded"
             >
               Logout
-            </button>
+            </button> */}
+            <div className="flex items-center space-x-6">
+              {/* User Profile */}
+              <button onClick={handleProfileClick} className="flex items-center space-x-2 hover:underline">
+                <img
+                  src={defaultUserIcon}
+                  alt="User Profile"
+                  className="w-8 h-8 rounded-full border border-gray-300"
+                />
+                <span className="text-white font-semibold">{userData?.fullName || "Profile"}</span>
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="bg-white text-gray-800 px-4 py-2 rounded hover:bg-gray-200 transition"
+              >
+                Logout
+              </button>
+            </div>
           </>
         )}
       </div>
