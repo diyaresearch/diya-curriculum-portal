@@ -170,8 +170,12 @@ const UserProfile = () => {
 
       <h2 className="text-2xl font-bold text-center mb-1">User Profile</h2>
 
-      <label className="block text-center text-gray-700 font-semibold mb-6">
+      <label className="block text-center text-gray-700 font-semibold mb-1">
         User Role: {formData.role}
+      </label>
+
+      <label className="block text-center text-gray-700 font-semibold mb-6">
+        User Type: {formData.userType}
       </label>
 
       <form onSubmit={handleUpdate} className="space-y-4">
@@ -212,7 +216,8 @@ const UserProfile = () => {
           />
         </div>
 
-        <div>
+        {/* userType dropdown, hide this for now and add more in the future */}
+        {/* <div>
           <label className="block text-gray-700">User Type</label>
           <select
             name="userType"
@@ -223,7 +228,7 @@ const UserProfile = () => {
           >
             <option value="Teacher">Teacher</option>
           </select>
-        </div>
+        </div> */}
 
         <div>
           <label className="block text-gray-700">Job Title</label>
