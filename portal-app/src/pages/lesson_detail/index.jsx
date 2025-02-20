@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getAuth } from "firebase/auth";
 import axios from "axios";
+import useUserData from "../../hooks/useUserData";
 import { FaFilePdf, FaVideo, FaExternalLinkAlt, FaDownload, FaTrash, FaEdit, FaChevronDown } from "react-icons/fa";
 
 export const LessonDetail = () => {
+  const { user, userData, loading } = useUserData();
   const [lesson, setLesson] = useState(null);
   const navigate = useNavigate();
   const { lessonId } = useParams();
   const [contentDetails, setContentDetails] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [author, setAuthor] = useState(null);
+  const [authorId, setAuthorId] = useState(null);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -23,13 +25,6 @@ export const LessonDetail = () => {
 
   const handleDownload = async () => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        navigate("/lesson-generator");
-        return;
-      }
-
       const token = await user.getIdToken();
       const response = await axios.get(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons/${lessonId}/download`,
@@ -54,14 +49,8 @@ export const LessonDetail = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        navigate("/lesson-generator");
-        return;
-      }
 
-      if (user.uid !== "767Tnvj1DKSUrxshqUv4VvMIkxp1") {
+      if (userData.role !== "admin" && user.uid !== authorId) {
         console.error("No permissions to delete lesson");
         alert("Contact Admin to delete the lesson plan.");
         return;
@@ -125,13 +114,13 @@ export const LessonDetail = () => {
   useEffect(() => {
     const fetchLesson = async () => {
       try {
-        const auth = getAuth();
-        const user = auth.currentUser;
-        if (!user) {
+        if (!loading && !user) {
           navigate("/lesson-generator");
           return;
         }
-
+        
+        if (loading || !user) return;
+  
         const token = await user.getIdToken();
         const response = await axios.get(
           `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`,
@@ -141,7 +130,7 @@ export const LessonDetail = () => {
         );
         const lessonData = response.data;
         setLesson(lessonData);
-
+  
         const contentPromises = lessonData.sections.flatMap((section) =>
           section.contentIds.map(async (contentId) => {
             const contentResponse = await axios.get(
@@ -150,28 +139,31 @@ export const LessonDetail = () => {
             return { contentId, ...contentResponse.data };
           })
         );
-
+  
         const contentData = await Promise.all(contentPromises);
         const contentDetailsMap = contentData.reduce((acc, content) => {
           acc[content.id] = content;
           return acc;
         }, {});
-
+  
         setContentDetails(contentDetailsMap);
-
+  
         if (lessonData.authorId) {
           const authorResponse = await axios.get(
             `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/${lessonData.authorId}`
           );
           setAuthor(authorResponse.data);
+          setAuthorId(lessonData.authorId);
         }
       } catch (error) {
         console.error("Error fetching lesson:", error);
       }
     };
-
-    fetchLesson();
-  }, [lessonId, navigate]);
+  
+    if (!loading) {
+      fetchLesson();
+    }
+  }, [lessonId, navigate, user, loading]);
 
   if (!lesson) {
     return (
