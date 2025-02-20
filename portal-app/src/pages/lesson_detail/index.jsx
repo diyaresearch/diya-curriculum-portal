@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import axios from "axios";
-import { FaFilePdf, FaVideo, FaExternalLinkAlt, FaDownload, FaTrash, FaEdit } from "react-icons/fa";
+import { FaFilePdf, FaVideo, FaExternalLinkAlt, FaDownload, FaTrash, FaEdit, FaChevronDown } from "react-icons/fa";
 
 export const LessonDetail = () => {
   const [lesson, setLesson] = useState(null);
@@ -11,6 +11,12 @@ export const LessonDetail = () => {
   const [contentDetails, setContentDetails] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [author, setAuthor] = useState(null);
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -190,27 +196,41 @@ export const LessonDetail = () => {
             <div className="flex justify-between items-start mb-4">
               <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
               <div className="flex space-x-2">
+              <div className="relative">
                 <button
-                  onClick={handleDownload}
-                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={toggleDropdown}
+                  className="p-2 border border-gray-300 rounded inline-flex items-center px-4 py-2 bg-white-600 text-black rounded-lg hover:bg-white-700 transition-colors"
                 >
-                  <FaDownload className="mr-2" />
-                  Download Plan
+                  Select an action
+                  <FaChevronDown className="ml-2" />
                 </button>
-                <button
-                  onClick={() => navigate(`/edit-lesson/${lessonId}`)}
-                  className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <FaEdit className="mr-2" />
-                  Edit Plan
-                </button>
-                <button
-                  onClick={openModal}
-                  className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  <FaTrash className="mr-2" />
-                  Delete Plan
-                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
+                    <button
+                      onClick={handleDownload}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      <FaDownload className="inline-block mr-2" />
+                      Download Plan
+                    </button>
+                    <button
+                      onClick={() => navigate(`/edit-lesson/${lessonId}`)}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                    >
+                      <FaEdit className="inline-block mr-2" />
+                      Edit Plan
+                    </button>
+                    <button
+                      onClick={openModal}
+                      className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
+                    >
+                      <FaTrash className="inline-block mr-2" />
+                      Delete Plan
+                    </button>
+                  </div>
+                )}
+              </div>
               </div>
             </div>
 
