@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Modal from "react-modal";
-import { getAuth } from "firebase/auth";
+// import { getAuth } from "firebase/auth";
 import OverlayTileView from "../../components/OverlayTileView";
 import axios from "axios";
+import useUserData from "../../hooks/useUserData";
 
 Modal.setAppElement("#root");
 
@@ -30,23 +31,35 @@ export const EditLesson = () => {
   const { lessonId } = useParams();
   const [setIsModalOpen] = useState(false);
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
-  
+  const { user, userData, loading } = useUserData();
+  const [authorId, setAuthorId] = useState(false);
+
   const closeModal = () => setIsModalOpen(false);
 
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`)
-      .then((response) => {
-        setPortalContent(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching portal content:", error);
-      });
+    const fetchData = async () => {
+      try {
+        if (!loading && !user) {
+          navigate("/my-plans");
+          return;
+        }
 
-    axios
-      .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`)
-      .then((response) => {
-        const lessonData = response.data;
+        if (loading || !user) return;
+
+        const token = await user.getIdToken();
+
+        const portalResponse = await axios.get(
+          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`
+        );
+        setPortalContent(portalResponse.data);
+
+        const lessonResponse = await axios.get(
+          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const lessonData = lessonResponse.data;
         setFormData({
           title: lessonData.title || "",
           subject: lessonData.subject || "",
@@ -58,11 +71,16 @@ export const EditLesson = () => {
         });
         setObjectives(lessonData.objectives || [""]);
         setSections(lessonData.sections || [{ intro: "", contentIds: [] }]);
-      })
-      .catch((error) => {
-        console.error("Error fetching lesson data:", error);
-      });
-  }, [lessonId]);
+        setAuthorId(lessonData.authorId || "");
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    if (!loading) {
+      fetchData();
+    }
+  }, [lessonId, navigate, user, loading]);
 
   useEffect(() => {
     if (sections.length > 0) {
@@ -89,8 +107,7 @@ export const EditLesson = () => {
     const { id, value } = e.target;
     setFormData({
       ...formData,
-      [id]:
-      id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
+      [id]: id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
     });
   };
 
@@ -119,15 +136,13 @@ export const EditLesson = () => {
   };
 
   const handleSubmit = async () => {
-    const auth = getAuth();
-    const user = auth.currentUser;
     if (!user) {
       setModalMessage("User not authenticated");
       setModalIsOpen(true);
       return;
     }
-        
-    if (user.uid !== '767Tnvj1DKSUrxshqUv4VvMIkxp1'){
+
+    if (userData.role !== "admin" && user.uid !== authorId) {
       console.error("No permissions to update lesson");
       alert("Contact the Admin to update the lesson plan.");
       return;
@@ -149,8 +164,7 @@ export const EditLesson = () => {
         sections: sections.map((section, index) => ({
           id: index,
           intro: section.intro,
-          contentIds:
-            selectedMaterials[index]?.map((material) => material.id) || [],
+          contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
         })),
         author: userId,
       };
@@ -171,13 +185,15 @@ export const EditLesson = () => {
       setConfirmationModalOpen(false);
       setModalIsOpen(true);
     } catch (error) {
-        setConfirmationModalOpen(false);
-        if (error.response && error.response.data && error.response.data.error) {
-            setModalMessage("Error updating lesson plan: " + error.response.data.error);
-          } else {
-            setModalMessage("Error updating lesson plan: " + (error.message || "An unknown error occurred"));
-          }
-          setModalIsOpen(true);
+      setConfirmationModalOpen(false);
+      if (error.response && error.response.data && error.response.data.error) {
+        setModalMessage("Error updating lesson plan: " + error.response.data.error);
+      } else {
+        setModalMessage(
+          "Error updating lesson plan: " + (error.message || "An unknown error occurred")
+        );
+      }
+      setModalIsOpen(true);
     }
   };
 
@@ -186,9 +202,7 @@ export const EditLesson = () => {
     const alreadySelected = sectionMaterials.find((m) => m.id === material.id);
 
     if (alreadySelected) {
-      const updatedSectionMaterials = sectionMaterials.filter(
-        (m) => m.id !== material.id
-      );
+      const updatedSectionMaterials = sectionMaterials.filter((m) => m.id !== material.id);
       setSelectedMaterials({
         ...selectedMaterials,
         [selectedSectionIndex]: updatedSectionMaterials,
@@ -203,9 +217,7 @@ export const EditLesson = () => {
 
   const removeMaterial = (materialId, sectionIndex) => {
     const sectionMaterials = selectedMaterials[sectionIndex] || [];
-    const updatedSectionMaterials = sectionMaterials.filter(
-      (m) => m.id !== materialId
-    );
+    const updatedSectionMaterials = sectionMaterials.filter((m) => m.id !== materialId);
     setSelectedMaterials({
       ...selectedMaterials,
       [sectionIndex]: updatedSectionMaterials,
@@ -244,10 +256,7 @@ export const EditLesson = () => {
         <h2 className="text-2xl mb-4 text-center">Edit Lesson Plan</h2>
         <form>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="title"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
               Lesson Title:
             </label>
             <input
@@ -261,10 +270,7 @@ export const EditLesson = () => {
             />
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="subject"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="subject">
               Subject:
             </label>
             <select
@@ -287,10 +293,7 @@ export const EditLesson = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="level"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="level">
               Grade Level:
             </label>
             <select
@@ -316,10 +319,7 @@ export const EditLesson = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="duration"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="duration">
               Lesson Duration (minutes):
             </label>
             <input
@@ -362,10 +362,7 @@ export const EditLesson = () => {
           </div>
 
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="description"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
               Lesson Description:
             </label>
             <textarea
@@ -449,7 +446,9 @@ export const EditLesson = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Update Lesson Plan</h2>
-              <p className="text-gray-600 mb-6">Are you sure you want to update this lesson plan? This action cannot be undone.</p>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to update this lesson plan? This action cannot be undone.
+              </p>
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setConfirmationModalOpen(false)}
@@ -472,7 +471,9 @@ export const EditLesson = () => {
             content={portalContent}
             onClose={() => setShowOverlay(false)}
             onSelectMaterial={onSelectMaterial}
-            initialSelectedTiles={Object.values(selectedMaterials || {}).flat().map((item) => item.id)}
+            initialSelectedTiles={Object.values(selectedMaterials || {})
+              .flat()
+              .map((item) => item.id)}
           />
         )}
         <Modal
