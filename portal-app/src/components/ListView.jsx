@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import TileItem from "./TileItem";
 import Overlay from "./Overlay";
-import { getAuth } from "firebase/auth";
+import useUserData from "../hooks/useUserData";
 
 const categories = [
   "Python", // New Category
   "Physics",
-  "Chemisty",
+  "Chemistry",
   "Biology",
   "Economics",
   "Earth Science",
@@ -33,6 +33,7 @@ const ListView = ({ content }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [deleteError, setDeleteError] = useState("");
+  const { user, userData } = useUserData();
 
   const filterContent = useCallback(() => {
     let filtered = content;
@@ -96,8 +97,6 @@ const ListView = ({ content }) => {
 
   const handleDeleteUnit = async (id) => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
       if (!user) {
         throw new Error("User not authenticated");
       }
@@ -131,8 +130,6 @@ const ListView = ({ content }) => {
         return;
       }
 
-      const auth = getAuth();
-      const user = auth.currentUser;
       if (!user) {
         throw new Error("User not authenticated");
       }
@@ -266,6 +263,7 @@ const ListView = ({ content }) => {
                 }
                 setSelectedItems(newSelected);
               }}
+              userRole={userData?.role}
             />
           ))}
         </div>
