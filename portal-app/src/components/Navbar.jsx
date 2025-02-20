@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useUserData from "../hooks/useUserData";
 import logo from "../assets/DIYA_Logo.png";
 import axios from "axios";
@@ -9,6 +9,8 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 import Modal from "react-modal";
+import { useNavigate } from "react-router-dom";
+import defaultUserIcon from "../assets/default_user_icon.png";
 
 // Define the users collection
 const SCHEMA_QUALIFIER = `${process.env.REACT_APP_DATABASE_SCHEMA_QUALIFIER}`;
@@ -17,7 +19,7 @@ const TABLE_USERS =  SCHEMA_QUALIFIER + "users";
 console.log('table users is', TABLE_USERS)
 
 const Navbar = () => {
-  const { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError, loading } = useUserData();
+  const { user, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError } = useUserData();
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -63,9 +65,11 @@ const Navbar = () => {
       );
   
       if (response.status === 201) {
-        alert("Profile created successfully! You are now logged in.");
         setIsSignUpModalOpen(false);
         refreshUserData();
+        setTimeout(() => {
+          window.close();
+        }, 1000);
       } else {
         throw new Error("Signup failed. Please try again.");
       }
@@ -77,6 +81,11 @@ const Navbar = () => {
 
   const closeAuthErrorModal = () => {
     setAuthError(""); // Clear the error when closing the modal
+  };
+
+  const navigate = useNavigate();
+  const handleProfileClick = () => {
+    navigate("/user-profile");
   };
 
   return (
@@ -320,23 +329,36 @@ const Navbar = () => {
           </>
         ) : (
           <>
-            <span className="text-white mr-4">
-              Welcome {userData?.fullName}, logged in as{" "}
-              {userData?.role}.
-            </span>
-            <button
-              onClick={handleSignOut}
-              className="bg-white text-gray-800 px-4 py-2 rounded"
-            >
-              Logout
-            </button>
+            <div className="flex items-center space-x-6">
+              {/* User Profile */}
+              <button onClick={handleProfileClick} className="flex items-center space-x-2 hover:underline">
+                <img
+                  src={defaultUserIcon}
+                  alt="User Profile"
+                  className="w-8 h-8 rounded-full border border-gray-300"
+                />
+                <span className="text-white font-semibold">{userData?.fullName || "Profile"}</span>
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="bg-white text-gray-800 px-4 py-2 rounded hover:bg-gray-200 transition"
+              >
+                Logout
+              </button>
+            </div>
           </>
         )}
       </div>
-      {/* User Signup Modal */}
       {isSignUpModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full">
+          <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full relative">
+            {/* X button in the top-right corner */}
+            <button
+              onClick={() => setIsSignUpModalOpen(false)}
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-lg font-bold"
+            >
+              ✕
+            </button>
             <h2 className="text-2xl font-bold mb-6 text-center">Sign-Up</h2>
             <form onSubmit={handleSignUpSubmit}>
               <div className="flex mb-4 space-x-4">
@@ -423,31 +445,8 @@ const Navbar = () => {
                 Submit
               </button>
             </form>
-            <button
-              onClick={() => setIsSignUpModalOpen(false)}
-              className="mt-4 w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600"
-            >
-              Close
-            </button>
           </div>
         </div>
-      )}
-      {/* Authentication Error Modal */}
-      {authError && (
-        <Modal
-          isOpen={!!authError}
-          onRequestClose={closeAuthErrorModal}
-          className="bg-white p-6 rounded shadow-md w-1/3 mx-auto mt-20"
-          overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
-        >
-          <h2 className="text-xl font-bold mb-4 text-center">Authentication Error</h2>
-          <p className="text-red-500 text-center">{authError}</p>
-          <div className="flex justify-center mt-4">
-            <button onClick={closeAuthErrorModal} className="bg-gray-500 text-white px-4 py-2 rounded">
-              Close
-            </button>
-          </div>
-        </Modal>
       )}
     </nav>
   );
