@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getAuth } from "firebase/auth";
 import axios from "axios";
-import { FaFilePdf, FaVideo, FaExternalLinkAlt, FaDownload, FaTrash, FaEdit, FaChevronDown } from "react-icons/fa";
+import useUserData from "../../hooks/useUserData";
+import {
+  FaFilePdf,
+  FaVideo,
+  FaExternalLinkAlt,
+  FaDownload,
+  FaTrash,
+  FaEdit,
+  FaChevronDown,
+} from "react-icons/fa";
 
 export const LessonDetail = () => {
+  const { user, userData, loading } = useUserData();
   const [lesson, setLesson] = useState(null);
   const navigate = useNavigate();
   const { lessonId } = useParams();
   const [contentDetails, setContentDetails] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [author, setAuthor] = useState(null);
+  const [authorId, setAuthorId] = useState(null);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -23,13 +33,6 @@ export const LessonDetail = () => {
 
   const handleDownload = async () => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        navigate("/lesson-generator");
-        return;
-      }
-
       const token = await user.getIdToken();
       const response = await axios.get(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons/${lessonId}/download`,
@@ -54,14 +57,7 @@ export const LessonDetail = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        navigate("/lesson-generator");
-        return;
-      }
-
-      if (user.uid !== "767Tnvj1DKSUrxshqUv4VvMIkxp1") {
+      if (userData.role !== "admin" && user.uid !== authorId) {
         console.error("No permissions to delete lesson");
         alert("Contact Admin to delete the lesson plan.");
         return;
@@ -125,12 +121,12 @@ export const LessonDetail = () => {
   useEffect(() => {
     const fetchLesson = async () => {
       try {
-        const auth = getAuth();
-        const user = auth.currentUser;
-        if (!user) {
+        if (!loading && !user) {
           navigate("/lesson-generator");
           return;
         }
+
+        if (loading || !user) return;
 
         const token = await user.getIdToken();
         const response = await axios.get(
@@ -164,14 +160,17 @@ export const LessonDetail = () => {
             `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/${lessonData.authorId}`
           );
           setAuthor(authorResponse.data);
+          setAuthorId(lessonData.authorId);
         }
       } catch (error) {
         console.error("Error fetching lesson:", error);
       }
     };
 
-    fetchLesson();
-  }, [lessonId, navigate]);
+    if (!loading) {
+      fetchLesson();
+    }
+  }, [lessonId, navigate, user, loading]);
 
   if (!lesson) {
     return (
@@ -196,41 +195,41 @@ export const LessonDetail = () => {
             <div className="flex justify-between items-start mb-4">
               <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
               <div className="flex space-x-2">
-              <div className="relative">
-                <button
-                  onClick={toggleDropdown}
-                  className="p-2 border border-gray-300 rounded inline-flex items-center px-4 py-2 bg-white-600 text-black rounded-lg hover:bg-white-700 transition-colors"
-                >
-                  Select an action
-                  <FaChevronDown className="ml-2" />
-                </button>
+                <div className="relative">
+                  <button
+                    onClick={toggleDropdown}
+                    className="p-2 border border-gray-300 rounded inline-flex items-center px-4 py-2 bg-white-600 text-black rounded-lg hover:bg-white-700 transition-colors"
+                  >
+                    Select an action
+                    <FaChevronDown className="ml-2" />
+                  </button>
 
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
-                    <button
-                      onClick={handleDownload}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    >
-                      <FaDownload className="inline-block mr-2" />
-                      Download Plan
-                    </button>
-                    <button
-                      onClick={() => navigate(`/edit-lesson/${lessonId}`)}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                    >
-                      <FaEdit className="inline-block mr-2" />
-                      Edit Plan
-                    </button>
-                    <button
-                      onClick={openModal}
-                      className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
-                    >
-                      <FaTrash className="inline-block mr-2" />
-                      Delete Plan
-                    </button>
-                  </div>
-                )}
-              </div>
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
+                      <button
+                        onClick={handleDownload}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        <FaDownload className="inline-block mr-2" />
+                        Download Plan
+                      </button>
+                      <button
+                        onClick={() => navigate(`/edit-lesson/${lessonId}`)}
+                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                      >
+                        <FaEdit className="inline-block mr-2" />
+                        Edit Plan
+                      </button>
+                      <button
+                        onClick={openModal}
+                        className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
+                      >
+                        <FaTrash className="inline-block mr-2" />
+                        Delete Plan
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
