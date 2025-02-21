@@ -10,6 +10,7 @@ export const LessonDetail = () => {
   const { lessonId } = useParams();
   const [contentDetails, setContentDetails] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [author, setAuthor] = useState(null);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -60,7 +61,7 @@ export const LessonDetail = () => {
         return;
       }
 
-      if (user.uid !== '767Tnvj1DKSUrxshqUv4VvMIkxp1'){
+      if (user.uid !== "767Tnvj1DKSUrxshqUv4VvMIkxp1") {
         console.error("No permissions to delete lesson");
         alert("Contact Admin to delete the lesson plan.");
         return;
@@ -157,6 +158,13 @@ export const LessonDetail = () => {
         }, {});
 
         setContentDetails(contentDetailsMap);
+
+        if (lessonData.authorId) {
+          const authorResponse = await axios.get(
+            `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/${lessonData.authorId}`
+          );
+          setAuthor(authorResponse.data);
+        }
       } catch (error) {
         console.error("Error fetching lesson:", error);
       }
@@ -225,7 +233,7 @@ export const LessonDetail = () => {
               </div>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <span className="font-semibold text-gray-600">Subject:</span>
@@ -242,6 +250,26 @@ export const LessonDetail = () => {
             </div>
           </div>
 
+          {/* Author Section */}
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-semibold text-gray-800 mb-3">Author Details</h2>
+            {author ? (
+              <div>
+                <p className="text-gray-700 leading-relaxed">
+                  <strong>Name:</strong>{" "}
+                  {author.firstName && author.lastName
+                    ? `${author.firstName} ${author.lastName}`
+                    : author.fullName}
+                </p>
+                <p className="text-gray-700 leading-relaxed">
+                  <strong>Email:</strong> {author.email}
+                </p>
+              </div>
+            ) : (
+              <p>No author information available</p>
+            )}
+          </div>
+
           {/* Description Section */}
           <div className="p-6 bg-gray-50 border-b">
             <h2 className="text-xl font-semibold text-gray-800 mb-3">Description</h2>
@@ -253,7 +281,9 @@ export const LessonDetail = () => {
             <h2 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h2>
             <ul className="list-disc pl-5 space-y-2">
               {objectives.map((objective, index) => (
-                <li key={index} className="text-gray-700">{objective}</li>
+                <li key={index} className="text-gray-700">
+                  {objective}
+                </li>
               ))}
             </ul>
           </div>
@@ -278,10 +308,16 @@ export const LessonDetail = () => {
                     return (
                       <div key={contentIndex} className="border rounded-lg p-4">
                         <div className="flex items-center mb-3">
-                          {isVideoLink(content.fileUrl) && <FaVideo className="mr-2 text-blue-600" />}
-                          {content.fileUrl?.toLowerCase().includes('.pdf') && <FaFilePdf className="mr-2 text-red-600" />}
-                          {!isVideoLink(content.fileUrl) && !content.fileUrl?.toLowerCase().includes('.pdf') && 
-                            <FaExternalLinkAlt className="mr-2 text-gray-600" />}
+                          {isVideoLink(content.fileUrl) && (
+                            <FaVideo className="mr-2 text-blue-600" />
+                          )}
+                          {content.fileUrl?.toLowerCase().includes(".pdf") && (
+                            <FaFilePdf className="mr-2 text-red-600" />
+                          )}
+                          {!isVideoLink(content.fileUrl) &&
+                            !content.fileUrl?.toLowerCase().includes(".pdf") && (
+                              <FaExternalLinkAlt className="mr-2 text-gray-600" />
+                            )}
                           <h4 className="text-lg font-medium">
                             Content {contentIndex + 1} ({content.Duration}min)
                           </h4>
@@ -308,7 +344,7 @@ export const LessonDetail = () => {
                             rel="noopener noreferrer"
                             className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                           >
-                            {content.fileUrl?.toLowerCase().includes('.pdf') ? (
+                            {content.fileUrl?.toLowerCase().includes(".pdf") ? (
                               <>
                                 <FaFilePdf className="mr-2" />
                                 View PDF Document
@@ -336,7 +372,9 @@ export const LessonDetail = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Delete Lesson Plan</h2>
-            <p className="text-gray-600 mb-6">Are you sure you want to delete this lesson plan? This action cannot be undone.</p>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete this lesson plan? This action cannot be undone.
+            </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={closeModal}
