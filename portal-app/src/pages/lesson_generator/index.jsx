@@ -30,6 +30,20 @@ export const LessonGenerator = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    const savedDraft = localStorage.getItem("lessonPlanDraft");
+
+    if (savedDraft !== "undefined") {
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        setFormData(parsedDraft);
+      } catch (error) {
+        console.error("Error parsing lesson plan draft:", error);
+      }
+    } else {
+      console.log("No saved draft found");
+    }
+    localStorage.setItem("fromLessonGenerator", "true");
+
     axios
       .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`)
       .then((response) => {
@@ -44,20 +58,28 @@ export const LessonGenerator = () => {
     navigate("/");
   };
 
+  // Save formData to localStorage on change
+  const saveFormDataToLocalStorage = (data) => {
+    localStorage.setItem("lessonPlanDraft", JSON.stringify(data));
+  };
+
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData({
+    const updatedFormData = {
       ...formData,
-      [id]:
-        id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
-    });
+      [id]: id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
+    };
+    setFormData(updatedFormData);
+    saveFormDataToLocalStorage(updatedFormData);
   };
 
   const handleChange_objective = (index, event) => {
     const newObjectives = [...objectives];
     newObjectives[index] = event.target.value;
     setObjectives(newObjectives);
-    setFormData({ ...formData, objectives: newObjectives });
+    const updatedFormData = { ...formData, objectives: newObjectives };
+    setFormData(updatedFormData);
+    saveFormDataToLocalStorage(updatedFormData);
   };
 
   const handleSectionChange = (index, event) => {
@@ -66,8 +88,10 @@ export const LessonGenerator = () => {
       updatedSections[index] = { intro: "", contentIds: [] };
     }
     updatedSections[index].intro = event.target.value;
+    const updatedFormData = { ...formData, sections: updatedSections };
     setSections(updatedSections);
-    setFormData({ ...formData, sections: updatedSections });
+    setFormData(updatedFormData);
+    saveFormDataToLocalStorage(updatedFormData);
   };
   const addObjective = () => {
     setObjectives([...objectives, ""]);
@@ -107,8 +131,7 @@ export const LessonGenerator = () => {
         sections: sections.map((section, index) => ({
           id: index,
           intro: section.intro,
-          contentIds:
-            selectedMaterials[index]?.map((material) => material.id) || [],
+          contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
         })),
         author: userId,
       };
@@ -140,6 +163,8 @@ export const LessonGenerator = () => {
       setSelectedMaterials({});
       setModalIsOpen(true);
       setIsSubmitting(false);
+      // Clear localStorage draft after a successful submission
+      localStorage.setItem("lessonPlanDraft", JSON.stringify({}));
     } catch (error) {
       setModalMessage("Error generating lesson plan: " + error.message);
       setModalIsOpen(true);
@@ -156,9 +181,7 @@ export const LessonGenerator = () => {
     const alreadySelected = sectionMaterials.find((m) => m.id === material.id);
 
     if (alreadySelected) {
-      const updatedSectionMaterials = sectionMaterials.filter(
-        (m) => m.id !== material.id
-      );
+      const updatedSectionMaterials = sectionMaterials.filter((m) => m.id !== material.id);
       setSelectedMaterials({
         ...selectedMaterials,
         [selectedSectionIndex]: updatedSectionMaterials,
@@ -173,9 +196,7 @@ export const LessonGenerator = () => {
 
   const removeMaterial = (materialId, sectionIndex) => {
     const sectionMaterials = selectedMaterials[sectionIndex] || [];
-    const updatedSectionMaterials = sectionMaterials.filter(
-      (m) => m.id !== materialId
-    );
+    const updatedSectionMaterials = sectionMaterials.filter((m) => m.id !== materialId);
     setSelectedMaterials({
       ...selectedMaterials,
       [sectionIndex]: updatedSectionMaterials,
@@ -221,10 +242,7 @@ export const LessonGenerator = () => {
         <h2 className="text-2xl mb-4 text-center">Lesson Plan Generator</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="title"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
               Lesson Title:
             </label>
             <input
@@ -238,10 +256,7 @@ export const LessonGenerator = () => {
             />
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="subject"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="subject">
               Subject:
             </label>
             <select
@@ -261,10 +276,7 @@ export const LessonGenerator = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="level"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="level">
               Grade Level:
             </label>
             <select
@@ -290,10 +302,7 @@ export const LessonGenerator = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="duration"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="duration">
               Lesson Duration (minutes):
             </label>
             <input
@@ -336,10 +345,7 @@ export const LessonGenerator = () => {
           </div>
 
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="description"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
               Lesson Description:
             </label>
             <textarea
@@ -427,7 +433,9 @@ export const LessonGenerator = () => {
             content={portalContent}
             onClose={() => setShowOverlay(false)}
             onSelectMaterial={onSelectMaterial}
-            initialSelectedTiles={Object.values(selectedMaterials || {}).flat().map((item) => item.id)}            
+            initialSelectedTiles={Object.values(selectedMaterials || {})
+              .flat()
+              .map((item) => item.id)}
           />
         )}
         <Modal

@@ -20,7 +20,7 @@ export const UploadContent = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
-  const navigator = useNavigate();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -78,9 +78,19 @@ export const UploadContent = () => {
         fileUrl: "",
       });
       setModalIsOpen(true);
-      setTimeout(() => {
-        navigator("/");
-      }, 2000);
+      const fromLessonGenerator = localStorage.getItem("fromLessonGenerator");
+      if (fromLessonGenerator === "true") {
+        console.log("User came from the lesson generator page");
+        localStorage.removeItem("fromLessonGenerator");
+        setTimeout(() => {
+          navigate("/lesson-generator");
+        }, 2000);
+      }else{
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
+      }
+      
     } catch (error) {
       setModalMessage("Error submitting content: " + error.message);
       setModalIsOpen(true);
@@ -114,10 +124,7 @@ export const UploadContent = () => {
         <h2 className="text-2xl mb-4 text-center">Upload contents</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Title"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Title">
               Title:
             </label>
             <input
@@ -131,10 +138,7 @@ export const UploadContent = () => {
             />
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Category"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Category">
               Category:
             </label>
             <select
@@ -153,10 +157,7 @@ export const UploadContent = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Type"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Type">
               Type:
             </label>
             <select
@@ -176,10 +177,7 @@ export const UploadContent = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Level"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Level">
               Level:
             </label>
             <select
@@ -196,10 +194,7 @@ export const UploadContent = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Duration"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Duration">
               Duration (minutes):
             </label>
             <input
@@ -218,22 +213,14 @@ export const UploadContent = () => {
               type="checkbox"
               id="isPublic"
               checked={formData.isPublic}
-              onChange={(e) =>
-                setFormData({ ...formData, isPublic: e.target.checked })
-              }
+              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
             />
-            <label
-              className="text-gray-700 text-sm font-bold"
-              htmlFor="isPublic"
-            >
+            <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
               Make Public
             </label>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Abstract"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Abstract">
               Abstract:
             </label>
             <textarea
@@ -247,10 +234,7 @@ export const UploadContent = () => {
             />
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="fileUrl"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fileUrl">
               Content Url:
             </label>
             <input
@@ -280,9 +264,7 @@ export const UploadContent = () => {
         >
           <h2>{modalMessage}</h2>
           <button
-            onClick={() => {
-              window.location.href = process.env.REACT_APP_HOME_PAGE;
-            }}
+            onClick={closeModal}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
             Close
