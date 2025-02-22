@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
@@ -7,16 +7,18 @@ import axios from "axios";
 
 Modal.setAppElement("#root");
 
+const initialFormData ={
+  title: "",
+  subject: "",
+  level: "",
+  objectives: [],
+  duration: "",
+  sections: [],
+  description: "",
+};
+
 export const LessonGenerator = () => {
-  const [formData, setFormData] = useState({
-    title: "",
-    subject: "",
-    level: "",
-    objectives: [],
-    duration: "",
-    sections: [],
-    description: "",
-  });
+  const [formData, setFormData] = useState(initialFormData);
 
   const [showOverlay, setShowOverlay] = useState(false);
   const [selectedSectionIndex, setSelectedSectionIndex] = useState(null);
@@ -29,21 +31,33 @@ export const LessonGenerator = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
+  localStorage.setItem("fromLessonGenerator", "true");
+
+  const loadDraft = useCallback(() => {  // useCallback for draft loading
     const savedDraft = localStorage.getItem("lessonPlanDraft");
 
-    if (savedDraft !== "undefined") {
-      try {
-        const parsedDraft = JSON.parse(savedDraft);
-        setFormData(parsedDraft);
-      } catch (error) {
-        console.error("Error parsing lesson plan draft:", error);
-      }
+    if (savedDraft) { 
+        try {
+            const parsedDraft = JSON.parse(savedDraft);
+            if (parsedDraft && Object.keys(parsedDraft).length > 0) {
+                setFormData(parsedDraft);
+                console.log("Draft loaded:", parsedDraft);
+            } else {
+                console.log("Saved draft was empty or invalid. Using initial form data.");
+                setFormData(initialFormData);
+            }
+        } catch (error) {
+            console.error("Error parsing lesson plan draft:", error);
+            setFormData(initialFormData); 
+        }
     } else {
-      console.log("No saved draft found");
+        console.log("No saved draft found. Using initial form data.");
+        setFormData(initialFormData); 
     }
-    localStorage.setItem("fromLessonGenerator", "true");
+}, []); 
 
+  useEffect(() => {
+    loadDraft();
     axios
       .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`)
       .then((response) => {
@@ -52,7 +66,7 @@ export const LessonGenerator = () => {
       .catch((error) => {
         console.error("Error fetching portal content:", error);
       });
-  }, []);
+  }, [loadDraft]);
 
   const handleExit = () => {
     navigate("/");
@@ -78,7 +92,7 @@ export const LessonGenerator = () => {
     newObjectives[index] = event.target.value;
     setObjectives(newObjectives);
     const updatedFormData = { ...formData, objectives: newObjectives };
-    setFormData(updatedFormData);
+    setFormData({ ...formData, objectives: newObjectives });
     saveFormDataToLocalStorage(updatedFormData);
   };
 
@@ -164,7 +178,7 @@ export const LessonGenerator = () => {
       setModalIsOpen(true);
       setIsSubmitting(false);
       // Clear localStorage draft after a successful submission
-      localStorage.setItem("lessonPlanDraft", JSON.stringify({}));
+      localStorage.removeItem("lessonPlanDraft");
     } catch (error) {
       setModalMessage("Error generating lesson plan: " + error.message);
       setModalIsOpen(true);
