@@ -151,6 +151,24 @@ const ViewContent = () => {
                 </h2>
               </div>
 
+              {/* Show Content URL only for PDFs and external links, not for videos */}
+              {(!isVideoLink(fileUrl) && fileUrl) && (
+                <div className="mb-4 p-3 bg-gray-50 border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Content URL:</span>
+                    <a
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline flex items-center"
+                    >
+                      Open in New Tab
+                      <FaExternalLinkAlt className="ml-2 h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
+              )}
+
               {isVideoLink(fileUrl) && (
                 <div className="mb-4">
                   <div className="border rounded-lg overflow-hidden">
