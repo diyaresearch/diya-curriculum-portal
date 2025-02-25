@@ -151,8 +151,8 @@ const ViewContent = () => {
                 </h2>
               </div>
 
-              {/* Add content link for PDFs and Videos */}
-              {(isVideoLink(fileUrl) || isPdfLink(fileUrl)) && (
+              {/* Show Content URL only for PDFs and external links, not for videos */}
+              {(!isVideoLink(fileUrl) && fileUrl) && (
                 <div className="mb-4 p-3 bg-gray-50 border rounded-lg">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Content URL:</span>
