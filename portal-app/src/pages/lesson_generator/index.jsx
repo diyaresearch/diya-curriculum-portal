@@ -240,21 +240,21 @@ export const LessonGenerator = () => {
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="subject"
+              htmlFor="category"
             >
-              Subject:
+              Category:
             </label>
             <select
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="subject"
+              id="category"
               value={formData.subject}
               onChange={handleChange}
               required
             >
-              <option>Select a subject</option>
+              <option>Select a category</option>
               <option value="Python">Python</option>
               <option value="Physics">Physics</option>
-              <option value="Chemistry">Chemisty</option>
+              <option value="Chemistry">Chemistry</option>
               <option value="Biology">Biology</option>
               <option value="Economics">Economics</option>
               <option value="Earth Science">Earth Science</option>
@@ -263,9 +263,32 @@ export const LessonGenerator = () => {
           <div className="mb-4">
             <label
               className="block text-gray-700 text-sm font-bold mb-2"
+              htmlFor="type"
+            >
+              Type:
+            </label>
+            <select
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="type"
+              value={formData.level}
+              onChange={handleChange}
+              required
+            >
+              <option>Select a type</option>
+              <option value="Lectures">Lectures</option>
+              <option value="Assignments">Assignments</option>
+              <option value="Quiz">Quiz</option>
+              <option value="Projects">Projects</option>
+              <option value="Case studies">Case studies</option>
+              <option value="Data sets">Data sets</option>
+            </select>
+          </div>
+          <div className="mb-4">
+            <label
+              className="block text-gray-700 text-sm font-bold mb-2"
               htmlFor="level"
             >
-              Grade Level:
+              Level:
             </label>
             <select
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -274,19 +297,10 @@ export const LessonGenerator = () => {
               onChange={handleChange}
               required
             >
-              <option>Select a grade level</option>
-              <option value="1st grade">1st grade</option>
-              <option value="2nd grade">2nd grade</option>
-              <option value="3rd grade">3rd grade</option>
-              <option value="4th grade">4th grade</option>
-              <option value="5th grade">5th grade</option>
-              <option value="6th grade">6th grade</option>
-              <option value="7th grade">7th grade</option>
-              <option value="8th grade">8th grade</option>
-              <option value="9th grade">9th grade</option>
-              <option value="10th grade">10th grade</option>
-              <option value="11th grade">11th grade</option>
-              <option value="12th grade">12th grade</option>
+              <option>Select a level</option>
+              <option value="Basic">Basic</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
             </select>
           </div>
           <div className="mb-4">
