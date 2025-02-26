@@ -4,6 +4,8 @@ import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
 import OverlayTileView from "../../components/OverlayTileView";
 import axios from "axios";
+import UploadContent from "../upload-content/index";
+import useUserData from "../../hooks/useUserData";
 
 Modal.setAppElement("#root");
 
@@ -28,6 +30,10 @@ export const LessonGenerator = () => {
   const [selectedMaterials, setSelectedMaterials] = useState({});
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const { userData } = useUserData(); // Get user data
+  const userRole = userData?.role; // Extract role
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false);
 
   useEffect(() => {
     axios
@@ -48,8 +54,7 @@ export const LessonGenerator = () => {
     const { id, value } = e.target;
     setFormData({
       ...formData,
-      [id]:
-        id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
+      [id]: id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
     });
   };
 
@@ -75,6 +80,41 @@ export const LessonGenerator = () => {
 
   const addSection = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
+  };
+
+  const handleCreateNewNugget = () => {
+    console.log("Create Nugget clicked. Current user role:", userRole);
+
+    if (!userRole) {
+      console.error("User role is undefined.");
+      return;
+    }
+
+    if (userRole === "teacherDefault") {
+      console.log("Showing upgrade popup for teacherDefault");
+      setShowUpgradePopup(true);
+    } else if (userRole === "teacherPlus" || userRole === "admin") {
+      if (selectedSectionIndex === null) {
+        setSelectedSectionIndex(0);
+      }
+      setShowUploadModal(true);
+    } else {
+      console.warn("Unrecognized user role:", userRole);
+    }
+  };
+
+  const closeUploadModal = () => {
+    setShowUploadModal(false);
+  };
+
+  const handleNewNuggetAdded = (newNugget) => {
+    setShowUploadModal(false);
+    if (selectedSectionIndex !== null) {
+      setSelectedMaterials((prevMaterials) => ({
+        ...prevMaterials,
+        [selectedSectionIndex]: [...(prevMaterials[selectedSectionIndex] || []), newNugget],
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -107,8 +147,7 @@ export const LessonGenerator = () => {
         sections: sections.map((section, index) => ({
           id: index,
           intro: section.intro,
-          contentIds:
-            selectedMaterials[index]?.map((material) => material.id) || [],
+          contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
         })),
         author: userId,
       };
@@ -156,9 +195,7 @@ export const LessonGenerator = () => {
     const alreadySelected = sectionMaterials.find((m) => m.id === material.id);
 
     if (alreadySelected) {
-      const updatedSectionMaterials = sectionMaterials.filter(
-        (m) => m.id !== material.id
-      );
+      const updatedSectionMaterials = sectionMaterials.filter((m) => m.id !== material.id);
       setSelectedMaterials({
         ...selectedMaterials,
         [selectedSectionIndex]: updatedSectionMaterials,
@@ -173,9 +210,7 @@ export const LessonGenerator = () => {
 
   const removeMaterial = (materialId, sectionIndex) => {
     const sectionMaterials = selectedMaterials[sectionIndex] || [];
-    const updatedSectionMaterials = sectionMaterials.filter(
-      (m) => m.id !== materialId
-    );
+    const updatedSectionMaterials = sectionMaterials.filter((m) => m.id !== materialId);
     setSelectedMaterials({
       ...selectedMaterials,
       [sectionIndex]: updatedSectionMaterials,
@@ -221,10 +256,7 @@ export const LessonGenerator = () => {
         <h2 className="text-2xl mb-4 text-center">Lesson Plan Generator</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="title"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
               Lesson Title:
             </label>
             <input
@@ -304,10 +336,7 @@ export const LessonGenerator = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="duration"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="duration">
               Lesson Duration (minutes):
             </label>
             <input
@@ -350,10 +379,7 @@ export const LessonGenerator = () => {
           </div>
 
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="description"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
               Lesson Description:
             </label>
             <textarea
@@ -394,6 +420,16 @@ export const LessonGenerator = () => {
                   }}
                 >
                   + Add materials from the portal
+                </button>
+                <button
+                  type="button"
+                  className="bg-green-500 text-white py-1 px-3 rounded"
+                  onClick={() => {
+                    setSelectedSectionIndex(index);
+                    handleCreateNewNugget();
+                  }}
+                >
+                  + Create New Nugget
                 </button>
 
                 <div className="flex flex-wrap mt-2">
@@ -441,7 +477,9 @@ export const LessonGenerator = () => {
             content={portalContent}
             onClose={() => setShowOverlay(false)}
             onSelectMaterial={onSelectMaterial}
-            initialSelectedTiles={Object.values(selectedMaterials || {}).flat().map((item) => item.id)}            
+            initialSelectedTiles={Object.values(selectedMaterials || {})
+              .flat()
+              .map((item) => item.id)}
           />
         )}
         <Modal
@@ -459,6 +497,29 @@ export const LessonGenerator = () => {
           </button>
         </Modal>
       </div>
+      <Modal isOpen={showUploadModal} onRequestClose={closeUploadModal}>
+        <UploadContent fromLesson={closeUploadModal} onNuggetCreated={handleNewNuggetAdded} />
+      </Modal>
+      {/* Popup for Teacher Default Users */}
+      {showUpgradePopup && (
+        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-md shadow-lg">
+            <p className="text-lg font-bold text-red-500">
+              To access this feature, please upgrade to TeacherPlus by emailing{" "}
+              <a href="mailto:contact@diyaresearch.org" className="text-blue-600">
+                contact@diyaresearch.org
+              </a>
+              .
+            </p>
+            <button
+              onClick={() => setShowUpgradePopup(false)}
+              className="mt-4 bg-gray-400 py-1 px-3 rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

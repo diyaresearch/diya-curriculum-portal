@@ -26,7 +26,7 @@ const createUnit = async (req, res) => {
     }
     console.log("Author ID:", Author);
 
-    await saveContentToFirestore(
+    const newNugget = await saveContentToFirestore(
       Title,
       Category,
       Type,
@@ -37,7 +37,7 @@ const createUnit = async (req, res) => {
       fileUrl,
       Author,
     );
-      res.status(201).send("Content submitted successfully");
+      res.status(201).send(newNugget);
   } catch (error) {
     console.error("Error submitting content:", error);
     res.status(500).send("Error submitting content");
@@ -93,8 +93,10 @@ async function saveContentToFirestore(
   };
   console.log("Document data to save:", data);
 
-  await contentRef.add(data);
-  console.log("Document successfully saved to Firestore");
+  const docRef = await contentRef.add(data);
+  console.log("Document successfully saved to Firestore with ID:", docRef.id);
+
+  return { id: docRef.id, ...data };
 }
 
 module.exports = {
