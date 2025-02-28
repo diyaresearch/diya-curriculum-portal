@@ -17,11 +17,15 @@ const getAllLessons = async (req, res) => {
       res.status(200).json([]);
       return;
     }
-    const lessons = [];
+    const publicLessons = [];
     lessonsSnapshot.forEach((doc) => {
-      lessons.push({ id: doc.id, ...doc.data() });
+      const lessonData = doc.data();
+      // only public and previous lessons
+      if (lessonData.isPublic) {
+        publicLessons.push({ id: doc.id, ...lessonData });
+      }
     });
-    res.status(200).json(lessons);
+    res.status(200).json(publicLessons);
   } catch (error) {
     console.error("Error fetching lessons:", error);
     res.status(500).send(error.message);
@@ -114,6 +118,7 @@ const postLesson = async (req, res) => {
       duration: formData.duration,
       sections: formData.sections,
       description: formData.description,
+      isPublic: formData.isPublic,
       createdAt: new Date().toISOString(),
     });
 
@@ -153,6 +158,7 @@ const updateLesson = async (req, res) => {
       duration: formData.duration || lessonData.duration,
       sections: formData.sections || lessonData.sections,
       description: formData.description || lessonData.description,
+      isPublic: formData.isPublic || lessonData.isPublic,
     };
 
     await lessonRef.update(updateData);
