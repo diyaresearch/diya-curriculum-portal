@@ -6,13 +6,16 @@ import OverlayTileView from "../../components/OverlayTileView";
 import axios from "axios";
 import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
 Modal.setAppElement("#root");
 
 export const LessonGenerator = () => {
   const [formData, setFormData] = useState({
     title: "",
-    subject: "",
+    category: "",
+    type: "",
     level: "",
     objectives: [],
     duration: "",
@@ -58,6 +61,10 @@ export const LessonGenerator = () => {
     });
   };
 
+  const handleDescriptionChange = (value) => {
+    setFormData({ ...formData, description: value });
+  };
+
   const handleChange_objective = (index, event) => {
     const newObjectives = [...objectives];
     newObjectives[index] = event.target.value;
@@ -65,15 +72,16 @@ export const LessonGenerator = () => {
     setFormData({ ...formData, objectives: newObjectives });
   };
 
-  const handleSectionChange = (index, event) => {
+  const handleSectionChange = (index, value) => {
     const updatedSections = [...sections];
     if (!updatedSections[index]) {
       updatedSections[index] = { intro: "", contentIds: [] };
     }
-    updatedSections[index].intro = event.target.value;
+    updatedSections[index].intro = value;
     setSections(updatedSections);
     setFormData({ ...formData, sections: updatedSections });
   };
+
   const addObjective = () => {
     setObjectives([...objectives, ""]);
   };
@@ -139,7 +147,8 @@ export const LessonGenerator = () => {
     try {
       const lessonData = {
         title: formData.title,
-        subject: formData.subject,
+        category: formData.category,
+        type: formData.type,
         level: formData.level,
         objectives: formData.objectives,
         duration: formData.duration,
@@ -168,7 +177,8 @@ export const LessonGenerator = () => {
       setModalMessage("Lesson plan generated successfully");
       setFormData({
         title: "",
-        subject: "",
+        category: "",
+        type: "",
         level: "",
         objectives: [""],
         duration: "",
@@ -302,7 +312,7 @@ export const LessonGenerator = () => {
             <select
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="type"
-              value={formData.level}
+              value={formData.type}
               onChange={handleChange}
               required
             >
@@ -382,33 +392,24 @@ export const LessonGenerator = () => {
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
               Lesson Description:
             </label>
-            <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="description"
-              rows="5"
-              placeholder="This lesson is about..."
+            <ReactQuill
+              theme="snow"
               value={formData.description}
-              onChange={handleChange}
-              required
+              onChange={handleDescriptionChange}
+              className="bg-white"
             />
           </div>
           <div className="mb-4 relative">
             {sections.map((section, index) => (
               <div key={index} className="mb-4 relative">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor={`Section${index + 1}`}
-                >
+                <label className="block text-gray-700 text-sm font-bold mb-2">
                   Section #{index + 1}:
                 </label>
-                <textarea
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id={`Section${index + 1}`}
-                  rows="5"
-                  placeholder="This section is about..."
+                <ReactQuill
+                  theme="snow"
                   value={sections[index]?.intro || ""}
-                  onChange={(event) => handleSectionChange(index, event)}
-                  required
+                  onChange={(value) => handleSectionChange(index, value)}
+                  className="bg-white"
                 />
 
                 <button
