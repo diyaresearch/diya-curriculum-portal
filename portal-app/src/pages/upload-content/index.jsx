@@ -5,14 +5,14 @@ import { getAuth } from "firebase/auth";
 
 Modal.setAppElement("#root");
 
-export const UploadContent = ({ fromLesson, onNuggetCreated }) => {
+export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic }) => {
   const [formData, setFormData] = useState({
     Title: "",
     Category: "",
     Type: "",
     Level: "",
     Duration: "",
-    isPublic: false,
+    isPublic: isPublic || false,
     Abstract: "",
     fileUrl: "",
   });
@@ -208,18 +208,20 @@ export const UploadContent = ({ fromLesson, onNuggetCreated }) => {
               required
             />
           </div>
-          <div className="mb-4 flex items-center">
-            <input
-              className="mr-2 leading-tight"
-              type="checkbox"
-              id="isPublic"
-              checked={formData.isPublic}
-              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-            />
-            <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
-              Make Public
-            </label>
-          </div>
+          {!fromLesson && (
+            <div className="mb-4 flex items-center">
+              <input
+                className="mr-2 leading-tight"
+                type="checkbox"
+                id="isPublic"
+                checked={formData.isPublic}
+                onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+              />
+              <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
+                Make Public
+              </label>
+            </div>
+          )}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Abstract">
               Abstract:
