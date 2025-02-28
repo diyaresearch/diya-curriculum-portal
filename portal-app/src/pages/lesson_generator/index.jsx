@@ -18,6 +18,7 @@ export const LessonGenerator = () => {
     duration: "",
     sections: [],
     description: "",
+    isPublic: false,
   });
 
   const [showOverlay, setShowOverlay] = useState(false);
@@ -144,6 +145,7 @@ export const LessonGenerator = () => {
         objectives: formData.objectives,
         duration: formData.duration,
         description: formData.description,
+        isPublic: formData.isPublic,
         sections: sections.map((section, index) => ({
           id: index,
           intro: section.intro,
@@ -174,6 +176,7 @@ export const LessonGenerator = () => {
         duration: "",
         sections: [],
         description: "",
+        isPublic: false,
       });
       setSections([{ intro: "", contentIds: [] }]);
       setSelectedMaterials({});
@@ -391,6 +394,18 @@ export const LessonGenerator = () => {
               onChange={handleChange}
               required
             />
+          </div>
+          <div className="mb-4 flex items-center">
+            <input
+              className="mr-2 leading-tight"
+              type="checkbox"
+              id="isPublic"
+              checked={formData.isPublic}
+              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+            />
+            <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
+              Make Public
+            </label>
           </div>
           <div className="mb-4 relative">
             {sections.map((section, index) => (
