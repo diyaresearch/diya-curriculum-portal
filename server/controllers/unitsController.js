@@ -22,11 +22,15 @@ const getAllUnits = async (req, res) => {
       return;
     }
     
-    const units = [];
+    const publicUnits = [];
     unitsSnapshot.forEach(doc => {
-      units.push({ id: doc.id, ...doc.data() });
+      const unitData = doc.data();
+        // only push public units
+        if (unitData.isPublic === "true") {
+            publicUnits.push({ id: doc.id, ...unitData });
+        }
     });
-    res.status(200).json(units);
+    res.status(200).json(publicUnits);
   } catch (error) {
     console.error('Error fetching units:', error);
     res.status(500).send(error.message);
