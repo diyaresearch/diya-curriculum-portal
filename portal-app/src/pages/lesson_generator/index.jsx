@@ -513,7 +513,7 @@ export const LessonGenerator = () => {
         </Modal>
       </div>
       <Modal isOpen={showUploadModal} onRequestClose={closeUploadModal}>
-        <UploadContent fromLesson={closeUploadModal} onNuggetCreated={handleNewNuggetAdded} />
+        <UploadContent fromLesson={closeUploadModal} onNuggetCreated={handleNewNuggetAdded} isPublic={formData.isPublic}/>
       </Modal>
       {/* Popup for Teacher Default Users */}
       {showUpgradePopup && (
