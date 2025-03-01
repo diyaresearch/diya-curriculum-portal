@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Modal from "react-modal";
-// import { getAuth } from "firebase/auth";
 import OverlayTileView from "../../components/OverlayTileView";
 import axios from "axios";
 import useUserData from "../../hooks/useUserData";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 Modal.setAppElement("#root");
 
 export const EditLesson = () => {
   const [formData, setFormData] = useState({
     title: "",
-    subject: "",
+    category: "",
+    type: "",
     level: "",
     objectives: [],
     duration: "",
@@ -62,8 +64,9 @@ export const EditLesson = () => {
         const lessonData = lessonResponse.data;
         setFormData({
           title: lessonData.title || "",
-          subject: lessonData.subject || "",
+          category: lessonData.category || "",
           level: lessonData.level || "",
+          type: lessonData.type || "",
           objectives: lessonData.objectives || [""],
           duration: lessonData.duration || "",
           sections: lessonData.sections || [],
@@ -118,12 +121,12 @@ export const EditLesson = () => {
     setFormData({ ...formData, objectives: newObjectives });
   };
 
-  const handleSectionChange = (index, event) => {
+  const handleSectionChange = (index, value) => {
     const updatedSections = [...sections];
     if (!updatedSections[index]) {
       updatedSections[index] = { intro: "", contentIds: [] };
     }
-    updatedSections[index].intro = event.target.value;
+    updatedSections[index].intro = value;
     setSections(updatedSections);
     setFormData({ ...formData, sections: updatedSections });
   };
@@ -156,8 +159,9 @@ export const EditLesson = () => {
     try {
       const lessonData = {
         title: formData.title,
-        subject: formData.subject,
+        category: formData.category,
         level: formData.level,
+        type: formData.type,
         objectives: formData.objectives,
         duration: formData.duration,
         description: formData.description,
@@ -168,7 +172,6 @@ export const EditLesson = () => {
         })),
         author: userId,
       };
-
       const response = await fetch(url, {
         method: "PUT",
         headers: {
@@ -270,31 +273,48 @@ export const EditLesson = () => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="subject">
-              Subject:
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
+              Category:
             </label>
             <select
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="subject"
-              value={formData.subject}
+              id="category"
+              value={formData.category}
               onChange={handleChange}
               required
             >
-              <option>Select a subject</option>
-              <option value="Mathematics">Mathematics</option>
-              <option value="Science">Science</option>
-              <option value="Social Studies">Social Studies</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="Languages">Languages</option>
-              <option value="Arts">Arts</option>
-              <option value="Physical">Physical</option>
-              <option value="Education">Education</option>
-              <option value="Health">Health</option>
+              <option>Select a category</option>
+              <option value="Python">Python</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="Economics">Economics</option>
+              <option value="Earth Science">Earth Science</option>
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="type">
+              Type:
+            </label>
+            <select
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="type"
+              value={formData.type}
+              onChange={handleChange}
+              required
+            >
+              <option>Select a type</option>
+              <option value="Lectures">Lectures</option>
+              <option value="Assignments">Assignments</option>
+              <option value="Quiz">Quiz</option>
+              <option value="Projects">Projects</option>
+              <option value="Case studies">Case studies</option>
+              <option value="Data sets">Data sets</option>
             </select>
           </div>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="level">
-              Grade Level:
+              Level:
             </label>
             <select
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -303,19 +323,10 @@ export const EditLesson = () => {
               onChange={handleChange}
               required
             >
-              <option>Select a grade level</option>
-              <option value="1st grade">1st grade</option>
-              <option value="2nd grade">2nd grade</option>
-              <option value="3rd grade">3rd grade</option>
-              <option value="4th grade">4th grade</option>
-              <option value="5th grade">5th grade</option>
-              <option value="6th grade">6th grade</option>
-              <option value="7th grade">7th grade</option>
-              <option value="8th grade">8th grade</option>
-              <option value="9th grade">9th grade</option>
-              <option value="10th grade">10th grade</option>
-              <option value="11th grade">11th grade</option>
-              <option value="12th grade">12th grade</option>
+              <option>Select a level</option>
+              <option value="Basic">Basic</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
             </select>
           </div>
           <div className="mb-4">
@@ -365,14 +376,11 @@ export const EditLesson = () => {
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
               Lesson Description:
             </label>
-            <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="description"
-              rows="5"
-              placeholder="This lesson is about..."
+            <ReactQuill
+              theme="snow"
               value={formData.description}
               onChange={handleChange}
-              required
+              className="bg-white"
             />
           </div>
           <div className="mb-4 relative">
@@ -384,14 +392,11 @@ export const EditLesson = () => {
                 >
                   Section #{index + 1}:
                 </label>
-                <textarea
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id={`Section${index + 1}`}
-                  rows="5"
-                  placeholder="This section is about..."
+                <ReactQuill
+                  theme="snow"
                   value={sections[index]?.intro || ""}
-                  onChange={(event) => handleSectionChange(index, event)}
-                  required
+                  onChange={(value) => handleSectionChange(index, value)}
+                  className="bg-white"
                 />
 
                 <button
