@@ -17,7 +17,7 @@ export const LessonGenerator = () => {
     category: "",
     type: "",
     level: "",
-    objectives: [],
+    objectives: "",
     duration: "",
     sections: [],
     description: "",
@@ -28,7 +28,6 @@ export const LessonGenerator = () => {
   const [portalContent, setPortalContent] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [objectives, setObjectives] = useState([""]);
   const [sections, setSections] = useState([{ intro: "", contentIds: [] }]);
   const [selectedMaterials, setSelectedMaterials] = useState({});
   const navigate = useNavigate();
@@ -65,11 +64,8 @@ export const LessonGenerator = () => {
     setFormData({ ...formData, description: value });
   };
 
-  const handleChange_objective = (index, event) => {
-    const newObjectives = [...objectives];
-    newObjectives[index] = event.target.value;
-    setObjectives(newObjectives);
-    setFormData({ ...formData, objectives: newObjectives });
+  const handleChange_objective = (value) => {
+    setFormData({ ...formData, objectives: value });
   };
 
   const handleSectionChange = (index, value) => {
@@ -80,10 +76,6 @@ export const LessonGenerator = () => {
     updatedSections[index].intro = value;
     setSections(updatedSections);
     setFormData({ ...formData, sections: updatedSections });
-  };
-
-  const addObjective = () => {
-    setObjectives([...objectives, ""]);
   };
 
   const addSection = () => {
@@ -180,7 +172,7 @@ export const LessonGenerator = () => {
         category: "",
         type: "",
         level: "",
-        objectives: [""],
+        objectives: "",
         duration: "",
         sections: [],
         description: "",
@@ -360,32 +352,15 @@ export const LessonGenerator = () => {
             />
           </div>
           <div className="mb-4">
-            {objectives.map((objective, index) => (
-              <div key={index} className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor={`Objective${index + 1}`}
-                >
-                  Objective #{index + 1}:
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id={`Objective${index + 1}`}
-                  type="text"
-                  placeholder="The objective of this lesson plan is..."
-                  value={formData.objectives[index]}
-                  onChange={(event) => handleChange_objective(index, event)}
-                  required
-                />
-              </div>
-            ))}
-            <button
-              type="button"
-              className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
-              onClick={addObjective}
-            >
-              Add another Objective
-            </button>
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="objectives">
+              Lesson Objective:
+            </label>
+            <ReactQuill
+              theme="snow"
+              value={formData.objectives}
+              onChange={handleChange_objective}
+              className="bg-white"
+            />
           </div>
 
           <div className="mb-4">
