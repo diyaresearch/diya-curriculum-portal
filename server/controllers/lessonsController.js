@@ -112,7 +112,8 @@ const postLesson = async (req, res) => {
     await lessonRef.set({
       authorId: authorId,
       title: formData.title,
-      subject: formData.subject,
+      category: formData.category,
+      type: formData.type,
       level: formData.level,
       objectives: formData.objectives,
       duration: formData.duration,
@@ -152,7 +153,8 @@ const updateLesson = async (req, res) => {
 
     const updateData = {
       title: formData.title || lessonData.title,
-      subject: formData.subject || lessonData.subject,
+      categoty: formData.category || lessonData.category,
+      type: formData.type || lessonData.type,
       level: formData.level || lessonData.level,
       objectives: formData.objectives || lessonData.objectives,
       duration: formData.duration || lessonData.duration,
@@ -216,7 +218,7 @@ const downloadPDF = async (req, res) => {
       .fontSize(20)
       .text(`Lesson: ${lessonData.title}`, { align: "center" });
     docPdf.moveDown();
-    docPdf.fontSize(14).text(`Subject: ${lessonData.subject}`);
+    docPdf.fontSize(14).text(`Category: ${lessonData.categpry}`);
     docPdf.text(`Level: ${lessonData.level}`);
     docPdf.text(`Duration: ${lessonData.duration} minutes`);
     docPdf.moveDown();

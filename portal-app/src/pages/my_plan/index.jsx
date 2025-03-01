@@ -17,7 +17,7 @@ export const MyPlans = () => {
   const TileItem = ({
     id,
     title,
-    subject,
+    category,
     type,
     level,
     duration,
@@ -31,8 +31,8 @@ export const MyPlans = () => {
       >
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-sm text-gray-600">Type: {type}</p>
-        <p className="text-sm text-gray-600">Subject: {subject}</p>
-        <p className="text-sm text-gray-600">Grade Level: {level}</p>
+        <p className="text-sm text-gray-600">Category: {category}</p>
+        <p className="text-sm text-gray-600">Level: {level}</p>
         <p className="text-sm text-gray-600">Duration: {duration}</p>
         <p className="text-sm text-gray-600">
           Date: {formatDate(date) || "N/A"}
@@ -110,8 +110,8 @@ export const MyPlans = () => {
               key={index}
               id={plan.id}
               title={plan.title}
-              subject={plan.subject}
-              type="Lesson Plan"
+              category={plan.category}
+              type={plan.type}
               level={plan.level}
               duration={`${plan.duration} minutes`}
               date={plan.createdAt}
