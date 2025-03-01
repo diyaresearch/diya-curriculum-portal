@@ -26,7 +26,7 @@ const getAllUnits = async (req, res) => {
     unitsSnapshot.forEach(doc => {
       const unitData = doc.data();
         // only push public units
-        if (unitData.isPublic === "true") {
+        if (unitData.isPublic) {
             publicUnits.push({ id: doc.id, ...unitData });
         }
     });
