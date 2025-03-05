@@ -289,14 +289,14 @@ export const LessonDetail = () => {
 
           {/* Objectives Section */}
           <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h2>
-            <ul className="list-disc pl-5 space-y-2">
-              {objectives.map((objective, index) => (
-                <li key={index} className="text-gray-700">
-                  {objective}
-                </li>
-              ))}
-            </ul>
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h2>
+            <ReactQuill
+              theme="snow"
+              value={objectives}
+                    readOnly={true}
+                    modules={{ toolbar: false }}
+              className="bg-white"
+            />
           </div>
 
           {/* Lesson Sections */}
