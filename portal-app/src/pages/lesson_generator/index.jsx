@@ -245,7 +245,7 @@ export const LessonGenerator = () => {
             className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
             onClick={() => navigate("/my-plans")}
           >
-            My Plans
+            Plans
           </button>
           <button
             type="button"
@@ -395,7 +395,7 @@ export const LessonGenerator = () => {
                     setShowOverlay(true);
                   }}
                 >
-                  + Add materials from the portal
+                  + Add Existing Nuggets
                 </button>
                 <button
                   type="button"
