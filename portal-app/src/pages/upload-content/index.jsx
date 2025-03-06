@@ -5,14 +5,14 @@ import { getAuth } from "firebase/auth";
 
 Modal.setAppElement("#root");
 
-export const UploadContent = ({ fromLesson, onNuggetCreated }) => {
+export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic }) => {
   const [formData, setFormData] = useState({
     Title: "",
     Category: "",
     Type: "",
     Level: "",
     Duration: "",
-    isPublic: false,
+    isPublic: isPublic || false,
     Abstract: "",
     fileUrl: "",
   });
@@ -43,23 +43,25 @@ export const UploadContent = ({ fromLesson, onNuggetCreated }) => {
     const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/`; // Replace with your backend endpoint URL
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("Title", formData.Title);
-      formDataToSend.append("Category", formData.Category);
-      formDataToSend.append("Type", formData.Type);
-      formDataToSend.append("Level", formData.Level);
-      formDataToSend.append("Duration", formData.Duration);
-      formDataToSend.append("isPublic", formData.isPublic);
-      formDataToSend.append("Abstract", formData.Abstract);
-      formDataToSend.append("fileUrl", formData.fileUrl);
-      formDataToSend.append("Author", userId); // Include the user ID
+      const formDataToSend = {
+        Title: formData.Title,
+        Category: formData.Category,
+        Level: formData.Level,
+        Type: formData.Type,
+        Duration: formData.Duration,
+        Abstract: formData.Abstract,
+        isPublic: formData.isPublic,
+        fileUrl: formData.fileUrl,
+        Author: userId,
+      };
 
       const response = await fetch(url, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`, // Include the token in the request headers
         },
-        body: formDataToSend,
+        body: JSON.stringify(formDataToSend),
       });
 
       if (!response.ok) {
@@ -208,18 +210,20 @@ export const UploadContent = ({ fromLesson, onNuggetCreated }) => {
               required
             />
           </div>
-          <div className="mb-4 flex items-center">
-            <input
-              className="mr-2 leading-tight"
-              type="checkbox"
-              id="isPublic"
-              checked={formData.isPublic}
-              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-            />
-            <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
-              Make Public
-            </label>
-          </div>
+          {!fromLesson && (
+            <div className="mb-4 flex items-center">
+              <input
+                className="mr-2 leading-tight"
+                type="checkbox"
+                id="isPublic"
+                checked={formData.isPublic}
+                onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+              />
+              <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
+                Make Public
+              </label>
+            </div>
+          )}
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Abstract">
               Abstract:
