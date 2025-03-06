@@ -420,10 +420,10 @@ export const LessonGenerator = () => {
                 {sections.length > 1 && (
                   <button
                     type="button"
-                    className="bg-red-500 text-white py-1 px-3 rounded"
+                    className="absolute top-0 right-0 text-red-500 text-xl font-bold"
                     onClick={() => deleteSection(index)}
                   >
-                  Delete Section
+                    &times;
                   </button>
                 )}
                 <div className="flex flex-wrap mt-2">
