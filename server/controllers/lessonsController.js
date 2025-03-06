@@ -17,11 +17,15 @@ const getAllLessons = async (req, res) => {
       res.status(200).json([]);
       return;
     }
-    const lessons = [];
+    const publicLessons = [];
     lessonsSnapshot.forEach((doc) => {
-      lessons.push({ id: doc.id, ...doc.data() });
+      const lessonData = doc.data();
+      // only public and previous lessons
+      if (lessonData.isPublic) {
+        publicLessons.push({ id: doc.id, ...lessonData });
+      }
     });
-    res.status(200).json(lessons);
+    res.status(200).json(publicLessons);
   } catch (error) {
     console.error("Error fetching lessons:", error);
     res.status(500).send(error.message);
@@ -108,12 +112,14 @@ const postLesson = async (req, res) => {
     await lessonRef.set({
       authorId: authorId,
       title: formData.title,
-      subject: formData.subject,
+      category: formData.category,
+      type: formData.type,
       level: formData.level,
       objectives: formData.objectives,
       duration: formData.duration,
       sections: formData.sections,
       description: formData.description,
+      isPublic: formData.isPublic,
       createdAt: new Date().toISOString(),
     });
 
@@ -147,12 +153,14 @@ const updateLesson = async (req, res) => {
 
     const updateData = {
       title: formData.title || lessonData.title,
-      subject: formData.subject || lessonData.subject,
+      categoty: formData.category || lessonData.category,
+      type: formData.type || lessonData.type,
       level: formData.level || lessonData.level,
       objectives: formData.objectives || lessonData.objectives,
       duration: formData.duration || lessonData.duration,
       sections: formData.sections || lessonData.sections,
       description: formData.description || lessonData.description,
+      isPublic: formData.isPublic || lessonData.isPublic,
     };
 
     await lessonRef.update(updateData);
@@ -210,7 +218,7 @@ const downloadPDF = async (req, res) => {
       .fontSize(20)
       .text(`Lesson: ${lessonData.title}`, { align: "center" });
     docPdf.moveDown();
-    docPdf.fontSize(14).text(`Subject: ${lessonData.subject}`);
+    docPdf.fontSize(14).text(`Category: ${lessonData.categpry}`);
     docPdf.text(`Level: ${lessonData.level}`);
     docPdf.text(`Duration: ${lessonData.duration} minutes`);
     docPdf.moveDown();
