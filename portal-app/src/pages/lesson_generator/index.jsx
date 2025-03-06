@@ -36,7 +36,6 @@ export const LessonGenerator = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const { userData } = useUserData(); // Get user data
   const userRole = userData?.role; // Extract role
-  const [showUpgradePopup, setShowUpgradePopup] = useState(false);
 
   useEffect(() => {
     axios
@@ -91,10 +90,7 @@ export const LessonGenerator = () => {
       return;
     }
 
-    if (userRole === "teacherDefault") {
-      console.log("Showing upgrade popup for teacherDefault");
-      setShowUpgradePopup(true);
-    } else if (userRole === "teacherPlus" || userRole === "admin") {
+    if (userRole === "teacherPlus" || userRole === "admin") {
       if (selectedSectionIndex === null) {
         setSelectedSectionIndex(0);
       }
@@ -519,26 +515,6 @@ export const LessonGenerator = () => {
           isPublic={false}
         />
       </Modal>
-      {/* Popup for Teacher Default Users */}
-      {showUpgradePopup && (
-        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-md shadow-lg">
-            <p className="text-lg font-bold text-red-500">
-              To access this feature, please upgrade to TeacherPlus by emailing{" "}
-              <a href="mailto:contact@diyaresearch.org" className="text-blue-600">
-                contact@diyaresearch.org
-              </a>
-              .
-            </p>
-            <button
-              onClick={() => setShowUpgradePopup(false)}
-              className="mt-4 bg-gray-400 py-1 px-3 rounded"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
