@@ -11,6 +11,8 @@ import {
   FaEdit,
   FaChevronDown,
 } from "react-icons/fa";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export const LessonDetail = () => {
   const { user, userData, loading } = useUserData();
@@ -184,7 +186,7 @@ export const LessonDetail = () => {
     );
   }
 
-  const { title, subject, level, duration, description, objectives, sections } = lesson;
+  const { title, type, category, level, duration, description, objectives, sections } = lesson;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -235,11 +237,15 @@ export const LessonDetail = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="font-semibold text-gray-600">Subject:</span>
-                <span className="ml-2 text-gray-800">{subject}</span>
+                <span className="font-semibold text-gray-600">Type:</span>
+                <span className="ml-2 text-gray-800">{type}</span>
               </div>
               <div>
-                <span className="font-semibold text-gray-600">Grade Level:</span>
+                <span className="font-semibold text-gray-600">Category:</span>
+                <span className="ml-2 text-gray-800">{category}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-600">Level:</span>
                 <span className="ml-2 text-gray-800">{level}</span>
               </div>
               <div>
@@ -272,19 +278,25 @@ export const LessonDetail = () => {
           {/* Description Section */}
           <div className="p-6 bg-gray-50 border-b">
             <h2 className="text-xl font-semibold text-gray-800 mb-3">Description</h2>
-            <p className="text-gray-700 leading-relaxed">{description}</p>
+            <ReactQuill
+              theme="snow"
+              value={description}
+              readOnly={true}
+              modules={{ toolbar: false }}
+              className="bg-gray-50"
+            />
           </div>
 
           {/* Objectives Section */}
           <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h2>
-            <ul className="list-disc pl-5 space-y-2">
-              {objectives.map((objective, index) => (
-                <li key={index} className="text-gray-700">
-                  {objective}
-                </li>
-              ))}
-            </ul>
+          <h2 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h2>
+            <ReactQuill
+              theme="snow"
+              value={objectives}
+                    readOnly={true}
+                    modules={{ toolbar: false }}
+              className="bg-white"
+            />
           </div>
 
           {/* Lesson Sections */}
@@ -296,7 +308,13 @@ export const LessonDetail = () => {
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">
                     Section {sectionIndex + 1}
                   </h3>
-                  <p className="text-gray-700">{section.intro}</p>
+                  <ReactQuill
+                    theme="snow"
+                    value={section.intro}
+                    readOnly={true}
+                    modules={{ toolbar: false }}
+                    className="bg-gray-50"
+                  />
                 </div>
 
                 <div className="space-y-6">
