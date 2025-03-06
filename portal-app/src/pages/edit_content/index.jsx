@@ -63,22 +63,23 @@ export const EditContent = () => {
     const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`;
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("Title", formData.Title);
-      formDataToSend.append("Category", formData.Category);
-      formDataToSend.append("Type", formData.Type);
-      formDataToSend.append("Level", formData.Level);
-      formDataToSend.append("Duration", formData.Duration);
-      formDataToSend.append("isPublic", formData.isPublic);
-      formDataToSend.append("Abstract", formData.Abstract);
-      formDataToSend.append("fileUrl", formData.fileUrl);
+      const formDataToSend = {
+        Title: formData.Title,
+        Category: formData.Category,
+        Level: formData.Level,
+        Type: formData.Type,
+        Duration: formData.Duration,
+        Abstract: formData.Abstract,
+        isPublic: formData.isPublic,
+        fileUrl: formData.fileUrl,
+      };
 
       const response = await fetch(url, {
-        method: `POST`,
-        body: formDataToSend,
+        method: "POST",
         headers: {
-          // 'Content-Type': 'multipart/form-data',
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify(formDataToSend),
       });
 
       if (!response.ok) {
