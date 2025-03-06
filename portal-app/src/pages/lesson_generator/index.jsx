@@ -148,7 +148,7 @@ export const LessonGenerator = () => {
           const contentIds = selectedMaterials[index]?.map((material) => material.id) || [];
           console.log(contentIds);
           if (!Array.isArray(contentIds) || contentIds.length === 0) {
-            console.error("No valid contentIds found for section", index);
+            console.log("No valid contentIds found for section", index);
             return [];
           }
 
@@ -314,7 +314,7 @@ export const LessonGenerator = () => {
             <select
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="category"
-              value={formData.subject}
+              value={formData.category}
               onChange={handleChange}
               required
             >
