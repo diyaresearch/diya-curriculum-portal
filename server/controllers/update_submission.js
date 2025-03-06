@@ -13,17 +13,24 @@ const updateUnitById = async (req, res) => {
   try {
     const { id } = req.params;
     console.log(req.body, req.params)
-    const { Title, Category, Type, Level, Duration, isPublic, Abstract, fileUrl } =
-      req.body;
+    const unitRef = db.collection(TABLE_CONTENT).doc(id);
+    const unitSnapshot = await unitRef.get();
+    
+    if (!unitSnapshot.exists) {
+      return res.status(404).json({ message: "Unit not found" });
+    }
+
+    const existingData = unitSnapshot.data();
+
     let updateData = {
-      Title,
-      Category,
-      Type,
-      Level,
-      Duration,
-      isPublic,
-      Abstract,
-      fileUrl,
+      Title: req.body.Title ?? existingData.Title,
+      Category: req.body.Category ?? existingData.Category,
+      Type: req.body.Type ?? existingData.Type,
+      Level: req.body.Level ?? existingData.Level,
+      Duration: req.body.Duration ?? existingData.Duration,
+      isPublic: req.body.isPublic,
+      Abstract: req.body.Abstract ?? existingData.Abstract,
+      fileUrl: req.body.fileUrl ?? existingData.fileUrl,
       LastModified: new Date().toISOString(),
     };
     console.log("update Data is", updateData)
