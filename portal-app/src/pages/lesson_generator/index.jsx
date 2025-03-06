@@ -21,6 +21,7 @@ export const LessonGenerator = () => {
     duration: "",
     sections: [],
     description: "",
+    isPublic: false,
   });
 
   const [showOverlay, setShowOverlay] = useState(false);
@@ -137,6 +138,39 @@ export const LessonGenerator = () => {
     const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/`;
 
     try {
+      console.log(formData.isPublic === true);
+
+      // If the lesson is public, update all content within sections to be public
+      if (formData.isPublic) {
+        const contentUpdates = sections.flatMap((section, index) => {
+          console.log("Processing section:", section);
+
+          const contentIds = selectedMaterials[index]?.map((material) => material.id) || [];
+          console.log(contentIds);
+          if (!Array.isArray(contentIds) || contentIds.length === 0) {
+            console.error("No valid contentIds found for section", index);
+            return [];
+          }
+
+          return contentIds.map((contentId) => {
+            console.log("Updating content to public:", contentId);
+            return fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ isPublic: true }),
+            });
+          });
+        });
+
+        console.log("Content update requests:", contentUpdates);
+        await Promise.all(contentUpdates);
+      } else {
+        console.log("Lesson is private. Skipping content update.");
+      }
+
       const lessonData = {
         title: formData.title,
         category: formData.category,
@@ -145,6 +179,7 @@ export const LessonGenerator = () => {
         objectives: formData.objectives,
         duration: formData.duration,
         description: formData.description,
+        isPublic: formData.isPublic,
         sections: sections.map((section, index) => ({
           id: index,
           intro: section.intro,
@@ -176,6 +211,7 @@ export const LessonGenerator = () => {
         duration: "",
         sections: [],
         description: "",
+        isPublic: false,
       });
       setSections([{ intro: "", contentIds: [] }]);
       setSelectedMaterials({});
@@ -272,10 +308,7 @@ export const LessonGenerator = () => {
             />
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="category"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
               Category:
             </label>
             <select
@@ -295,10 +328,7 @@ export const LessonGenerator = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="type"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="type">
               Type:
             </label>
             <select
@@ -318,10 +348,7 @@ export const LessonGenerator = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="level"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="level">
               Level:
             </label>
             <select
@@ -373,6 +400,18 @@ export const LessonGenerator = () => {
               onChange={handleDescriptionChange}
               className="bg-white"
             />
+          </div>
+          <div className="mb-4 flex items-center">
+            <input
+              className="mr-2 leading-tight"
+              type="checkbox"
+              id="isPublic"
+              checked={formData.isPublic}
+              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+            />
+            <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
+              Make Public
+            </label>
           </div>
           <div className="mb-4 relative">
             {sections.map((section, index) => (
@@ -474,7 +513,11 @@ export const LessonGenerator = () => {
         </Modal>
       </div>
       <Modal isOpen={showUploadModal} onRequestClose={closeUploadModal}>
-        <UploadContent fromLesson={closeUploadModal} onNuggetCreated={handleNewNuggetAdded} />
+        <UploadContent
+          fromLesson={closeUploadModal}
+          onNuggetCreated={handleNewNuggetAdded}
+          isPublic={false}
+        />
       </Modal>
       {/* Popup for Teacher Default Users */}
       {showUpgradePopup && (
