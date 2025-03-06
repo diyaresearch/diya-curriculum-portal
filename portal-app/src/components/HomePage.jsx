@@ -60,7 +60,7 @@ const HomePage = ({ user }) => {
                   onClick={() => navigate("/my-plans")}
                   className="font-bold py-2 px-4 rounded"
                 >
-                  View My Lesson Plans
+                  View Lesson Plans
                 </button>
               ) : (
                 "View and manage your lesson plans"
