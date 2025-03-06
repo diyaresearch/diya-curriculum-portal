@@ -28,7 +28,7 @@ const updateUnitById = async (req, res) => {
       Type: req.body.Type ?? existingData.Type,
       Level: req.body.Level ?? existingData.Level,
       Duration: req.body.Duration ?? existingData.Duration,
-      isPublic: req.body.isPublic ?? existingData.isPublic,
+      isPublic: req.body.isPublic,
       Abstract: req.body.Abstract ?? existingData.Abstract,
       fileUrl: req.body.fileUrl ?? existingData.fileUrl,
       LastModified: new Date().toISOString(),
