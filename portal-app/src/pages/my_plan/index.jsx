@@ -101,7 +101,7 @@ export const MyPlans = () => {
             Exit
           </button>
         </div>
-        <h2 className="text-2xl mb-4 text-center">My Plans</h2>
+        <h2 className="text-2xl mb-4 text-center">Plans</h2>
         <br />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
