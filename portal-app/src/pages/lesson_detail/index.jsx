@@ -216,7 +216,14 @@ export const LessonDetail = () => {
                         Download Plan
                       </button>
                       <button
-                        onClick={() => navigate(`/edit-lesson/${lessonId}`)}
+                        onClick={() => {
+                          if (userData.role === "admin" || user.uid === authorId) {
+                            navigate(`/edit-lesson/${lessonId}`);
+                          } else {
+                            console.error("No permissions to update lesson");
+                            alert("You do not have permission to edit this lesson plan. Contact the Admin to update the lesson plan.");
+                          }
+                        }}
                         className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                       >
                         <FaEdit className="inline-block mr-2" />
