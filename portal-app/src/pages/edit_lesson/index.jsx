@@ -117,6 +117,15 @@ export const EditLesson = () => {
   const handleChange_objective = (value) => {
     setFormData({ ...formData, objectives: value });
   };
+  
+  const deleteSection = (index) => {
+    const updatedSections = sections.filter((_, i) => i !== index);
+    setSections(updatedSections);
+    setFormData((prevData) => ({
+      ...prevData,
+      sections: updatedSections,
+    }));
+  }; 
 
   const handleSectionChange = (index, value) => {
     const updatedSections = [...sections];
@@ -386,7 +395,15 @@ export const EditLesson = () => {
                 >
                   + Add materials from the portal
                 </button>
-
+                {sections.length > 1 && (
+                  <button
+                    type="button"
+                    className="absolute top-0 right-0 text-red-500 text-xl font-bold"
+                    onClick={() => deleteSection(index)}
+                  >
+                    &times;
+                  </button>
+                )}
                 <div className="flex flex-wrap mt-2">
                   {selectedMaterials[index]?.map((material) => (
                     <div
