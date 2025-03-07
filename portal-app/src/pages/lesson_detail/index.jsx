@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import DOMPurify from "dompurify";
 
 export const LessonDetail = () => {
   const { user, userData, loading } = useUserData();
@@ -216,7 +217,16 @@ export const LessonDetail = () => {
                         Download Plan
                       </button>
                       <button
-                        onClick={() => navigate(`/edit-lesson/${lessonId}`)}
+                        onClick={() => {
+                          if (userData.role === "admin" || user.uid === authorId) {
+                            navigate(`/edit-lesson/${lessonId}`);
+                          } else {
+                            console.error("No permissions to update lesson");
+                            alert(
+                              "You do not have permission to edit this lesson plan. Contact the Admin to update the lesson plan."
+                            );
+                          }
+                        }}
                         className="block w-full text-left px-4 py-2 hover:bg-gray-100"
                       >
                         <FaEdit className="inline-block mr-2" />
@@ -289,12 +299,12 @@ export const LessonDetail = () => {
 
           {/* Objectives Section */}
           <div className="p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h2>
+            <h2 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h2>
             <ReactQuill
               theme="snow"
               value={objectives}
-                    readOnly={true}
-                    modules={{ toolbar: false }}
+              readOnly={true}
+              modules={{ toolbar: false }}
               className="bg-white"
             />
           </div>
@@ -340,7 +350,11 @@ export const LessonDetail = () => {
                           </h4>
                         </div>
 
-                        <p className="text-gray-600 mb-4">{content.Abstract}</p>
+                        {/* <p className="text-gray-600 mb-4">{content.Abstract}</p> */}
+                        <div
+                          className="text-gray-600 mb-4"
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.Abstract) }}
+                        />
 
                         {/* Content Display */}
                         {isVideoLink(content.fileUrl) ? (
