@@ -4,6 +4,7 @@ import Modal from "react-modal";
 import OverlayTileView from "../../components/OverlayTileView";
 import axios from "axios";
 import useUserData from "../../hooks/useUserData";
+import UploadContent from "../upload-content/index";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
@@ -19,6 +20,7 @@ export const EditLesson = () => {
     duration: "",
     sections: [],
     description: "",
+    isPublic: false,
   });
 
   const [showOverlay, setShowOverlay] = useState(false);
@@ -35,6 +37,7 @@ export const EditLesson = () => {
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const { user, userData, loading } = useUserData();
   const [authorId, setAuthorId] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const closeModal = () => setIsModalOpen(false);
 
@@ -71,6 +74,7 @@ export const EditLesson = () => {
           duration: lessonData.duration || "",
           sections: lessonData.sections || [],
           description: lessonData.description || "",
+          isPublic: lessonData.isPublic || false,
         });
         setObjectives(lessonData.objectives || "");
         setSections(lessonData.sections || [{ intro: "", contentIds: [] }]);
@@ -116,6 +120,28 @@ export const EditLesson = () => {
 
   const handleChange_objective = (value) => {
     setFormData({ ...formData, objectives: value });
+  };
+
+  const handleCreateNewNugget = () => {
+
+      if (selectedSectionIndex === null) {
+        setSelectedSectionIndex(0);
+      }
+      setShowUploadModal(true);
+  };
+
+  const handleNewNuggetAdded = (newNugget) => {
+    setShowUploadModal(false);
+    if (selectedSectionIndex !== null) {
+      setSelectedMaterials((prevMaterials) => ({
+        ...prevMaterials,
+        [selectedSectionIndex]: [...(prevMaterials[selectedSectionIndex] || []), newNugget],
+      }));
+    }
+  };
+
+  const closeUploadModal = () => {
+    setShowUploadModal(false);
   };
   
   const deleteSection = (index) => {
@@ -174,7 +200,39 @@ export const EditLesson = () => {
           contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
         })),
         author: userId,
+        isPublic: formData.isPublic,
       };
+
+      if (formData.isPublic) {
+        const contentUpdates = sections.flatMap((section, index) => {
+          console.log("Processing section:", section);
+
+          const contentIds = selectedMaterials[index]?.map((material) => material.id) || [];
+          console.log(contentIds);
+          if (!Array.isArray(contentIds) || contentIds.length === 0) {
+            console.log("No valid contentIds found for section", index);
+            return [];
+          }
+
+          return contentIds.map((contentId) => {
+            console.log("Updating content to public:", contentId);
+            return fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ isPublic: true }),
+            });
+          });
+        });
+
+        console.log("Content update requests:", contentUpdates);
+        await Promise.all(contentUpdates);
+      } else {
+        console.log("Lesson is private. Skipping content update.");
+      }
+
       const response = await fetch(url, {
         method: "PUT",
         headers: {
@@ -369,6 +427,18 @@ export const EditLesson = () => {
               className="bg-white"
             />
           </div>
+          <div className="mb-4 flex items-center">
+            <input
+              className="mr-2 leading-tight"
+              type="checkbox"
+              id="isPublic"
+              checked={formData.isPublic}
+              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+            />
+            <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
+              Make Public
+            </label>
+          </div>
           <div className="mb-4 relative">
             {sections.map((section, index) => (
               <div key={index} className="mb-4 relative">
@@ -394,6 +464,16 @@ export const EditLesson = () => {
                   }}
                 >
                   + Add materials from the portal
+                </button>
+                <button
+                  type="button"
+                  className="bg-green-500 text-white py-1 px-3 rounded"
+                  onClick={() => {
+                    setSelectedSectionIndex(index);
+                    handleCreateNewNugget();
+                  }}
+                >
+                  + Create New Nugget
                 </button>
                 {sections.length > 1 && (
                   <button
@@ -489,6 +569,13 @@ export const EditLesson = () => {
             Close
           </button>
         </Modal>
+        <Modal isOpen={showUploadModal} onRequestClose={closeUploadModal}>
+                <UploadContent
+                  fromLesson={closeUploadModal}
+                  onNuggetCreated={handleNewNuggetAdded}
+                  isPublic={false}
+                />
+              </Modal>
       </div>
     </div>
   );
