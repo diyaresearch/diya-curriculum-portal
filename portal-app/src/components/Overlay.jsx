@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEllipsisV } from "react-icons/fa";
+import DOMPurify from "dompurify"; 
 
 const Overlay = ({ content, onClose }) => {
   const navigate = useNavigate();
@@ -61,7 +62,10 @@ const Overlay = ({ content, onClose }) => {
         <p>Level: {content.Level}</p>
         <p>Duration: {content.Duration}min</p>
         <div className="mt-4 p-3 border rounded h-[150px] w-full overflow-auto">
-          <div className="text-left">{content.Abstract}</div>
+        <div
+          className="text-left"
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.Abstract) }}
+        />
         </div>
         <div>
           <h3 className="text-lg mb-2">Content Url:</h3> {/* Reduce spacing using mb-2 */}

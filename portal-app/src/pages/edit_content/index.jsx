@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { useNavigate, useParams } from "react-router-dom";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
 Modal.setAppElement("#root");
 
@@ -54,6 +56,10 @@ export const EditContent = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleAbstractChange = (value) => {
+    setFormData({ ...formData, Abstract: value });
   };
 
   const handleSubmit = async (e) => {
@@ -156,15 +162,12 @@ export const EditContent = () => {
               required
             >
               <option>Select a category</option>
-              <option value="Mathematics">Mathematics</option>
-              <option value="Science">Science</option>
-              <option value="Social Studies">Social Studies</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="Languages">Languages</option>
-              <option value="Arts">Arts</option>
-              <option value="Physical">Physical</option>
-              <option value="Education">Education</option>
-              <option value="Health">Health</option>
+              <option value="Python">Python</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="Economics">Economics</option>
+              <option value="Earth Science">Earth Science</option>
             </select>
           </div>
           <div className="mb-4">
@@ -251,14 +254,11 @@ export const EditContent = () => {
             >
               Abstract:
             </label>
-            <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="Abstract"
-              rows="5"
-              placeholder="Abstract"
+            <ReactQuill
+              theme="snow"
               value={formData.Abstract}
-              onChange={handleChange}
-              required
+              onChange={handleAbstractChange}
+              className="bg-white"
             />
           </div>
           <div className="mb-4">
