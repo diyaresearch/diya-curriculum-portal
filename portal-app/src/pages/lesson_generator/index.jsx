@@ -79,13 +79,28 @@ export const LessonGenerator = () => {
   };
 
   const deleteSection = (index) => {
+    // Remove the section at the given index
     const updatedSections = sections.filter((_, i) => i !== index);
+  
+    // Update selectedMaterials by shifting keys
+    const updatedMaterials = Object.keys(selectedMaterials)
+      .map((key) => parseInt(key, 10))
+      .filter((key) => key !== index)
+      .reduce((acc, key) => {
+        const newKey = key > index ? key - 1 : key;
+        acc[newKey] = selectedMaterials[key];
+        return acc;
+      }, {});
+  
     setSections(updatedSections);
+    setSelectedMaterials(updatedMaterials);
+    
     setFormData((prevData) => ({
       ...prevData,
       sections: updatedSections,
     }));
-  };  
+  };
+  
 
   const addSection = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
