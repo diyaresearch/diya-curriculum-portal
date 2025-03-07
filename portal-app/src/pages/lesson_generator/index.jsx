@@ -78,6 +78,30 @@ export const LessonGenerator = () => {
     setFormData({ ...formData, sections: updatedSections });
   };
 
+  const deleteSection = (index) => {
+    // Remove the section at the given index
+    const updatedSections = sections.filter((_, i) => i !== index);
+  
+    // Update selectedMaterials by shifting keys
+    const updatedMaterials = Object.keys(selectedMaterials)
+      .map((key) => parseInt(key, 10))
+      .filter((key) => key !== index)
+      .reduce((acc, key) => {
+        const newKey = key > index ? key - 1 : key;
+        acc[newKey] = selectedMaterials[key];
+        return acc;
+      }, {});
+  
+    setSections(updatedSections);
+    setSelectedMaterials(updatedMaterials);
+    
+    setFormData((prevData) => ({
+      ...prevData,
+      sections: updatedSections,
+    }));
+  };
+  
+
   const addSection = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
   };
@@ -442,7 +466,16 @@ export const LessonGenerator = () => {
                 >
                   + Create New Nugget
                 </button>
-
+                
+                {sections.length > 1 && (
+                  <button
+                    type="button"
+                    className="absolute top-0 right-0 text-red-500 text-xl font-bold"
+                    onClick={() => deleteSection(index)}
+                  >
+                    &times;
+                  </button>
+                )}
                 <div className="flex flex-wrap mt-2">
                   {selectedMaterials[index]?.map((material) => (
                     <div
