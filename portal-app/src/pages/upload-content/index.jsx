@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
 Modal.setAppElement("#root");
 
@@ -24,6 +26,10 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic }) => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleAbstractChange = (value) => {
+    setFormData({ ...formData, Abstract: value });
   };
 
   const handleSubmit = async (e) => {
@@ -156,6 +162,7 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic }) => {
               <option value="Physics">Physics</option>
               <option value="Chemistry">Chemistry</option>
               <option value="Biology">Biology</option>
+              <option value="Economics">Economics</option>
               <option value="Earth Science">Earth Science</option>
             </select>
           </div>
@@ -228,14 +235,11 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic }) => {
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Abstract">
               Abstract:
             </label>
-            <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="Abstract"
-              rows="5"
-              placeholder="Abstract"
+            <ReactQuill
+              theme="snow"
               value={formData.Abstract}
-              onChange={handleChange}
-              required
+              onChange={handleAbstractChange}
+              className="bg-white"
             />
           </div>
           <div className="mb-4">
