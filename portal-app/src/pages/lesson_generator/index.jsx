@@ -585,6 +585,9 @@ export const LessonGenerator = () => {
             initialSelectedTiles={Object.values(selectedMaterials || {})
               .flat()
               .map((item) => item.id)}
+            type={formData.type}
+            category={formData.category}
+            level={formData.level}
           />
         )}
         <Modal
@@ -607,6 +610,9 @@ export const LessonGenerator = () => {
           fromLesson={closeUploadModal}
           onNuggetCreated={handleNewNuggetAdded}
           isPublic={false}
+          type={formData.type}
+          category={formData.category}
+          level={formData.level}
         />
       </Modal>
     </div>
