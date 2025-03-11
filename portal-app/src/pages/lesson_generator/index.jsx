@@ -38,15 +38,54 @@ export const LessonGenerator = () => {
   const userRole = userData?.role; // Extract role
 
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`)
-      .then((response) => {
+    const fetchUnits = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user) {
+          return;
+        }
+
+        const token = await user.getIdToken();
+        const response = await axios.get(
+          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units/user`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         setPortalContent(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching portal content:", error);
-      });
+      } catch (error) {
+        console.error("Error fetching user units:", error);
+      }
+    };
+
+    fetchUnits();
   }, []);
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem("lessonPlanDraft");
+    if (savedDraft) {
+      const parsedDraft = JSON.parse(savedDraft);
+      console.log("Restored Data:", parsedDraft);
+
+      setFormData(parsedDraft);
+
+      // Ensure `sections` and `selectedMaterials` are also restored properly
+      setSections(parsedDraft.sections || [{ intro: "", contentIds: [] }]);
+
+      // Convert content IDs to actual material objects
+      const restoredMaterials = {};
+      if (parsedDraft.sections) {
+        parsedDraft.sections.forEach((section, index) => {
+          restoredMaterials[index] = section.contentIds.map(
+            (contentId) => portalContent.find((item) => item.id === contentId) || { id: contentId }
+          );
+        });
+      }
+      setSelectedMaterials(restoredMaterials);
+    }
+  }, [portalContent]);
 
   const handleExit = () => {
     navigate("/");
@@ -135,6 +174,20 @@ export const LessonGenerator = () => {
         [selectedSectionIndex]: [...(prevMaterials[selectedSectionIndex] || []), newNugget],
       }));
     }
+  };
+
+  const handleSaveSession = () => {
+    const savedData = {
+      ...formData,
+      sections: sections.map((section, index) => ({
+        ...section,
+        contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
+      })),
+    };
+
+    console.log("Saving Draft:", savedData);
+    localStorage.setItem("lessonPlanDraft", JSON.stringify(savedData));
+    alert("Lesson plan draft saved successfully!");
   };
 
   const handleSubmit = async (e) => {
@@ -236,6 +289,7 @@ export const LessonGenerator = () => {
       setSelectedMaterials({});
       setModalIsOpen(true);
       setIsSubmitting(false);
+      localStorage.removeItem("lessonPlanDraft");
     } catch (error) {
       setModalMessage("Error generating lesson plan: " + error.message);
       setModalIsOpen(true);
@@ -501,9 +555,17 @@ export const LessonGenerator = () => {
               Add another Section
             </button>
           </div>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center space-between">
+            {/* Save Button - Temporarily Saves the Session */}
             <button
-              className={`py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-full font-bold ${
+              className="py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/3 font-bold bg-orange-400 hover:bg-orange-600 text-white"
+              type="button"
+              onClick={handleSaveSession}
+            >
+              Save as Draft
+            </button>
+            <button
+              className={`py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/3 font-bold ${
                 isSubmitting
                   ? "bg-gray-400 text-gray-700 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-700 text-white"
@@ -511,7 +573,7 @@ export const LessonGenerator = () => {
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
         </form>
