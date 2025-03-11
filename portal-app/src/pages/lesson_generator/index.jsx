@@ -38,14 +38,29 @@ export const LessonGenerator = () => {
   const userRole = userData?.role; // Extract role
 
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`)
-      .then((response) => {
+    const fetchUnits = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user) {
+          return;
+        }
+
+        const token = await user.getIdToken();
+        const response = await axios.get(
+          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units/user`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         setPortalContent(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching portal content:", error);
-      });
+      } catch (error) {
+        console.error("Error fetching user units:", error);
+      }
+    };
+
+    fetchUnits();
   }, []);
 
   useEffect(() => {
@@ -53,18 +68,18 @@ export const LessonGenerator = () => {
     if (savedDraft) {
       const parsedDraft = JSON.parse(savedDraft);
       console.log("Restored Data:", parsedDraft);
-      
+
       setFormData(parsedDraft);
-      
+
       // Ensure `sections` and `selectedMaterials` are also restored properly
       setSections(parsedDraft.sections || [{ intro: "", contentIds: [] }]);
-      
+
       // Convert content IDs to actual material objects
       const restoredMaterials = {};
       if (parsedDraft.sections) {
         parsedDraft.sections.forEach((section, index) => {
-          restoredMaterials[index] = section.contentIds.map(contentId => 
-            portalContent.find(item => item.id === contentId) || { id: contentId }
+          restoredMaterials[index] = section.contentIds.map(
+            (contentId) => portalContent.find((item) => item.id === contentId) || { id: contentId }
           );
         });
       }
@@ -166,10 +181,10 @@ export const LessonGenerator = () => {
       ...formData,
       sections: sections.map((section, index) => ({
         ...section,
-        contentIds: selectedMaterials[index]?.map(material => material.id) || []
-      }))
+        contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
+      })),
     };
-    
+
     console.log("Saving Draft:", savedData);
     localStorage.setItem("lessonPlanDraft", JSON.stringify(savedData));
     alert("Lesson plan draft saved successfully!");

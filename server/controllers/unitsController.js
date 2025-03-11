@@ -53,6 +53,34 @@ const getUnitById = async (req, res) => {
   }
 };
 
+const getUserUnits = async (req, res) => {
+  try {
+    const userId = req.user ? req.user.uid : null; // Extract user ID from authenticated request
+    if (!userId) {
+      return res.status(401).send("Unauthorized");
+    }
+
+    const unitsSnapshot = await db.collection(TABLE_CONTENT).get();
+    if (unitsSnapshot.empty) {
+      return res.status(200).json([]);
+    }
+
+    const userUnits = [];
+    unitsSnapshot.forEach((doc) => {
+      const unitData = doc.data();
+      // Fetch public units and private units owned by the user
+      if (unitData.isPublic || unitData.Author === userId) {
+        userUnits.push({ id: doc.id, ...unitData });
+      }
+    });
+
+    res.status(200).json(userUnits);
+  } catch (error) {
+    console.error("Error fetching user units:", error);
+    res.status(500).send(error.message);
+  }
+};
+
 const deleteUnit = async (req, res) => {
   try {
     const unitId = req.params.id;
@@ -95,5 +123,6 @@ const deleteUnit = async (req, res) => {
 module.exports = {
   getAllUnits,
   getUnitById,
+  getUserUnits,
   deleteUnit,
 };
