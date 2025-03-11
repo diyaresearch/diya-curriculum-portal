@@ -7,11 +7,11 @@ const types = ["Lectures", "Assignments", "Quiz", "Projects", "Case studies", "D
 
 const levels = ["Basic", "Intermediate", "Advanced"];
 
-const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTiles = {} }) => {
+const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTiles, type, category, level  = {} }) => {
   const [filteredContent, setFilteredContent] = useState(content);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedType, setSelectedType] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(category || "");
+  const [selectedType, setSelectedType] = useState(type || "");
+  const [selectedLevel, setSelectedLevel] = useState(level || "");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
@@ -20,6 +20,12 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTi
   useEffect(() => {
     setFilteredContent(content);
   }, [content]);
+
+  useEffect(() => {
+    setSelectedCategory(category || "");
+    setSelectedType(type || "");
+    setSelectedLevel(level || "");
+  }, [category, type, level]);
 
   useEffect(() => {
     filterContent();
