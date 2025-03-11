@@ -555,17 +555,17 @@ export const LessonGenerator = () => {
               Add another Section
             </button>
           </div>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center space-between">
             {/* Save Button - Temporarily Saves the Session */}
             <button
-              className="py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/2 font-bold bg-blue-500 hover:bg-blue-600 text-white"
+              className="py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/3 font-bold bg-orange-400 hover:bg-orange-600 text-white"
               type="button"
               onClick={handleSaveSession}
             >
-              Save
+              Save as Draft
             </button>
             <button
-              className={`py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/2 font-bold ${
+              className={`py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/3 font-bold ${
                 isSubmitting
                   ? "bg-gray-400 text-gray-700 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-700 text-white"
