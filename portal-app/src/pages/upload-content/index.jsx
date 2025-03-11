@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
@@ -7,12 +7,12 @@ import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
 Modal.setAppElement("#root");
 
-export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic }) => {
+export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic, type, category, level }) => {
   const [formData, setFormData] = useState({
     Title: "",
-    Category: "",
-    Type: "",
-    Level: "",
+    Category: category || "",
+    Type: type || "",
+    Level: level || "",
     Duration: "",
     isPublic: isPublic || false,
     Abstract: "",
@@ -23,6 +23,16 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic }) => {
   const [modalMessage, setModalMessage] = useState("");
 
   const navigate = useNavigate();
+
+  // Ensure form updates if new props are passed in
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      Category: category || prev.Category,
+      Type: type || prev.Type,
+      Level: level || prev.Level,
+    }));
+  }, [category, type, level]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -80,9 +90,9 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic }) => {
       setModalMessage("Content submitted successfully");
       setFormData({
         Title: "",
-        Category: "",
-        Type: "",
-        Level: "",
+        Category: category || "",
+        Type: type || "",
+        Level: level || "",
         Duration: "",
         isPublic: false,
         Abstract: "",

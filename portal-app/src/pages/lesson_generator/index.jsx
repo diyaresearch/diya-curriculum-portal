@@ -81,7 +81,7 @@ export const LessonGenerator = () => {
   const deleteSection = (index) => {
     // Remove the section at the given index
     const updatedSections = sections.filter((_, i) => i !== index);
-  
+
     // Update selectedMaterials by shifting keys
     const updatedMaterials = Object.keys(selectedMaterials)
       .map((key) => parseInt(key, 10))
@@ -91,16 +91,15 @@ export const LessonGenerator = () => {
         acc[newKey] = selectedMaterials[key];
         return acc;
       }, {});
-  
+
     setSections(updatedSections);
     setSelectedMaterials(updatedMaterials);
-    
+
     setFormData((prevData) => ({
       ...prevData,
       sections: updatedSections,
     }));
   };
-  
 
   const addSection = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
@@ -466,7 +465,7 @@ export const LessonGenerator = () => {
                 >
                   + Create New Nugget
                 </button>
-                
+
                 {sections.length > 1 && (
                   <button
                     type="button"
@@ -524,6 +523,9 @@ export const LessonGenerator = () => {
             initialSelectedTiles={Object.values(selectedMaterials || {})
               .flat()
               .map((item) => item.id)}
+            type={formData.type}
+            category={formData.category}
+            level={formData.level}
           />
         )}
         <Modal
@@ -546,6 +548,9 @@ export const LessonGenerator = () => {
           fromLesson={closeUploadModal}
           onNuggetCreated={handleNewNuggetAdded}
           isPublic={false}
+          type={formData.type}
+          category={formData.category}
+          level={formData.level}
         />
       </Modal>
     </div>
