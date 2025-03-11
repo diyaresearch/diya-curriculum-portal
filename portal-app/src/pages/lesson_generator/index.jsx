@@ -48,6 +48,30 @@ export const LessonGenerator = () => {
       });
   }, []);
 
+  useEffect(() => {
+    const savedDraft = localStorage.getItem("lessonPlanDraft");
+    if (savedDraft) {
+      const parsedDraft = JSON.parse(savedDraft);
+      console.log("Restored Data:", parsedDraft);
+      
+      setFormData(parsedDraft);
+      
+      // Ensure `sections` and `selectedMaterials` are also restored properly
+      setSections(parsedDraft.sections || [{ intro: "", contentIds: [] }]);
+      
+      // Convert content IDs to actual material objects
+      const restoredMaterials = {};
+      if (parsedDraft.sections) {
+        parsedDraft.sections.forEach((section, index) => {
+          restoredMaterials[index] = section.contentIds.map(contentId => 
+            portalContent.find(item => item.id === contentId) || { id: contentId }
+          );
+        });
+      }
+      setSelectedMaterials(restoredMaterials);
+    }
+  }, [portalContent]);
+
   const handleExit = () => {
     navigate("/");
   };
@@ -81,7 +105,7 @@ export const LessonGenerator = () => {
   const deleteSection = (index) => {
     // Remove the section at the given index
     const updatedSections = sections.filter((_, i) => i !== index);
-  
+
     // Update selectedMaterials by shifting keys
     const updatedMaterials = Object.keys(selectedMaterials)
       .map((key) => parseInt(key, 10))
@@ -91,16 +115,15 @@ export const LessonGenerator = () => {
         acc[newKey] = selectedMaterials[key];
         return acc;
       }, {});
-  
+
     setSections(updatedSections);
     setSelectedMaterials(updatedMaterials);
-    
+
     setFormData((prevData) => ({
       ...prevData,
       sections: updatedSections,
     }));
   };
-  
 
   const addSection = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
@@ -136,6 +159,20 @@ export const LessonGenerator = () => {
         [selectedSectionIndex]: [...(prevMaterials[selectedSectionIndex] || []), newNugget],
       }));
     }
+  };
+
+  const handleSaveSession = () => {
+    const savedData = {
+      ...formData,
+      sections: sections.map((section, index) => ({
+        ...section,
+        contentIds: selectedMaterials[index]?.map(material => material.id) || []
+      }))
+    };
+    
+    console.log("Saving Draft:", savedData);
+    localStorage.setItem("lessonPlanDraft", JSON.stringify(savedData));
+    alert("Lesson plan draft saved successfully!");
   };
 
   const handleSubmit = async (e) => {
@@ -237,6 +274,7 @@ export const LessonGenerator = () => {
       setSelectedMaterials({});
       setModalIsOpen(true);
       setIsSubmitting(false);
+      localStorage.removeItem("lessonPlanDraft");
     } catch (error) {
       setModalMessage("Error generating lesson plan: " + error.message);
       setModalIsOpen(true);
@@ -466,7 +504,7 @@ export const LessonGenerator = () => {
                 >
                   + Create New Nugget
                 </button>
-                
+
                 {sections.length > 1 && (
                   <button
                     type="button"
@@ -503,8 +541,16 @@ export const LessonGenerator = () => {
             </button>
           </div>
           <div className="flex items-center justify-center">
+            {/* Save Button - Temporarily Saves the Session */}
             <button
-              className={`py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-full font-bold ${
+              className="py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/2 font-bold bg-blue-500 hover:bg-blue-600 text-white"
+              type="button"
+              onClick={handleSaveSession}
+            >
+              Save
+            </button>
+            <button
+              className={`py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/2 font-bold ${
                 isSubmitting
                   ? "bg-gray-400 text-gray-700 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-700 text-white"
@@ -512,7 +558,7 @@ export const LessonGenerator = () => {
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
         </form>
