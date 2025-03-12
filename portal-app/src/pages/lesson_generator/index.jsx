@@ -8,6 +8,7 @@ import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import Quill CSS
+import { FaExternalLinkAlt } from "react-icons/fa";
 
 Modal.setAppElement("#root");
 
@@ -535,7 +536,16 @@ export const LessonGenerator = () => {
                       key={material.id}
                       className="p-2 border rounded-md m-1 text-xs flex items-center"
                     >
-                      <span>{material.Title}</span>
+                      {/* Hyperlinked Title */}
+                      <a
+                        href={`/view-content/${material.UnitID}`} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline flex items-center"
+                      >
+                        {material.Title} 
+                      </a>
+
                       <button
                         onClick={() => removeMaterial(material.id, index)}
                         className="ml-2 text-red-500 font-bold"
