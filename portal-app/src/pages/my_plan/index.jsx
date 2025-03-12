@@ -8,22 +8,14 @@ export const MyPlans = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
   const navigate = useNavigate();
+  const [planType, setPlanType] = useState("public"); // "public" or "myPlans"
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleString();
   };
 
-  const TileItem = ({
-    id,
-    title,
-    category,
-    type,
-    level,
-    duration,
-    date,
-    onClick,
-  }) => {
+  const TileItem = ({ id, title, category, type, level, duration, date, onClick }) => {
     return (
       <div
         className="border p-4 rounded-md shadow-sm hover:bg-gray-100 hover:shadow-lg transition duration-200"
@@ -34,9 +26,7 @@ export const MyPlans = () => {
         <p className="text-sm text-gray-600">Category: {category}</p>
         <p className="text-sm text-gray-600">Level: {level}</p>
         <p className="text-sm text-gray-600">Duration: {duration}</p>
-        <p className="text-sm text-gray-600">
-          Date: {formatDate(date) || "N/A"}
-        </p>
+        <p className="text-sm text-gray-600">Date: {formatDate(date) || "N/A"}</p>
       </div>
     );
   };
@@ -52,38 +42,33 @@ export const MyPlans = () => {
         }
 
         const token = await user.getIdToken();
-        const response = await axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons`, {
+        let apiUrl =
+          planType === "public"
+            ? `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons`
+            : `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/myLessons`;
+
+        const response = await axios.get(apiUrl, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        // Make all lesson plans public
-       const userPlans = response.data;
-         //response.data.filter(
-        //   (plan) => plan.authorId === user.uid
-        // );
-        setPlans(userPlans);
+
+        setPlans(response.data);
       } catch (error) {
         console.error("Error fetching plans:", error);
       }
     };
 
     fetchPlans();
-  }, [navigate]);
+  }, [navigate, planType]);
 
   const handlePageChange = (direction) => {
     if (direction === "prev" && currentPage > 1) {
       setCurrentPage(currentPage - 1);
-    } else if (
-      direction === "next" &&
-      currentPage < Math.ceil(plans.length / itemsPerPage)
-    ) {
+    } else if (direction === "next" && currentPage < Math.ceil(plans.length / itemsPerPage)) {
       setCurrentPage(currentPage + 1);
     }
   };
 
-  const paginatedPlans = plans.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedPlans = plans.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleExit = () => {
     navigate("/");
@@ -93,6 +78,17 @@ export const MyPlans = () => {
     <div className="min-h-screen bg-blue-100 flex flex-col items-center justify-center">
       <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 w-full max-w-3xl relative flex-grow">
         <div className="absolute top-4 right-4 flex space-x-2">
+          <select
+            className="border px-3 py-1 rounded bg-white"
+            value={planType}
+            onChange={(e) => {
+              setPlanType(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="public">Public Plans</option>
+            <option value="myPlans">My Plans</option>
+          </select>
           <button
             type="button"
             className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
@@ -101,7 +97,9 @@ export const MyPlans = () => {
             Exit
           </button>
         </div>
-        <h2 className="text-2xl mb-4 text-center">Plans</h2>
+        <h2 className="text-2xl mb-4 text-center">
+          {planType === "public" ? "Public Plans" : "My Plans"}
+        </h2>
         <br />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
