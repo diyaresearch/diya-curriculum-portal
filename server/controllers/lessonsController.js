@@ -9,7 +9,7 @@ const TABLE_SECTIONS = SCHEMA_QUALIFIER + "sections";
 
 console.log('lessonsController tables are', TABLE_CONTENT, TABLE_LESSON, TABLE_SECTIONS)
 
-// Get all lessons
+// Get all public lessons
 const getAllLessons = async (req, res) => {
   try {
     const lessonsSnapshot = await db.collection(TABLE_LESSON).get();
@@ -46,6 +46,35 @@ const getLessonById = async (req, res) => {
     res.status(200).json({ id: doc.id, ...doc.data() });
   } catch (error) {
     console.error("Error fetching lesson:", error);
+    res.status(500).send(error.message);
+  }
+};
+
+//Get current user private lesson plan
+const getUserLessons = async (req, res) => {
+  try {
+    const userId = req.user ? req.user.uid : null;
+    if (!userId) {
+      return res.status(401).send("Unauthorized");
+    }
+
+    const lessonRef = await db.collection(TABLE_LESSON).get();
+    if (lessonRef.empty) {
+      return res.status(200).json([]);
+    }
+
+    const userLessons = [];
+    lessonRef.forEach((doc) => {
+      const lessonData = doc.data();
+      // Fetch only private lessons owned by the user
+      if (!lessonData.isPublic && lessonData.authorId === userId) {
+        userLessons.push({ id: doc.id, ...lessonData });
+      }
+    });
+
+    res.status(200).json(userLessons);
+  } catch (error) {
+    console.error("Error fetching user units:", error);
     res.status(500).send(error.message);
   }
 };
@@ -298,6 +327,7 @@ const downloadPDF = async (req, res) => {
 module.exports = {
   getAllLessons,
   getLessonById,
+  getUserLessons,
   getAllSections,
   getSections,
   postLesson,
