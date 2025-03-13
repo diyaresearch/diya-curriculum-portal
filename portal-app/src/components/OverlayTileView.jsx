@@ -153,23 +153,35 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTi
                       date={formatDate(item.LastModified)}
                       onClick={() => {}}
                     />
-                    <button
-                      onClick={() => {
-                        setSelectedTiles((prevState) =>
-                          prevState.includes(item.id)
-                            ? prevState.filter((id) => id !== item.id)
-                            : [...prevState, item.id]
-                        );
-                        onSelectMaterial(item);
-                      }}
-                      className={`absolute bottom-3 right-2 py-1 px-3 rounded ${
-                        selectedTiles.includes(item.id)
-                          ? "bg-red-500 text-white"
-                          : "bg-blue-500 text-white"
-                      }`}
-                    >
-                      {selectedTiles.includes(item.id) ? "Unselect" : "Select"}
-                    </button>
+                    <div className="absolute bottom-3 right-2 flex flex-col space-y-2">
+                      {/* View Button - Opens content in a new tab */}
+                      <a
+                        href={`/view-content/${item.UnitID}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="py-1 px-3 rounded bg-green-500 text-white hover:bg-green-700 transition duration-200 text-center"
+                      >
+                        View
+                      </a>
+
+                      <button
+                        onClick={() => {
+                          setSelectedTiles((prevState) =>
+                            prevState.includes(item.id)
+                              ? prevState.filter((id) => id !== item.id)
+                              : [...prevState, item.id]
+                          );
+                          onSelectMaterial(item);
+                        }}
+                        className={`py-1 px-3 rounded text-center ${
+                          selectedTiles.includes(item.id)
+                            ? "bg-red-500 text-white"
+                            : "bg-blue-500 text-white"
+                        }`}
+                      >
+                        {selectedTiles.includes(item.id) ? "Unselect" : "Select"}
+                      </button>
+                    </div>
                   </div>
                 ))}
             </div>
