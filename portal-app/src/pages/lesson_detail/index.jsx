@@ -187,7 +187,7 @@ export const LessonDetail = () => {
     );
   }
 
-  const { title, type, category, level, duration, description, objectives, sections } = lesson;
+  const { title, type, category, level, duration, description, objectives, sections, isPublic } = lesson;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -245,7 +245,7 @@ export const LessonDetail = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
               <div>
                 <span className="font-semibold text-gray-600">Type:</span>
                 <span className="ml-2 text-gray-800">{type}</span>
@@ -261,6 +261,10 @@ export const LessonDetail = () => {
               <div>
                 <span className="font-semibold text-gray-600">Duration:</span>
                 <span className="ml-2 text-gray-800">{duration} minutes</span>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-600">Is Public:</span>
+                <span className="ml-2 text-gray-800">{isPublic ? "Yes" : "No"}</span>
               </div>
             </div>
           </div>
