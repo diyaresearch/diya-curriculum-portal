@@ -8,14 +8,14 @@ export const MyPlans = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
   const navigate = useNavigate();
-  const [planType, setPlanType] = useState("public"); // "public" or "myPlans"
+  const [planType, setPlanType] = useState("myPlans"); // "public" or "myPlans"
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleString();
   };
 
-  const TileItem = ({ id, title, category, type, level, duration, date, onClick }) => {
+  const TileItem = ({ id, title, category, type, level, duration, isPublic, date, onClick }) => {
     return (
       <div
         className="border p-4 rounded-md shadow-sm hover:bg-gray-100 hover:shadow-lg transition duration-200"
@@ -26,6 +26,7 @@ export const MyPlans = () => {
         <p className="text-sm text-gray-600">Category: {category}</p>
         <p className="text-sm text-gray-600">Level: {level}</p>
         <p className="text-sm text-gray-600">Duration: {duration}</p>
+        <p className="text-sm text-gray-600">Is Public: {isPublic ? "Yes" : "No"}</p>
         <p className="text-sm text-gray-600">Date: {formatDate(date) || "N/A"}</p>
       </div>
     );
@@ -112,6 +113,7 @@ export const MyPlans = () => {
               type={plan.type}
               level={plan.level}
               duration={`${plan.duration} minutes`}
+              isPublic={plan.isPublic}
               date={plan.createdAt}
               onClick={() => navigate(`/lesson/${plan.id}`)}
             />

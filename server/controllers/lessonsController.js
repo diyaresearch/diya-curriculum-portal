@@ -50,7 +50,7 @@ const getLessonById = async (req, res) => {
   }
 };
 
-//Get current user private lesson plan
+//Get current user lesson plan
 const getUserLessons = async (req, res) => {
   try {
     const userId = req.user ? req.user.uid : null;
@@ -67,7 +67,7 @@ const getUserLessons = async (req, res) => {
     lessonRef.forEach((doc) => {
       const lessonData = doc.data();
       // Fetch only private lessons owned by the user
-      if (!lessonData.isPublic && lessonData.authorId === userId) {
+      if (lessonData.authorId === userId) {
         userLessons.push({ id: doc.id, ...lessonData });
       }
     });
