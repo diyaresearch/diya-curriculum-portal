@@ -189,9 +189,9 @@ const updateLesson = async (req, res) => {
       duration: formData.duration || lessonData.duration,
       sections: formData.sections || lessonData.sections,
       description: formData.description || lessonData.description,
-      isPublic: formData.isPublic || lessonData.isPublic,
+      isPublic: formData.isPublic,
     };
-
+    
     await lessonRef.update(updateData);
 
     res
