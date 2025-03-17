@@ -33,7 +33,7 @@ export const EditLesson = () => {
   const [selectedMaterials, setSelectedMaterials] = useState({});
   const navigate = useNavigate();
   const { lessonId } = useParams();
-  const [setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const { user, userData, loading } = useUserData();
   const [authorId, setAuthorId] = useState(false);
@@ -54,7 +54,10 @@ export const EditLesson = () => {
         const token = await user.getIdToken();
 
         const portalResponse = await axios.get(
-          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`
+          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units/user`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
         setPortalContent(portalResponse.data);
 
@@ -90,16 +93,18 @@ export const EditLesson = () => {
   }, [lessonId, navigate, user, loading]);
 
   useEffect(() => {
-    if (sections.length > 0) {
+    if (sections.length > 0 && portalContent.length > 0) {
       setSelectedMaterials(
         sections.reduce((acc, section, index) => {
           const contentIdsArray = Array.isArray(section.contentIds)
             ? section.contentIds
             : [section.contentIds]; // Ensure `contentIds` is an array
+          
           acc[index] = contentIdsArray.map((contentId) => {
             const materialDetails = portalContent.find((item) => item.id === contentId);
-            return materialDetails || { id: contentId };
+            return materialDetails || { id: contentId }; // Avoid undefined
           });
+  
           return acc;
         }, {})
       );
@@ -433,7 +438,11 @@ export const EditLesson = () => {
               type="checkbox"
               id="isPublic"
               checked={formData.isPublic}
-              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+              onChange={(e) => {
+                const updatedValue = e.target.checked;
+                setFormData((prevData) => ({ ...prevData, isPublic: updatedValue }));
+                console.log(updatedValue);
+              }}
             />
             <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
               Make Public
@@ -463,7 +472,7 @@ export const EditLesson = () => {
                     setShowOverlay(true);
                   }}
                 >
-                  + Add materials from the portal
+                  + Add Existing Nuggets
                 </button>
                 <button
                   type="button"
@@ -553,6 +562,9 @@ export const EditLesson = () => {
             initialSelectedTiles={Object.values(selectedMaterials || {})
               .flat()
               .map((item) => item.id)}
+            type={formData.type}
+            category={formData.category}
+            level={formData.level}
           />
         )}
         <Modal
@@ -574,6 +586,9 @@ export const EditLesson = () => {
                   fromLesson={closeUploadModal}
                   onNuggetCreated={handleNewNuggetAdded}
                   isPublic={false}
+                  type={formData.type}
+                  category={formData.category}
+                  level={formData.level}
                 />
               </Modal>
       </div>
