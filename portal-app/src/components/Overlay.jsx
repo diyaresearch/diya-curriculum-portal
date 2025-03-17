@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaEllipsisV } from "react-icons/fa";
-import DOMPurify from "dompurify"; 
+import DOMPurify from "dompurify";
+import useUserData from "../hooks/useUserData";
 
 const Overlay = ({ content, onClose }) => {
   const navigate = useNavigate();
   const [showOptions, setShowOptions] = useState(false);
+  const { user, userData } = useUserData();
+
   if (!content) return null;
 
   const handleSaveLink = () => {
@@ -21,18 +24,13 @@ const Overlay = ({ content, onClose }) => {
         <h2 className="text-4xl font-bold">{content.Title}</h2>
         <div className="flex space-x-2">
           <div className="relative">
-            <button
-              onClick={() => setShowOptions(!showOptions)}
-              className="p-2"
-            >
+            <button onClick={() => setShowOptions(!showOptions)} className="p-2">
               <FaEllipsisV />
             </button>
             {showOptions && (
               <div className="absolute right-0 bg-white border shadow-md mt-2 rounded w-48">
                 <button
-                  onClick={() =>
-                    window.open(`/view-content/${content.UnitID}`, "_blank")
-                  }
+                  onClick={() => window.open(`/view-content/${content.UnitID}`, "_blank")}
                   className="block px-4 py-2"
                 >
                   Open in New Tab
@@ -43,8 +41,17 @@ const Overlay = ({ content, onClose }) => {
                 </button>
                 <hr />
                 <button
-                  onClick={() => navigate(`/edit-content/${content.id}`)}
-                  className="block px-4 py-2"
+                  onClick={() => {
+                    if (userData?.role === "admin") {
+                      navigate(`/edit-content/${content.id}`);
+                    } else {
+                      console.log("Access denied: Only admins can edit content.");
+                    }
+                  }}
+                  className={`block px-4 py-2 ${
+                    userData?.role !== "admin" ? "cursor-not-allowed opacity-50" : ""
+                  }`}
+                  disabled={userData?.role !== "admin"}
                 >
                   Edit the Content
                 </button>
@@ -62,18 +69,19 @@ const Overlay = ({ content, onClose }) => {
         <p>Level: {content.Level}</p>
         <p>Duration: {content.Duration}min</p>
         <div className="mt-4 p-3 border rounded h-[150px] w-full overflow-auto">
-        <div
-          className="text-left"
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.Abstract) }}
-        />
+          <div
+            className="text-left"
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.Abstract) }}
+          />
         </div>
         <div>
           <h3 className="text-lg mb-2">Content Url:</h3> {/* Reduce spacing using mb-2 */}
-          <div 
+          <div
             className="p-3 border rounded w-full overflow-auto"
-            style={{ minHeight: '50px', maxHeight: '200px' }} /* Adjust height dynamically */
+            style={{ minHeight: "50px", maxHeight: "200px" }} /* Adjust height dynamically */
           >
-            <div className="text-left break-words">{content.fileUrl}</div> {/* Ensure long URLs wrap */}
+            <div className="text-left break-words">{content.fileUrl}</div>{" "}
+            {/* Ensure long URLs wrap */}
           </div>
         </div>
         <div className="mt-4 p-2 border rounded">
@@ -84,9 +92,7 @@ const Overlay = ({ content, onClose }) => {
             placeholder="Write a comment..."
           ></textarea>
           <div className="flex justify-end">
-            <button className="mt-2 p-2 bg-blue-500 text-white rounded">
-              Comment
-            </button>
+            <button className="mt-2 p-2 bg-blue-500 text-white rounded">Comment</button>
           </div>
         </div>
       </div>
