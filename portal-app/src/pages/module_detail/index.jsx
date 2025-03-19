@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import ModuleComponent from "../../components/Module";
 
@@ -11,7 +11,14 @@ const sampleLessonPlans = [
 export const ModuleDetail = () => {
   const { moduleId } = useParams(); // Get module ID from URL
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState("view"); // Default mode is "view"
+
+  // Extract selected plans from navigation state (only for create mode)
+  const selectedPlanIds  = location.state?.selectedPlans || [];
+
+  const [fetchedLessonPlans, setFetchedLessonPlans] = useState([]);
+
   const [moduleData, setModuleData] = useState({
     title: "",
     description: "",
@@ -22,11 +29,31 @@ export const ModuleDetail = () => {
   useEffect(() => {
     if (moduleId === "create") {
       setMode("create");
+      fetchLessonPlans();
     } else if (moduleId) {
       setMode("view");
       fetchModuleDetails();
     }
   }, [moduleId]);
+
+    // Fetch full lesson plan details using IDs
+    const fetchLessonPlans = async () => {
+        try {
+          const token = localStorage.getItem("authToken"); // Adjust based on your auth method
+          const lessonPlanRequests = selectedPlanIds.map((id) =>
+            axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${id}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+          );
+    
+          const responses = await Promise.all(lessonPlanRequests);
+          const lessonPlans = responses.map((response) => response.data);
+          setFetchedLessonPlans(lessonPlans);
+          setModuleData((prevData) => ({ ...prevData, lessonPlans }));
+        } catch (error) {
+          console.error("Error fetching lesson plans:", error);
+        }
+      };
 
   const fetchModuleDetails = async () => {
     try {
@@ -66,8 +93,8 @@ export const ModuleDetail = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-blue-100">
       <div className="bg-white shadow-md rounded-lg px-8 py-6 w-full max-w-5xl">
-         {/* Dynamic Title */}
-         <h1 className="text-2xl text-center mb-4">
+        {/* Dynamic Title */}
+        <h1 className="text-2xl text-center mb-4">
           {mode === "create" ? "Create Module" : mode === "edit" ? "Edit Module" : "View Module"}
         </h1>
         {mode === "view" && (
@@ -80,7 +107,7 @@ export const ModuleDetail = () => {
         )}
         <ModuleComponent
           mode={mode}
-          lessonPlans={sampleLessonPlans}
+          lessonPlans={fetchedLessonPlans}
           moduleData={moduleData}
           setModuleData={setModuleData}
         />
