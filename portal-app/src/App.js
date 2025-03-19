@@ -13,6 +13,7 @@ import MyPlans from "./pages/my_plan";
 import LessonDetail from "./pages/lesson_detail";
 import Layout from "./components/Layout";
 import UserProfilePage from "./pages/profile_detail";
+import ModuleDetail from "./pages/module_detail";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="/my-plans" element={<MyPlans />} />
           <Route path="/lesson/:lessonId" element={<LessonDetail />} />
           <Route path="/user-profile" element={<UserProfilePage />} />
+          <Route path="/module/:moduleId" element={<ModuleDetail />} />
         </Routes>
       </Layout>
     </BrowserRouter>
