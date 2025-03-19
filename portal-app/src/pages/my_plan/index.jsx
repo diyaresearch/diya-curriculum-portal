@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
+import useUserData from "../../hooks/useUserData";
 
 const categories = ["Python", "Physics", "Chemistry", "Biology", "Economics", "Earth Science"];
 const types = ["Lectures", "Assignments", "Quiz", "Projects", "Case studies", "Data sets"];
@@ -14,11 +15,14 @@ export const MyPlans = () => {
   const itemsPerPage = 9;
   const navigate = useNavigate();
   const [planType, setPlanType] = useState("myPlans"); // "public" or "myPlans"
+  const { userData } = useUserData();
+  const userRole = userData?.role; // Extract user role
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedPlans, setSelectedPlans] = useState(new Set()); // Store selected lesson plans
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -96,6 +100,24 @@ export const MyPlans = () => {
 
   const handleExit = () => {
     navigate("/");
+  };
+
+  // ✅ Handle plan selection (checkbox for admins)
+  const handleSelectPlan = (planId) => {
+    const updatedSelection = new Set(selectedPlans);
+    if (updatedSelection.has(planId)) {
+      updatedSelection.delete(planId);
+    } else {
+      updatedSelection.add(planId);
+    }
+    setSelectedPlans(updatedSelection);
+  };
+
+  // ✅ Handle "Create Module" button click
+  const handleCreateModule = () => {
+    if (selectedPlans.size > 0) {
+      navigate("/create-module", { state: { selectedPlans: Array.from(selectedPlans) } });
+    }
   };
 
   return (
@@ -179,22 +201,35 @@ export const MyPlans = () => {
 
         {/* Plans Display */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedPlans.map((plan, index) => (
-            <div
-              key={index}
-              className="border p-4 rounded-md shadow-sm hover:bg-gray-100 hover:shadow-lg transition duration-200 cursor-pointer"
-              onClick={() => navigate(`/lesson/${plan.id}`)}
-            >
-              <h3 className="text-lg font-semibold">{plan.title}</h3>
-              <p className="text-sm text-gray-600">Type: {plan.type}</p>
-              <p className="text-sm text-gray-600">Category: {plan.category}</p>
-              <p className="text-sm text-gray-600">Level: {plan.level}</p>
-              <p className="text-sm text-gray-600">Duration: {plan.duration} minutes</p>
-              <p className="text-sm text-gray-600">Is Public: {plan.isPublic ? "Yes" : "No"}</p>
-              <p className="text-sm text-gray-600">Date: {formatDate(plan.createdAt) || "N/A"}</p>
+        {paginatedPlans.map((plan, index) => (
+            <div key={index} className="border p-4 rounded-md shadow-sm flex items-center space-x-2">
+              {/* ✅ Checkbox for admins */}
+              {userRole === "admin" && (
+                <input
+                  type="checkbox"
+                  checked={selectedPlans.has(plan.id)}
+                  onChange={() => handleSelectPlan(plan.id)}
+                />
+              )}
+              <div onClick={() => navigate(`/lesson/${plan.id}`)}>
+                <h3 className="text-lg font-semibold">{plan.title}</h3>
+                <p className="text-sm text-gray-600">Type: {plan.type}</p>
+                <p className="text-sm text-gray-600">Category: {plan.category}</p>
+                <p className="text-sm text-gray-600">Level: {plan.level}</p>
+                <p className="text-sm text-gray-600">Duration: {plan.duration} minutes</p>
+                <p className="text-sm text-gray-600">Is Public: {plan.isPublic ? "Yes" : "No"}</p>
+                <p className="text-sm text-gray-600">Date: {formatDate(plan.createdAt) || "N/A"}</p>
+              </div>
             </div>
           ))}
         </div>
+
+        {/* ✅ Create Module Button (if any plans are selected) */}
+        {selectedPlans.size > 0 && (
+          <button onClick={handleCreateModule} className="bg-green-500 text-white px-4 py-2 rounded mt-4">
+            Create Module
+          </button>
+        )}
 
         {/* Pagination */}
         <div className="flex justify-between items-center mt-4">
