@@ -116,7 +116,7 @@ export const MyPlans = () => {
   // ✅ Handle "Create Module" button click
   const handleCreateModule = () => {
     if (selectedPlans.size > 0) {
-      navigate("/create-module", { state: { selectedPlans: Array.from(selectedPlans) } });
+      navigate("/module/create", { state: { selectedPlans: Array.from(selectedPlans) } });
     }
   };
 
