@@ -13,6 +13,7 @@ console.log(`Loaded environment: ${env}`);
 const unitsRoutes = require("./routes/units");
 const contentRoutes = require("./routes/units");
 const lessonsRoutes = require("./routes/lessons");
+const modulesRoutes = require("./routes/modules");
 const userRoutes = require("./routes/user");
 
 
@@ -44,6 +45,7 @@ app.use(cors({
 app.use("/api", unitsRoutes);
 app.use("/api", contentRoutes);
 app.use("/api", lessonsRoutes);
+app.use("/api", modulesRoutes);
 app.use("/api/user", userRoutes);
 
 // Add this route to handle the root path
