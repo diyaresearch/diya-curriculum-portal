@@ -1,30 +1,24 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
-import ModuleComponent from "../../components/Module";
-
-const sampleLessonPlans = [
-  { title: "Introduction to Python", category: "Python", level: "Basic", duration: 60 },
-  { title: "Advanced React", category: "Web Development", level: "Advanced", duration: 90 },
-];
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export const ModuleDetail = () => {
   const { moduleId } = useParams(); // Get module ID from URL
   const navigate = useNavigate();
   const location = useLocation();
-  const [mode, setMode] = useState("view"); // Default mode is "view"
+  const [mode, setMode] = useState("view");
 
-  // Extract selected plans from navigation state (only for create mode)
-  const selectedPlanIds  = location.state?.selectedPlans || [];
+  // Extract selected lesson plan IDs from navigation state (for create mode)
+  const selectedPlanIds = location.state?.selectedPlans || [];
 
-  const [fetchedLessonPlans, setFetchedLessonPlans] = useState([]);
-
-  const [moduleData, setModuleData] = useState({
-    title: "",
-    description: "",
-    tags: [],
-    lessonPlans: [],
-  });
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [tags, setTags] = useState([]);
+  const [newTag, setNewTag] = useState("");
+  const [lessonPlanMap, setLessonPlanMap] = useState({}); // { 0: "lessonId", 1: "lessonId" }
+  const [lessonPlans, setLessonPlans] = useState([]);
 
   useEffect(() => {
     if (moduleId === "create") {
@@ -36,55 +30,107 @@ export const ModuleDetail = () => {
     }
   }, [moduleId]);
 
-    // Fetch full lesson plan details using IDs
-    const fetchLessonPlans = async () => {
-        try {
-          const token = localStorage.getItem("authToken"); // Adjust based on your auth method
-          const lessonPlanRequests = selectedPlanIds.map((id) =>
-            axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${id}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            })
-          );
-    
-          const responses = await Promise.all(lessonPlanRequests);
-          const lessonPlans = responses.map((response) => response.data);
-          setFetchedLessonPlans(lessonPlans);
-          setModuleData((prevData) => ({ ...prevData, lessonPlans }));
-        } catch (error) {
-          console.error("Error fetching lesson plans:", error);
-        }
-      };
+  // Fetch lesson plans for create mode (from selectedPlanIds)
+  const fetchLessonPlans = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const lessonPlanRequests = selectedPlanIds.map((id) =>
+        axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      );
 
+      const responses = await Promise.all(lessonPlanRequests);
+      const fetchedPlans = responses.map((response) => response.data);
+
+      // Convert lesson plans to { 0: "lessonId", 1: "lessonId" }
+      const plansMap = fetchedPlans.reduce((acc, plan, index) => {
+        acc[index] = plan.id;
+        return acc;
+      }, {});
+
+      setLessonPlans(fetchedPlans);
+      setLessonPlanMap(plansMap);
+    } catch (error) {
+      console.error("Error fetching lesson plans:", error);
+    }
+  };
+
+  // Fetch module details for view/edit mode
   const fetchModuleDetails = async () => {
     try {
       const response = await axios.get(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`
       );
-      setModuleData(response.data);
+      const moduleData = response.data;
+
+      setTitle(moduleData.title);
+      setDescription(moduleData.description);
+      setTags(moduleData.tags || []);
+      setLessonPlanMap(moduleData.lessonPlans || {});
+
+      // Fetch full lesson plan details based on stored lessonPlanMap
+      const lessonPlanIds = Object.values(moduleData.lessonPlans || {});
+      fetchLessonDetails(lessonPlanIds);
     } catch (error) {
       console.error("Error fetching module:", error);
     }
   };
 
+  // Fetch detailed lesson plan data using stored lesson plan IDs
+  const fetchLessonDetails = async (lessonPlanIds) => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const lessonPlanRequests = lessonPlanIds.map((id) =>
+        axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      );
+
+      const responses = await Promise.all(lessonPlanRequests);
+      const fetchedPlans = responses.map((response) => response.data);
+      setLessonPlans(fetchedPlans);
+    } catch (error) {
+      console.error("Error fetching lesson plan details:", error);
+    }
+  };
+
+  // Add a new tag
+  const addTag = () => {
+    if (newTag.trim() !== "") {
+      setTags([...tags, newTag.trim()]);
+      setNewTag("");
+    }
+  };
+
+  // Remove a tag
+  const removeTag = (index) => {
+    setTags(tags.filter((_, i) => i !== index));
+  };
+
+  // Handle module creation
   const handleSubmit = async () => {
     try {
+      const newModule = { title, description, tags, lessonPlans: lessonPlanMap };
       const response = await axios.post(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module`,
-        moduleData
+        newModule
       );
-      navigate(`/module/${response.data.id}`); // Redirect to the created module
+      navigate(`/module/${response.data.id}`); // Redirect to created module
     } catch (error) {
       console.error("Error creating module:", error);
     }
   };
 
+  // Handle module update
   const handleUpdate = async () => {
     try {
-      await axios.put(
+      const updatedModule = { title, description, tags, lessonPlans: lessonPlanMap };
+      await axios.post(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`,
-        moduleData
+        updatedModule
       );
-      navigate(`/module/${moduleId}`); // Redirect to the updated module
+      setMode("view"); // Switch to view mode after update
     } catch (error) {
       console.error("Error updating module:", error);
     }
@@ -93,40 +139,108 @@ export const ModuleDetail = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-blue-100">
       <div className="bg-white shadow-md rounded-lg px-8 py-6 w-full max-w-5xl">
-        {/* Dynamic Title */}
+        {/* Title based on mode */}
         <h1 className="text-2xl text-center mb-4">
           {mode === "create" ? "Create Module" : mode === "edit" ? "Edit Module" : "View Module"}
         </h1>
-        {mode === "view" && (
-          <button
-            onClick={() => setMode("edit")}
-            className="mb-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
-          >
-            Edit Module
-          </button>
-        )}
-        <ModuleComponent
-          mode={mode}
-          lessonPlans={fetchedLessonPlans}
-          moduleData={moduleData}
-          setModuleData={setModuleData}
-        />
 
-        {mode === "create" && (
-          <button
-            onClick={handleSubmit}
-            className="mt-4 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-700"
-          >
+        {/* Module Title */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Module Title:</label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={mode === "view"}
+            className={`w-full px-4 py-2 border rounded ${
+              mode === "view" ? "bg-gray-100 cursor-not-allowed" : "bg-white"
+            }`}
+          />
+        </div>
+
+        {/* Module Description */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Module Description:</label>
+          <ReactQuill
+            value={description}
+            onChange={setDescription}
+            readOnly={mode === "view"}
+            theme="snow"
+            className={`bg-white border ${mode === "view" ? "pointer-events-none opacity-60" : ""}`}
+          />
+        </div>
+
+        {/* Module Tags */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Module Tags:</label>
+          <div className="flex space-x-2 mb-2">
+            <input
+              type="text"
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              className="flex-1 px-4 py-2 border rounded"
+              placeholder="Enter a tag"
+              disabled={mode === "view"}
+            />
+            <button
+              onClick={addTag}
+              disabled={mode === "view"}
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Add
+            </button>
+          </div>
+          {tags.map((tag, index) => (
+            <span key={index} className="px-3 py-1 bg-gray-200 rounded m-1">
+              {tag}{" "}
+              {mode !== "view" && (
+                <button onClick={() => removeTag(index)} className="text-red-500">
+                  &times;
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+
+        {/* Lesson Plans List */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">Lesson Plans:</label>
+          <div className="border rounded p-2">
+            {lessonPlans.length > 0 ? (
+              lessonPlans.map((lesson, index) => (
+                <div key={index} className="p-2 border-b">
+                  <p className="text-sm text-gray-600">Lesson Title: {lesson.title}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500 text-sm">No lesson plans available.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Create / Edit Buttons */}
+        {mode === "create" ? (
+          <button onClick={handleSubmit} className="bg-green-500 text-white py-2 px-4 rounded">
             Submit Module
           </button>
-        )}
-
-        {mode === "edit" && (
+        ) : mode === "edit" ? (
+          <>
+            <button onClick={handleUpdate} className="bg-yellow-500 text-white py-2 px-4 rounded">
+              Update Module
+            </button>
+            <button
+              onClick={() => setMode("view")}
+              className="bg-gray-400 text-white py-2 px-4 rounded ml-4"
+            >
+              Exit Edit Mode
+            </button>
+          </>
+        ) : (
           <button
-            onClick={handleUpdate}
-            className="mt-4 bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-700"
+            onClick={() => setMode("edit")}
+            className="bg-blue-500 text-white py-2 px-4 rounded"
           >
-            Update Module
+            Edit Module
           </button>
         )}
       </div>
