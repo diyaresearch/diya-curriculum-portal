@@ -20,6 +20,8 @@ export const ModuleDetail = () => {
   const [lessonPlanMap, setLessonPlanMap] = useState({}); // { 0: "lessonId", 1: "lessonId" }
   const [lessonPlans, setLessonPlans] = useState([]);
 
+  const [draggedIndex, setDraggedIndex] = useState(null);
+
   useEffect(() => {
     if (moduleId === "create") {
       setMode("create");
@@ -104,6 +106,36 @@ export const ModuleDetail = () => {
 
   const removeTag = (index) => {
     setTags(tags.filter((_, i) => i !== index));
+  };
+
+  // Drag Start - Set Dragged Item
+  const handleDragStart = (index) => {
+    setDraggedIndex(index);
+  };
+
+  // Allow Drag Over - Necessary for Drop
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
+
+  // Handle Drop - Reorder List
+  const handleDrop = (index) => {
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    // Reorder lessonPlans array
+    const updatedPlans = [...lessonPlans];
+    const draggedItem = updatedPlans.splice(draggedIndex, 1)[0];
+    updatedPlans.splice(index, 0, draggedItem);
+
+    // Reorder lessonPlanMap
+    const updatedPlanMap = {};
+    updatedPlans.forEach((plan, idx) => {
+      updatedPlanMap[idx] = plan.id;
+    });
+
+    setLessonPlans(updatedPlans);
+    setLessonPlanMap(updatedPlanMap); // Ensure lessonPlanMap updates as well
+    setDraggedIndex(null);
   };
 
   // Handle module creation
@@ -200,14 +232,24 @@ export const ModuleDetail = () => {
           ))}
         </div>
 
-        {/* Lesson Plans List */}
+        {/* Lesson Plans List - Drag-and-Drop */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">Lesson Plans:</label>
-          <div className="border rounded p-2">
+          <div className="border rounded p-2 bg-gray-50">
             {lessonPlans.length > 0 ? (
               lessonPlans.map((lesson, index) => (
-                <div key={index} className="p-2 border-b">
-                  <p className="text-sm text-gray-600">Lesson Title: {lesson.title}</p>
+                <div
+                  key={index}
+                  draggable={mode !== "view"}
+                  onDragStart={mode !== "view" ? () => handleDragStart(index) : undefined}
+                  onDragOver={mode !== "view" ? handleDragOver : undefined}
+                  onDrop={mode !== "view" ? () => handleDrop(index) : undefined}
+                  // className="p-3 mb-2 border bg-white shadow-md rounded-md cursor-move"
+                  className={`p-3 mb-2 border bg-white shadow-md rounded-md cursor-move ${
+                    mode !== "view" ? "cursor-move" : "cursor-default"
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold">{lesson.title}</h3>
                 </div>
               ))
             ) : (
