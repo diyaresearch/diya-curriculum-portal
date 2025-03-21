@@ -82,3 +82,4 @@ const Module = ({ mode, lessonPlans = [] }) => {
 };
 
 export default Module;
+
