@@ -5,7 +5,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 export const ModuleDetail = () => {
-  const { moduleId } = useParams(); // Get module ID from URL
+  const { moduleId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [mode, setMode] = useState("view");
@@ -95,7 +95,6 @@ export const ModuleDetail = () => {
     }
   };
 
-  // Add a new tag
   const addTag = () => {
     if (newTag.trim() !== "") {
       setTags([...tags, newTag.trim()]);
@@ -103,7 +102,6 @@ export const ModuleDetail = () => {
     }
   };
 
-  // Remove a tag
   const removeTag = (index) => {
     setTags(tags.filter((_, i) => i !== index));
   };
@@ -116,7 +114,7 @@ export const ModuleDetail = () => {
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module`,
         newModule
       );
-      navigate(`/module/${response.data.id}`); // Redirect to created module
+      navigate(`/module/${response.data.id}`);
     } catch (error) {
       console.error("Error creating module:", error);
     }
@@ -130,7 +128,7 @@ export const ModuleDetail = () => {
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`,
         updatedModule
       );
-      setMode("view"); // Switch to view mode after update
+      setMode("view");
     } catch (error) {
       console.error("Error updating module:", error);
     }
@@ -229,7 +227,9 @@ export const ModuleDetail = () => {
               Update Module
             </button>
             <button
-              onClick={() => setMode("view")}
+              onClick={() => {
+                window.location.reload();
+              }}
               className="bg-gray-400 text-white py-2 px-4 rounded ml-4"
             >
               Exit Edit Mode
