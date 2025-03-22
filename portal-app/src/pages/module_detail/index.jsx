@@ -179,7 +179,9 @@ export const ModuleDetail = () => {
             <h2 className="text-4xl font-bold mb-2">{title}</h2>
           ) : (
             <>
-              <label className="block text-gray-700 text-lg font-semibold mb-2">Module Title:</label>
+              <label className="block text-gray-700 text-lg font-semibold mb-2">
+                Module Title:
+              </label>
               <input
                 type="text"
                 value={title}
@@ -194,9 +196,7 @@ export const ModuleDetail = () => {
 
         {/* Module Description */}
         <div className="mb-6">
-          <label className="block text-gray-700 text-lg font-semibold mb-2">
-            Description:
-          </label>
+          <label className="block text-gray-700 text-lg font-semibold mb-2">Description:</label>
           {mode === "view" ? (
             <div
               className="border p-4 rounded bg-gray-50"
@@ -228,8 +228,13 @@ export const ModuleDetail = () => {
           )}
           <div className="flex flex-wrap gap-2">
             {tags.map((tag, index) => (
-              <span key={index} className="px-3 py-1 bg-gray-200 rounded">
-                {tag}
+              <span key={index} className="px-3 py-1 bg-gray-200 rounded m-1">
+                {tag}{" "}
+                {mode !== "view" && (
+                  <button onClick={() => removeTag(index)} className="text-red-500">
+                    &times;
+                  </button>
+                )}
               </span>
             ))}
           </div>
