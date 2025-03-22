@@ -19,7 +19,6 @@ export const ModuleDetail = () => {
   const [newTag, setNewTag] = useState("");
   const [lessonPlanMap, setLessonPlanMap] = useState({}); // { 0: "lessonId", 1: "lessonId" }
   const [lessonPlans, setLessonPlans] = useState([]);
-
   const [draggedIndex, setDraggedIndex] = useState(null);
 
   useEffect(() => {
@@ -170,71 +169,77 @@ export const ModuleDetail = () => {
     <div className="flex justify-center items-center min-h-screen bg-blue-100">
       <div className="bg-white shadow-md rounded-lg px-8 py-6 w-full max-w-5xl">
         {/* Title based on mode */}
-        <h1 className="text-2xl text-center mb-4">
+        <h1 className="text-3xl text-center mb-6">
           {mode === "create" ? "Create Module" : mode === "edit" ? "Edit Module" : "View Module"}
         </h1>
 
         {/* Module Title */}
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Module Title:</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={mode === "view"}
-            className={`w-full px-4 py-2 border rounded ${
-              mode === "view" ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-            }`}
-          />
+        <div className="mb-6">
+          {mode === "view" ? (
+            <h2 className="text-4xl font-bold mb-2">{title}</h2>
+          ) : (
+            <>
+              <label className="block text-gray-700 text-lg font-semibold mb-2">Module Title:</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-4 py-2 border rounded bg-white text-xl"
+              />
+            </>
+          )}
         </div>
+
+        <hr className="my-4" />
 
         {/* Module Description */}
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Module Description:</label>
-          <ReactQuill
-            value={description}
-            onChange={setDescription}
-            readOnly={mode === "view"}
-            theme="snow"
-            className={`bg-white border ${mode === "view" ? "pointer-events-none opacity-60" : ""}`}
-          />
+        <div className="mb-6">
+          <label className="block text-gray-700 text-lg font-semibold mb-2">
+            Description:
+          </label>
+          {mode === "view" ? (
+            <div
+              className="border p-4 rounded bg-gray-50"
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
+          ) : (
+            <ReactQuill value={description} onChange={setDescription} theme="snow" />
+          )}
         </div>
 
+        <hr className="my-4" />
+
         {/* Module Tags */}
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Module Tags:</label>
-          <div className="flex space-x-2 mb-2">
-            <input
-              type="text"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              className="flex-1 px-4 py-2 border rounded"
-              placeholder="Enter a tag"
-              disabled={mode === "view"}
-            />
-            <button
-              onClick={addTag}
-              disabled={mode === "view"}
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-            >
-              Add
-            </button>
+        <div className="mb-6">
+          <label className="block text-gray-700 text-lg font-semibold mb-2">Module Tags:</label>
+          {mode !== "view" && (
+            <div className="flex space-x-2 mb-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                className="flex-1 px-4 py-2 border rounded"
+                placeholder="Enter a tag"
+              />
+              <button onClick={addTag} className="px-4 py-2 bg-blue-500 text-white rounded">
+                Add
+              </button>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag, index) => (
+              <span key={index} className="px-3 py-1 bg-gray-200 rounded">
+                {tag}
+              </span>
+            ))}
           </div>
-          {tags.map((tag, index) => (
-            <span key={index} className="px-3 py-1 bg-gray-200 rounded m-1">
-              {tag}{" "}
-              {mode !== "view" && (
-                <button onClick={() => removeTag(index)} className="text-red-500">
-                  &times;
-                </button>
-              )}
-            </span>
-          ))}
         </div>
+
+        <hr className="my-4" />
 
         {/* Lesson Plans List - Drag-and-Drop */}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">Lesson Plans:</label>
+          <label className="block text-gray-700 text-lg font-semibold mb-2">Lesson Plans:</label>
           <div className="border rounded p-2 bg-gray-50">
             {lessonPlans.length > 0 ? (
               lessonPlans.map((lesson, index) => (
@@ -258,7 +263,7 @@ export const ModuleDetail = () => {
           </div>
         </div>
 
-        {/* Create / Edit Buttons */}
+        {/* Edit and Submit Buttons */}
         {mode === "create" ? (
           <button onClick={handleSubmit} className="bg-green-500 text-white py-2 px-4 rounded">
             Submit Module
@@ -269,10 +274,8 @@ export const ModuleDetail = () => {
               Update Module
             </button>
             <button
-              onClick={() => {
-                window.location.reload();
-              }}
-              className="bg-gray-400 text-white py-2 px-4 rounded ml-4"
+              onClick={() => setMode("view")}
+              className="bg-gray-500 text-white py-2 px-4 rounded ml-4"
             >
               Exit Edit Mode
             </button>
