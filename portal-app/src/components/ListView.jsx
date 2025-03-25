@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import TileItem from "./TileItem";
 import Overlay from "./Overlay";
 import useUserData from "../hooks/useUserData";
+import { useNavigate } from "react-router-dom";
 
 const categories = [
   "Python", // New Category
@@ -34,6 +35,22 @@ const ListView = ({ content }) => {
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [deleteError, setDeleteError] = useState("");
   const { user, userData } = useUserData();
+  const [modules, setModules] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/modules`);
+        const data = await response.json();
+        setModules(data);
+      } catch (error) {
+        console.error("Error fetching modules:", error);
+      }
+    };
+
+    fetchModules();
+  }, []);
 
   const filterContent = useCallback(() => {
     let filtered = content;
@@ -161,9 +178,43 @@ const ListView = ({ content }) => {
 
   return (
     <div className="text-center mt-10">
-      <h2 className="text-2xl font-bold">
+      {modules.length > 0 && (
+        <div className="container mx-auto px-4 mt-10">
+          <h2 className="text-2xl font-bold text-center mb-6">Modules</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {modules.map((module, index) => (
+              <div
+                key={index}
+                onClick={() => navigate(`/module/${module.id}`)}
+                className="p-4 bg-white shadow-md rounded cursor-pointer hover:shadow-lg transition duration-200"
+              >
+                <div className="h-40 bg-gray-200 rounded mb-4 flex items-center justify-center">
+                  <span className="text-gray-500 text-sm">Image Placeholder</span>
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-center">{module.title}</h3>
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {module.tags && module.tags.map((tag, i) => {
+                    const tagColors = [
+                      "bg-pink-200", "bg-yellow-200", "bg-green-200", "bg-blue-200", "bg-purple-200"
+                    ];
+                    const color = tagColors[i % tagColors.length];
+                    return (
+                      <span key={i} className={`px-2 py-1 text-sm rounded ${color}`}>
+                        {tag}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+  
+
+      <h2 className="text-2xl font-bold mt-10">
         Let's browse some teaching resources!
-      </h2>
+      </h2>  
       <div className="flex justify-center mt-4 space-x-4">
         <select
           value={selectedCategory}
