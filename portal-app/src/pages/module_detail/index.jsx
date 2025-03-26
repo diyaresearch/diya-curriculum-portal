@@ -294,7 +294,14 @@ const ModuleDetail = () => {
                       className="mr-4"
                     />
                   )}
-                  <span className="text-lg font-semibold">{lesson.title}</span>
+                  <a
+                    href={`/lesson/${lesson.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline hover:text-blue-800"
+                  >
+                    {lesson.title}
+                  </a>
                 </div>
               ))
             ) : (
