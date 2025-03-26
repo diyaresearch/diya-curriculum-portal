@@ -3,11 +3,13 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import useUserData from "../../hooks/useUserData"; 
 
-export const ModuleDetail = () => {
+const ModuleDetail = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { userData } = useUserData();
   const [mode, setMode] = useState("view");
 
   // Extract selected lesson plan IDs from navigation state (for create mode)
@@ -20,6 +22,7 @@ export const ModuleDetail = () => {
   const [lessonPlanMap, setLessonPlanMap] = useState({}); // { 0: "lessonId", 1: "lessonId" }
   const [lessonPlans, setLessonPlans] = useState([]);
   const [draggedIndex, setDraggedIndex] = useState(null);
+  const [selectedLessonIds, setSelectedLessonIds] = useState(new Set());
 
   useEffect(() => {
     if (moduleId === "create") {
@@ -40,9 +43,8 @@ export const ModuleDetail = () => {
           headers: { Authorization: `Bearer ${token}` },
         })
       );
-
       const responses = await Promise.all(lessonPlanRequests);
-      const fetchedPlans = responses.map((response) => response.data);
+      const fetchedPlans = responses.map((r) => r.data);
 
       // Convert lesson plans to { 0: "lessonId", 1: "lessonId" }
       const plansMap = fetchedPlans.reduce((acc, plan, index) => {
@@ -63,15 +65,15 @@ export const ModuleDetail = () => {
       const response = await axios.get(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`
       );
-      const moduleData = response.data;
+      const data = response.data;
 
-      setTitle(moduleData.title);
-      setDescription(moduleData.description);
-      setTags(moduleData.tags || []);
-      setLessonPlanMap(moduleData.lessonPlans || {});
+      setTitle(data.title);
+      setDescription(data.description);
+      setTags(data.tags || []);
+      setLessonPlanMap(data.lessonPlans || {});
 
       // Fetch full lesson plan details based on stored lessonPlanMap
-      const lessonPlanIds = Object.values(moduleData.lessonPlans || {});
+      const lessonPlanIds = Object.values(data.lessonPlans || {});
       fetchLessonDetails(lessonPlanIds);
     } catch (error) {
       console.error("Error fetching module:", error);
@@ -79,25 +81,24 @@ export const ModuleDetail = () => {
   };
 
   // Fetch detailed lesson plan data using stored lesson plan IDs
-  const fetchLessonDetails = async (lessonPlanIds) => {
+  const fetchLessonDetails = async (ids) => {
     try {
       const token = localStorage.getItem("authToken");
-      const lessonPlanRequests = lessonPlanIds.map((id) =>
+      const lessonPlanRequests = ids.map((id) =>
         axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
       );
-
       const responses = await Promise.all(lessonPlanRequests);
-      const fetchedPlans = responses.map((response) => response.data);
+      const fetchedPlans = responses.map((r) => r.data);
       setLessonPlans(fetchedPlans);
     } catch (error) {
-      console.error("Error fetching lesson plan details:", error);
+      console.error("Error fetching lesson details:", error);
     }
   };
 
   const addTag = () => {
-    if (newTag.trim() !== "") {
+    if (newTag.trim()) {
       setTags([...tags, newTag.trim()]);
       setNewTag("");
     }
@@ -108,33 +109,52 @@ export const ModuleDetail = () => {
   };
 
   // Drag Start - Set Dragged Item
-  const handleDragStart = (index) => {
-    setDraggedIndex(index);
-  };
+  const handleDragStart = (index) => setDraggedIndex(index);
 
   // Allow Drag Over - Necessary for Drop
-  const handleDragOver = (event) => {
-    event.preventDefault();
-  };
+  const handleDragOver = (e) => e.preventDefault();
 
   // Handle Drop - Reorder List
   const handleDrop = (index) => {
     if (draggedIndex === null || draggedIndex === index) return;
+    const updated = [...lessonPlans];
+    const item = updated.splice(draggedIndex, 1)[0];
+    updated.splice(index, 0, item);
 
-    // Reorder lessonPlans array
-    const updatedPlans = [...lessonPlans];
-    const draggedItem = updatedPlans.splice(draggedIndex, 1)[0];
-    updatedPlans.splice(index, 0, draggedItem);
-
-    // Reorder lessonPlanMap
-    const updatedPlanMap = {};
-    updatedPlans.forEach((plan, idx) => {
-      updatedPlanMap[idx] = plan.id;
+    const newMap = {};
+    updated.forEach((plan, idx) => {
+      newMap[idx] = plan.id;
     });
 
-    setLessonPlans(updatedPlans);
-    setLessonPlanMap(updatedPlanMap); // Ensure lessonPlanMap updates as well
+    setLessonPlans(updated);
+    setLessonPlanMap(newMap);
     setDraggedIndex(null);
+  };
+
+  const toggleSelectLesson = (id) => {
+    const updated = new Set(selectedLessonIds);
+    if (updated.has(id)) {
+      updated.delete(id);
+    } else {
+      updated.add(id);
+    }
+    setSelectedLessonIds(updated);
+  };
+
+  const handleDeleteSelected = () => {
+    if (
+      window.confirm(`Are you sure you want to delete ${selectedLessonIds.size} selected lessons?`)
+    ) {
+      const updatedPlans = lessonPlans.filter((lesson) => !selectedLessonIds.has(lesson.id));
+      const updatedMap = {};
+      updatedPlans.forEach((plan, idx) => {
+        updatedMap[idx] = plan.id;
+      });
+
+      setLessonPlans(updatedPlans);
+      setLessonPlanMap(updatedMap);
+      setSelectedLessonIds(new Set());
+    }
   };
 
   // Handle module creation
@@ -154,10 +174,10 @@ export const ModuleDetail = () => {
   // Handle module update
   const handleUpdate = async () => {
     try {
-      const updatedModule = { title, description, tags, lessonPlans: lessonPlanMap };
+      const updated = { title, description, tags, lessonPlans: lessonPlanMap };
       await axios.post(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`,
-        updatedModule
+        updated
       );
       setMode("view");
     } catch (error) {
@@ -179,9 +199,7 @@ export const ModuleDetail = () => {
             <h2 className="text-4xl font-bold mb-2">{title}</h2>
           ) : (
             <>
-              <label className="block text-gray-700 text-lg font-semibold mb-2">
-                Module Title:
-              </label>
+              <label className="block text-gray-700 text-lg font-semibold mb-2">Module Title:</label>
               <input
                 type="text"
                 value={title}
@@ -192,22 +210,15 @@ export const ModuleDetail = () => {
           )}
         </div>
 
-        <hr className="my-4" />
-
         {/* Module Description */}
         <div className="mb-6">
           <label className="block text-gray-700 text-lg font-semibold mb-2">Description:</label>
           {mode === "view" ? (
-            <div
-              className="border p-4 rounded bg-gray-50"
-              dangerouslySetInnerHTML={{ __html: description }}
-            />
+            <div className="border p-4 rounded bg-gray-50" dangerouslySetInnerHTML={{ __html: description }} />
           ) : (
             <ReactQuill value={description} onChange={setDescription} theme="snow" />
           )}
         </div>
-
-        <hr className="my-4" />
 
         {/* Module Tags */}
         <div className="mb-6">
@@ -221,9 +232,7 @@ export const ModuleDetail = () => {
                 className="flex-1 px-4 py-2 border rounded"
                 placeholder="Enter a tag"
               />
-              <button onClick={addTag} className="px-4 py-2 bg-blue-500 text-white rounded">
-                Add
-              </button>
+              <button onClick={addTag} className="px-4 py-2 bg-blue-500 text-white rounded">Add</button>
             </div>
           )}
           <div className="flex flex-wrap gap-2">
@@ -231,20 +240,28 @@ export const ModuleDetail = () => {
               <span key={index} className="px-3 py-1 bg-gray-200 rounded m-1">
                 {tag}{" "}
                 {mode !== "view" && (
-                  <button onClick={() => removeTag(index)} className="text-red-500">
-                    &times;
-                  </button>
+                  <button onClick={() => removeTag(index)} className="text-red-500">&times;</button>
                 )}
               </span>
             ))}
           </div>
         </div>
 
-        <hr className="my-4" />
-
-        {/* Lesson Plans List - Drag-and-Drop */}
-        <div className="mb-4">
+        {/* Lesson Plans */}
+        <div className="mb-6">
           <label className="block text-gray-700 text-lg font-semibold mb-2">Lesson Plans:</label>
+
+          {userData?.role === "admin" && mode !== "view" && selectedLessonIds.size > 0 && (
+            <div className="flex justify-end mb-2">
+              <button
+                onClick={handleDeleteSelected}
+                className="mb-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Delete Selected ({selectedLessonIds.size})
+              </button>
+            </div>
+          )}
+
           <div className="border rounded p-2 bg-gray-50">
             {lessonPlans.length > 0 ? (
               lessonPlans.map((lesson, index) => (
@@ -254,12 +271,19 @@ export const ModuleDetail = () => {
                   onDragStart={mode !== "view" ? () => handleDragStart(index) : undefined}
                   onDragOver={mode !== "view" ? handleDragOver : undefined}
                   onDrop={mode !== "view" ? () => handleDrop(index) : undefined}
-                  // className="p-3 mb-2 border bg-white shadow-md rounded-md cursor-move"
-                  className={`p-3 mb-2 border bg-white shadow-md rounded-md cursor-move ${
+                  className={`p-3 mb-2 border bg-white shadow-md rounded-md flex items-center gap-4 ${
                     mode !== "view" ? "cursor-move" : "cursor-default"
                   }`}
                 >
-                  <h3 className="text-lg font-semibold">{lesson.title}</h3>
+                  {userData?.role === "admin" && mode !== "view" && (
+                    <input
+                      type="checkbox"
+                      checked={selectedLessonIds.has(lesson.id)}
+                      onChange={() => toggleSelectLesson(lesson.id)}
+                      className="mr-4"
+                    />
+                  )}
+                  <span className="text-lg font-semibold">{lesson.title}</span>
                 </div>
               ))
             ) : (
