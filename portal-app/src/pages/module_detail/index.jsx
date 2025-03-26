@@ -236,14 +236,25 @@ const ModuleDetail = () => {
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-            {tags.map((tag, index) => (
-              <span key={index} className="px-3 py-1 bg-gray-200 rounded m-1">
-                {tag}{" "}
+          {tags.map((tag, index) => {
+            const colorClasses = [
+              "bg-pink-200",
+              "bg-yellow-200",
+              "bg-green-200",
+              "bg-blue-200",
+              "bg-purple-200",
+            ];
+            const bgColor = colorClasses[index % colorClasses.length];
+
+            return (
+              <span key={index} className={`px-3 py-1 ${bgColor} rounded m-1`}>
+                {tag}
                 {mode !== "view" && (
-                  <button onClick={() => removeTag(index)} className="text-red-500">&times;</button>
+                  <button onClick={() => removeTag(index)} className="text-red-500 ml-1">&times;</button>
                 )}
               </span>
-            ))}
+            );
+          })}
           </div>
         </div>
 
