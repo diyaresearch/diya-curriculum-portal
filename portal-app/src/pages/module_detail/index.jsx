@@ -190,7 +190,7 @@ const ModuleDetail = () => {
       <div className="bg-white shadow-md rounded-lg px-8 py-6 w-full max-w-5xl">
         {/* Title based on mode */}
         <h1 className="text-3xl text-center mb-6">
-          {mode === "create" ? "Create Module" : mode === "edit" ? "Edit Module" : "View Module"}
+          {mode === "create" ? "Create Module" : mode === "edit" ? "Edit Module" : ""}
         </h1>
 
         {/* Module Title */}
