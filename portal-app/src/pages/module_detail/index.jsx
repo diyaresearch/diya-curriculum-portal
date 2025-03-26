@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import useUserData from "../../hooks/useUserData"; 
+import useUserData from "../../hooks/useUserData";
 
 const ModuleDetail = () => {
   const { moduleId } = useParams();
@@ -23,6 +23,10 @@ const ModuleDetail = () => {
   const [lessonPlans, setLessonPlans] = useState([]);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [selectedLessonIds, setSelectedLessonIds] = useState(new Set());
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [coverImageFile, setCoverImageFile] = useState(null);
+  const [coverImageUrl, setCoverImageUrl] = useState("");
 
   useEffect(() => {
     if (moduleId === "create") {
@@ -157,6 +161,24 @@ const ModuleDetail = () => {
     }
   };
 
+  // image field
+  const uploadImageIfNeeded = async () => {
+    if (!coverImageFile) return coverImageUrl || "";
+  
+    const formData = new FormData();
+    formData.append("image", coverImageFile);
+  
+    const res = await axios.post(
+      `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/upload-image`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+  
+    return res.data.imageUrl;
+  };
+
   // Handle module creation
   const handleSubmit = async () => {
     try {
@@ -199,7 +221,9 @@ const ModuleDetail = () => {
             <h2 className="text-4xl font-bold mb-2">{title}</h2>
           ) : (
             <>
-              <label className="block text-gray-700 text-lg font-semibold mb-2">Module Title:</label>
+              <label className="block text-gray-700 text-lg font-semibold mb-2">
+                Module Title:
+              </label>
               <input
                 type="text"
                 value={title}
@@ -214,7 +238,10 @@ const ModuleDetail = () => {
         <div className="mb-6">
           <label className="block text-gray-700 text-lg font-semibold mb-2">Description:</label>
           {mode === "view" ? (
-            <div className="border p-4 rounded bg-gray-50" dangerouslySetInnerHTML={{ __html: description }} />
+            <div
+              className="border p-4 rounded bg-gray-50"
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
           ) : (
             <ReactQuill value={description} onChange={setDescription} theme="snow" />
           )}
@@ -232,30 +259,61 @@ const ModuleDetail = () => {
                 className="flex-1 px-4 py-2 border rounded"
                 placeholder="Enter a tag"
               />
-              <button onClick={addTag} className="px-4 py-2 bg-blue-500 text-white rounded">Add</button>
+              <button onClick={addTag} className="px-4 py-2 bg-blue-500 text-white rounded">
+                Add
+              </button>
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-          {tags.map((tag, index) => {
-            const colorClasses = [
-              "bg-pink-200",
-              "bg-yellow-200",
-              "bg-green-200",
-              "bg-blue-200",
-              "bg-purple-200",
-            ];
-            const bgColor = colorClasses[index % colorClasses.length];
+            {tags.map((tag, index) => {
+              const colorClasses = [
+                "bg-pink-200",
+                "bg-yellow-200",
+                "bg-green-200",
+                "bg-blue-200",
+                "bg-purple-200",
+              ];
+              const bgColor = colorClasses[index % colorClasses.length];
 
-            return (
-              <span key={index} className={`px-3 py-1 ${bgColor} rounded m-1`}>
-                {tag}
-                {mode !== "view" && (
-                  <button onClick={() => removeTag(index)} className="text-red-500 ml-1">&times;</button>
-                )}
-              </span>
-            );
-          })}
+              return (
+                <span key={index} className={`px-3 py-1 ${bgColor} rounded m-1`}>
+                  {tag}
+                  {mode !== "view" && (
+                    <button onClick={() => removeTag(index)} className="text-red-500 ml-1">
+                      &times;
+                    </button>
+                  )}
+                </span>
+              );
+            })}
           </div>
+        </div>
+
+        {/* Upload Image */}
+        <div className="mb-6">
+          <label className="block text-gray-700 text-lg font-semibold mb-2">
+            Upload Cover Image:
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              setCoverImageFile(file);
+              if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => setCoverImageUrl(reader.result);
+                reader.readAsDataURL(file);
+              }
+            }}
+            disabled={mode === "view"}
+            className="border p-2 rounded"
+          />
+          {coverImageUrl && (
+            <div className="mt-2">
+              <img src={coverImageUrl} alt="Preview" className="w-full max-w-sm rounded" />
+            </div>
+          )}
         </div>
 
         {/* Lesson Plans */}
