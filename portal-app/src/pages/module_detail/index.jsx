@@ -4,6 +4,19 @@ import axios from "axios";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import useUserData from "../../hooks/useUserData";
+import module1 from "../../assets/modules/module1.png";
+import module2 from "../../assets/modules/module2.png";
+import module3 from "../../assets/modules/module3.png";
+import module4 from "../../assets/modules/module4.png";
+import module5 from "../../assets/modules/module5.png";
+
+const imageMap = {
+  module1,
+  module2,
+  module3,
+  module4,
+  module5,
+};
 
 const ModuleDetail = () => {
   const { moduleId } = useParams();
@@ -23,10 +36,7 @@ const ModuleDetail = () => {
   const [lessonPlans, setLessonPlans] = useState([]);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [selectedLessonIds, setSelectedLessonIds] = useState(new Set());
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [coverImageFile, setCoverImageFile] = useState(null);
-  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [selectedImage, setSelectedImage] = useState("module1");
 
   useEffect(() => {
     if (moduleId === "create") {
@@ -75,6 +85,8 @@ const ModuleDetail = () => {
       setDescription(data.description);
       setTags(data.tags || []);
       setLessonPlanMap(data.lessonPlans || {});
+      setSelectedImage(data.image || "module1");
+      console.log(data.image);
 
       // Fetch full lesson plan details based on stored lessonPlanMap
       const lessonPlanIds = Object.values(data.lessonPlans || {});
@@ -161,28 +173,16 @@ const ModuleDetail = () => {
     }
   };
 
-  // image field
-  const uploadImageIfNeeded = async () => {
-    if (!coverImageFile) return coverImageUrl || "";
-  
-    const formData = new FormData();
-    formData.append("image", coverImageFile);
-  
-    const res = await axios.post(
-      `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/upload-image`,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
-  
-    return res.data.imageUrl;
-  };
-
   // Handle module creation
   const handleSubmit = async () => {
     try {
-      const newModule = { title, description, tags, lessonPlans: lessonPlanMap };
+      const newModule = {
+        title,
+        description,
+        tags,
+        lessonPlans: lessonPlanMap,
+        image: selectedImage,
+      };
       const response = await axios.post(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module`,
         newModule
@@ -196,7 +196,13 @@ const ModuleDetail = () => {
   // Handle module update
   const handleUpdate = async () => {
     try {
-      const updated = { title, description, tags, lessonPlans: lessonPlanMap };
+      const updated = {
+        title,
+        description,
+        tags,
+        lessonPlans: lessonPlanMap,
+        image: selectedImage,
+      };
       await axios.post(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`,
         updated
@@ -233,6 +239,38 @@ const ModuleDetail = () => {
             </>
           )}
         </div>
+
+        {/* Select Image */}
+        {selectedImage && (
+          <div className="mb-6">
+            <img
+              src={imageMap[selectedImage] || module1}
+              alt="Cover"
+              className="w-full max-w-md rounded shadow-md mx-auto"
+            />
+          </div>
+        )}
+
+        {mode !== "view" && (
+          <div className="mb-6">
+            <label className="block text-gray-700 text-lg font-semibold mb-2">
+              Select Cover Image:
+            </label>
+            <div className="flex gap-4 flex-wrap">
+              {["module1", "module2", "module3", "module4", "module5"].map((key) => (
+                <div
+                  key={key}
+                  onClick={() => setSelectedImage(key)}
+                  className={`border-4 rounded cursor-pointer ${
+                    selectedImage === key ? "border-blue-500" : "border-transparent"
+                  }`}
+                >
+                  <img src={imageMap[key]} alt={key} className="w-32 h-20 object-cover rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Module Description */}
         <div className="mb-6">
@@ -287,33 +325,6 @@ const ModuleDetail = () => {
               );
             })}
           </div>
-        </div>
-
-        {/* Upload Image */}
-        <div className="mb-6">
-          <label className="block text-gray-700 text-lg font-semibold mb-2">
-            Upload Cover Image:
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              setCoverImageFile(file);
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => setCoverImageUrl(reader.result);
-                reader.readAsDataURL(file);
-              }
-            }}
-            disabled={mode === "view"}
-            className="border p-2 rounded"
-          />
-          {coverImageUrl && (
-            <div className="mt-2">
-              <img src={coverImageUrl} alt="Preview" className="w-full max-w-sm rounded" />
-            </div>
-          )}
         </div>
 
         {/* Lesson Plans */}
