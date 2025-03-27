@@ -298,7 +298,7 @@ const ModuleDetail = () => {
                     href={`/lesson/${lesson.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 underline hover:text-blue-800"
+                    className="text-black font-semibold hover:text-blue-600 hover:underline"
                   >
                     {lesson.title}
                   </a>
