@@ -48,13 +48,14 @@ const getModuleById = async (req, res) => {
 // Create a new module
 const createModule = async (req, res) => {
   try {
-    const { title, description, tags, lessonPlans } = req.body;
+    const { title, description, tags, lessonPlans, image } = req.body;
 
     const newModule = {
       title,
       description,
       tags: tags || [],
       lessonPlans: lessonPlans || [],
+      image: image,
     };
 
     const moduleRef = await db.collection(TABLE_MODULE).add(newModule);
@@ -69,7 +70,7 @@ const createModule = async (req, res) => {
 const editModule = async (req, res) => {
   try {
     const moduleId = req.params.id;
-    const { title, description, tags, lessonPlans } = req.body;
+    const { title, description, tags, lessonPlans, image } = req.body;
 
     const moduleRef = db.collection(TABLE_MODULE).doc(moduleId);
     const moduleDoc = await moduleRef.get();
@@ -85,6 +86,7 @@ const editModule = async (req, res) => {
       description: description || moduleData.description,
       tags: tags || moduleData.tags,
       lessonPlans: lessonPlans || moduleData.lessonPlans,
+      image: image || moduleData.image,
     };
 
     await moduleRef.update(updatedModule);
