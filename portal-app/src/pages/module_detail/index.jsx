@@ -3,7 +3,20 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import useUserData from "../../hooks/useUserData"; 
+import useUserData from "../../hooks/useUserData";
+import module1 from "../../assets/modules/module1.png";
+import module2 from "../../assets/modules/module2.png";
+import module3 from "../../assets/modules/module3.png";
+import module4 from "../../assets/modules/module4.png";
+import module5 from "../../assets/modules/module5.png";
+
+const imageMap = {
+  module1,
+  module2,
+  module3,
+  module4,
+  module5,
+};
 
 const ModuleDetail = () => {
   const { moduleId } = useParams();
@@ -23,6 +36,7 @@ const ModuleDetail = () => {
   const [lessonPlans, setLessonPlans] = useState([]);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [selectedLessonIds, setSelectedLessonIds] = useState(new Set());
+  const [selectedImage, setSelectedImage] = useState("module1");
 
   useEffect(() => {
     if (moduleId === "create") {
@@ -71,6 +85,8 @@ const ModuleDetail = () => {
       setDescription(data.description);
       setTags(data.tags || []);
       setLessonPlanMap(data.lessonPlans || {});
+      setSelectedImage(data.image || "module1");
+      console.log(data.image);
 
       // Fetch full lesson plan details based on stored lessonPlanMap
       const lessonPlanIds = Object.values(data.lessonPlans || {});
@@ -160,7 +176,13 @@ const ModuleDetail = () => {
   // Handle module creation
   const handleSubmit = async () => {
     try {
-      const newModule = { title, description, tags, lessonPlans: lessonPlanMap };
+      const newModule = {
+        title,
+        description,
+        tags,
+        lessonPlans: lessonPlanMap,
+        image: selectedImage,
+      };
       const response = await axios.post(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module`,
         newModule
@@ -174,7 +196,13 @@ const ModuleDetail = () => {
   // Handle module update
   const handleUpdate = async () => {
     try {
-      const updated = { title, description, tags, lessonPlans: lessonPlanMap };
+      const updated = {
+        title,
+        description,
+        tags,
+        lessonPlans: lessonPlanMap,
+        image: selectedImage,
+      };
       await axios.post(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`,
         updated
@@ -199,7 +227,9 @@ const ModuleDetail = () => {
             <h2 className="text-4xl font-bold mb-2">{title}</h2>
           ) : (
             <>
-              <label className="block text-gray-700 text-lg font-semibold mb-2">Module Title:</label>
+              <label className="block text-gray-700 text-lg font-semibold mb-2">
+                Module Title:
+              </label>
               <input
                 type="text"
                 value={title}
@@ -210,11 +240,46 @@ const ModuleDetail = () => {
           )}
         </div>
 
+        {/* Select Image */}
+        {selectedImage && (
+          <div className="mb-6">
+            <img
+              src={imageMap[selectedImage] || module1}
+              alt="Cover"
+              className="w-full max-w-md rounded shadow-md mx-auto"
+            />
+          </div>
+        )}
+
+        {mode !== "view" && (
+          <div className="mb-6">
+            <label className="block text-gray-700 text-lg font-semibold mb-2">
+              Select Cover Image:
+            </label>
+            <div className="flex gap-4 flex-wrap">
+              {["module1", "module2", "module3", "module4", "module5"].map((key) => (
+                <div
+                  key={key}
+                  onClick={() => setSelectedImage(key)}
+                  className={`border-4 rounded cursor-pointer ${
+                    selectedImage === key ? "border-blue-500" : "border-transparent"
+                  }`}
+                >
+                  <img src={imageMap[key]} alt={key} className="w-32 h-20 object-cover rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Module Description */}
         <div className="mb-6">
           <label className="block text-gray-700 text-lg font-semibold mb-2">Description:</label>
           {mode === "view" ? (
-            <div className="border p-4 rounded bg-gray-50" dangerouslySetInnerHTML={{ __html: description }} />
+            <div
+              className="border p-4 rounded bg-gray-50"
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
           ) : (
             <ReactQuill value={description} onChange={setDescription} theme="snow" />
           )}
@@ -232,29 +297,33 @@ const ModuleDetail = () => {
                 className="flex-1 px-4 py-2 border rounded"
                 placeholder="Enter a tag"
               />
-              <button onClick={addTag} className="px-4 py-2 bg-blue-500 text-white rounded">Add</button>
+              <button onClick={addTag} className="px-4 py-2 bg-blue-500 text-white rounded">
+                Add
+              </button>
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-          {tags.map((tag, index) => {
-            const colorClasses = [
-              "bg-pink-200",
-              "bg-yellow-200",
-              "bg-green-200",
-              "bg-blue-200",
-              "bg-purple-200",
-            ];
-            const bgColor = colorClasses[index % colorClasses.length];
+            {tags.map((tag, index) => {
+              const colorClasses = [
+                "bg-pink-200",
+                "bg-yellow-200",
+                "bg-green-200",
+                "bg-blue-200",
+                "bg-purple-200",
+              ];
+              const bgColor = colorClasses[index % colorClasses.length];
 
-            return (
-              <span key={index} className={`px-3 py-1 ${bgColor} rounded m-1`}>
-                {tag}
-                {mode !== "view" && (
-                  <button onClick={() => removeTag(index)} className="text-red-500 ml-1">&times;</button>
-                )}
-              </span>
-            );
-          })}
+              return (
+                <span key={index} className={`px-3 py-1 ${bgColor} rounded m-1`}>
+                  {tag}
+                  {mode !== "view" && (
+                    <button onClick={() => removeTag(index)} className="text-red-500 ml-1">
+                      &times;
+                    </button>
+                  )}
+                </span>
+              );
+            })}
           </div>
         </div>
 
