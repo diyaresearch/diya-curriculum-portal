@@ -213,6 +213,24 @@ const ModuleDetail = () => {
     }
   };
 
+  // Handle module deletion (admin only)
+  const handleDeleteModule = async () => {
+    if (!window.confirm("Are you sure you want to delete this module?")) return;
+  
+    try {
+      const token = localStorage.getItem("authToken");
+      await axios.delete(
+        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      navigate("/"); // Redirect to homepage
+    } catch (error) {
+      console.error("Error deleting module:", error);
+    }
+  };  
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-blue-100">
       <div className="bg-white shadow-md rounded-lg px-8 py-6 w-full max-w-5xl">
@@ -397,12 +415,24 @@ const ModuleDetail = () => {
             </button>
           </>
         ) : (
-          <button
-            onClick={() => setMode("edit")}
-            className="bg-blue-500 text-white py-2 px-4 rounded"
-          >
-            Edit Module
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setMode("edit")}
+              className="bg-blue-500 text-white py-2 px-4 rounded"
+            >
+              Edit Module
+            </button>
+
+            {/* Show Delete button only to Admin */}
+            {userData?.role === "admin" && (
+              <button
+                onClick={handleDeleteModule}
+                className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+              >
+                Delete Module
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>
