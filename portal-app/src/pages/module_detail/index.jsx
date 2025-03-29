@@ -9,6 +9,7 @@ import module2 from "../../assets/modules/module2.png";
 import module3 from "../../assets/modules/module3.png";
 import module4 from "../../assets/modules/module4.png";
 import module5 from "../../assets/modules/module5.png";
+import OverlayTileView from "../../components/OverlayTileView";
 
 const imageMap = {
   module1,
@@ -37,6 +38,8 @@ const ModuleDetail = () => {
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [selectedLessonIds, setSelectedLessonIds] = useState(new Set());
   const [selectedImage, setSelectedImage] = useState("module1");
+  const [portalContent, setPortalContent] = useState("");
+  const [showOverlay, setShowOverlay] = useState(false);
 
   useEffect(() => {
     if (moduleId === "create") {
@@ -47,6 +50,19 @@ const ModuleDetail = () => {
       fetchModuleDetails();
     }
   }, [moduleId]);
+
+  useEffect(() => {
+    const fetchAllLessonPlans = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons`);
+
+        setPortalContent(response.data);
+      } catch (error) {
+        console.error("Error fetching user lesson plans:", error);
+      }
+    };
+    fetchAllLessonPlans();
+  }, []);
 
   // Fetch lesson plans for create mode (from selectedPlanIds)
   const fetchLessonPlans = async () => {
@@ -86,7 +102,6 @@ const ModuleDetail = () => {
       setTags(data.tags || []);
       setLessonPlanMap(data.lessonPlans || {});
       setSelectedImage(data.image || "module1");
-      console.log(data.image);
 
       // Fetch full lesson plan details based on stored lessonPlanMap
       const lessonPlanIds = Object.values(data.lessonPlans || {});
@@ -111,6 +126,34 @@ const ModuleDetail = () => {
     } catch (error) {
       console.error("Error fetching lesson details:", error);
     }
+  };
+
+  // On selecting a lesson plan from the overlay
+  const onSelectLessonPlan = (lessonPlan) => {
+    // Check if the lesson plan is already in the list of selected lesson plans
+    const alreadySelected = lessonPlans.some((plan) => plan.id === lessonPlan.id);
+
+    let updatedLessonPlans = [...lessonPlans];
+
+    if (alreadySelected) {
+      // Triger the check and delete, let admin to delete outside of the popup
+      setSelectedLessonIds((prevSelectedLessonIds) => {
+        const updatedSelectedLessonIds = new Set(prevSelectedLessonIds);
+        updatedSelectedLessonIds.add(lessonPlan.id);
+        return updatedSelectedLessonIds;
+      });
+    } else {
+      updatedLessonPlans.push(lessonPlan);
+    }
+
+    setLessonPlans(updatedLessonPlans);
+
+    setShowOverlay(false);
+  };
+
+  // This is to handle the Add More Lesson Plans button click event
+  const handleAddMoreLessonPlans = () => {
+    setShowOverlay(true);
   };
 
   const addTag = () => {
@@ -216,20 +259,17 @@ const ModuleDetail = () => {
   // Handle module deletion (admin only)
   const handleDeleteModule = async () => {
     if (!window.confirm("Are you sure you want to delete this module?")) return;
-  
+
     try {
       const token = localStorage.getItem("authToken");
-      await axios.delete(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.delete(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/module/${moduleId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       navigate("/"); // Redirect to homepage
     } catch (error) {
       console.error("Error deleting module:", error);
     }
-  };  
+  };
 
   // Navigate to homepage
   const handleExit = () => {
@@ -249,7 +289,7 @@ const ModuleDetail = () => {
             className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100 ml-4"
             onClick={handleExit}
           >
-             Exit
+            Exit
           </button>
         </div>
         {/* Module Title */}
@@ -373,6 +413,16 @@ const ModuleDetail = () => {
             </div>
           )}
 
+          {/* Add More Lesson Plans Button */}
+          {mode !== "view" && (
+            <button
+              onClick={handleAddMoreLessonPlans}
+              className="bg-blue-500 text-white py-2 px-4 rounded"
+            >
+              Add More Lesson Plans
+            </button>
+          )}
+
           <div className="border rounded p-2 bg-gray-50">
             {lessonPlans.length > 0 ? (
               lessonPlans.map((lesson, index) => (
@@ -446,6 +496,20 @@ const ModuleDetail = () => {
               </button>
             )}
           </div>
+        )}
+
+        {/* Show Overlay if showOverlay is true */}
+        {showOverlay && (
+          <OverlayTileView
+            content={portalContent}
+            onClose={() => setShowOverlay(false)}
+            onSelectMaterial={onSelectLessonPlan}
+            initialSelectedTiles={lessonPlans.map((lesson) => lesson.id)}
+            type={""}
+            category={""}
+            level={""}
+            contentType={"lessonPlan"}
+          />
         )}
       </div>
     </div>

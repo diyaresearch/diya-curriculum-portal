@@ -7,7 +7,16 @@ const types = ["Lectures", "Assignments", "Quiz", "Projects", "Case studies", "D
 
 const levels = ["Basic", "Intermediate", "Advanced"];
 
-const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTiles, type, category, level  = {} }) => {
+const OverlayTileView = ({
+  content,
+  onClose,
+  onSelectMaterial,
+  initialSelectedTiles,
+  type,
+  category,
+  level = {},
+  contentType,
+}) => {
   const [filteredContent, setFilteredContent] = useState(content);
   const [selectedCategory, setSelectedCategory] = useState(category || "");
   const [selectedType, setSelectedType] = useState(type || "");
@@ -18,7 +27,9 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTi
   const [selectedTiles, setSelectedTiles] = useState(initialSelectedTiles || []);
 
   useEffect(() => {
-    setFilteredContent(content);
+    if (content !== filteredContent) {
+      setFilteredContent(content);
+    }
   }, [content]);
 
   useEffect(() => {
@@ -141,49 +152,96 @@ const OverlayTileView = ({ content, onClose, onSelectMaterial, initialSelectedTi
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {filteredContent
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                .map((item, index) => (
-                  <div key={index} className="relative">
-                    <TileItem
-                      id={item.id}
-                      title={item.Title}
-                      category={item.Category}
-                      type={item.Type}
-                      level={item.Level}
-                      duration={item.Duration}
-                      date={formatDate(item.LastModified)}
-                      onClick={() => {}}
-                    />
-                    <div className="absolute bottom-3 right-2 flex flex-col space-y-2">
-                      {/* View Button - Opens content in a new tab */}
-                      <a
-                        href={`/view-content/${item.UnitID}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="py-1 px-3 rounded bg-green-500 text-white hover:bg-green-700 transition duration-200 text-center"
-                      >
-                        View
-                      </a>
-
-                      <button
-                        onClick={() => {
-                          setSelectedTiles((prevState) =>
-                            prevState.includes(item.id)
-                              ? prevState.filter((id) => id !== item.id)
-                              : [...prevState, item.id]
-                          );
-                          onSelectMaterial(item);
-                        }}
-                        className={`py-1 px-3 rounded text-center ${
-                          selectedTiles.includes(item.id)
-                            ? "bg-red-500 text-white"
-                            : "bg-blue-500 text-white"
-                        }`}
-                      >
-                        {selectedTiles.includes(item.id) ? "Unselect" : "Select"}
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                .map((item, index) => {
+                  // Conditionally render based on content type (nuggets or lesson plans)
+                  if (contentType === "nugget") {
+                    // Render Nugget TileView
+                    return (
+                      <div key={index} className="relative">
+                        <TileItem
+                          id={item.id}
+                          title={item.Title}
+                          category={item.Category}
+                          type={item.Type}
+                          level={item.Level}
+                          duration={item.Duration}
+                          date={formatDate(item.LastModified)}
+                          onClick={() => {}}
+                        />
+                        <div className="absolute bottom-3 right-2 flex flex-col space-y-2">
+                          <a
+                            href={`/view-content/${item.UnitID}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-1 px-3 rounded bg-green-500 text-white hover:bg-green-700 transition duration-200 text-center"
+                          >
+                            View
+                          </a>
+                          <button
+                            onClick={() => {
+                              setSelectedTiles((prevState) =>
+                                prevState.includes(item.id)
+                                  ? prevState.filter((id) => id !== item.id)
+                                  : [...prevState, item.id]
+                              );
+                              onSelectMaterial(item);
+                            }}
+                            className={`py-1 px-3 rounded text-center ${
+                              selectedTiles.includes(item.id)
+                                ? "bg-red-500 text-white"
+                                : "bg-blue-500 text-white"
+                            }`}
+                          >
+                            {selectedTiles.includes(item.id) ? "Unselect" : "Select"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  } else if (contentType === "lessonPlan") {
+                    // Render Lesson Plan TileView
+                    return (
+                      <div key={index} className="relative">
+                        <TileItem
+                          id={item.id}
+                          title={item.title}
+                          category={item.category}
+                          type={item.type}
+                          level={item.level}
+                          duration={item.duration}
+                          date={formatDate(item.createdAt)}
+                          onClick={() => {}}
+                        />
+                        <div className="absolute bottom-3 right-2 flex flex-col space-y-2">
+                          <a
+                            href={`/lesson/${item.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-1 px-3 rounded bg-green-500 text-white hover:bg-green-700 transition duration-200 text-center"
+                          >
+                            View
+                          </a>
+                          <button
+                            onClick={() => {
+                              setSelectedTiles((prevState) =>
+                                prevState.includes(item.id)
+                                  ? prevState.filter((id) => id !== item.id)
+                                  : [...prevState, item.id]
+                              );
+                              onSelectMaterial(item);
+                            }}
+                            className={`py-1 px-3 rounded text-center ${
+                              selectedTiles.includes(item.id)
+                                ? "bg-red-500 text-white"
+                                : "bg-blue-500 text-white"
+                            }`}
+                          >
+                            {selectedTiles.includes(item.id) ? "Selected" : "Select"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+                })}
             </div>
           </div>
 
