@@ -42,26 +42,72 @@ const OverlayTileView = ({
     filterContent();
   }, [selectedCategory, selectedType, selectedLevel, searchTerm]);
 
+  // const filterContent = useCallback(() => {
+  //   let filtered = [...content];
+
+  //   if (selectedCategory) {
+  //     filtered = filtered.filter((item) => item.Category === selectedCategory);
+  //   }
+  //   if (selectedType) {
+  //     filtered = filtered.filter((item) => item.Type === selectedType);
+  //   }
+  //   if (selectedLevel) {
+  //     filtered = filtered.filter((item) => item.Level === selectedLevel);
+  //   }
+  //   if (searchTerm) {
+  //     filtered = filtered.filter((item) =>
+  //       item.Title.toLowerCase().includes(searchTerm.toLowerCase())
+  //     );
+  //   }
+
+  //   setFilteredContent(filtered);
+  // }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
+
   const filterContent = useCallback(() => {
     let filtered = [...content];
 
     if (selectedCategory) {
-      filtered = filtered.filter((item) => item.Category === selectedCategory);
+      // Handle filtering for both content types
+      if (contentType === "nugget") {
+        filtered = filtered.filter((item) => item.Category === selectedCategory);
+      } else if (contentType === "lessonPlan") {
+        filtered = filtered.filter((item) => item.category === selectedCategory);
+      }
     }
+
     if (selectedType) {
-      filtered = filtered.filter((item) => item.Type === selectedType);
+      // Handle filtering for both content types
+      if (contentType === "nugget") {
+        filtered = filtered.filter((item) => item.Type === selectedType);
+      } else if (contentType === "lessonPlan") {
+        filtered = filtered.filter((item) => item.type === selectedType);
+      }
     }
+
     if (selectedLevel) {
-      filtered = filtered.filter((item) => item.Level === selectedLevel);
+      // Handle filtering for both content types
+      if (contentType === "nugget") {
+        filtered = filtered.filter((item) => item.Level === selectedLevel);
+      } else if (contentType === "lessonPlan") {
+        filtered = filtered.filter((item) => item.level === selectedLevel);
+      }
     }
+
     if (searchTerm) {
-      filtered = filtered.filter((item) =>
-        item.Title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      // Handle search for both content types
+      if (contentType === "nugget") {
+        filtered = filtered.filter((item) =>
+          item.Title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      } else if (contentType === "lessonPlan") {
+        filtered = filtered.filter((item) =>
+          item.title.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
     }
 
     setFilteredContent(filtered);
-  }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
+  }, [selectedCategory, selectedType, selectedLevel, searchTerm, content, contentType]);
 
   const handlePageChange = (direction) => {
     if (direction === "prev" && currentPage > 1) {
