@@ -42,27 +42,6 @@ const OverlayTileView = ({
     filterContent();
   }, [selectedCategory, selectedType, selectedLevel, searchTerm]);
 
-  // const filterContent = useCallback(() => {
-  //   let filtered = [...content];
-
-  //   if (selectedCategory) {
-  //     filtered = filtered.filter((item) => item.Category === selectedCategory);
-  //   }
-  //   if (selectedType) {
-  //     filtered = filtered.filter((item) => item.Type === selectedType);
-  //   }
-  //   if (selectedLevel) {
-  //     filtered = filtered.filter((item) => item.Level === selectedLevel);
-  //   }
-  //   if (searchTerm) {
-  //     filtered = filtered.filter((item) =>
-  //       item.Title.toLowerCase().includes(searchTerm.toLowerCase())
-  //     );
-  //   }
-
-  //   setFilteredContent(filtered);
-  // }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
-
   const filterContent = useCallback(() => {
     let filtered = [...content];
 
