@@ -228,14 +228,27 @@ const ModuleDetail = () => {
     }
   };
 
+  // Navigate to homepage
+  const handleExit = () => {
+    navigate("/");
+  };
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-blue-100">
       <div className="bg-white shadow-md rounded-lg px-8 py-6 w-full max-w-5xl">
         {/* Title based on mode */}
-        <h1 className="text-3xl text-center mb-6">
-          {mode === "create" ? "Create Module" : mode === "edit" ? "Edit Module" : ""}
-        </h1>
-
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl text-center mb-6">
+            {mode === "create" ? "Create Module" : mode === "edit" ? "Edit Module" : ""}
+          </h1>
+          <button
+            type="button"
+            className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100 ml-4"
+            onClick={handleExit}
+          >
+             Exit
+          </button>
+        </div>
         {/* Module Title */}
         <div className="mb-6">
           {mode === "view" ? (
