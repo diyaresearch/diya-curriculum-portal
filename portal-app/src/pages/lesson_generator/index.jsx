@@ -598,6 +598,7 @@ export const LessonGenerator = () => {
             type={formData.type}
             category={formData.category}
             level={formData.level}
+            contentType={"nugget"}
           />
         )}
         <Modal
