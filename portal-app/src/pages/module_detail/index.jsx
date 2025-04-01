@@ -128,12 +128,13 @@ const ModuleDetail = () => {
     }
   };
 
-  // On selecting a lesson plan from the overlay
+  // On selecting a lesson plan from the popup
   const onSelectLessonPlan = (lessonPlan) => {
     // Check if the lesson plan is already in the list of selected lesson plans
     const alreadySelected = lessonPlans.some((plan) => plan.id === lessonPlan.id);
 
     let updatedLessonPlans = [...lessonPlans];
+    let updatedMap = { ...lessonPlanMap };
 
     if (alreadySelected) {
       // Triger the check and delete, let admin to delete outside of the popup
@@ -144,10 +145,11 @@ const ModuleDetail = () => {
       });
     } else {
       updatedLessonPlans.push(lessonPlan);
+      updatedMap[updatedLessonPlans.length - 1] = lessonPlan.id;
     }
 
     setLessonPlans(updatedLessonPlans);
-
+    setLessonPlanMap(updatedMap);
     setShowOverlay(false);
   };
 
