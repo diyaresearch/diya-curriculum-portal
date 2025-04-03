@@ -473,7 +473,10 @@ const ModuleDetail = () => {
               Update Module
             </button>
             <button
-              onClick={() => setMode("view")}
+              onClick={() => { 
+                setMode("view");
+                window.location.reload(); 
+              }}
               className="bg-gray-500 text-white py-2 px-4 rounded ml-4"
             >
               Exit Edit Mode
