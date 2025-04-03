@@ -4,6 +4,7 @@ import { storage } from "../../firebase/firebaseConfig";
 import { ref, getDownloadURL } from "firebase/storage";
 import { Document, Page, pdfjs } from "react-pdf";
 import { FaFilePdf, FaVideo, FaExternalLinkAlt } from "react-icons/fa";
+import DOMPurify from "dompurify";
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -43,7 +44,6 @@ const ViewContent = () => {
     }
     return url;
   };
-
 
   const isPdfLink = (url) => {
     if (!url) return false;
@@ -134,7 +134,10 @@ const ViewContent = () => {
           {/* Abstract Section */}
           <div className="p-6 bg-gray-50 border-b">
             <h2 className="text-xl font-semibold text-gray-800 mb-3">Abstract</h2>
-            <p className="text-gray-700 leading-relaxed">{content.Abstract}</p>
+            <div
+              className="text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.Abstract) }}
+            />
           </div>
 
           {/* Content Display Section */}
@@ -144,15 +147,19 @@ const ViewContent = () => {
                 <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
                   {isVideoLink(fileUrl) && <FaVideo className="mr-2" />}
                   {isPdfLink(fileUrl) && <FaFilePdf className="mr-2" />}
-                  {!isVideoLink(fileUrl) && !isPdfLink(fileUrl) && <FaExternalLinkAlt className="mr-2" />}
-                  {isVideoLink(fileUrl) ? "Video Content" : 
-                   isPdfLink(fileUrl) ? "Document Content" : 
-                   "External Resource"}
+                  {!isVideoLink(fileUrl) && !isPdfLink(fileUrl) && (
+                    <FaExternalLinkAlt className="mr-2" />
+                  )}
+                  {isVideoLink(fileUrl)
+                    ? "Video Content"
+                    : isPdfLink(fileUrl)
+                    ? "Document Content"
+                    : "External Resource"}
                 </h2>
               </div>
 
-              {/* Add content link for PDFs and Videos */}
-              {(isVideoLink(fileUrl) || isPdfLink(fileUrl)) && (
+              {/* Show Content URL only for PDFs and external links, not for videos */}
+              {!isVideoLink(fileUrl) && fileUrl && (
                 <div className="mb-4 p-3 bg-gray-50 border rounded-lg">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Content URL:</span>
@@ -218,7 +225,11 @@ const ViewContent = () => {
                       onLoadSuccess={onDocumentLoadSuccess}
                       className="mb-4"
                       loading={<div className="text-center py-4">Loading PDF...</div>}
-                      error={<div className="text-center py-4 text-red-600">Error loading PDF. Please try again later.</div>}
+                      error={
+                        <div className="text-center py-4 text-red-600">
+                          Error loading PDF. Please try again later.
+                        </div>
+                      }
                     >
                       {Array.from(new Array(numPages), (el, index) => (
                         <div key={`page_${index + 1}`} className="mb-4">
@@ -238,7 +249,9 @@ const ViewContent = () => {
 
               {!isVideoLink(fileUrl) && !isPdfLink(fileUrl) && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                  <p className="text-gray-700 mb-4">This content is hosted on an external platform.</p>
+                  <p className="text-gray-700 mb-4">
+                    This content is hosted on an external platform.
+                  </p>
                   <a
                     href={fileUrl}
                     target="_blank"

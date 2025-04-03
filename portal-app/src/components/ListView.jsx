@@ -2,6 +2,20 @@ import React, { useEffect, useState, useCallback } from "react";
 import TileItem from "./TileItem";
 import Overlay from "./Overlay";
 import useUserData from "../hooks/useUserData";
+import { useNavigate } from "react-router-dom";
+import module1 from "../assets/modules/module1.png";
+import module2 from "../assets/modules/module2.png";
+import module3 from "../assets/modules/module3.png";
+import module4 from "../assets/modules/module4.png";
+import module5 from "../assets/modules/module5.png";
+
+const imageMap = {
+  module1,
+  module2,
+  module3,
+  module4,
+  module5,
+};
 
 const categories = [
   "Python", // New Category
@@ -12,14 +26,7 @@ const categories = [
   "Earth Science",
 ];
 
-const types = [
-  "Lectures",
-  "Assignments",
-  "Quiz",
-  "Projects",
-  "Case studies",
-  "Data sets",
-];
+const types = ["Lectures", "Assignments", "Quiz", "Projects", "Case studies", "Data sets"];
 const levels = ["Basic", "Intermediate", "Advanced"];
 
 const ListView = ({ content }) => {
@@ -34,6 +41,22 @@ const ListView = ({ content }) => {
   const [selectedItems, setSelectedItems] = useState(new Set());
   const [deleteError, setDeleteError] = useState("");
   const { user, userData } = useUserData();
+  const [modules, setModules] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/modules`);
+        const data = await response.json();
+        setModules(data);
+      } catch (error) {
+        console.error("Error fetching modules:", error);
+      }
+    };
+
+    fetchModules();
+  }, []);
 
   const filterContent = useCallback(() => {
     let filtered = content;
@@ -102,22 +125,19 @@ const ListView = ({ content }) => {
       }
 
       const token = await user.getIdToken();
-      const response = await fetch(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         const error = await response.text();
         throw new Error(error);
       }
 
-      setFilteredContent(filteredContent.filter(item => item.id !== id));
+      setFilteredContent(filteredContent.filter((item) => item.id !== id));
       setDeleteError("");
     } catch (error) {
       setDeleteError(error.message);
@@ -126,7 +146,9 @@ const ListView = ({ content }) => {
 
   const handleBulkDelete = async () => {
     try {
-      if (!window.confirm(`Are you sure you want to delete ${selectedItems.size} selected items?`)) {
+      if (
+        !window.confirm(`Are you sure you want to delete ${selectedItems.size} selected items?`)
+      ) {
         return;
       }
 
@@ -135,7 +157,7 @@ const ListView = ({ content }) => {
       }
 
       const token = await user.getIdToken();
-      const deletePromises = Array.from(selectedItems).map(id =>
+      const deletePromises = Array.from(selectedItems).map((id) =>
         fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${id}`, {
           method: "DELETE",
           headers: {
@@ -145,13 +167,13 @@ const ListView = ({ content }) => {
       );
 
       const results = await Promise.all(deletePromises);
-      const failedDeletions = results.filter(r => !r.ok);
+      const failedDeletions = results.filter((r) => !r.ok);
 
       if (failedDeletions.length > 0) {
         throw new Error(`Failed to delete ${failedDeletions.length} items`);
       }
 
-      setFilteredContent(filteredContent.filter(item => !selectedItems.has(item.id)));
+      setFilteredContent(filteredContent.filter((item) => !selectedItems.has(item.id)));
       setSelectedItems(new Set());
       setDeleteError("");
     } catch (error) {
@@ -161,9 +183,54 @@ const ListView = ({ content }) => {
 
   return (
     <div className="text-center mt-10">
-      <h2 className="text-2xl font-bold">
-        Let's browse some teaching resources!
-      </h2>
+      {modules.length > 0 && (
+        <div className="container mx-auto px-4 mt-10">
+          <h2 className="text-2xl font-bold text-center mb-6">Modules</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {modules.map((module, index) => (
+              <div
+                key={index}
+                onClick={() => navigate(`/module/${module.id}`)}
+                className="p-4 bg-white shadow-md rounded cursor-pointer hover:shadow-lg transition duration-200"
+              >
+                <div className="h-40 bg-gray-200 rounded mb-4 flex items-center justify-center">
+                  {module.image ? (
+                    <img
+                      src={imageMap[module.image]}
+                      alt={module.image}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  ) : (
+                    <span className="text-gray-500 text-sm">Image Placeholder</span>
+                  )}
+                </div>
+
+                <h3 className="text-xl font-bold mb-2 text-center">{module.title}</h3>
+                <div className="flex flex-wrap gap-1 justify-center">
+                  {module.tags &&
+                    module.tags.map((tag, i) => {
+                      const tagColors = [
+                        "bg-pink-200",
+                        "bg-yellow-200",
+                        "bg-green-200",
+                        "bg-blue-200",
+                        "bg-purple-200",
+                      ];
+                      const color = tagColors[i % tagColors.length];
+                      return (
+                        <span key={i} className={`px-2 py-1 text-sm rounded ${color}`}>
+                          {tag}
+                        </span>
+                      );
+                    })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <h2 className="text-2xl font-bold mt-10">Let's browse some teaching resources!</h2>
       <div className="flex justify-center mt-4 space-x-4">
         <select
           value={selectedCategory}
@@ -236,9 +303,7 @@ const ListView = ({ content }) => {
           </button>
         )}
       </div>
-      {deleteError && (
-        <div className="text-red-500 mb-4">{deleteError}</div>
-      )}
+      {deleteError && <div className="text-red-500 mb-4">{deleteError}</div>}
       <div className="container mx-auto p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {paginatedContent.map((item, index) => (
@@ -288,9 +353,7 @@ const ListView = ({ content }) => {
           <span className="p-2">Page {currentPage}</span>
           <button
             onClick={() => handlePageChange("next")}
-            disabled={
-              currentPage === Math.ceil(filteredContent.length / itemsPerPage)
-            }
+            disabled={currentPage === Math.ceil(filteredContent.length / itemsPerPage)}
             className="p-2 bg-gray-300 rounded"
           >
             Next
@@ -298,10 +361,7 @@ const ListView = ({ content }) => {
         </div>
       </div>
       {selectedContent && (
-        <Overlay
-          content={selectedContent}
-          onClose={() => setSelectedContent(null)}
-        />
+        <Overlay content={selectedContent} onClose={() => setSelectedContent(null)} />
       )}
     </div>
   );
