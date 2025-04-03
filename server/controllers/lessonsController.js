@@ -9,7 +9,7 @@ const TABLE_SECTIONS = SCHEMA_QUALIFIER + "sections";
 
 console.log('lessonsController tables are', TABLE_CONTENT, TABLE_LESSON, TABLE_SECTIONS)
 
-// Get all lessons
+// Get all public lessons
 const getAllLessons = async (req, res) => {
   try {
     const lessonsSnapshot = await db.collection(TABLE_LESSON).get();
@@ -17,11 +17,15 @@ const getAllLessons = async (req, res) => {
       res.status(200).json([]);
       return;
     }
-    const lessons = [];
+    const publicLessons = [];
     lessonsSnapshot.forEach((doc) => {
-      lessons.push({ id: doc.id, ...doc.data() });
+      const lessonData = doc.data();
+      // only public and previous lessons
+      if (lessonData.isPublic) {
+        publicLessons.push({ id: doc.id, ...lessonData });
+      }
     });
-    res.status(200).json(lessons);
+    res.status(200).json(publicLessons);
   } catch (error) {
     console.error("Error fetching lessons:", error);
     res.status(500).send(error.message);
@@ -42,6 +46,35 @@ const getLessonById = async (req, res) => {
     res.status(200).json({ id: doc.id, ...doc.data() });
   } catch (error) {
     console.error("Error fetching lesson:", error);
+    res.status(500).send(error.message);
+  }
+};
+
+//Get current user lesson plan
+const getUserLessons = async (req, res) => {
+  try {
+    const userId = req.user ? req.user.uid : null;
+    if (!userId) {
+      return res.status(401).send("Unauthorized");
+    }
+
+    const lessonRef = await db.collection(TABLE_LESSON).get();
+    if (lessonRef.empty) {
+      return res.status(200).json([]);
+    }
+
+    const userLessons = [];
+    lessonRef.forEach((doc) => {
+      const lessonData = doc.data();
+      // Fetch only private lessons owned by the user
+      if (lessonData.authorId === userId) {
+        userLessons.push({ id: doc.id, ...lessonData });
+      }
+    });
+
+    res.status(200).json(userLessons);
+  } catch (error) {
+    console.error("Error fetching user units:", error);
     res.status(500).send(error.message);
   }
 };
@@ -108,12 +141,14 @@ const postLesson = async (req, res) => {
     await lessonRef.set({
       authorId: authorId,
       title: formData.title,
-      subject: formData.subject,
+      category: formData.category,
+      type: formData.type,
       level: formData.level,
       objectives: formData.objectives,
       duration: formData.duration,
       sections: formData.sections,
       description: formData.description,
+      isPublic: formData.isPublic,
       createdAt: new Date().toISOString(),
     });
 
@@ -147,14 +182,16 @@ const updateLesson = async (req, res) => {
 
     const updateData = {
       title: formData.title || lessonData.title,
-      subject: formData.subject || lessonData.subject,
+      categoty: formData.category || lessonData.category,
+      type: formData.type || lessonData.type,
       level: formData.level || lessonData.level,
       objectives: formData.objectives || lessonData.objectives,
       duration: formData.duration || lessonData.duration,
       sections: formData.sections || lessonData.sections,
       description: formData.description || lessonData.description,
+      isPublic: formData.isPublic,
     };
-
+    
     await lessonRef.update(updateData);
 
     res
@@ -210,7 +247,7 @@ const downloadPDF = async (req, res) => {
       .fontSize(20)
       .text(`Lesson: ${lessonData.title}`, { align: "center" });
     docPdf.moveDown();
-    docPdf.fontSize(14).text(`Subject: ${lessonData.subject}`);
+    docPdf.fontSize(14).text(`Category: ${lessonData.categpry}`);
     docPdf.text(`Level: ${lessonData.level}`);
     docPdf.text(`Duration: ${lessonData.duration} minutes`);
     docPdf.moveDown();
@@ -290,6 +327,7 @@ const downloadPDF = async (req, res) => {
 module.exports = {
   getAllLessons,
   getLessonById,
+  getUserLessons,
   getAllSections,
   getSections,
   postLesson,

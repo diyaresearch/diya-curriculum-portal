@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { useNavigate, useParams } from "react-router-dom";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
 Modal.setAppElement("#root");
 
@@ -56,6 +58,10 @@ export const EditContent = () => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  const handleAbstractChange = (value) => {
+    setFormData({ ...formData, Abstract: value });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -63,22 +69,23 @@ export const EditContent = () => {
     const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`;
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("Title", formData.Title);
-      formDataToSend.append("Category", formData.Category);
-      formDataToSend.append("Type", formData.Type);
-      formDataToSend.append("Level", formData.Level);
-      formDataToSend.append("Duration", formData.Duration);
-      formDataToSend.append("isPublic", formData.isPublic);
-      formDataToSend.append("Abstract", formData.Abstract);
-      formDataToSend.append("fileUrl", formData.fileUrl);
+      const formDataToSend = {
+        Title: formData.Title,
+        Category: formData.Category,
+        Level: formData.Level,
+        Type: formData.Type,
+        Duration: formData.Duration,
+        Abstract: formData.Abstract,
+        isPublic: formData.isPublic,
+        fileUrl: formData.fileUrl,
+      };
 
       const response = await fetch(url, {
-        method: `POST`,
-        body: formDataToSend,
+        method: "POST",
         headers: {
-          // 'Content-Type': 'multipart/form-data',
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify(formDataToSend),
       });
 
       if (!response.ok) {
@@ -155,15 +162,12 @@ export const EditContent = () => {
               required
             >
               <option>Select a category</option>
-              <option value="Mathematics">Mathematics</option>
-              <option value="Science">Science</option>
-              <option value="Social Studies">Social Studies</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="Languages">Languages</option>
-              <option value="Arts">Arts</option>
-              <option value="Physical">Physical</option>
-              <option value="Education">Education</option>
-              <option value="Health">Health</option>
+              <option value="Python">Python</option>
+              <option value="Physics">Physics</option>
+              <option value="Chemistry">Chemistry</option>
+              <option value="Biology">Biology</option>
+              <option value="Economics">Economics</option>
+              <option value="Earth Science">Earth Science</option>
             </select>
           </div>
           <div className="mb-4">
@@ -250,14 +254,11 @@ export const EditContent = () => {
             >
               Abstract:
             </label>
-            <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="Abstract"
-              rows="5"
-              placeholder="Abstract"
+            <ReactQuill
+              theme="snow"
               value={formData.Abstract}
-              onChange={handleChange}
-              required
+              onChange={handleAbstractChange}
+              className="bg-white"
             />
           </div>
           <div className="mb-4">
