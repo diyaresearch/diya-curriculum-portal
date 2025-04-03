@@ -4,18 +4,25 @@ import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
 import OverlayTileView from "../../components/OverlayTileView";
 import axios from "axios";
+import UploadContent from "../upload-content/index";
+import useUserData from "../../hooks/useUserData";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css"; // Import Quill CSS
+import { FaExternalLinkAlt } from "react-icons/fa";
 
 Modal.setAppElement("#root");
 
 export const LessonGenerator = () => {
   const [formData, setFormData] = useState({
     title: "",
-    subject: "",
+    category: "",
+    type: "",
     level: "",
-    objectives: [],
+    objectives: "",
     duration: "",
     sections: [],
     description: "",
+    isPublic: false,
   });
 
   const [showOverlay, setShowOverlay] = useState(false);
@@ -23,22 +30,63 @@ export const LessonGenerator = () => {
   const [portalContent, setPortalContent] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [objectives, setObjectives] = useState([""]);
   const [sections, setSections] = useState([{ intro: "", contentIds: [] }]);
   const [selectedMaterials, setSelectedMaterials] = useState({});
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const { userData } = useUserData(); // Get user data
+  const userRole = userData?.role; // Extract role
 
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`)
-      .then((response) => {
+    const fetchUnits = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user) {
+          return;
+        }
+
+        const token = await user.getIdToken();
+        const response = await axios.get(
+          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units/user`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         setPortalContent(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching portal content:", error);
-      });
+      } catch (error) {
+        console.error("Error fetching user units:", error);
+      }
+    };
+
+    fetchUnits();
   }, []);
+
+  useEffect(() => {
+    const savedDraft = localStorage.getItem("lessonPlanDraft");
+    if (savedDraft) {
+      const parsedDraft = JSON.parse(savedDraft);
+      console.log("Restored Data:", parsedDraft);
+
+      setFormData(parsedDraft);
+
+      // Ensure `sections` and `selectedMaterials` are also restored properly
+      setSections(parsedDraft.sections || [{ intro: "", contentIds: [] }]);
+
+      // Convert content IDs to actual material objects
+      const restoredMaterials = {};
+      if (parsedDraft.sections) {
+        parsedDraft.sections.forEach((section, index) => {
+          restoredMaterials[index] = section.contentIds.map(
+            (contentId) => portalContent.find((item) => item.id === contentId) || { id: contentId }
+          );
+        });
+      }
+      setSelectedMaterials(restoredMaterials);
+    }
+  }, [portalContent]);
 
   const handleExit = () => {
     navigate("/");
@@ -48,33 +96,99 @@ export const LessonGenerator = () => {
     const { id, value } = e.target;
     setFormData({
       ...formData,
-      [id]:
-        id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
+      [id]: id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
     });
   };
 
-  const handleChange_objective = (index, event) => {
-    const newObjectives = [...objectives];
-    newObjectives[index] = event.target.value;
-    setObjectives(newObjectives);
-    setFormData({ ...formData, objectives: newObjectives });
+  const handleDescriptionChange = (value) => {
+    setFormData({ ...formData, description: value });
   };
 
-  const handleSectionChange = (index, event) => {
+  const handleChange_objective = (value) => {
+    setFormData({ ...formData, objectives: value });
+  };
+
+  const handleSectionChange = (index, value) => {
     const updatedSections = [...sections];
     if (!updatedSections[index]) {
       updatedSections[index] = { intro: "", contentIds: [] };
     }
-    updatedSections[index].intro = event.target.value;
+    updatedSections[index].intro = value;
     setSections(updatedSections);
     setFormData({ ...formData, sections: updatedSections });
   };
-  const addObjective = () => {
-    setObjectives([...objectives, ""]);
+
+  const deleteSection = (index) => {
+    // Remove the section at the given index
+    const updatedSections = sections.filter((_, i) => i !== index);
+
+    // Update selectedMaterials by shifting keys
+    const updatedMaterials = Object.keys(selectedMaterials)
+      .map((key) => parseInt(key, 10))
+      .filter((key) => key !== index)
+      .reduce((acc, key) => {
+        const newKey = key > index ? key - 1 : key;
+        acc[newKey] = selectedMaterials[key];
+        return acc;
+      }, {});
+
+    setSections(updatedSections);
+    setSelectedMaterials(updatedMaterials);
+
+    setFormData((prevData) => ({
+      ...prevData,
+      sections: updatedSections,
+    }));
   };
 
   const addSection = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
+  };
+
+  const handleCreateNewNugget = () => {
+    console.log("Create Nugget clicked. Current user role:", userRole);
+
+    if (!userRole) {
+      console.error("User role is undefined.");
+      return;
+    }
+
+    if (userRole === "teacherPlus" || userRole === "admin") {
+      if (selectedSectionIndex === null) {
+        setSelectedSectionIndex(0);
+      }
+      setShowUploadModal(true);
+    } else {
+      console.warn("Unrecognized user role:", userRole);
+    }
+  };
+
+  const closeUploadModal = () => {
+    setShowUploadModal(false);
+  };
+
+  const handleNewNuggetAdded = (newNugget) => {
+    setShowUploadModal(false);
+    if (selectedSectionIndex !== null) {
+      setSelectedMaterials((prevMaterials) => ({
+        ...prevMaterials,
+        [selectedSectionIndex]: [...(prevMaterials[selectedSectionIndex] || []), newNugget],
+      }));
+    }
+  };
+
+  const handleSaveSession = () => {
+    const savedData = {
+      ...formData,
+      sections: sections.map((section, index) => ({
+        ...section,
+        contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
+      })),
+    };
+
+    console.log("Saving Draft:", savedData);
+    localStorage.setItem("lessonPlanDraft", JSON.stringify(savedData));
+    alert("Lesson plan draft saved successfully!");
   };
 
   const handleSubmit = async (e) => {
@@ -97,18 +211,52 @@ export const LessonGenerator = () => {
     const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/`;
 
     try {
+      console.log(formData.isPublic === true);
+
+      // If the lesson is public, update all content within sections to be public
+      if (formData.isPublic) {
+        const contentUpdates = sections.flatMap((section, index) => {
+          console.log("Processing section:", section);
+
+          const contentIds = selectedMaterials[index]?.map((material) => material.id) || [];
+          console.log(contentIds);
+          if (!Array.isArray(contentIds) || contentIds.length === 0) {
+            console.log("No valid contentIds found for section", index);
+            return [];
+          }
+
+          return contentIds.map((contentId) => {
+            console.log("Updating content to public:", contentId);
+            return fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ isPublic: true }),
+            });
+          });
+        });
+
+        console.log("Content update requests:", contentUpdates);
+        await Promise.all(contentUpdates);
+      } else {
+        console.log("Lesson is private. Skipping content update.");
+      }
+
       const lessonData = {
         title: formData.title,
-        subject: formData.subject,
+        category: formData.category,
+        type: formData.type,
         level: formData.level,
         objectives: formData.objectives,
         duration: formData.duration,
         description: formData.description,
+        isPublic: formData.isPublic,
         sections: sections.map((section, index) => ({
           id: index,
           intro: section.intro,
-          contentIds:
-            selectedMaterials[index]?.map((material) => material.id) || [],
+          contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
         })),
         author: userId,
       };
@@ -129,17 +277,20 @@ export const LessonGenerator = () => {
       setModalMessage("Lesson plan generated successfully");
       setFormData({
         title: "",
-        subject: "",
+        category: "",
+        type: "",
         level: "",
-        objectives: [""],
+        objectives: "",
         duration: "",
         sections: [],
         description: "",
+        isPublic: false,
       });
       setSections([{ intro: "", contentIds: [] }]);
       setSelectedMaterials({});
       setModalIsOpen(true);
       setIsSubmitting(false);
+      localStorage.removeItem("lessonPlanDraft");
     } catch (error) {
       setModalMessage("Error generating lesson plan: " + error.message);
       setModalIsOpen(true);
@@ -156,9 +307,7 @@ export const LessonGenerator = () => {
     const alreadySelected = sectionMaterials.find((m) => m.id === material.id);
 
     if (alreadySelected) {
-      const updatedSectionMaterials = sectionMaterials.filter(
-        (m) => m.id !== material.id
-      );
+      const updatedSectionMaterials = sectionMaterials.filter((m) => m.id !== material.id);
       setSelectedMaterials({
         ...selectedMaterials,
         [selectedSectionIndex]: updatedSectionMaterials,
@@ -173,9 +322,7 @@ export const LessonGenerator = () => {
 
   const removeMaterial = (materialId, sectionIndex) => {
     const sectionMaterials = selectedMaterials[sectionIndex] || [];
-    const updatedSectionMaterials = sectionMaterials.filter(
-      (m) => m.id !== materialId
-    );
+    const updatedSectionMaterials = sectionMaterials.filter((m) => m.id !== materialId);
     setSelectedMaterials({
       ...selectedMaterials,
       [sectionIndex]: updatedSectionMaterials,
@@ -208,7 +355,7 @@ export const LessonGenerator = () => {
             className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
             onClick={() => navigate("/my-plans")}
           >
-            My Plans
+            Plans
           </button>
           <button
             type="button"
@@ -221,10 +368,7 @@ export const LessonGenerator = () => {
         <h2 className="text-2xl mb-4 text-center">Lesson Plan Generator</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="title"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
               Lesson Title:
             </label>
             <input
@@ -238,34 +382,48 @@ export const LessonGenerator = () => {
             />
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="subject"
-            >
-              Subject:
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="category">
+              Category:
             </label>
             <select
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="subject"
-              value={formData.subject}
+              id="category"
+              value={formData.category}
               onChange={handleChange}
               required
             >
-              <option>Select a subject</option>
+              <option>Select a category</option>
               <option value="Python">Python</option>
               <option value="Physics">Physics</option>
-              <option value="Chemistry">Chemisty</option>
+              <option value="Chemistry">Chemistry</option>
               <option value="Biology">Biology</option>
               <option value="Economics">Economics</option>
               <option value="Earth Science">Earth Science</option>
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="level"
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="type">
+              Type:
+            </label>
+            <select
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="type"
+              value={formData.type}
+              onChange={handleChange}
+              required
             >
-              Grade Level:
+              <option>Select a type</option>
+              <option value="Lectures">Lectures</option>
+              <option value="Assignments">Assignments</option>
+              <option value="Quiz">Quiz</option>
+              <option value="Projects">Projects</option>
+              <option value="Case studies">Case studies</option>
+              <option value="Data sets">Data sets</option>
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="level">
+              Level:
             </label>
             <select
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
@@ -274,26 +432,14 @@ export const LessonGenerator = () => {
               onChange={handleChange}
               required
             >
-              <option>Select a grade level</option>
-              <option value="1st grade">1st grade</option>
-              <option value="2nd grade">2nd grade</option>
-              <option value="3rd grade">3rd grade</option>
-              <option value="4th grade">4th grade</option>
-              <option value="5th grade">5th grade</option>
-              <option value="6th grade">6th grade</option>
-              <option value="7th grade">7th grade</option>
-              <option value="8th grade">8th grade</option>
-              <option value="9th grade">9th grade</option>
-              <option value="10th grade">10th grade</option>
-              <option value="11th grade">11th grade</option>
-              <option value="12th grade">12th grade</option>
+              <option>Select a level</option>
+              <option value="Basic">Basic</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="duration"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="duration">
               Lesson Duration (minutes):
             </label>
             <input
@@ -307,68 +453,51 @@ export const LessonGenerator = () => {
             />
           </div>
           <div className="mb-4">
-            {objectives.map((objective, index) => (
-              <div key={index} className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor={`Objective${index + 1}`}
-                >
-                  Objective #{index + 1}:
-                </label>
-                <input
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id={`Objective${index + 1}`}
-                  type="text"
-                  placeholder="The objective of this lesson plan is..."
-                  value={formData.objectives[index]}
-                  onChange={(event) => handleChange_objective(index, event)}
-                  required
-                />
-              </div>
-            ))}
-            <button
-              type="button"
-              className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
-              onClick={addObjective}
-            >
-              Add another Objective
-            </button>
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="objectives">
+              Lesson Objective:
+            </label>
+            <ReactQuill
+              theme="snow"
+              value={formData.objectives}
+              onChange={handleChange_objective}
+              className="bg-white"
+            />
           </div>
 
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="description"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
               Lesson Description:
             </label>
-            <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="description"
-              rows="5"
-              placeholder="This lesson is about..."
+            <ReactQuill
+              theme="snow"
               value={formData.description}
-              onChange={handleChange}
-              required
+              onChange={handleDescriptionChange}
+              className="bg-white"
             />
+          </div>
+          <div className="mb-4 flex items-center">
+            <input
+              className="mr-2 leading-tight"
+              type="checkbox"
+              id="isPublic"
+              checked={formData.isPublic}
+              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+            />
+            <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
+              Make Public
+            </label>
           </div>
           <div className="mb-4 relative">
             {sections.map((section, index) => (
               <div key={index} className="mb-4 relative">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor={`Section${index + 1}`}
-                >
+                <label className="block text-gray-700 text-sm font-bold mb-2">
                   Section #{index + 1}:
                 </label>
-                <textarea
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                  id={`Section${index + 1}`}
-                  rows="5"
-                  placeholder="This section is about..."
+                <ReactQuill
+                  theme="snow"
                   value={sections[index]?.intro || ""}
-                  onChange={(event) => handleSectionChange(index, event)}
-                  required
+                  onChange={(value) => handleSectionChange(index, value)}
+                  className="bg-white"
                 />
 
                 <button
@@ -379,16 +508,44 @@ export const LessonGenerator = () => {
                     setShowOverlay(true);
                   }}
                 >
-                  + Add materials from the portal
+                  + Add Existing Nuggets
+                </button>
+                <button
+                  type="button"
+                  className="bg-green-500 text-white py-1 px-3 rounded"
+                  onClick={() => {
+                    setSelectedSectionIndex(index);
+                    handleCreateNewNugget();
+                  }}
+                >
+                  + Create New Nugget
                 </button>
 
+                {sections.length > 1 && (
+                  <button
+                    type="button"
+                    className="absolute top-0 right-0 text-red-500 text-xl font-bold"
+                    onClick={() => deleteSection(index)}
+                  >
+                    &times;
+                  </button>
+                )}
                 <div className="flex flex-wrap mt-2">
                   {selectedMaterials[index]?.map((material) => (
                     <div
                       key={material.id}
                       className="p-2 border rounded-md m-1 text-xs flex items-center"
                     >
-                      <span>{material.Title}</span>
+                      {/* Hyperlinked Title */}
+                      <a
+                        href={`/view-content/${material.UnitID}`} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline flex items-center"
+                      >
+                        {material.Title} 
+                      </a>
+
                       <button
                         onClick={() => removeMaterial(material.id, index)}
                         className="ml-2 text-red-500 font-bold"
@@ -408,9 +565,17 @@ export const LessonGenerator = () => {
               Add another Section
             </button>
           </div>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center space-between">
+            {/* Save Button - Temporarily Saves the Session */}
             <button
-              className={`py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-full font-bold ${
+              className="py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/3 font-bold bg-orange-400 hover:bg-orange-600 text-white"
+              type="button"
+              onClick={handleSaveSession}
+            >
+              Save as Draft
+            </button>
+            <button
+              className={`py-2 px-4 rounded-2xl focus:outline-none focus:shadow-outline w-1/3 font-bold ${
                 isSubmitting
                   ? "bg-gray-400 text-gray-700 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-700 text-white"
@@ -418,7 +583,7 @@ export const LessonGenerator = () => {
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save"}
+              {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
         </form>
@@ -427,7 +592,13 @@ export const LessonGenerator = () => {
             content={portalContent}
             onClose={() => setShowOverlay(false)}
             onSelectMaterial={onSelectMaterial}
-            initialSelectedTiles={Object.values(selectedMaterials || {}).flat().map((item) => item.id)}            
+            initialSelectedTiles={Object.values(selectedMaterials || {})
+              .flat()
+              .map((item) => item.id)}
+            type={formData.type}
+            category={formData.category}
+            level={formData.level}
+            contentType={"nugget"}
           />
         )}
         <Modal
@@ -445,6 +616,16 @@ export const LessonGenerator = () => {
           </button>
         </Modal>
       </div>
+      <Modal isOpen={showUploadModal} onRequestClose={closeUploadModal}>
+        <UploadContent
+          fromLesson={closeUploadModal}
+          onNuggetCreated={handleNewNuggetAdded}
+          isPublic={false}
+          type={formData.type}
+          category={formData.category}
+          level={formData.level}
+        />
+      </Modal>
     </div>
   );
 };

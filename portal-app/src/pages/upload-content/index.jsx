@@ -1,18 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
 Modal.setAppElement("#root");
 
-export const UploadContent = () => {
+export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic, type, category, level }) => {
   const [formData, setFormData] = useState({
     Title: "",
-    Category: "",
-    Type: "",
-    Level: "",
+    Category: category || "",
+    Type: type || "",
+    Level: level || "",
     Duration: "",
-    isPublic: false,
+    isPublic: isPublic || false,
     Abstract: "",
     fileUrl: "",
   });
@@ -20,10 +22,24 @@ export const UploadContent = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
 
-  const navigator = useNavigate();
+  const navigate = useNavigate();
+
+  // Ensure form updates if new props are passed in
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      Category: category || prev.Category,
+      Type: type || prev.Type,
+      Level: level || prev.Level,
+    }));
+  }, [category, type, level]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleAbstractChange = (value) => {
+    setFormData({ ...formData, Abstract: value });
   };
 
   const handleSubmit = async (e) => {
@@ -43,44 +59,57 @@ export const UploadContent = () => {
     const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/`; // Replace with your backend endpoint URL
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("Title", formData.Title);
-      formDataToSend.append("Category", formData.Category);
-      formDataToSend.append("Type", formData.Type);
-      formDataToSend.append("Level", formData.Level);
-      formDataToSend.append("Duration", formData.Duration);
-      formDataToSend.append("isPublic", formData.isPublic);
-      formDataToSend.append("Abstract", formData.Abstract);
-      formDataToSend.append("fileUrl", formData.fileUrl);
-      formDataToSend.append("Author", userId); // Include the user ID
+      const formDataToSend = {
+        Title: formData.Title,
+        Category: formData.Category,
+        Level: formData.Level,
+        Type: formData.Type,
+        Duration: formData.Duration,
+        Abstract: formData.Abstract,
+        isPublic: formData.isPublic,
+        fileUrl: formData.fileUrl,
+        Author: userId,
+      };
 
       const response = await fetch(url, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`, // Include the token in the request headers
         },
-        body: formDataToSend,
+        body: JSON.stringify(formDataToSend),
       });
 
       if (!response.ok) {
         throw new Error("Error submitting content");
       }
 
+      const newNugget = await response.json();
+      console.log("New Nugget:", newNugget);
+
       setModalMessage("Content submitted successfully");
       setFormData({
         Title: "",
-        Category: "",
-        Type: "",
-        Level: "",
+        Category: category || "",
+        Type: type || "",
+        Level: level || "",
         Duration: "",
         isPublic: false,
         Abstract: "",
         fileUrl: "",
       });
+
       setModalIsOpen(true);
-      setTimeout(() => {
-        navigator("/");
-      }, 2000);
+      if (fromLesson) {
+        closeModal();
+        if (onNuggetCreated) {
+          onNuggetCreated(newNugget); // Call the callback if inside a modal
+        }
+      } else {
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
+      }
     } catch (error) {
       setModalMessage("Error submitting content: " + error.message);
       setModalIsOpen(true);
@@ -114,10 +143,7 @@ export const UploadContent = () => {
         <h2 className="text-2xl mb-4 text-center">Upload contents</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Title"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Title">
               Title:
             </label>
             <input
@@ -131,10 +157,7 @@ export const UploadContent = () => {
             />
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Category"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Category">
               Category:
             </label>
             <select
@@ -149,14 +172,12 @@ export const UploadContent = () => {
               <option value="Physics">Physics</option>
               <option value="Chemistry">Chemistry</option>
               <option value="Biology">Biology</option>
+              <option value="Economics">Economics</option>
               <option value="Earth Science">Earth Science</option>
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Type"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Type">
               Type:
             </label>
             <select
@@ -176,10 +197,7 @@ export const UploadContent = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Level"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Level">
               Level:
             </label>
             <select
@@ -196,10 +214,7 @@ export const UploadContent = () => {
             </select>
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Duration"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Duration">
               Duration (minutes):
             </label>
             <input
@@ -212,45 +227,33 @@ export const UploadContent = () => {
               required
             />
           </div>
-          <div className="mb-4 flex items-center">
-            <input
-              className="mr-2 leading-tight"
-              type="checkbox"
-              id="isPublic"
-              checked={formData.isPublic}
-              onChange={(e) =>
-                setFormData({ ...formData, isPublic: e.target.checked })
-              }
-            />
-            <label
-              className="text-gray-700 text-sm font-bold"
-              htmlFor="isPublic"
-            >
-              Make Public
-            </label>
-          </div>
+          {!fromLesson && (
+            <div className="mb-4 flex items-center">
+              <input
+                className="mr-2 leading-tight"
+                type="checkbox"
+                id="isPublic"
+                checked={formData.isPublic}
+                onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+              />
+              <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
+                Make Public
+              </label>
+            </div>
+          )}
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Abstract"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Abstract">
               Abstract:
             </label>
-            <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="Abstract"
-              rows="5"
-              placeholder="Abstract"
+            <ReactQuill
+              theme="snow"
               value={formData.Abstract}
-              onChange={handleChange}
-              required
+              onChange={handleAbstractChange}
+              className="bg-white"
             />
           </div>
           <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="fileUrl"
-            >
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fileUrl">
               Content Url:
             </label>
             <input
