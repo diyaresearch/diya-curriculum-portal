@@ -14,9 +14,9 @@ export const MyPlans = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
   const navigate = useNavigate();
-  const [planType, setPlanType] = useState("myPlans"); // "public" or "myPlans"
   const { userData } = useUserData();
   const userRole = userData?.role; // Extract user role
+  const [planType, setPlanType] = useState(userRole === "admin" ? "all" : "myPlans");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -35,24 +35,42 @@ export const MyPlans = () => {
         }
 
         const token = await user.getIdToken();
-        let apiUrl =
-          planType === "public"
-            ? `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons`
-            : `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/myLessons`;
 
-        const response = await axios.get(apiUrl, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        let apiUrl;
+        if (userRole === "admin") {
+          apiUrl = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons/admin`;
 
-        setPlans(response.data);
-        setFilteredPlans(response.data);
+          const response = await axios.get(apiUrl);
+
+          if (planType === "all") {
+            setPlans(response.data);
+          } else if (planType === "public") {
+            setPlans(response.data.filter((lesson) => lesson.isPublic === true));
+          } else if (planType === "private") {
+            setPlans(response.data.filter((lesson) => lesson.isPublic === false));
+          }
+
+          setFilteredPlans(response.data);
+        } else {
+          apiUrl =
+            planType === "public"
+              ? `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons`
+              : `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/myLessons`;
+
+          const response = await axios.get(apiUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          setPlans(response.data);
+          setFilteredPlans(response.data);
+        }
       } catch (error) {
         console.error("Error fetching plans:", error);
       }
     };
 
     fetchPlans();
-  }, [navigate, planType]);
+  }, [navigate, planType, userRole]);
 
   // Filter plans based on search and selected filters
   useEffect(() => {
@@ -88,7 +106,10 @@ export const MyPlans = () => {
   const handlePageChange = (direction) => {
     if (direction === "prev" && currentPage > 1) {
       setCurrentPage(currentPage - 1);
-    } else if (direction === "next" && currentPage < Math.ceil(filteredPlans.length / itemsPerPage)) {
+    } else if (
+      direction === "next" &&
+      currentPage < Math.ceil(filteredPlans.length / itemsPerPage)
+    ) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -133,8 +154,18 @@ export const MyPlans = () => {
               setCurrentPage(1);
             }}
           >
-            <option value="public">Public Plans</option>
-            <option value="myPlans">My Plans</option>
+            {userData?.role === "admin" ? (
+              <>
+                <option value="all">All Plans</option>
+                <option value="public">Public Plans</option>
+                <option value="private">Private Plans</option>
+              </>
+            ) : (
+              <>
+                <option value="public">Public Plans</option>
+                <option value="myPlans">My Plans</option>
+              </>
+            )}
           </select>
           <button
             type="button"
@@ -146,7 +177,15 @@ export const MyPlans = () => {
         </div>
 
         <h2 className="text-2xl mb-4 text-center">
-          {planType === "public" ? "Public Plans" : "My Plans"}
+          {userData?.role === "admin"
+            ? planType === "public"
+              ? "Public Plans"
+              : planType === "private"
+              ? "Private Plans"
+              : "All Plans"
+            : planType === "public"
+            ? "Public Plans"
+            : "My Plans"}
         </h2>
 
         {/* Search Bar & Filters */}
@@ -201,8 +240,11 @@ export const MyPlans = () => {
 
         {/* Plans Display */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {paginatedPlans.map((plan, index) => (
-            <div key={index} className="border p-4 rounded-md shadow-sm flex items-center space-x-2">
+          {paginatedPlans.map((plan, index) => (
+            <div
+              key={index}
+              className="border p-4 rounded-md shadow-sm flex items-center space-x-2"
+            >
               {/* ✅ Checkbox for admins */}
               {userRole === "admin" && (
                 <input
@@ -226,7 +268,10 @@ export const MyPlans = () => {
 
         {/* ✅ Create Module Button (if any plans are selected) */}
         {selectedPlans.size > 0 && (
-          <button onClick={handleCreateModule} className="bg-green-500 text-white px-4 py-2 rounded mt-4">
+          <button
+            onClick={handleCreateModule}
+            className="bg-green-500 text-white px-4 py-2 rounded mt-4"
+          >
             Create Module
           </button>
         )}
