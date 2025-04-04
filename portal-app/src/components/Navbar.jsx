@@ -104,7 +104,6 @@ const Navbar = () => {
       <div className="space-x-4 text-white">
         <a
           href= {process.env.REACT_APP_HOME_PAGE}
-          target="_blank"
           rel="noopener noreferrer"
           className="hover:underline"
           style={{

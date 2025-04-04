@@ -84,17 +84,6 @@ const Overlay = ({ content, onClose }) => {
             {/* Ensure long URLs wrap */}
           </div>
         </div>
-        <div className="mt-4 p-2 border rounded">
-          <h3 className="text-lg">Add your comment here:</h3>
-          <br />
-          <textarea
-            className="w-full p-2 border rounded"
-            placeholder="Write a comment..."
-          ></textarea>
-          <div className="flex justify-end">
-            <button className="mt-2 p-2 bg-blue-500 text-white rounded">Comment</button>
-          </div>
-        </div>
       </div>
     </div>
   );
