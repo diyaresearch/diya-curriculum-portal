@@ -32,6 +32,27 @@ const getAllLessons = async (req, res) => {
   }
 };
 
+// Get all lessons for admin
+const getAllLessonsAdmin = async (req, res) => {
+  try {
+    const lessonsSnapshot = await db.collection(TABLE_LESSON).get();
+    if (lessonsSnapshot.empty) {
+      res.status(200).json([]);
+      return;
+    }
+    const lessons = [];
+    lessonsSnapshot.forEach((doc) => {
+      const lessonData = doc.data();
+      lessons.push({ id: doc.id, ...lessonData });
+    });
+    res.status(200).json(lessons);
+  } catch (error) {
+    console.error("Error fetching lessons:", error);
+    res.status(500).send(error.message);
+  }
+};
+
+
 const getLessonById = async (req, res) => {
   const lessonId = req.params.lessonId;
 
@@ -278,6 +299,7 @@ const downloadPDF = async (req, res) => {
 
 module.exports = {
   getAllLessons,
+  getAllLessonsAdmin,
   getLessonById,
   getUserLessons,
   postLesson,
