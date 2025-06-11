@@ -294,12 +294,33 @@ const ModuleDetail = () => {
             Exit
           </button>
         </div>
-        {/* Module Title */}
-        <div className="mb-6">
-          {mode === "view" ? (
-            <h2 className="text-4xl font-bold mb-2">{title}</h2>
-          ) : (
-            <>
+        {/* Title + Description + Image layout in view mode */}
+        {mode === "view" ? (
+          <div className="flex flex-col md:flex-row justify-between mb-6 gap-6">
+            <div className="flex-1">
+              <h2 className="text-4xl font-bold mb-4">{title}</h2>
+              <label className="block text-gray-700 text-lg font-semibold mb-2">
+                Description:
+              </label>
+              <div
+                className="border p-4 rounded bg-gray-50"
+                dangerouslySetInnerHTML={{ __html: description }}
+              />
+            </div>
+            {selectedImage && (
+              <div className="flex-shrink-0 w-full md:w-1/2 mt-4 md:mt-0">
+                <img
+                  src={imageMap[selectedImage] || module1}
+                  alt="Cover"
+                  className="rounded shadow-md w-full h-auto"
+                />
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Title (edit/create mode) */}
+            <div className="mb-6">
               <label className="block text-gray-700 text-lg font-semibold mb-2">
                 Module Title:
               </label>
@@ -309,54 +330,43 @@ const ModuleDetail = () => {
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full px-4 py-2 border rounded bg-white text-xl"
               />
-            </>
-          )}
-        </div>
-
-        {/* Select Image */}
-        {selectedImage && (
-          <div className="mb-6">
-            <img
-              src={imageMap[selectedImage] || module1}
-              alt="Cover"
-              className="w-full max-w-md rounded shadow-md mx-auto"
-            />
-          </div>
-        )}
-
-        {mode !== "view" && (
-          <div className="mb-6">
-            <label className="block text-gray-700 text-lg font-semibold mb-2">
-              Select Cover Image:
-            </label>
-            <div className="flex gap-4 flex-wrap">
-              {["module1", "module2", "module3", "module4", "module5"].map((key) => (
-                <div
-                  key={key}
-                  onClick={() => setSelectedImage(key)}
-                  className={`border-4 rounded cursor-pointer ${
-                    selectedImage === key ? "border-blue-500" : "border-transparent"
-                  }`}
-                >
-                  <img src={imageMap[key]} alt={key} className="w-32 h-20 object-cover rounded" />
-                </div>
-              ))}
             </div>
-          </div>
-        )}
 
-        {/* Module Description */}
-        <div className="mb-6">
-          <label className="block text-gray-700 text-lg font-semibold mb-2">Description:</label>
-          {mode === "view" ? (
-            <div
-              className="border p-4 rounded bg-gray-50"
-              dangerouslySetInnerHTML={{ __html: description }}
-            />
-          ) : (
-            <ReactQuill value={description} onChange={setDescription} theme="snow" />
-          )}
-        </div>
+            {/* Image Selector (edit/create mode) */}
+            {selectedImage && (
+              <div className="mb-6">
+                <label className="block text-gray-700 text-lg font-semibold mb-2">
+                  Select Cover Image:
+                </label>
+                <div className="flex gap-4 flex-wrap">
+                  {["module1", "module2", "module3", "module4", "module5"].map((key) => (
+                    <div
+                      key={key}
+                      onClick={() => setSelectedImage(key)}
+                      className={`border-4 rounded cursor-pointer ${
+                        selectedImage === key ? "border-blue-500" : "border-transparent"
+                      }`}
+                    >
+                      <img
+                        src={imageMap[key]}
+                        alt={key}
+                        className="w-32 h-20 object-cover rounded"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Description (edit/create mode) */}
+            <div className="mb-6">
+              <label className="block text-gray-700 text-lg font-semibold mb-2">
+                Description:
+              </label>
+              <ReactQuill value={description} onChange={setDescription} theme="snow" />
+            </div>
+          </>
+        )}
 
         {/* Module Tags */}
         <div className="mb-6">
@@ -473,7 +483,10 @@ const ModuleDetail = () => {
               Update Module
             </button>
             <button
-              onClick={() => setMode("view")}
+              onClick={() => { 
+                setMode("view");
+                window.location.reload(); 
+              }}
               className="bg-gray-500 text-white py-2 px-4 rounded ml-4"
             >
               Exit Edit Mode

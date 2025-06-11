@@ -32,6 +32,27 @@ const getAllLessons = async (req, res) => {
   }
 };
 
+// Get all lessons for admin
+const getAllLessonsAdmin = async (req, res) => {
+  try {
+    const lessonsSnapshot = await db.collection(TABLE_LESSON).get();
+    if (lessonsSnapshot.empty) {
+      res.status(200).json([]);
+      return;
+    }
+    const lessons = [];
+    lessonsSnapshot.forEach((doc) => {
+      const lessonData = doc.data();
+      lessons.push({ id: doc.id, ...lessonData });
+    });
+    res.status(200).json(lessons);
+  } catch (error) {
+    console.error("Error fetching lessons:", error);
+    res.status(500).send(error.message);
+  }
+};
+
+
 const getLessonById = async (req, res) => {
   const lessonId = req.params.lessonId;
 
@@ -76,54 +97,6 @@ const getUserLessons = async (req, res) => {
   } catch (error) {
     console.error("Error fetching user units:", error);
     res.status(500).send(error.message);
-  }
-};
-
-const getAllSections = async (req, res) => {
-  try {
-    const sectionsRef = db
-      .collection(TABLE_LESSON)
-      .doc("XnZzLBMIeKE5dsRXZ5nJ")
-      .collection(TABLE_SECTIONS);
-    const snapshot = await sectionsRef.get();
-
-    if (snapshot.empty) {
-      return res.status(404).json({ message: "No matching documents." });
-    }
-
-    const sections = [];
-    snapshot.forEach((doc) => {
-      sections.push({ id: doc.id, data: doc.data() });
-    });
-
-    res.status(200).json(sections);
-  } catch (error) {
-    console.error("Error getting documents:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
-
-const getSections = async (req, res) => {
-  try {
-    const lessonRef = db.collection(TABLE_LESSON).doc("oeVhJ5KBtbrfk5z3XUdT");
-    const doc = await lessonRef.get();
-
-    if (!doc.exists) {
-      return res.status(404).json({ message: "Lesson not found." });
-    }
-
-    const { sections } = doc.data();
-
-    if (!sections || sections.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No sections found for this lesson." });
-    }
-
-    res.status(200).json(sections);
-  } catch (error) {
-    console.error("Error getting sections:", error);
-    res.status(500).json({ error: "Failed to retrieve sections" });
   }
 };
 
@@ -326,10 +299,9 @@ const downloadPDF = async (req, res) => {
 
 module.exports = {
   getAllLessons,
+  getAllLessonsAdmin,
   getLessonById,
   getUserLessons,
-  getAllSections,
-  getSections,
   postLesson,
   updateLesson,
   deleteLessonById,

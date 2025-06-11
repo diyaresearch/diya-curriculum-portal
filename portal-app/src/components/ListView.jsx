@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import TileItem from "./TileItem";
 import Overlay from "./Overlay";
 import useUserData from "../hooks/useUserData";
@@ -43,6 +43,10 @@ const ListView = ({ content }) => {
   const { user, userData } = useUserData();
   const [modules, setModules] = useState([]);
   const navigate = useNavigate();
+  const scrollRef = useRef(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
 
   useEffect(() => {
     const fetchModules = async () => {
@@ -181,17 +185,72 @@ const ListView = ({ content }) => {
     }
   };
 
+  const scroll = (direction) => {
+    const { current } = scrollRef;
+    if (!current) return;
+  
+    const scrollAmount = current.offsetWidth; // scroll by one full container
+    const newScrollLeft = direction === "left"
+      ? current.scrollLeft - scrollAmount
+      : current.scrollLeft + scrollAmount;
+  
+    current.scrollTo({ left: newScrollLeft, behavior: "smooth" });
+  
+    setTimeout(() => updateArrowVisibility(), 300); // delay to let scroll happen
+  };
+  
+  const updateArrowVisibility = () => {
+    const { current } = scrollRef;
+    if (!current) return;
+    
+    const tolerance = 10;
+    setShowLeftArrow(current.scrollLeft > tolerance);
+    setShowRightArrow(current.scrollLeft + current.offsetWidth < current.scrollWidth - tolerance);
+  };
+  
+  useEffect(() => {
+    updateArrowVisibility();
+  }, [modules]);
+  
+  useEffect(() => {
+    const { current } = scrollRef;
+    if (!current) return;
+  
+    current.addEventListener("scroll", updateArrowVisibility);
+    return () => current.removeEventListener("scroll", updateArrowVisibility);
+  }, []);  
+
   return (
     <div className="text-center mt-10">
       {modules.length > 0 && (
-        <div className="container mx-auto px-4 mt-10">
+        <div className="relative w-full overflow-hidden px-4 max-w-[1280px] mx-auto mt-10">
           <h2 className="text-2xl font-bold text-center mb-6">Modules</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {/* Arrow buttons */}
+          {showLeftArrow && (
+            <button
+              onClick={() => scroll("left")}
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white rounded-full shadow w-10 h-10 flex items-center justify-center"
+            >
+              ◀
+            </button>
+          )}
+
+          {showRightArrow && (
+            <button
+              onClick={() => scroll("right")}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 z-20 bg-white rounded-full shadow w-10 h-10 flex items-center justify-center"
+            >
+              ▶
+            </button>
+          )}
+
+
+          <div ref={scrollRef} className="flex space-x-4 scroll-smooth no-scrollbar snap-x snap-mandatory" style={{overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {modules.map((module, index) => (
               <div
                 key={index}
                 onClick={() => navigate(`/module/${module.id}`)}
-                className="p-4 bg-white shadow-md rounded cursor-pointer hover:shadow-lg transition duration-200"
+                className="w-[250px] flex-shrink-0 snap-start p-4 bg-white shadow-md rounded cursor-pointer hover:shadow-lg transition duration-200"
               >
                 <div className="h-40 bg-gray-200 rounded mb-4 flex items-center justify-center">
                   {module.image ? (
@@ -204,7 +263,7 @@ const ListView = ({ content }) => {
                     <span className="text-gray-500 text-sm">Image Placeholder</span>
                   )}
                 </div>
-
+      
                 <h3 className="text-xl font-bold mb-2 text-center">{module.title}</h3>
                 <div className="flex flex-wrap gap-1 justify-center">
                   {module.tags &&
