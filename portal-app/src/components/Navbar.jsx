@@ -92,7 +92,7 @@ const Navbar = () => {
     <nav style={{ width: "100%" }} 
     className="bg-gray-800 p-4 flex justify-between items-center">
       <div className="flex items-center space-x-2">
-        <a href="https://diya-research.org" target="_blank" rel="noopener noreferrer"> 
+        <a href={process.env.REACT_APP_DIYA_BASE_URL} target="_blank" rel="noopener noreferrer"> 
           <img
           src={logo}
           alt="Logo"
@@ -103,8 +103,7 @@ const Navbar = () => {
 
       <div className="space-x-4 text-white">
         <a
-          href="https://curriculum-portal-1ce8f.web.app/" // Added a link to DIYA Ed Portal 
-          target="_blank"
+          href= {process.env.REACT_APP_HOME_PAGE}
           rel="noopener noreferrer"
           className="hover:underline"
           style={{
@@ -145,7 +144,7 @@ const Navbar = () => {
             }}
           >
             <a
-              href="https://diya-research.org/2025-teacher-nomination-form/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/2025-teacher-nomination-form/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -157,7 +156,7 @@ const Navbar = () => {
               Nominations
             </a>
             <a
-              href="https://diya-research.org/professional-development-workshop/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/professional-development-workshop/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -169,7 +168,7 @@ const Navbar = () => {
               PD Workshop
             </a>
             <a
-              href="https://diya-research.org/ai-ambassador-program/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-ambassador-program/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -208,7 +207,7 @@ const Navbar = () => {
             }}
           >
             <a
-              href="https://diya-research.org/ai-exploration/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-exploration/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -220,7 +219,7 @@ const Navbar = () => {
               AI Exploration
             </a>
             <a
-              href="https://diya-research.org/python-for-ai/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/python-for-ai/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -232,7 +231,7 @@ const Navbar = () => {
               Python for AI
             </a>
             <a
-              href="https://diya-research.org/ai-insights/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-insights/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -244,7 +243,7 @@ const Navbar = () => {
               AI Insights
             </a>
             <a
-              href="https://diya-research.org/ai-forge/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-forge/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -256,7 +255,7 @@ const Navbar = () => {
               AI Forge
             </a>
             <a
-              href="https://diya-research.org/ai-research/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-research/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -268,7 +267,7 @@ const Navbar = () => {
               AI Research
             </a>
             <a
-              href="https://diya-research.org/student-showcases/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/student-showcases/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -280,7 +279,7 @@ const Navbar = () => {
               Showcases
             </a>
             <a
-              href="https://diya-research.org/diya-club-for-high-school/"
+              href={`${process.env.REACT_APP_DIYA_BASE_URL}/diya-club-for-high-school/`}
               target="_blank"
               rel="noopener noreferrer"
               className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
@@ -294,7 +293,7 @@ const Navbar = () => {
           </div>
         </div>
         <a
-          href="https://diya-research.org/contact-us/"
+          href={`${process.env.REACT_APP_DIYA_BASE_URL}/contact-us/`}
           target="_blank"
           rel="noopener noreferrer"
           className="hover:underline"
