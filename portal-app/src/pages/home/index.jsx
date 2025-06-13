@@ -27,7 +27,7 @@ const Home = () => {
   return (
     <div>
       <HomePage user={user} />
-      {user ? <ListView content={content} /> : <Resources />}
+      {/*{user && <ListView content={content} />}*/}
     </div>
   );
 };

@@ -89,262 +89,157 @@ const Navbar = () => {
   };
 
   return (
-    <nav style={{ width: "100%" }} 
-    className="bg-gray-800 p-4 flex justify-between items-center">
-      <div className="flex items-center space-x-2">
-        <a href={process.env.REACT_APP_DIYA_BASE_URL} target="_blank" rel="noopener noreferrer"> 
+    <nav
+      style={{ width: "100%", backgroundColor: "#fff", minHeight: "80px", height: "80px" }}
+      className="px-4 flex justify-between items-center shadow"
+    >
+      <div className="flex items-center" style={{ gap: "20px" }}>
+        <a href={process.env.REACT_APP_DIYA_BASE_URL} target="_blank" rel="noopener noreferrer">
           <img
-          src={logo}
-          alt="Logo"
-          style={{ height: "113px", width: "90px" }}
+            src={logo}
+            alt="Logo"
+            style={{
+              height: "65px",
+              width: "55px",
+              borderRadius: "10%",
+              objectFit: "contain",
+              border: "1px solid #eee"
+            }}
           />
-        </a> 
+        </a>
+        <span
+          style={{
+            fontSize: "1.6rem",
+            fontWeight: "600",
+            color: "#000", // Make the text black
+            fontFamily: "Open Sans, sans-serif",
+            letterSpacing: "1px"
+          }}
+        >
+          DIYA Ed Portal
+        </span>
       </div>
 
-      <div className="space-x-4 text-white">
+      <div className="flex items-center space-x-0 ml-auto">
         <a
-          href= {process.env.REACT_APP_HOME_PAGE}
+          href={process.env.REACT_APP_HOME_PAGE}
           rel="noopener noreferrer"
           className="hover:underline"
           style={{
-            fontSize: "18px",
-            fontWeight: "400",
+            fontSize: "15px",
+            fontWeight: "600", // Made bolder
             fontFamily: "Open Sans, sans-serif",
             letterSpacing: "1.5px",
-            textUnderlineOffset: "20px", 
+            textUnderlineOffset: "20px",
             padding: "0px 20px",
+            color: "#222",
+            background: "none",
+            border: "none",
+            outline: "none",
+            cursor: "pointer",
+            height: "56px",
+            display: "flex",
+            alignItems: "center"
           }}
         >
-          Home 
+          Home
         </a>
-        <div className="relative group inline-block">
-          <a
-            href="#"
-            className="hover:underline group-hover:underline"
-            style={{
-              fontSize: "18px",
-              fontWeight: "400",
-              fontFamily: "Open Sans, sans-serif",
-              letterSpacing: "1.5px",
-              textUnderlineOffset: "20px",
-              padding: "0px 20px",
-            }}
-          >
-            For Educators
-          </a>
-          {/* Dropdown menu */}
-          <div
-            className="absolute left-1/2 transform -translate-x-1/2 mt-0 hidden group-hover:block hover:block"
-            style={{
-              padding: "20px 0px",
-              margin: "auto",
-              zIndex: 20,
-              overflow: "hidden",
-              minWidth: "180px"
-            }}
-          >
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/2025-teacher-nomination-form/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              Nominations
-            </a>
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/professional-development-workshop/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              PD Workshop
-            </a>
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-ambassador-program/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              AI Ambassador
-            </a>
-          </div>
-        </div>
-        <div className="relative group inline-block">
-          <a
-            href="#"
-            className="hover:underline group-hover:underline"
-            style={{
-              fontSize: "18px",
-              fontWeight: "400",
-              fontFamily: "Open Sans, sans-serif",
-              letterSpacing: "1.5px",
-              textUnderlineOffset: "20px",
-              padding: "0px 20px",
-            }}
-          >
-            For Students
-          </a>
-          <div
-            className="absolute left-1/2 transform -translate-x-1/2 mt-0 hidden group-hover:block hover:block"
-            style={{
-              padding: "20px 0px",
-              margin: "auto",
-              zIndex: 20,
-              overflow: "hidden",
-              minWidth: "180px"
-            }}
-          >
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-exploration/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              AI Exploration
-            </a>
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/python-for-ai/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              Python for AI
-            </a>
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-insights/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              AI Insights
-            </a>
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-forge/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              AI Forge
-            </a>
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/ai-research/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              AI Research
-            </a>
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/student-showcases/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              Showcases
-            </a>
-            <a
-              href={`${process.env.REACT_APP_DIYA_BASE_URL}/diya-club-for-high-school/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block px-4 py-2 text-white bg-[#1C418A] hover:bg-gray-500"
-              style={{
-                fontSize: "18px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              DIYA Club
-            </a>
-          </div>
-        </div>
         <a
-          href={`${process.env.REACT_APP_DIYA_BASE_URL}/contact-us/`}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/about"
           className="hover:underline"
           style={{
-            fontSize: "18px",
-            fontWeight: "400",
+            fontSize: "15px",
+            fontWeight: "600", // Made bolder
             fontFamily: "Open Sans, sans-serif",
             letterSpacing: "1.5px",
-            textUnderlineOffset: "20px", 
+            textUnderlineOffset: "20px",
             padding: "0px 20px",
+            color: "#222",
+            background: "none",
+            border: "none",
+            outline: "none",
+            cursor: "pointer",
+            height: "56px",
+            display: "flex",
+            alignItems: "center"
           }}
         >
-          Contact Us
+          About
         </a>
-      </div>
-
-      <div>
         {!user ? (
           <>
             <button
               onClick={handleGoogleAuth}
-              className="bg-white text-gray-800 px-4 py-2 rounded mr-2"
+              className="hover:underline"
+              style={{
+                fontSize: "15px", // smaller text
+                fontWeight: "600", // Made bolder
+                fontFamily: "Open Sans, sans-serif",
+                letterSpacing: "1.5px",
+                textUnderlineOffset: "20px",
+                padding: "0px 20px",
+                color: "#222", // Darker text
+                background: "none",
+                border: "none",
+                outline: "none",
+                cursor: "pointer",
+                height: "56px",
+                display: "flex",
+                alignItems: "center"
+              }}
             >
-              Sign in
-            </button>
-            <button
-              onClick={() => setIsSignUpModalOpen(true)}
-              className="bg-white text-gray-800 px-4 py-2 rounded"
-            >
-              Sign up
+              Log in
             </button>
           </>
         ) : (
           <>
-            <div className="flex items-center space-x-6">
-              {/* User Profile */}
-              <button onClick={handleProfileClick} className="flex items-center space-x-2 hover:underline">
-                <img
-                  src={defaultUserIcon}
-                  alt="User Profile"
-                  className="w-8 h-8 rounded-full border border-gray-300"
-                />
-                <span className="text-white font-semibold">{userData?.fullName || "Profile"}</span>
-              </button>
-              <button
-                onClick={handleSignOut}
-                className="bg-white text-gray-800 px-4 py-2 rounded hover:bg-gray-200 transition"
-              >
-                Logout
-              </button>
-            </div>
+            <button onClick={handleProfileClick} className="flex items-center space-x-2 hover:underline"
+              style={{
+                fontSize: "15px", // smaller text
+                fontWeight: "600", // Made bolder
+                fontFamily: "Open Sans, sans-serif",
+                letterSpacing: "1.5px",
+                textUnderlineOffset: "20px",
+                padding: "0px 20px",
+                color: "#222", // Darker text
+                background: "none",
+                border: "none",
+                outline: "none",
+                cursor: "pointer",
+                height: "56px",
+                display: "flex",
+                alignItems: "center"
+              }}
+            >
+              <img
+                src={defaultUserIcon}
+                alt="User Profile"
+                className="w-8 h-8 rounded-full border border-gray-300"
+              />
+              <span className="font-semibold">{userData?.fullName || "Profile"}</span>
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="hover:underline"
+              style={{
+                fontSize: "15px", // smaller text
+                fontWeight: "600", // Made bolder
+                fontFamily: "Open Sans, sans-serif",
+                letterSpacing: "1.5px",
+                textUnderlineOffset: "20px",
+                padding: "0px 20px",
+                color: "#222", // Darker text
+                background: "none",
+                border: "none",
+                outline: "none",
+                cursor: "pointer",
+                height: "56px",
+                display: "flex",
+                alignItems: "center"
+              }}
+            >
+              Logout
+            </button>
           </>
         )}
       </div>
