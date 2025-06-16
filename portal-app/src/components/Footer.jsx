@@ -1,23 +1,34 @@
 import React from "react";
 
 const Footer = () => {
-    return (
-      <footer
-        style={{
-          backgroundColor: "#1f2937",
-          width: "100%",
-          color: "white",
-          textAlign: "center",
-          padding: "20px 10px",
-          fontFamily: "Open Sans, sans-serif",
-          fontSize: "14px",
-        }}
-      >
-        <div style={{padding: "10px 10px"}}>DIYA Research Inc is a 501(c)(3) nonprofit organization</div>
-        <div style={{padding: "10px 10px"}}>Tax ID# 85-3774771</div>
-        <div style={{padding: "10px 10px"}}>© Copyright 2023 DIYA Research Inc. All Rights Reserved.</div>
-      </footer>
-    );
-  };
-  
-  export default Footer;
+  return (
+    <footer
+      style={{
+        backgroundColor: "#1f2937",
+        width: "100%",
+        color: "white",
+        textAlign: "center",
+        padding: "80px 10px", // Even thicker footer
+        fontFamily: "Open Sans, sans-serif",
+        fontSize: "16px",
+      }}
+    >
+      <div style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: "24px"
+      }}>
+        <span>© 2023 DIYA Ed Portal</span>
+        <a href="/" style={{ color: "#fff", textDecoration: "none" }}>Home</a>
+        <a href="/about" style={{ color: "#fff", textDecoration: "none" }}>About</a>
+        <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>Twitter</a>
+        <a href="https://facebook.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>Facebook</a>
+        <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>Instagram</a>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
