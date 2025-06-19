@@ -549,10 +549,11 @@ const PopupTestimonialCard = ({
           width: "90%",
           boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
           position: "relative",
-          // Remove any fixed height or minHeight here!
           display: "flex",
           flexDirection: "column",
-          alignItems: "center"
+          alignItems: "center",
+          maxHeight: "80vh",         // <-- Add this
+          overflowY: "auto"          // <-- And this
         }}
       >
         {/* Popup navigation arrows at the top, but lower so they don't cover the exit button */}
