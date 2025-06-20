@@ -8,8 +8,76 @@ import teacherImg from "../assets/teacher.png";
 import physicsImg from "../assets/finphysics.png";
 import textbooksImg from "../assets/textbooks.png";
 import microscopeImg from "../assets/microscope.png";
-import pencilImg from "../assets/finpencil.png"; // Add this import at the top
+import pencilImg from "../assets/finpencil.png";
+import { getFirestore, collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { app as firebaseApp } from "../firebase/firebaseConfig";
+import { db } from "../firebase/firebaseConfig";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
+// --- Sign Up Prompt Modal ---
+const SignUpPrompt = ({ open, onClose, type }) => {
+  if (!open) return null;
+  const isTeacher = type === "teacher";
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      background: "rgba(0,0,0,0.3)", zIndex: 2000,
+      display: "flex", alignItems: "center", justifyContent: "center"
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 12, padding: 32, minWidth: 320,
+        boxShadow: "0 4px 24px rgba(0,0,0,0.18)", textAlign: "center", position: "relative"
+      }}>
+        <button onClick={onClose} style={{
+          position: "absolute", top: 10, right: 16, background: "none", border: "none",
+          fontSize: "1.5rem", cursor: "pointer", color: "#888"
+        }}>×</button>
+        <h3 style={{ marginBottom: 16 }}>
+          {isTeacher ? "Sign Up for Teacher Account" : "Sign Up for Student Account"}
+        </h3>
+        <div style={{ marginBottom: 24 }}>
+          Please sign up or log in to access this page.
+        </div>
+        <a href="/signup">
+          <button style={{
+            background: "#162040", color: "#fff", border: "none", borderRadius: 6,
+            padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
+          }}>
+            {isTeacher ? "Sign Up as Teacher" : "Sign Up as Student"}
+          </button>
+        </a>
+      </div>
+    </div>
+  );
+};
+
+// --- Custom Hook to get user and role from Firebase ---
+function useUserRole() {
+  const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      if (firebaseUser) {
+        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
+        if (userDoc.exists()) {
+          setRole(userDoc.data().role);
+        } else {
+          setRole(null);
+        }
+      } else {
+        setRole(null);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  return { user, role };
+}
+
+// --- SquareSection Component ---
 const SquareSection = ({ title, description, buttonText, buttonLink, children }) => (
   <section
     style={{
@@ -73,355 +141,557 @@ const SquareSection = ({ title, description, buttonText, buttonLink, children })
   </section>
 );
 
-const TeacherRectangles = () => (
-  <div
-    style={{
-      display: "flex",
-      flexWrap: "wrap",
-      justifyContent: "center",
-      gap: "40px",
-      marginTop: "48px",
-      marginBottom: "32px",
-      width: "100%",
-      maxWidth: "1100px"
-    }}
-  >
-    {/* Rectangle 1 */}
-    <div
-      style={{
-        background: "#f3f3f1",
-        borderRadius: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        border: "1px solid #e0dfdb",
-        width: "480px",
-        minHeight: "160px",
-        padding: "0",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center"
-      }}
-    >
-      {/* Barchart image */}
-      <div style={{
-        width: "90px",
-        height: "90px",
-        marginLeft: "32px",
-        marginRight: "24px",
-        borderRadius: "8px",
-        background: "#e0dfdb",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden"
-      }}>
-        <img
-          src={barchartImg}
-          alt="Barchart"
-          style={{
-            width: "80px",
-            height: "80px",
-            objectFit: "contain",
-            display: "block"
-          }}
-        />
-      </div>
-      <div>
-        <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
-          Ready-to-use Modules
-        </span>
-        <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
-          Access a library of pre-built modules.
-        </div>
-      </div>
-    </div>
-    {/* Rectangle 2 */}
-    <div
-      style={{
-        background: "#f3f3f1",
-        borderRadius: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        border: "1px solid #e0dfdb",
-        width: "480px",
-        minHeight: "160px",
-        padding: "0",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center"
-      }}
-    >
-      {/* Laptop image */}
-      <div style={{
-        width: "90px",
-        height: "90px",
-        marginLeft: "32px",
-        marginRight: "24px",
-        borderRadius: "8px",
-        background: "#e0dfdb",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden"
-      }}>
-        <img
-          src={laptopImg}
-          alt="Laptop"
-          style={{
-            width: "80px",
-            height: "80px",
-            objectFit: "contain",
-            display: "block"
-          }}
-        />
-      </div>
-      <div>
-        <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
-          Lesson Plan Builder
-        </span>
-        <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
-          Create and customize your lesson plans.
-        </div>
-      </div>
-    </div>
-    {/* Rectangle 3 */}
-    <div
-      style={{
-        background: "#f3f3f1",
-        borderRadius: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        border: "1px solid #e0dfdb",
-        width: "480px",
-        minHeight: "160px",
-        padding: "0",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center"
-      }}
-    >
-      {/* Teacher image */}
-      <div style={{
-        width: "90px",
-        height: "90px",
-        marginLeft: "32px",
-        marginRight: "24px",
-        borderRadius: "8px",
-        background: "#e0dfdb",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden"
-      }}>
-        <img
-          src={teacherImg}
-          alt="Teacher"
-          style={{
-            width: "80px",
-            height: "80px",
-            objectFit: "contain",
-            display: "block"
-          }}
-        />
-      </div>
-      <div>
-        <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
-          Classroom Management
-        </span>
-        <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
-          Control content visibility for students.
-        </div>
-      </div>
-    </div>
-    {/* Rectangle 4 */}
-    <div
-      style={{
-        background: "#f3f3f1",
-        borderRadius: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        border: "1px solid #e0dfdb",
-        width: "480px",
-        minHeight: "160px",
-        padding: "0",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center"
-      }}
-    >
-      {/* Pencil image */}
-      <div style={{
-        width: "90px",
-        height: "90px",
-        marginLeft: "32px",
-        marginRight: "24px",
-        borderRadius: "8px",
-        background: "#e0dfdb",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden"
-      }}>
-        <img
-          src={pencilImg}
-          alt="Pencil"
-          style={{
-            width: "80px",
-            height: "80px",
-            objectFit: "contain",
-            display: "block"
-          }}
-        />
-      </div>
-      <div>
-        <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
-          Share with Community
-        </span>
-        <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
-          Make the lesson plan public to the community.
-        </div>
-      </div>
-    </div>
-  </div>
-);
+// --- TeacherRectangles with role check ---
+const TeacherRectangles = () => {
+  const { user, role } = useUserRole();
+  const [showPrompt, setShowPrompt] = useState(false);
 
-const StudentRectangles = () => (
-  <div
-    style={{
-      display: "flex",
-      flexWrap: "nowrap",
-      justifyContent: "center",
-      gap: "40px",
-      marginTop: "48px",
-      marginBottom: "32px",
-      width: "100%",
-      maxWidth: "1100px"
-    }}
-  >
-    {/* Rectangle 1 */}
-    <div
-      style={{
-        background: "#f3f3f1",
-        borderRadius: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        border: "1px solid #e0dfdb",
-        width: "480px",
-        minHeight: "160px",
-        padding: "0",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center"
-      }}
-    >
-      {/* Textbooks image */}
-      <div style={{
-        width: "90px",
-        height: "90px",
-        marginLeft: "32px",
-        marginRight: "24px",
-        borderRadius: "8px",
-        background: "#e0dfdb",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden"
-      }}>
-        <img
-          src={textbooksImg}
-          alt="Textbooks"
-          style={{
-            width: "80px",
-            height: "80px",
-            objectFit: "contain",
-            display: "block"
-          }}
-        />
-      </div>
-      <div>
-        <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
-          Learning Modules
-        </span>
-        <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
-          Interactive content to enhance your understanding.
-        </div>
-      </div>
-    </div>
-    {/* Rectangle 2 */}
-    <div
-      style={{
-        background: "#f3f3f1",
-        borderRadius: "12px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-        border: "1px solid #e0dfdb",
-        width: "480px",
-        minHeight: "160px",
-        padding: "0",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center"
-      }}
-    >
-      {/* Microscope image */}
-      <div style={{
-        width: "90px",
-        height: "90px",
-        marginLeft: "32px",
-        marginRight: "24px",
-        borderRadius: "8px",
-        background: "#e0dfdb",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden"
-      }}>
-        <img
-          src={microscopeImg}
-          alt="Microscope"
-          style={{
-            width: "80px",
-            height: "80px",
-            objectFit: "contain",
-            display: "block"
-          }}
-        />
-      </div>
-      <div>
-        <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
-          Project Ideas for Science Fair
-        </span>
-        <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
-          Get inspired with creative project ideas.
-        </div>
-      </div>
-    </div>
-  </div>
-);
+  const handleClick = (e) => {
+    if (
+      !user ||
+      !["teacherDefault", "teacherPlus", "admin"].includes(role)
+    ) {
+      e.preventDefault();
+      setShowPrompt(true);
+    }
+  };
 
-const reviews = [
-  {
-    stars: "⭐⭐⭐⭐⭐",
-    text: "“The modules are so interactive and easy to follow. I learned a lot!”",
-    author: "– Ananya, Grade 8"
-  },
-  {
-    stars: "⭐⭐⭐⭐⭐",
-    text: "“I love the project ideas. They helped me win my science fair!”",
-    author: "– Rahul, Grade 7"
-  },
-  {
-    stars: "⭐⭐⭐⭐⭐",
-    text: "“Great for revision before exams. Highly recommend to friends!”",
-    author: "– Priya, Grade 9"
-  },
-  {
-    stars: "⭐⭐⭐⭐⭐",
-    text: "“The lesson plans are so easy to use and adapt for my class.”",
-    author: "– Mrs. Sharma, Teacher"
-  },
-  {
-    stars: "⭐⭐⭐⭐⭐",
-    text: "“I never thought learning AI could be this much fun!”",
-    author: "– Karan, Grade 6"
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        gap: "40px",
+        marginTop: "48px",
+        marginBottom: "32px",
+        width: "100%",
+        maxWidth: "1100px"
+      }}
+    >
+      {/* Rectangle 1 */}
+      <a href="/modules" style={{ textDecoration: "none" }} onClick={handleClick}>
+        <div
+          style={{
+            background: "#f3f3f1",
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            border: "1px solid #e0dfdb",
+            width: "480px",
+            minHeight: "160px",
+            padding: "0",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            cursor: "pointer"
+          }}
+        >
+          <div style={{
+            width: "90px",
+            height: "90px",
+            marginLeft: "32px",
+            marginRight: "24px",
+            borderRadius: "8px",
+            background: "#e0dfdb",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden"
+          }}>
+            <img
+              src={barchartImg}
+              alt="Barchart"
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "contain",
+                display: "block"
+              }}
+            />
+          </div>
+          <div>
+            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+              Ready-to-use Modules
+            </span>
+            <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
+              Access a library of pre-built modules.
+            </div>
+          </div>
+        </div>
+      </a>
+      {/* Rectangle 2 */}
+      <a href="/lesson-plans" style={{ textDecoration: "none" }} onClick={handleClick}>
+        <div
+          style={{
+            background: "#f3f3f1",
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            border: "1px solid #e0dfdb",
+            width: "480px",
+            minHeight: "160px",
+            padding: "0",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            cursor: "pointer"
+          }}
+        >
+          <div style={{
+            width: "90px",
+            height: "90px",
+            marginLeft: "32px",
+            marginRight: "24px",
+            borderRadius: "8px",
+            background: "#e0dfdb",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden"
+          }}>
+            <img
+              src={laptopImg}
+              alt="Laptop"
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "contain",
+                display: "block"
+              }}
+            />
+          </div>
+          <div>
+            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+              Lesson Plan Builder
+            </span>
+            <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
+              Create and customize your lesson plans.
+            </div>
+          </div>
+        </div>
+      </a>
+      {/* Rectangle 3 */}
+      <a href="/classroom-management" style={{ textDecoration: "none" }} onClick={handleClick}>
+        <div
+          style={{
+            background: "#f3f3f1",
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            border: "1px solid #e0dfdb",
+            width: "480px",
+            minHeight: "160px",
+            padding: "0",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            cursor: "pointer"
+          }}
+        >
+          <div style={{
+            width: "90px",
+            height: "90px",
+            marginLeft: "32px",
+            marginRight: "24px",
+            borderRadius: "8px",
+            background: "#e0dfdb",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden"
+          }}>
+            <img
+              src={teacherImg}
+              alt="Teacher"
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "contain",
+                display: "block"
+              }}
+            />
+          </div>
+          <div>
+            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+              Classroom Management
+            </span>
+            <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
+              Control content visibility for students.
+            </div>
+          </div>
+        </div>
+      </a>
+      {/* Rectangle 4 */}
+      <a href="/community" style={{ textDecoration: "none" }} onClick={handleClick}>
+        <div
+          style={{
+            background: "#f3f3f1",
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            border: "1px solid #e0dfdb",
+            width: "480px",
+            minHeight: "160px",
+            padding: "0",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            cursor: "pointer"
+          }}
+        >
+          <div style={{
+            width: "90px",
+            height: "90px",
+            marginLeft: "32px",
+            marginRight: "24px",
+            borderRadius: "8px",
+            background: "#e0dfdb",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden"
+          }}>
+            <img
+              src={pencilImg}
+              alt="Pencil"
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "contain",
+                display: "block"
+              }}
+            />
+          </div>
+          <div>
+            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+              Share with Community
+            </span>
+            <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
+              Make the lesson plan public to the community.
+            </div>
+          </div>
+        </div>
+      </a>
+      <SignUpPrompt open={showPrompt} onClose={() => setShowPrompt(false)} type="teacher" />
+    </div>
+  );
+};
+
+// --- StudentRectangles with role check ---
+const StudentRectangles = () => {
+  const { user, role } = useUserRole();
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  const handleClick = (e) => {
+    if (
+      !user ||
+      !["student", "consumer"].includes(role)
+    ) {
+      e.preventDefault();
+      setShowPrompt(true);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "nowrap",
+        justifyContent: "center",
+        gap: "40px",
+        marginTop: "48px",
+        marginBottom: "32px",
+        width: "100%",
+        maxWidth: "1100px"
+      }}
+    >
+      {/* Rectangle 1 */}
+      <a href="/learning-modules" style={{ textDecoration: "none" }} onClick={handleClick}>
+        <div
+          style={{
+            background: "#f3f3f1",
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            border: "1px solid #e0dfdb",
+            width: "480px",
+            minHeight: "160px",
+            padding: "0",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            cursor: "pointer"
+          }}
+        >
+          <div style={{
+            width: "90px",
+            height: "90px",
+            marginLeft: "32px",
+            marginRight: "24px",
+            borderRadius: "8px",
+            background: "#e0dfdb",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden"
+          }}>
+            <img
+              src={textbooksImg}
+              alt="Textbooks"
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "contain",
+                display: "block"
+              }}
+            />
+          </div>
+          <div>
+            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+              Learning Modules
+            </span>
+            <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
+              Interactive content to enhance your understanding.
+            </div>
+          </div>
+        </div>
+      </a>
+      {/* Rectangle 2 */}
+      <a href="/project-ideas" style={{ textDecoration: "none" }} onClick={handleClick}>
+        <div
+          style={{
+            background: "#f3f3f1",
+            borderRadius: "12px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            border: "1px solid #e0dfdb",
+            width: "480px",
+            minHeight: "160px",
+            padding: "0",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            cursor: "pointer"
+          }}
+        >
+          <div style={{
+            width: "90px",
+            height: "90px",
+            marginLeft: "32px",
+            marginRight: "24px",
+            borderRadius: "8px",
+            background: "#e0dfdb",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden"
+          }}>
+            <img
+              src={microscopeImg}
+              alt="Microscope"
+              style={{
+                width: "80px",
+                height: "80px",
+                objectFit: "contain",
+                display: "block"
+              }}
+            />
+          </div>
+          <div>
+            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+              Project Ideas for Science Fair
+            </span>
+            <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
+              Get inspired with creative project ideas.
+            </div>
+          </div>
+        </div>
+      </a>
+      <SignUpPrompt open={showPrompt} onClose={() => setShowPrompt(false)} type="student" />
+    </div>
+  );
+};
+
+
+const PopupTestimonialCard = ({
+  testimonial,
+  open,
+  onClick,
+  onClose,
+  forcePreview,
+  onPopupPrev,
+  onPopupNext,
+  showPopupNav,
+  isFirst,
+  isLast
+}) => {
+  const previewText = forcePreview || testimonial.Text;
+
+  // Only render the preview card if onClick is provided (carousel preview)
+  if (!open && onClick) {
+    return (
+      <div
+        onClick={onClick}
+        style={{
+          background: "#f3f3f1",
+          borderRadius: "10px",
+          padding: "24px 28px",
+          maxWidth: "260px",
+          minWidth: "220px",
+          minHeight: "250px",
+          height: "300px",
+          boxSizing: "border-box",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+          border: "1px solid #e0dfdb",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          cursor: "pointer",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <div
+          style={{
+            color: "#222",
+            fontSize: "1.05rem",
+            marginBottom: "12px",
+            flex: 1,
+            overflow: "hidden",
+            lineHeight: 1.5,
+            maxHeight: "200px",
+            minHeight: "60px",
+            transition: "opacity 0.2s"
+          }}
+        >
+          {`“${previewText}”`}
+        </div>
+        <div style={{
+          color: "#111",
+          fontSize: "0.98rem",
+          fontWeight: "600",
+          marginTop: "8px"
+        }}>
+          – {testimonial.Name}
+        </div>
+      </div>
+    );
   }
-];
 
-const ReviewsCarousel = () => {
+  // Only render the popup if open
+  if (!open) return null;
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.3)",
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: "#fff",
+          borderRadius: "14px",
+          padding: "32px 36px 24px 36px",
+          maxWidth: "400px",
+          width: "90%",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          maxHeight: "80vh",         // <-- Add this
+          overflowY: "auto"          // <-- And this
+        }}
+      >
+        {/* Popup navigation arrows at the top, but lower so they don't cover the exit button */}
+        {showPopupNav && (
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            position: "absolute",
+            top: 40, // Slightly higher than before (was 54)
+            left: 0,
+            right: 0,
+            width: "100%",
+            padding: "0 16px",
+            zIndex: 2
+          }}>
+            <button
+              onClick={onPopupPrev}
+              disabled={isFirst}
+              style={{
+                background: "#fff",
+                border: "1px solid #ccc",
+                borderRadius: "50%",
+                width: 32,
+                height: 32,
+                fontSize: "1.3rem",
+                color: "#162040",
+                cursor: isFirst ? "not-allowed" : "pointer",
+                opacity: isFirst ? 0.4 : 1,
+                transition: "opacity 0.2s"
+              }}
+              aria-label="Previous testimonial"
+            >
+              &#8592;
+            </button>
+            <button
+              onClick={onPopupNext}
+              disabled={isLast}
+              style={{
+                background: "#fff",
+                border: "1px solid #ccc",
+                borderRadius: "50%",
+                width: 32,
+                height: 32,
+                fontSize: "1.3rem",
+                color: "#162040",
+                cursor: isLast ? "not-allowed" : "pointer",
+                opacity: isLast ? 0.4 : 1,
+                transition: "opacity 0.2s"
+              }}
+              aria-label="Next testimonial"
+            >
+              &#8594;
+            </button>
+          </div>
+        )}
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 18,
+            background: "none",
+            border: "none",
+            fontSize: "1.5rem",
+            cursor: "pointer",
+            color: "#888",
+            zIndex: 3
+          }}
+          aria-label="Close"
+        >
+          ×
+        </button>
+        <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: "18px", marginTop: showPopupNav ? "38px" : "0", textAlign: "center" }}>
+          {`“${testimonial.Text}”`}
+        </div>
+        <div style={{ color: "#111", fontSize: "1rem", fontWeight: 600, textAlign: "center" }}>
+          – {testimonial.Name}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// In TestimonialsCarousel, pass popup navigation handlers and state
+const TestimonialsCarousel = () => {
+  const [testimonials, setTestimonials] = useState([]);
+  const [openIndex, setOpenIndex] = useState(null);
   const [startIndex, setStartIndex] = useState(0);
 
   // Fetch testimonials from Firestore on mount
