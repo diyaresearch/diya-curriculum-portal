@@ -14,6 +14,8 @@ import LessonDetail from "./pages/lesson_detail";
 import Layout from "./components/Layout";
 import UserProfilePage from "./pages/profile_detail";
 import ModuleDetail from "./pages/module_detail";
+import { TeacherSignup, StudentSignup } from './pages/sign_up'; // Importing the Teacher and Student Signup component
+ 
 
 function App() {
   return (
@@ -30,6 +32,9 @@ function App() {
           <Route path="/lesson/:lessonId" element={<LessonDetail />} />
           <Route path="/user-profile" element={<UserProfilePage />} />
           <Route path="/module/:moduleId" element={<ModuleDetail />} />
+          {/* Redirecting to teacher and student signup for the specific route */}
+          <Route path="/teacher-signup" element={<TeacherSignup />} />
+          <Route path="/student-signup" element={<StudentSignup />} />
         </Routes>
       </Layout>
     </BrowserRouter>
