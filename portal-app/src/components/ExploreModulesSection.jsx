@@ -63,7 +63,7 @@ function useUserRole() {
       if (firebaseUser) {
         const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
         if (userDoc.exists()) {
-          setRole(userDoc.data().role);
+          setRole(userDoc.data().role); // <-- use lowercase here
         } else {
           setRole(null);
         }
@@ -821,6 +821,8 @@ const TestimonialsCarousel = () => {
 };
 
 const ExploreModulesSection = () => {
+  const { user, role } = useUserRole();
+
   return (
     <div
       style={{
@@ -1067,27 +1069,32 @@ const ExploreModulesSection = () => {
           </div>
         </div>
       </section>
-      <div style={{ width: "100%", marginTop: "-40px" }}>
-        {/* Negative margin removes extra space above For Teachers */}
-        <SquareSection
-          title="For Teachers"
-          description="Unlock powerful tools to enhance your teaching."
-          buttonText="Learn More"
-          buttonLink="/teachers"
-        >
-          <TeacherRectangles />
-        </SquareSection>
-      </div>
-      <div style={{ width: "100%" }}>
-        <SquareSection
-          title="For Students"
-          description="Discover engaging content tailored for your learning."
-          buttonText="Browse Content"
-          buttonLink="/students"
-        >
-          <StudentRectangles />
-        </SquareSection>
-      </div>
+      {/* Only show For Teachers if NOT a student */}
+      {(!role || !["student", "consumer"].includes(role)) && (
+        <div style={{ width: "100%", marginTop: "-40px" }}>
+          <SquareSection
+            title="For Teachers"
+            description="Unlock powerful tools to enhance your teaching."
+            buttonText="Learn More"
+            buttonLink="/teachers"
+          >
+            <TeacherRectangles />
+          </SquareSection>
+        </div>
+      )}
+      {/* Only show For Students if NOT a teacher */}
+      {(!role || !["teacherDefault", "teacherPlus", "admin"].includes(role)) && (
+        <div style={{ width: "100%" }}>
+          <SquareSection
+            title="For Students"
+            description="Discover engaging content tailored for your learning."
+            buttonText="Browse Content"
+            buttonLink="/students"
+          >
+            <StudentRectangles />
+          </SquareSection>
+        </div>
+      )}
       {/* Add spacing between For Students and Reviews section */}
       <div style={{ height: "60px" }} />
       {/* Testimonials Section */}
