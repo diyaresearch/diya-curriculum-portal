@@ -57,6 +57,7 @@ const HeroSection = () => {
         <div
           style={{
             display: "flex",
+            fontWeight: "bold",
             gap: "24px",
             marginTop: "40px"
           }}
@@ -65,11 +66,10 @@ const HeroSection = () => {
             style={{
               background: "#FFC940",
               color: "#000",
-              border: "1px solid #fff", // Thinner border
               borderRadius: "6px",
               padding: "14px 32px",
               fontSize: "1.08rem",
-              fontWeight: "600",
+              fontWeight: "bold",
               cursor: "pointer",
               transition: "background 0.2s, color 0.2s, border 0.2s",
             }}
@@ -82,11 +82,10 @@ const HeroSection = () => {
             style={{
               background: "#FFC940",
               color: "#000",
-              border: "1px solid #fff", // Thinner border
               borderRadius: "6px",
               padding: "14px 32px",
               fontSize: "1.08rem",
-              fontWeight: "600",
+              fontWeight: "bold",
               cursor: "pointer",
               transition: "background 0.2s, color 0.2s, border 0.2s",
             }}
