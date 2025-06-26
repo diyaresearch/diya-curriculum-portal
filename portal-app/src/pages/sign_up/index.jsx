@@ -1,5 +1,11 @@
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from '../../firebase/firebaseConfig';
+import { query, where, getDocs } from "firebase/firestore";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { MultiSelectDropdown, SingleSelectDropdown } from "../../components/Dropdowns";
+import SignupSuccess from "../../components/SignupSuccess";
 
 const SUBJECT_OPTIONS = [
   "CS",
@@ -13,64 +19,76 @@ const SUBJECT_OPTIONS = [
 
 const GRADE_OPTIONS = ["5 or lower", "6–8", "9–12"];
 
-function MultiSelectDropdown({ options, selected, setSelected, label }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef();
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  const toggleOption = (option) => {
-    setSelected((prev) =>
-      prev.includes(option)
-        ? prev.filter((v) => v !== option)
-        : [...prev, option]
-    );
-  };
-
-  return (
-    <div className="multi-select" ref={ref}>
-      <div
-        className={`multi-select-label${open ? " open" : ""}`}
-        onClick={() => setOpen((o) => !o)}
-        tabIndex={0}
-      >
-        {selected.length === 0
-          ? `Select ${label}`
-          : selected.join(", ")}
-        <span className="dropdown-arrow">{open ? "▲" : "▼"}</span>
-      </div>
-      {open && (
-        <div className="multi-select-dropdown">
-          {options.map((option) => (
-            <div
-              key={option}
-              className={`multi-select-option${
-                selected.includes(option) ? " selected" : ""
-              }`}
-              onClick={() => toggleOption(option)}
-            >
-              <span className="checkbox">
-                {selected.includes(option) ? "✔" : ""}
-              </span>
-              {option}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function TeacherSignup() {
   const [subjects, setSubjects] = useState([]);
   const [grades, setGrades] = useState([]);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [school, setSchool] = useState("");
+  const [confirm, setConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [signedUp, setSignedUp] = useState(false);
+  const [registeredName, setRegisteredName] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    const cleanEmail = email.trim().toLowerCase();
+    if (!fullName || !email || !school || subjects.length === 0 || grades.length === 0 || !confirm) {
+      setError("Please fill all fields and confirm you are a teacher.");
+      return;
+    }
+    setLoading(true);
+    try {
+      // Check for existing teacher with this email (case-insensitive)
+      const q = query(collection(db, "teachers"), where("email", "==", cleanEmail));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        setError("An account with this email already exists.");
+        setLoading(false);
+        return;
+      }
+
+      await addDoc(collection(db, "teachers"), {
+        fullName,
+        email: cleanEmail, // store cleaned email
+        school,
+        subjects,
+        grades,
+        createdAt: new Date(),
+      });
+
+      setLoading(false);
+      setRegisteredName(fullName);
+      setSignedUp(true);
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+      console.error("Firestore error:", err.code, err.message);
+    }
+  };
+
+  if (signedUp) {
+    const handleGoogleLogin = async () => {
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        alert("Google login failed: " + error.message);
+      }
+    };
+
+    return (
+      <SignupSuccess
+        name={registeredName}
+        type="Teacher"
+        onLogin={handleGoogleLogin}
+      />
+    );
+  }
 
   return (
     <div className="teacher-signup-page">
@@ -84,20 +102,35 @@ export function TeacherSignup() {
         </div>
       </div>
       <div className="form-barrier">
-        <main className="teacher-form-section">
+        <main className="form-section">
           <div className="form-left">
             <h2>Teacher Profile Information</h2>
             <p>Please fill in the following information to create your teacher profile.</p>
           </div>
-          <form className="form-right">
+          <form className="form-right" onSubmit={handleSubmit}>
             <label>Full Name</label>
-            <input type="text" placeholder="Enter your full name" />
+            <input
+              type="text"
+              placeholder="Enter your full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
 
             <label>Email</label>
-            <input type="email" placeholder="Your email" />
+            <input
+              type="email"
+              placeholder="Your email"
+              value={email}
+              onChange={e => setEmail(e.target.value.trim().toLowerCase())}
+            />
 
             <label>School or Organization Name</label>
-            <input type="text" placeholder="Enter your school or organization" />
+            <input
+              type="text"
+              placeholder="Enter your school or organization"
+              value={school}
+              onChange={(e) => setSchool(e.target.value)}
+            />
 
             <label>What Subjects do you teach?</label>
             <MultiSelectDropdown
@@ -116,12 +149,18 @@ export function TeacherSignup() {
             />
 
             <div className="confirm">
-              <input type="checkbox" />
+              <input
+                type="checkbox"
+                checked={confirm}
+                onChange={(e) => setConfirm(e.target.checked)}
+              />
               <label>I confirm that I am a teacher</label>
             </div>
 
-            <button type="submit" className="register-btn">
-              Register
+            {error && <div style={{ color: "red", marginBottom: 8 }}>{error}</div>}
+
+            <button type="submit" className="register-btn" disabled={loading}>
+              {loading ? "Registering..." : "Register"}
             </button>
           </form>
         </main>
@@ -130,83 +169,70 @@ export function TeacherSignup() {
   );
 }
 
-
-function SingleSelectDropdown({ options, selected, setSelected, label }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef();
-
-  useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  return (
-    <div className="multi-select" ref={ref}>
-      <div
-        className={`multi-select-label${open ? " open" : ""}`}
-        onClick={() => setOpen((o) => !o)}
-        tabIndex={0}
-      >
-        {selected ? selected : `Select ${label}`}
-        <span className="dropdown-arrow">{open ? "▲" : "▼"}</span>
-      </div>
-      {open && (
-        <div className="multi-select-dropdown">
-          {options.map((option) => (
-            <div
-              key={option}
-              className={`multi-select-option${selected === option ? " selected" : ""}`}
-              onClick={() => setSelected(option)} // <-- DO NOT close dropdown here!
-            >
-              <span className="checkbox">
-                {selected === option ? "✔" : ""}
-              </span>
-              {option}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="multi-select" ref={ref}>
-      <div
-        className={`multi-select-label${open ? " open" : ""}`}
-        onClick={() => setOpen((o) => !o)}
-        tabIndex={0}
-      >
-        {selected ? selected : `Select ${label}`}
-        <span className="dropdown-arrow">{open ? "▲" : "▼"}</span>
-      </div>
-      {open && (
-        <div className="multi-select-dropdown">
-          {options.map((option) => (
-            <div
-              key={option}
-              className={`multi-select-option${selected === option ? " selected" : ""}`}
-              onClick={() => {
-                setSelected(option);
-                setOpen(false);
-              }}
-            >
-              <span className="checkbox">
-                {selected === option ? "✔" : ""}
-              </span>
-              {option}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function StudentSignup() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [grade, setGrade] = useState("");
+  const [confirm, setConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [signedUp, setSignedUp] = useState(false);
+  const [registeredName, setRegisteredName] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    const cleanEmail = email.trim().toLowerCase();
+    if (!fullName || !email || !grade || !confirm) {
+      setError("Please fill all fields and confirm you are a student.");
+      return;
+    }
+    setLoading(true);
+    try {
+      // Check for existing student with this email (case-insensitive)
+      const q = query(collection(db, "students"), where("email", "==", cleanEmail));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        setError("An account with this email already exists.");
+        setLoading(false);
+        return;
+      }
+
+      await addDoc(collection(db, "students"), {
+        fullName,
+        email: cleanEmail, // store cleaned email
+        grade,
+        createdAt: new Date(),
+      });
+      setLoading(false);
+      setRegisteredName(fullName);
+      setSignedUp(true);
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+      console.error("Firestore error:", err.code, err.message);
+    }
+  };
+
+  if (signedUp) {
+    const handleGoogleLogin = async () => {
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        alert("Google login failed: " + error.message);
+      }
+    };
+
+    return (
+      <SignupSuccess
+        name={registeredName}
+        type="Student"
+        onLogin={handleGoogleLogin}
+      />
+    );
+  }
 
   return (
     <div className="teacher-signup-page">
@@ -221,17 +247,28 @@ export function StudentSignup() {
         </div>
       </div>
       <div className="form-barrier">
-        <main className="teacher-form-section">
+        <main className="form-section">
           <div className="form-left">
             <h2>Student Profile Information</h2>
             <p>Please fill in the following information to create your student profile.</p>
           </div>
-          <form className="form-right">
+
+          <form className="form-right" onSubmit={handleSubmit}>
             <label>Full Name</label>
-            <input type="text" placeholder="Enter your full name" />
+            <input
+              type="text"
+              placeholder="Enter your full name"
+              value={fullName}
+              onChange={e => setFullName(e.target.value)}
+            />
 
             <label>Email</label>
-            <input type="email" placeholder="Your email" />
+            <input
+              type="email"
+              placeholder="Your email"
+              value={email}
+              onChange={e => setEmail(e.target.value.trim().toLowerCase())}
+            />
 
             <label>Grade Level</label>
             <SingleSelectDropdown
@@ -240,12 +277,21 @@ export function StudentSignup() {
               setSelected={setGrade}
               label="Grade Level"
             />
+
             <div className="confirm">
-              <input type="checkbox" />
+              <input
+                type="checkbox"
+                checked={confirm}
+                onChange={e => setConfirm(e.target.checked)}
+              />
               <label>I confirm that I am a student</label>
             </div>
 
-            <button type="submit" className="register-btn">Register</button>
+            {error && <div style={{ color: "red", marginBottom: 8 }}>{error}</div>}
+
+            <button type="submit" className="register-btn" disabled={loading}>
+              {loading ? "Registering..." : "Register"}
+            </button>
           </form>
         </main>
       </div>
