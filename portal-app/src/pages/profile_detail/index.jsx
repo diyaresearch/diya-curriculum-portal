@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import useUserData from "../../hooks/useUserData";
+import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import defaultProfileIcon from "../../assets/default_user_icon.png";
 
 const UserProfile = () => {
-  const { user, loading } = useUserData();
+  const [checking, setChecking] = useState(true);
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -28,10 +29,22 @@ const UserProfile = () => {
   const [confirmation, setConfirmation] = useState(null);
 
   useEffect(() => {
-    if (!loading && !user) {
+    const auth = getAuth();
+    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+      setUser(firebaseUser);
+      setChecking(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (checking) return; // or a loading spinner
+
+    if (!user) {
       navigate("/");
+      return null;
     }
-  }, [user, loading, navigate]);
+  }, [user, checking, navigate]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -159,6 +172,8 @@ const UserProfile = () => {
     setConfirmation(null);
     setSelectedUser(null);
   };
+
+  if (checking) return null; // or a loading spinner
 
   return (
     <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
