@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from '../../firebase/firebaseConfig';
 import { query, where, getDocs } from "firebase/firestore";
@@ -57,6 +57,7 @@ export function TeacherSignup() {
         school,
         subjects,
         grades,
+        role: "teacherDefault", // <-- add this line
         createdAt: new Date(),
       });
 
@@ -119,7 +120,7 @@ export function TeacherSignup() {
             <label>Email</label>
             <input
               type="email"
-              placeholder="Your email"
+              placeholder="Enter your email"
               value={email}
               onChange={e => setEmail(e.target.value.trim().toLowerCase())}
             />
@@ -202,8 +203,10 @@ export function StudentSignup() {
         fullName,
         email: cleanEmail, // store cleaned email
         grade,
+        role: "student",
         createdAt: new Date(),
       });
+
       setLoading(false);
       setRegisteredName(fullName);
       setSignedUp(true);
@@ -265,7 +268,7 @@ export function StudentSignup() {
             <label>Email</label>
             <input
               type="email"
-              placeholder="Your email"
+              placeholder="Enter your email"
               value={email}
               onChange={e => setEmail(e.target.value.trim().toLowerCase())}
             />
