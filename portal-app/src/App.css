@@ -14,7 +14,7 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #292f3f;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -32,6 +32,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -76,13 +77,13 @@
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 
-
-/* Teacher Signup Page Styles */
 /* Teacher Signup Page Styles */
 .teacher-signup-page {
   font-family: sans-serif;
@@ -100,7 +101,7 @@
 .teacher-signup-page .signup-hero {
   width: 100vw;
   margin-left: calc(-50vw + 50%);
-  background: #292f3f;
+  background: #19213a;
   padding: 56px 0 48px 0;
   text-align: center;
   display: flex;
@@ -149,17 +150,18 @@
   background: #ffc940;
   color: #222;
   border: none;
-  font-weight: 700;
+  font-weight: bold;
   box-shadow: 0 2px 0 #bfa12e;
-  padding: 16px 16px; /* Increased vertical padding */
-  width: 350px;     /* Slightly wider */
+  padding: 16px 16px;
+  /* Increased vertical padding */
+  width: 350px;
+  /* Slightly wider */
   font-size: 1.08rem;
 }
 
 .teacher-signup-page .auth-buttons button.create-account-btn {
   background: #fff;
   color: #222;
-  border: 1.5px solid #bbb;
   margin-top: 8px;
 }
 
@@ -169,7 +171,7 @@
   margin-top: 48px;
   background: #fff;
   border-radius: 18px;
-  box-shadow: 0 4px 24px 0 rgba(41,47,63,0.10), 0 1.5px 0 #e5e7ef;
+  box-shadow: 0 4px 24px 0 rgba(41, 47, 63, 0.10), 0 1.5px 0 #e5e7ef;
   padding: 48px 48px 32px 48px;
   max-width: 1000px;
   width: 100%;
@@ -178,7 +180,7 @@
 }
 
 /* Main Form Section */
-.teacher-form-section {
+.form-section {
   display: flex;
   gap: 60px;
   justify-content: center;
@@ -250,33 +252,95 @@
   border-color: #292f3f;
 }
 
-.subjects,
-.grades {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 8px;
-  margin-bottom: 8px;
+
+/* Multi-select Dropdown Styles */
+.multi-select {
+  position: relative;
+  width: 100%;
+  margin-bottom: 12px;
+  font-size: 15px;
 }
 
-.subjects label,
-.grades label {
+.multi-select-label {
+  background: #f5f5f5;
+  border: 1.5px solid #bbb;
+  border-radius: 7px;
+  padding: 10px 12px;
+  cursor: pointer;
+  min-height: 40px;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  transition: border 0.2s;
   font-weight: 500;
-  cursor: pointer;
-  font-size: 13px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  padding: 3px 10px;
-  border: 1px solid #ccc;
+  color: #222;
   user-select: none;
 }
 
-.subjects input[type="checkbox"],
-.grades input[type="checkbox"] {
-  margin: 0;
+.multi-select-label.open,
+.multi-select-label:focus {
+  border-color: #292f3f;
+  outline: none;
+}
+
+.dropdown-arrow {
+  margin-left: 10px;
+  font-size: 1.1em;
+  color: #888;
+}
+
+.multi-select-dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid #bbb;
+  border-radius: 7px;
+  box-shadow: 0 4px 16px 0 rgba(41, 47, 63, 0.10);
+  z-index: 10;
+  padding: 6px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.multi-select-option {
+  padding: 8px 16px 8px 36px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #222;
+  display: flex;
+  align-items: center;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.multi-select-option:hover {
+  background: #f0f0f0;
+}
+
+.multi-select-option.selected {
+  background: #e9f6e9;
+  font-weight: bold;
+}
+
+.multi-select-option .checkbox {
+  position: absolute;
+  left: 12px;
+  font-size: 1.1em;
+  color: #1a8f3c;
+  width: 18px;
+  display: inline-block;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+
+  .multi-select-label,
+  .multi-select-dropdown {
+    font-size: 14px;
+    padding: 8px 8px;
+  }
 }
 
 .form-right .helper-text {
@@ -284,42 +348,6 @@
   color: #888;
   margin-bottom: 8px;
   margin-top: -8px;
-}
-
-.confirm {
-  margin-top: 5px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.confirm label {
-  font-size: 13px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.confirm input[type="checkbox"] {
-  margin: 0;
-}
-
-.register-btn {
-  width: 100%;
-  padding: 11px 0;
-  background: #000;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: bold;
-  margin-top: 10px;
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-bottom: 60px;
-}
-
-.register-btn:hover {
-  background: #222;
 }
 
 /* Footer styles */
@@ -494,32 +522,6 @@
   border-color: #000;
 }
 
-.grades {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 13px;
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-.grades label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 14px;
-  background: #f5f5f5;
-  border-radius: 12px;
-  padding: 4px 12px;
-  border: 1px solid #ccc;
-  user-select: none;
-}
-
-.grades input[type="checkbox"] {
-  margin: 0;
-}
-
 .helper-text {
   font-size: 12px;
   color: #888;
@@ -534,14 +536,25 @@
   gap: 8px;
 }
 
-.confirm label {
-  font-size: 14px;
-  cursor: pointer;
-  font-weight: bold;
+.confirm input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  margin-right: 6px;
+  vertical-align: middle;
+  accent-color: #222;
+  position: static;
 }
 
-.confirm input[type="checkbox"] {
-  margin: 0;
+.confirm label {
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  align-items: flex-end;
+  /* Align items to the bottom */
+  line-height: 1.2;
+  gap: 4px;
 }
 
 .register-btn {
@@ -556,7 +569,8 @@
   margin-top: 10px;
   cursor: pointer;
   transition: background 0.2s;
-  margin-bottom: 90px; /* Space before footer */
+  margin-bottom: 90px;
+  /* Space before footer */
 }
 
 .register-btn:hover {
