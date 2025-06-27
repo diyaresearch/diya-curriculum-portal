@@ -1,11 +1,18 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
-
-// TEMP: fake user variable — replace with real auth logic later
-const user = null; // or useAuth()?.user if using context
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <section
@@ -57,12 +64,10 @@ const HeroSection = () => {
         >
           Unlock potential through hands-on learning experiences for K12 educators and students.
         </p>
-
         {!user && (
           <div
             style={{
               display: "flex",
-              fontWeight: "bold",
               gap: "24px",
               marginTop: "40px"
             }}
@@ -71,10 +76,11 @@ const HeroSection = () => {
               style={{
                 background: "#FFC940",
                 color: "#000",
+                border: "1px solid #fff",
                 borderRadius: "6px",
                 padding: "14px 32px",
                 fontSize: "1.08rem",
-                fontWeight: "bold",
+                fontWeight: "600",
                 cursor: "pointer",
                 transition: "background 0.2s, color 0.2s, border 0.2s",
               }}
@@ -82,15 +88,15 @@ const HeroSection = () => {
             >
               Sign Up as Student
             </button>
-
             <button
               style={{
                 background: "#FFC940",
                 color: "#000",
+                border: "1px solid #fff",
                 borderRadius: "6px",
                 padding: "14px 32px",
                 fontSize: "1.08rem",
-                fontWeight: "bold",
+                fontWeight: "600",
                 cursor: "pointer",
                 transition: "background 0.2s, color 0.2s, border 0.2s",
               }}
