@@ -9,7 +9,7 @@ import physicsImg from "../assets/finphysics.png";
 import textbooksImg from "../assets/textbooks.png";
 import microscopeImg from "../assets/microscope.png";
 import pencilImg from "../assets/finpencil.png";
-import { getFirestore, collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -58,20 +58,36 @@ function useUserRole() {
 
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubTeacher = null;
+    let unsubStudent = null;
+
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
+      setRole(null);
       if (firebaseUser) {
-        const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-        if (userDoc.exists()) {
-          setRole(userDoc.data().role); // <-- use lowercase here
-        } else {
-          setRole(null);
-        }
-      } else {
-        setRole(null);
+        // Listen for changes in teachers doc
+        unsubTeacher = onSnapshot(doc(db, "teachers", firebaseUser.uid), (teacherDoc) => {
+          if (teacherDoc.exists()) {
+            setRole(teacherDoc.data().role);
+          } else {
+            // If not a teacher, listen for student doc
+            unsubStudent = onSnapshot(doc(db, "students", firebaseUser.uid), (studentDoc) => {
+              if (studentDoc.exists()) {
+                setRole(studentDoc.data().role);
+              } else {
+                setRole(null);
+              }
+            });
+          }
+        });
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribe();
+      if (unsubTeacher) unsubTeacher();
+      if (unsubStudent) unsubStudent();
+    };
   }, []);
 
   return { user, role };
@@ -823,6 +839,13 @@ const TestimonialsCarousel = () => {
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
 
+  // Set title/description/button based on role
+  const isTeacherDefault = role === "teacherDefault";
+  const sectionTitle = isTeacherDefault ? "Featured Modules" : "Explore Learning Modules";
+  const sectionDescription = isTeacherDefault
+    ? "Explore the latest modules available for your class."
+    : "Browse our modules and discover engaging content for your learning journey.";
+
   return (
     <div
       style={{
@@ -856,25 +879,40 @@ const ExploreModulesSection = () => {
             letterSpacing: "1px"
           }}
         >
-          Explore Learning Modules
+          {sectionTitle}
         </h2>
-        <button
+        <p
           style={{
-            marginTop: "32px",
-            background: "#162040",
-            color: "#fff",
-            border: "2px solid #162040",
-            borderRadius: "6px",
-            padding: "14px 48px",
-            fontSize: "1.08rem",
-            fontWeight: "600",
-            cursor: "pointer",
-            transition: "background 0.2s, color 0.2s, border 0.2s",
+            marginTop: "18px",
+            fontSize: "1.15rem",
+            color: "#222",
+            textAlign: "center",
+            maxWidth: "600px",
+            fontWeight: 500,
           }}
-          onClick={() => window.location.href = "/modules"}
         >
-          View All Modules
-        </button>
+          {sectionDescription}
+        </p>
+        {/* Only show the button if NOT teacherDefault */}
+        {!isTeacherDefault && (
+          <button
+            style={{
+              marginTop: "32px",
+              background: "#162040",
+              color: "#fff",
+              border: "2px solid #162040",
+              borderRadius: "6px",
+              padding: "14px 48px",
+              fontSize: "1.08rem",
+              fontWeight: "600",
+              cursor: "pointer",
+              transition: "background 0.2s, color 0.2s, border 0.2s",
+            }}
+            onClick={() => window.location.href = "/modules"}
+          >
+            View All Modules
+          </button>
+        )}
         {/* Three square subsections */}
         <div
           style={{
@@ -1069,8 +1107,8 @@ const ExploreModulesSection = () => {
           </div>
         </div>
       </section>
-      {/* Only show For Teachers if NOT a student */}
-      {(!role || !["student", "consumer"].includes(role)) && (
+      {/* Only show For Teachers if NOT a student and NOT teacherDefault */}
+      {!isTeacherDefault && (!role || !["student", "consumer"].includes(role)) && (
         <div style={{ width: "100%", marginTop: "-40px" }}>
           <SquareSection
             title="For Teachers"
@@ -1082,6 +1120,7 @@ const ExploreModulesSection = () => {
           </SquareSection>
         </div>
       )}
+
       {/* Only show For Students if NOT a teacher */}
       {(!role || !["teacherDefault", "teacherPlus", "admin"].includes(role)) && (
         <div style={{ width: "100%" }}>
@@ -1095,67 +1134,71 @@ const ExploreModulesSection = () => {
           </SquareSection>
         </div>
       )}
+
       {/* Add spacing between For Students and Reviews section */}
       <div style={{ height: "60px" }} />
-      {/* Testimonials Section */}
-      <section
-        style={{
-          width: "100%",
-          background: "#F6F8FA",
-          padding: "0",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "flex-start",
-          justifyContent: "center",
-          gap: "80px", // Increase gap for more space between left and right
-          maxWidth: "1100px",
-          margin: "0 auto 60px auto"
-        }}
-      >
-        {/* Left: Title and Description */}
-        <div style={{
-          flex: "0 0 260px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center", // <-- Center title and description horizontally
-          justifyContent: "flex-start",
-          minWidth: "220px",
-          maxWidth: "300px",
-          marginLeft: "-24px"
-        }}>
-          <h2 style={{
-            fontSize: "2.5rem",
-            fontWeight: 700,
-            color: "#162040",
-            marginBottom: "18px",
-            textAlign: "center", // <-- Center text
-            fontFamily: "Open Sans, sans-serif",
-            letterSpacing: "1px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis"
-          }}>
-             Testimonials
-          </h2>
+
+      {/* Only show Testimonials if NOT teacherDefault */}
+      {!isTeacherDefault && (
+        <section
+          style={{
+            width: "100%",
+            background: "#F6F8FA",
+            padding: "0",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "flex-start",
+            justifyContent: "center",
+            gap: "80px",
+            maxWidth: "1100px",
+            margin: "0 auto 60px auto"
+          }}
+        >
+          {/* Left: Title and Description */}
           <div style={{
-            color: "#222",
-            fontSize: "1.15rem",
-            fontWeight: 500,
-            lineHeight: 1.5,
-            textAlign: "center", // <-- Center text
-            maxWidth: "600px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis"
+            flex: "0 0 260px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            minWidth: "220px",
+            maxWidth: "300px",
+            marginLeft: "-24px"
           }}>
-            Hear from those who have experienced DIYA's impact.
+            <h2 style={{
+              fontSize: "2.5rem",
+              fontWeight: 700,
+              color: "#162040",
+              marginBottom: "18px",
+              textAlign: "center",
+              fontFamily: "Open Sans, sans-serif",
+              letterSpacing: "1px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}>
+               Testimonials
+            </h2>
+            <div style={{
+              color: "#222",
+              fontSize: "1.15rem",
+              fontWeight: 500,
+              lineHeight: 1.5,
+              textAlign: "center",
+              maxWidth: "600px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}>
+              Hear from those who have experienced DIYA's impact.
+            </div>
           </div>
-        </div>
-        {/* Right: Testimonials Carousel */}
-        <div style={{ marginRight: "-150px" }}>
-          <TestimonialsCarousel />
-        </div>
-      </section>
+          {/* Right: Testimonials Carousel */}
+          <div style={{ marginRight: "-150px" }}>
+            <TestimonialsCarousel />
+          </div>
+        </section>
+      )}
     </div>
   );
 };
