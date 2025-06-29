@@ -1,9 +1,7 @@
-
-import React, { useState, useEffect } from "react";
-import { collection, addDoc } from "firebase/firestore";
+import React, { useState } from "react";
+import { collection, setDoc, doc, query, where, getDocs } from "firebase/firestore";
 import { db } from '../../firebase/firebaseConfig';
-import { query, where, getDocs } from "firebase/firestore";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import { MultiSelectDropdown, SingleSelectDropdown } from "../../components/Dropdowns";
 import SignupSuccess from "../../components/SignupSuccess";
 
@@ -19,6 +17,30 @@ const SUBJECT_OPTIONS = [
 
 const GRADE_OPTIONS = ["5 or lower", "6–8", "9–12"];
 
+// Shared login handler for both forms, now returns a boolean for account existence
+async function handleGoogleLogin(setError, setShowNoAccountPopup) {
+  setError("");
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    // Check both collections for this email
+    const teacherDoc = await getDocs(query(collection(db, "teachers"), where("email", "==", user.email)));
+    const studentDoc = await getDocs(query(collection(db, "students"), where("email", "==", user.email)));
+    if (teacherDoc.empty && studentDoc.empty) {
+      await signOut(auth);
+      setShowNoAccountPopup(true);
+      return false;
+    }
+    // else: proceed as normal (user is in Firestore)
+    window.location.href = "/"; // or use navigate if using react-router
+    return true;
+  } catch (error) {
+    setError(error.message || "Login failed. Please try again.");
+    return false;
+  }
+}
 
 export function TeacherSignup() {
   const [subjects, setSubjects] = useState([]);
@@ -31,11 +53,31 @@ export function TeacherSignup() {
   const [error, setError] = useState("");
   const [signedUp, setSignedUp] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
+  const [googleUser, setGoogleUser] = useState(null);
+  const [showNoAccountPopup, setShowNoAccountPopup] = useState(false);
+
+  // Require Google sign-in before registration
+  const handleGoogleSignup = async () => {
+    setError("");
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      setGoogleUser(result.user);
+      setEmail(result.user.email); // Pre-fill email
+    } catch (err) {
+      setError("Google sign-in failed. Please try again.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     const cleanEmail = email.trim().toLowerCase();
+    if (!googleUser) {
+      setError("Please sign in with Google first.");
+      return;
+    }
     if (!fullName || !email || !school || subjects.length === 0 || grades.length === 0 || !confirm) {
       setError("Please fill all fields and confirm you are a teacher.");
       return;
@@ -51,15 +93,19 @@ export function TeacherSignup() {
         return;
       }
 
-      await addDoc(collection(db, "teachers"), {
+      // Create a new teacher document with UID as doc ID
+      await setDoc(doc(db, "teachers", googleUser.uid), {
         fullName,
-        email: cleanEmail, // store cleaned email
+        email: cleanEmail,
         school,
         subjects,
         grades,
-        role: "teacherDefault", // <-- add this line
+        role: "teacherDefault",
         createdAt: new Date(),
       });
+
+      // Log out after signup so user is not automatically logged in
+      await signOut(getAuth());
 
       setLoading(false);
       setRegisteredName(fullName);
@@ -72,22 +118,103 @@ export function TeacherSignup() {
   };
 
   if (signedUp) {
-    const handleGoogleLogin = async () => {
-      const auth = getAuth();
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (error) {
-        alert("Google login failed: " + error.message);
-      }
-    };
-
+    // Let the user click "Log in here!" to start the Google login flow
     return (
-      <SignupSuccess
-        name={registeredName}
-        type="Teacher"
-        onLogin={handleGoogleLogin}
-      />
+      <>
+        <SignupSuccess
+          name={registeredName}
+          type="Teacher"
+          onLogin={async () => {
+            await handleGoogleLogin(setError, setShowNoAccountPopup);
+          }}
+        />
+        {showNoAccountPopup && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: "rgba(0,0,0,0.45)",
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 16,
+                padding: "40px 32px",
+                minWidth: 340,
+                maxWidth: 400,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                textAlign: "center",
+                position: "relative"
+              }}
+            >
+              <button
+                onClick={() => setShowNoAccountPopup(false)}
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 18,
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.7rem",
+                  color: "#888",
+                  cursor: "pointer"
+                }}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <h2 style={{ color: "#c00", marginBottom: 18, fontWeight: 700, fontSize: "1.4rem" }}>
+                Login Error
+              </h2>
+              <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: 18 }}>
+                No account exists for this Google account.
+              </div>
+              <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+                <a href="/student-signup" style={{ textDecoration: "none" }}>
+                  <button
+                    style={{
+                      width: "100%",
+                      background: "#2563eb",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 6,
+                      padding: "12px 0",
+                      fontWeight: 600,
+                      fontSize: "1rem",
+                      cursor: "pointer",
+                      marginBottom: 8
+                    }}
+                  >
+                    Sign Up as Student
+                  </button>
+                </a>
+                <a href="/teacher-signup" style={{ textDecoration: "none" }}>
+                  <button
+                    style={{
+                      width: "100%",
+                      background: "#162040",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 6,
+                      padding: "12px 0",
+                      fontWeight: 600,
+                      fontSize: "1rem",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Sign Up as Teacher
+                  </button>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -98,9 +225,25 @@ export function TeacherSignup() {
         <p>
           Join our platform to access AI and Data Science resources for your classrooms.
         </p>
-        <div className="auth-buttons">
-          <button>Already have an account? Log in</button>
-        </div>
+        <button
+          type="button"
+          onClick={() => handleGoogleLogin(setError)}
+          style={{
+            marginTop: 16,
+            background: "#FFC940",
+            color: "#222",
+            border: "1px solid #fff",
+            borderRadius: "6px",
+            padding: "10px 32px",
+            fontWeight: 600,
+            fontSize: "1rem",
+            cursor: "pointer",
+            boxSizing: "border-box",
+            display: "inline-block"
+          }}
+        >
+          Already have an account? Log in.
+        </button>
       </div>
       <div className="form-barrier">
         <main className="form-section">
@@ -118,12 +261,33 @@ export function TeacherSignup() {
             />
 
             <label>Email</label>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={e => setEmail(e.target.value.trim().toLowerCase())}
-            />
+            {!googleUser ? (
+              <button
+                type="button"
+                onClick={handleGoogleSignup}
+                style={{
+                  width: "100%",
+                  background: "#FFC940",
+                  color: "#222",
+                  border: "1px solid #bbb",
+                  borderRadius: "6px",
+                  padding: "10px 0",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  cursor: "pointer",
+                  marginBottom: 8
+                }}
+              >
+                Sign up with Google
+              </button>
+            ) : (
+              <input
+                type="email"
+                value={email}
+                disabled
+                style={{ background: "#e3e8f0" }}
+              />
+            )}
 
             <label>School or Organization Name</label>
             <input
@@ -160,12 +324,61 @@ export function TeacherSignup() {
 
             {error && <div style={{ color: "red", marginBottom: 8 }}>{error}</div>}
 
-            <button type="submit" className="register-btn" disabled={loading}>
+            <button type="submit" className="register-btn" disabled={loading || !googleUser}>
               {loading ? "Registering..." : "Register"}
             </button>
           </form>
         </main>
       </div>
+      {error === "No account exists for this Google account. Please sign up first." && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: "rgba(0,0,0,0.45)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 16,
+              padding: "40px 32px",
+              minWidth: 340,
+              maxWidth: 400,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+              textAlign: "center",
+              position: "relative"
+            }}
+          >
+            <button
+              onClick={() => setError("")}
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 18,
+                background: "none",
+                border: "none",
+                fontSize: "1.7rem",
+                color: "#888",
+                cursor: "pointer"
+              }}
+              aria-label="Close"
+            >
+              ×
+            </button>
+            <h2 style={{ color: "#c00", marginBottom: 18, fontWeight: 700, fontSize: "1.4rem" }}>
+              Login Error
+            </h2>
+            <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: 18 }}>
+              No account exists for this Google account. Please sign up first.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -179,11 +392,30 @@ export function StudentSignup() {
   const [error, setError] = useState("");
   const [signedUp, setSignedUp] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
+  const [googleUser, setGoogleUser] = useState(null);
+  const [showNoAccountPopup, setShowNoAccountPopup] = useState(false);
+
+  const handleGoogleSignup = async () => {
+    setError("");
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      setGoogleUser(result.user);
+      setEmail(result.user.email);
+    } catch (err) {
+      setError("Google sign-in failed. Please try again.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     const cleanEmail = email.trim().toLowerCase();
+    if (!googleUser) {
+      setError("Please sign in with Google first.");
+      return;
+    }
     if (!fullName || !email || !grade || !confirm) {
       setError("Please fill all fields and confirm you are a student.");
       return;
@@ -199,13 +431,17 @@ export function StudentSignup() {
         return;
       }
 
-      await addDoc(collection(db, "students"), {
+      // Create a new student document with UID as doc ID
+      await setDoc(doc(db, "students", googleUser.uid), {
         fullName,
-        email: cleanEmail, // store cleaned email
+        email: cleanEmail,
         grade,
         role: "student",
         createdAt: new Date(),
       });
+
+      // Log out after signup so user is not automatically logged in
+      await signOut(getAuth());
 
       setLoading(false);
       setRegisteredName(fullName);
@@ -218,22 +454,102 @@ export function StudentSignup() {
   };
 
   if (signedUp) {
-    const handleGoogleLogin = async () => {
-      const auth = getAuth();
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (error) {
-        alert("Google login failed: " + error.message);
-      }
-    };
-
     return (
-      <SignupSuccess
-        name={registeredName}
-        type="Student"
-        onLogin={handleGoogleLogin}
-      />
+      <>
+        <SignupSuccess
+          name={registeredName}
+          type="Student"
+          onLogin={async () => {
+            await handleGoogleLogin(setError, setShowNoAccountPopup);
+          }}
+        />
+        {showNoAccountPopup && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: "rgba(0,0,0,0.45)",
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 16,
+                padding: "40px 32px",
+                minWidth: 340,
+                maxWidth: 400,
+                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+                textAlign: "center",
+                position: "relative"
+              }}
+            >
+              <button
+                onClick={() => setShowNoAccountPopup(false)}
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 18,
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.7rem",
+                  color: "#888",
+                  cursor: "pointer"
+                }}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              <h2 style={{ color: "#c00", marginBottom: 18, fontWeight: 700, fontSize: "1.4rem" }}>
+                Login Error
+              </h2>
+              <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: 18 }}>
+                No account exists for this Google account.
+              </div>
+              <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
+                <a href="/student-signup" style={{ textDecoration: "none" }}>
+                  <button
+                    style={{
+                      width: "100%",
+                      background: "#2563eb",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 6,
+                      padding: "12px 0",
+                      fontWeight: 600,
+                      fontSize: "1rem",
+                      cursor: "pointer",
+                      marginBottom: 8
+                    }}
+                  >
+                    Sign Up as Student
+                  </button>
+                </a>
+                <a href="/teacher-signup" style={{ textDecoration: "none" }}>
+                  <button
+                    style={{
+                      width: "100%",
+                      background: "#162040",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 6,
+                      padding: "12px 0",
+                      fontWeight: 600,
+                      fontSize: "1rem",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Sign Up as Teacher
+                  </button>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -245,9 +561,25 @@ export function StudentSignup() {
           Join our platform to access AI and Data Science resources. Connect with
           your teacher's class or learn on your own.
         </p>
-        <div className="auth-buttons">
-          <button>Already have an account? Log in</button>
-        </div>
+        <button
+          type="button"
+          onClick={() => handleGoogleLogin(setError)}
+          style={{
+            marginTop: 16,
+            background: "#FFC940",
+            color: "#222",
+            border: "1px solid #fff",
+            borderRadius: "6px",
+            padding: "10px 32px",
+            fontWeight: 600,
+            fontSize: "1rem",
+            cursor: "pointer",
+            boxSizing: "border-box",
+            display: "inline-block"
+          }}
+        >
+          Already have an account? Log in.
+        </button>
       </div>
       <div className="form-barrier">
         <main className="form-section">
@@ -266,12 +598,33 @@ export function StudentSignup() {
             />
 
             <label>Email</label>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={e => setEmail(e.target.value.trim().toLowerCase())}
-            />
+            {!googleUser ? (
+              <button
+                type="button"
+                onClick={handleGoogleSignup}
+                style={{
+                  width: "100%",
+                  background: "#FFC940",
+                  color: "#222",
+                  border: "1px solid #bbb",
+                  borderRadius: "6px",
+                  padding: "10px 0",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  cursor: "pointer",
+                  marginBottom: 8
+                }}
+              >
+                Sign up with Google
+              </button>
+            ) : (
+              <input
+                type="email"
+                value={email}
+                disabled
+                style={{ background: "#e3e8f0" }}
+              />
+            )}
 
             <label>Grade Level</label>
             <SingleSelectDropdown
@@ -292,7 +645,7 @@ export function StudentSignup() {
 
             {error && <div style={{ color: "red", marginBottom: 8 }}>{error}</div>}
 
-            <button type="submit" className="register-btn" disabled={loading}>
+            <button type="submit" className="register-btn" disabled={loading || !googleUser}>
               {loading ? "Registering..." : "Register"}
             </button>
           </form>

@@ -10,7 +10,6 @@ import {
 } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
-import { auth } from "../firebase/firebaseConfig";
 import { useNavigate, useLocation } from "react-router-dom";
 import defaultUserIcon from "../assets/default_user_icon.png";
 
@@ -19,7 +18,7 @@ const SCHEMA_QUALIFIER = `${process.env.REACT_APP_DATABASE_SCHEMA_QUALIFIER}`;
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 
 const Navbar = () => {
-  const { user: contextUser, userData, handleGoogleAuth, handleSignOut, refreshUserData, authError, setAuthError } = useUserData();
+  const { userData } = useUserData();
   const [user, setUser] = useState(null);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,7 +34,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Listen for auth state changes
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
@@ -59,6 +57,7 @@ const Navbar = () => {
 
   const handleSignUpSubmit = async (e) => {
     e.preventDefault();
+    const auth = getAuth();
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
@@ -83,7 +82,6 @@ const Navbar = () => {
       );
       if (response.status === 201) {
         setIsSignUpModalOpen(false);
-        refreshUserData();
         setTimeout(() => {
           window.close();
         }, 1000);
@@ -162,18 +160,32 @@ const Navbar = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (!userDoc.exists()) {
+      const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
+      const studentDoc = await getDoc(doc(db, "students", user.uid));
+      if (!teacherDoc.exists() && !studentDoc.exists()) {
         await signOut(auth);
-        // Add query param so popup persists on back
         navigate("?showSignUpPopup=1", { replace: false });
         setErrorMsg(renderSignUpError());
+        return;
       }
       // else: proceed as normal
     } catch (error) {
       setErrorMsg(error.message);
     }
   };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(getAuth());
+      setUser(null);
+      window.location.reload();
+    } catch (error) {
+      alert("Logout failed. Please try again.");
+    }
+  };
+
+  const role = userData?.role;
+  const isTeacherDefault = role === "teacherDefault";
 
   return (
     <>
@@ -232,32 +244,11 @@ const Navbar = () => {
           >
             Home
           </a>
-          <a
-            href="/about"
-            className="hover:underline"
-            style={{
-              fontSize: "15px",
-              fontWeight: "600",
-              fontFamily: "Open Sans, sans-serif",
-              letterSpacing: "1.5px",
-              textUnderlineOffset: "20px",
-              padding: "0px 20px",
-              color: "#222",
-              background: "none",
-              border: "none",
-              outline: "none",
-              cursor: "pointer",
-              height: "56px",
-              display: "flex",
-              alignItems: "center"
-            }}
-          >
-            About
-          </a>
-          {!user ? (
+          {/* Conditional nav links for teacherDefault */}
+          {isTeacherDefault ? (
             <>
-              <button
-                onClick={handleGoogleLogin}
+              <a
+                href="/my-modules"
                 className="hover:underline"
                 style={{
                   fontSize: "15px",
@@ -276,12 +267,11 @@ const Navbar = () => {
                   alignItems: "center"
                 }}
               >
-                Log in
-              </button>
-            </>
-          ) : (
-            <>
-              <button onClick={handleProfileClick} className="flex items-center space-x-2 hover:underline"
+                My Modules
+              </a>
+              <a
+                href="/community"
+                className="hover:underline"
                 style={{
                   fontSize: "15px",
                   fontWeight: "600",
@@ -297,6 +287,77 @@ const Navbar = () => {
                   height: "56px",
                   display: "flex",
                   alignItems: "center"
+                }}
+              >
+                Community
+              </a>
+            </>
+          ) : (
+            <a
+              href="/about"
+              className="hover:underline"
+              style={{
+                fontSize: "15px",
+                fontWeight: "600",
+                fontFamily: "Open Sans, sans-serif",
+                letterSpacing: "1.5px",
+                textUnderlineOffset: "20px",
+                padding: "0px 20px",
+                color: "#222",
+                background: "none",
+                border: "none",
+                outline: "none",
+                cursor: "pointer",
+                height: "56px",
+                display: "flex",
+                alignItems: "center"
+              }}
+            >
+              About
+            </a>
+          )}
+          {!user ? (
+            <button
+              onClick={handleGoogleLogin}
+              className="hover:underline"
+              style={{
+                fontSize: "15px",
+                fontWeight: "600",
+                fontFamily: "Open Sans, sans-serif",
+                letterSpacing: "1.5px",
+                textUnderlineOffset: "20px",
+                padding: "0px 20px",
+                color: "#222",
+                background: "none",
+                border: "none",
+                outline: "none",
+                cursor: "pointer",
+                height: "56px",
+                display: "flex",
+                alignItems: "center"
+              }}
+            >
+              Log in
+            </button>
+          ) : (
+            <>
+              <div
+                className="flex items-center space-x-2"
+                style={{
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  fontFamily: "Open Sans, sans-serif",
+                  letterSpacing: "1.5px",
+                  textUnderlineOffset: "20px",
+                  padding: "0px 20px",
+                  color: "#222",
+                  background: "none",
+                  border: "none",
+                  outline: "none",
+                  height: "56px",
+                  display: "flex",
+                  alignItems: "center"
+                  // NO cursor: "pointer"
                 }}
               >
                 <img
@@ -317,7 +378,7 @@ const Navbar = () => {
                     </span>
                   )}
                 </span>
-              </button>
+              </div>
               <button
                 onClick={handleSignOut}
                 className="hover:underline"
