@@ -12,7 +12,7 @@ import EditLesson from "./pages/edit_lesson";
 import MyPlans from "./pages/my_plan";
 import LessonDetail from "./pages/lesson_detail";
 import Layout from "./components/Layout";
-import UserProfilePage from "./pages/profile_detail";
+import UserProfile from "./pages/profile_detail";
 import ModuleDetail from "./pages/module_detail";
 import { TeacherSignup, StudentSignup } from './pages/sign_up'; // Importing the Teacher and Student Signup component
  
@@ -30,7 +30,7 @@ function App() {
           <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
           <Route path="/my-plans" element={<MyPlans />} />
           <Route path="/lesson/:lessonId" element={<LessonDetail />} />
-          <Route path="/user-profile" element={<UserProfilePage />} />
+          <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/module/:moduleId" element={<ModuleDetail />} />
           {/* Redirecting to teacher and student signup for the specific route */}
           <Route path="/teacher-signup" element={<TeacherSignup />} />
