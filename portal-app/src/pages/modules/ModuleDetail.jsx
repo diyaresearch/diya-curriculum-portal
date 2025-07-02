@@ -3,55 +3,7 @@ import aiExplorationImg from "../../assets/ChatGPT Image Jun 13, 2025, 02_04_24 
 import aiInsightsImg from "../../assets/ChatGPT Image Jun 13, 2025, 02_17_05 PM.png";
 import aiPhysicsImg from "../../assets/ChatGPT Image Jun 13, 2025, 02_25_51 PM.png";
 
-const details = [
-    { label: "Category", value: "AI" },
-    { label: "Level", value: "Beginner" },
-    { label: "Time Estimate", value: "3 hours" },
-    { label: "Rating", value: "4.9/5" }
-];
-
-const requirements = [
-    {
-        left: "Python Programming",
-        right: "Familiarity with using computers and Internet"
-    }
-];
-
-const descriptions = [
-    {
-        left: "In-depth AI knowledge",
-        right: "Explore various AI applications and their impact."
-    }
-];
-
-const objectives = [
-    {
-        left: "Understand AI Basics",
-        right: "Learn the foundational concepts of AI"
-    }
-];
-
-const resources = [
-    {
-        title: "Lecture on AI Fundamentals",
-        desc: "Introductory lecture discussing the main concepts of AI.",
-        type: "Lecture",
-        locked: false
-    },
-    {
-        title: "Quiz on AI Basics",
-        desc: "Test your knowledge on what you've learned.",
-        type: "Quiz",
-        locked: true
-    },
-    {
-        title: "Assignment: Explore AI Tools",
-        desc: "Research and present your favorite AI tool.",
-        type: "Assignment",
-        locked: false
-    }
-];
-
+// Removed unused constants `details`, `requirements`, `descriptions`, `objectives`, and `resources`.
 // Section title style: bold, left, vertically centered, larger
 const sectionLeftStyle = {
     flex: "0 0 320px",
