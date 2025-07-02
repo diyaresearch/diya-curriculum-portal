@@ -1,6 +1,4 @@
-import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-
+import { BrowserRouter, Route, Routes, Link } from "react-router-dom";
 import "./App.css";
 import "./index.css";
 import { EditContent } from "./pages/edit_content";
@@ -13,14 +11,18 @@ import MyPlans from "./pages/my_plan";
 import LessonDetail from "./pages/lesson_detail";
 import Layout from "./components/Layout";
 import UserProfile from "./pages/profile_detail";
-import ModuleDetail from "./pages/module_detail";
-import { TeacherSignup, StudentSignup } from './pages/sign_up'; // Importing the Teacher and Student Signup component
- 
+import ModuleDetail from "./pages/modules/ModuleDetail";
+import { TeacherSignup, StudentSignup } from './pages/sign_up';
 
 function App() {
   return (
     <BrowserRouter>
       <Layout>
+        {/* Move your navigation here if you want it on every page */}
+        
+        
+        
+
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/upload-content" element={<UploadContent />} />
@@ -31,8 +33,8 @@ function App() {
           <Route path="/my-plans" element={<MyPlans />} />
           <Route path="/lesson/:lessonId" element={<LessonDetail />} />
           <Route path="/user-profile" element={<UserProfile />} />
-          <Route path="/module/:moduleId" element={<ModuleDetail />} />
-          {/* Redirecting to teacher and student signup for the specific route */}
+          {/* Only keep this route */}
+          <Route path="/modules/:moduleId" element={<ModuleDetail />} />
           <Route path="/teacher-signup" element={<TeacherSignup />} />
           <Route path="/student-signup" element={<StudentSignup />} />
         </Routes>

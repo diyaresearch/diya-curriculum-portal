@@ -13,6 +13,9 @@ import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/fir
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+
+
 
 // --- Sign Up Prompt Modal ---
 const SignUpPrompt = ({ open, onClose, type }) => {
@@ -849,6 +852,7 @@ const MODULE_LEVELS = ["All", "Basic", "Intermediate", "Advanced"];
 
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
+  const navigate = useNavigate();
   const isTeacherDefault = role === "teacherDefault";
 
   // Filter state
@@ -1005,23 +1009,46 @@ const ExploreModulesSection = () => {
           }}
         >
           {/* First subsection */}
-          <div style={{
-            background: "#fff",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            width: "340px",
-            height: "340px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            overflow: "hidden",
-            padding: 0
-          }}>
-            {/* Image fills all except bottom text area */}
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              width: "340px",
+              height: "340px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              overflow: "hidden",
+              padding: 0,
+              cursor: "pointer"
+            }}
+            onClick={() => {
+              if (
+                user &&
+                ["teacherDefault", "student", "admin"].includes(role)
+              ) {
+                navigate("/modules/ai-exploration");
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-label="Go to AI Exploration"
+            onKeyPress={e => { 
+              if (e.key === "Enter" || e.key === " ") { 
+                if (
+                  user &&
+                  ["teacherDefault", "student", "admin"].includes(role)
+                ) {
+                  navigate("/modules/ai-exploration");
+                }
+              } 
+            }}
+          >
             <div style={{
               width: "100%",
-              height: "calc(100% - 90px)", // Reserve 90px for the text area
+              height: "calc(100% - 90px)",
               display: "flex",
               alignItems: "stretch",
               justifyContent: "center"
@@ -1070,19 +1097,33 @@ const ExploreModulesSection = () => {
             </div>
           </div>
           {/* Second subsection */}
-          <div style={{
-            background: "#fff",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            width: "340px", // Match first subsection
-            height: "340px", // Match first subsection
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            overflow: "hidden"
-          }}>
-            {/* Image fills all except bottom text area */}
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              width: "340px",
+              height: "340px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              overflow: "hidden",
+              cursor: "pointer"
+            }}
+            onClick={() => {
+              if (
+                user &&
+                ["teacherDefault", "student", "admin"].includes(role)
+              ) {
+                navigate("/modules/ai-insights");
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-label="Go to AI Insights"
+            onKeyPress={e => { if (e.key === "Enter" || e.key === " ") { if (user) navigate("/modules/ai-insights"); else navigate("/login"); } }}
+          >
             <div style={{
               width: "100%",
               height: "calc(100% - 90px)",
@@ -1128,19 +1169,33 @@ const ExploreModulesSection = () => {
             </div>
           </div>
           {/* Third subsection */}
-          <div style={{
-            background: "#fff",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            width: "340px",
-            height: "340px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            overflow: "hidden"
-          }}>
-            {/* Image fills all except bottom text area, just like the other subsections */}
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              width: "340px",
+              height: "340px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              overflow: "hidden",
+              cursor: "pointer"
+            }}
+            onClick={() => {
+              if (
+                user &&
+                ["teacherDefault", "student", "admin"].includes(role)
+              ) {
+                navigate("/modules/ai-physics");
+              }
+            }}
+            tabIndex={0}
+            role="button"
+            aria-label="Go to AI & Physics"
+            onKeyPress={e => { if (e.key === "Enter" || e.key === " ") { if (user) navigate("/modules/ai-physics"); else navigate("/login"); } }}
+          >
             <div style={{
               width: "100%",
               height: "calc(100% - 90px)",
@@ -1154,7 +1209,7 @@ const ExploreModulesSection = () => {
                 style={{
                   width: "100%",
                   height: "100%",
-                  objectFit: "cover", // Ensures the image covers the top area like the other subsections
+                  objectFit: "cover",
                   display: "block"
                 }}
               />
@@ -1461,6 +1516,21 @@ const ExploreModulesSection = () => {
             gap: "16px",
             maxWidth: "100%"
           }}>
+
+            <h2 style={{
+              fontSize: "2.5rem",
+              fontWeight: 700,
+              color: "#162040",
+              marginBottom: "18px",
+              textAlign: "center",
+              fontFamily: "Open Sans, sans-serif",
+              letterSpacing: "1px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}>
+              Testimonials
+
             <h2
               style={{
                 fontSize: "2.5rem",
@@ -1473,6 +1543,7 @@ const ExploreModulesSection = () => {
               }}
             >
               What Our Users Say
+
             </h2>
             <p
               style={{
