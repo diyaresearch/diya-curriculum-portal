@@ -1035,15 +1035,15 @@ const ExploreModulesSection = () => {
             tabIndex={0}
             role="button"
             aria-label="Go to AI Exploration"
-            onKeyPress={e => { 
-              if (e.key === "Enter" || e.key === " ") { 
+            onKeyPress={e => {
+              if (e.key === "Enter" || e.key === " ") {
                 if (
                   user &&
                   ["teacherDefault", "student", "admin"].includes(role)
                 ) {
                   navigate("/modules/ai-exploration");
                 }
-              } 
+              }
             }}
           >
             <div style={{
@@ -1530,6 +1530,8 @@ const ExploreModulesSection = () => {
               textOverflow: "ellipsis"
             }}>
               Testimonials
+
+            </h2>
 
             <h2
               style={{
