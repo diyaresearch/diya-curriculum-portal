@@ -311,15 +311,15 @@ const ModuleDetail = () => {
                         alignItems: "center",
                         justifyContent: "center"
                     }}>
-                    <img
-                        src={module.image}
-                        alt={module.title}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            borderRadius: 14
-                        }}
+                        <img
+                            src={module.image}
+                            alt={module.title}
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                borderRadius: 14
+                            }}
                             onError={e => { e.target.style.display = "none"; }}
                         />
                     </div>
