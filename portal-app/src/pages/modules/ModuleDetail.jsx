@@ -1,4 +1,3 @@
-import Module from "../../components/Module";
 import { useParams } from "react-router-dom";
 import aiExplorationImg from "../../assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png";
 import aiInsightsImg from "../../assets/ChatGPT Image Jun 13, 2025, 02_17_05 PM.png";
