@@ -1035,7 +1035,16 @@ const ExploreModulesSection = () => {
             tabIndex={0}
             role="button"
             aria-label="Go to AI Exploration"
-            onKeyPress={e => { if (e.key === "Enter" || e.key === " ") { if (user) navigate("/modules/ai-exploration"); else navigate("/login"); } }}
+            onKeyPress={e => { 
+              if (e.key === "Enter" || e.key === " ") { 
+                if (
+                  user &&
+                  ["teacherDefault", "student", "admin"].includes(role)
+                ) {
+                  navigate("/modules/ai-exploration");
+                }
+              } 
+            }}
           >
             <div style={{
               width: "100%",
