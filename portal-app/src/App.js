@@ -19,9 +19,9 @@ function App() {
     <BrowserRouter>
       <Layout>
         {/* Move your navigation here if you want it on every page */}
-        <Link to="/modules/ai-exploration" ></Link>
-        <Link to="/modules/ai-insights" ></Link>
-        <Link to="/modules/ai-physics"></Link>
+        
+        
+        
 
         <Routes>
           <Route path="/" element={<Home />} />
