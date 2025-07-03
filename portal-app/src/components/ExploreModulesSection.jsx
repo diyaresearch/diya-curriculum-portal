@@ -12,9 +12,8 @@ import pencilImg from "../assets/finpencil.png";
 import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-
 
 
 // --- Sign Up Prompt Modal ---
@@ -839,6 +838,58 @@ const TestimonialsCarousel = () => {
   );
 };
 
+function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
+  if (!open) return null;
+
+  const handleGoogleLogin = async () => {
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      // After login, go to homepage ("/") so the dashboard logic runs
+      window.location.href = "/";
+    } catch (error) {
+      alert("Login failed. Please try again.");
+    }
+  };
+
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      background: "rgba(0,0,0,0.3)", zIndex: 3000,
+      display: "flex", alignItems: "center", justifyContent: "center"
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 12, padding: 32, minWidth: 100, maxWidth: 400, width: "90%",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.18)", textAlign: "center", position: "relative"
+      }}>
+        <button onClick={onClose} style={{
+          position: "absolute", top: 10, right: 16, background: "none", border: "none",
+          fontSize: "1.5rem", cursor: "pointer", color: "#888"
+        }}>×</button>
+        <div style={{ fontWeight: 700, fontSize: "1.4rem", marginBottom: 16 }}>
+          {moduleTitle}
+        </div>
+        <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
+          {summary}
+        </div>
+        <div style={{ marginBottom: 24, fontWeight: 500 }}>
+          Sign up or login to see more!
+        </div>
+        <button
+          onClick={handleGoogleLogin}
+          style={{
+            background: "#162040", color: "#fff", border: "none", borderRadius: 6,
+            padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
+          }}
+        >
+          Login with Google
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const MODULE_CONTENT_TYPES = ["Module", "Lesson Plan", "Nuggets"];
 const MODULE_CATEGORIES = [
   "All",
@@ -850,10 +901,34 @@ const MODULE_CATEGORIES = [
 ];
 const MODULE_LEVELS = ["All", "Basic", "Intermediate", "Advanced"];
 
+// Add this constant outside the component, near the top of the file:
+const MODULE_POPUP_INFO = [
+  {
+    key: "ai-exploration",
+    title: "AI Exploration",
+    summary:
+      "Dive into the basics of Artificial Intelligence. This module introduces students to foundational AI concepts, real-world applications, and hands-on activities. Perfect for beginners, it builds curiosity and critical thinking about how AI shapes our world and daily life.",
+  },
+  {
+    key: "ai-insights",
+    title: "AI Insights",
+    summary:
+      "Explore deeper into AI with practical examples and interactive lessons. This module covers data, algorithms, and ethical considerations, helping learners understand how AI systems are built and used. Ideal for those ready to move beyond the basics.",
+  },
+  {
+    key: "ai-physics",
+    title: "AI & Physics",
+    summary:
+      "Discover the intersection of Artificial Intelligence and Physics. This module demonstrates how AI can solve physics problems, analyze data, and simulate experiments, making science learning more engaging and insightful for students.",
+  },
+];
+
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
   const navigate = useNavigate();
   const isTeacherDefault = role === "teacherDefault";
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupModule, setPopupModule] = useState(null);
 
   // Filter state
   const [contentType, setContentType] = useState("All");
@@ -1025,10 +1100,10 @@ const ExploreModulesSection = () => {
               cursor: "pointer"
             }}
             onClick={() => {
-              if (
-                user &&
-                ["teacherDefault", "student", "admin"].includes(role)
-              ) {
+              if (!user) {
+                setPopupModule(MODULE_POPUP_INFO[0]);
+                setPopupOpen(true);
+              } else if (["teacherDefault", "student", "admin"].includes(role)) {
                 navigate("/modules/ai-exploration");
               }
             }}
@@ -1112,10 +1187,10 @@ const ExploreModulesSection = () => {
               cursor: "pointer"
             }}
             onClick={() => {
-              if (
-                user &&
-                ["teacherDefault", "student", "admin"].includes(role)
-              ) {
+              if (!user) {
+                setPopupModule(MODULE_POPUP_INFO[1]);
+                setPopupOpen(true);
+              } else if (["teacherDefault", "student", "admin"].includes(role)) {
                 navigate("/modules/ai-insights");
               }
             }}
@@ -1184,10 +1259,10 @@ const ExploreModulesSection = () => {
               cursor: "pointer"
             }}
             onClick={() => {
-              if (
-                user &&
-                ["teacherDefault", "student", "admin"].includes(role)
-              ) {
+              if (!user) {
+                setPopupModule(MODULE_POPUP_INFO[2]);
+                setPopupOpen(true);
+              } else if (["teacherDefault", "student", "admin"].includes(role)) {
                 navigate("/modules/ai-physics");
               }
             }}
@@ -1240,6 +1315,12 @@ const ExploreModulesSection = () => {
               </span>
             </div>
           </div>
+          <ModuleLoginPrompt
+            open={popupOpen}
+            onClose={() => setPopupOpen(false)}
+            moduleTitle={popupModule?.title}
+            summary={popupModule?.summary}
+          />
         </div>
 
         {/* --- Filter and Search Section for teacherDefault --- */}
