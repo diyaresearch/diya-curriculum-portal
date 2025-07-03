@@ -9,7 +9,7 @@ import physicsImg from "../assets/finphysics.png";
 import textbooksImg from "../assets/textbooks.png";
 import microscopeImg from "../assets/microscope.png";
 import pencilImg from "../assets/finpencil.png";
-import { getFirestore, collection, getDocs, doc, onSnapshot, getDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
