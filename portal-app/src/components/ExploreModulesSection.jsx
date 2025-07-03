@@ -9,13 +9,11 @@ import physicsImg from "../assets/finphysics.png";
 import textbooksImg from "../assets/textbooks.png";
 import microscopeImg from "../assets/microscope.png";
 import pencilImg from "../assets/finpencil.png";
-import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, getDocs, doc, onSnapshot, getDoc } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-
-
 
 
 // --- Sign Up Prompt Modal ---
@@ -842,13 +840,14 @@ const TestimonialsCarousel = () => {
 
 function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
   if (!open) return null;
-  // Google login handler
+
   const handleGoogleLogin = async () => {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      window.location.href = "/dashboard";
+      // After login, go to homepage ("/") so the dashboard logic runs
+      window.location.href = "/";
     } catch (error) {
       alert("Login failed. Please try again.");
     }
@@ -861,7 +860,7 @@ function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
       display: "flex", alignItems: "center", justifyContent: "center"
     }}>
       <div style={{
-        background: "#fff", borderRadius: 12, padding: 32, minWidth: 100, maxWidth: 500, width: "80%",
+        background: "#fff", borderRadius: 12, padding: 32, minWidth: 100, maxWidth: 400, width: "90%",
         boxShadow: "0 4px 24px rgba(0,0,0,0.18)", textAlign: "center", position: "relative"
       }}>
         <button onClick={onClose} style={{
@@ -877,14 +876,15 @@ function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
         <div style={{ marginBottom: 24, fontWeight: 500 }}>
           Sign up or login to see more!
         </div>
-        <a href="/signup">
-          <button style={{
+        <button
+          onClick={handleGoogleLogin}
+          style={{
             background: "#162040", color: "#fff", border: "none", borderRadius: 6,
             padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
-          }}>
-            Login with Google
-          </button>
-        </a>
+          }}
+        >
+          Login with Google
+        </button>
       </div>
     </div>
   );
