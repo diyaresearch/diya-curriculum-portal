@@ -99,12 +99,12 @@ export const EditLesson = () => {
           const contentIdsArray = Array.isArray(section.contentIds)
             ? section.contentIds
             : [section.contentIds]; // Ensure `contentIds` is an array
-          
+
           acc[index] = contentIdsArray.map((contentId) => {
             const materialDetails = portalContent.find((item) => item.id === contentId);
             return materialDetails || { id: contentId }; // Avoid undefined
           });
-  
+
           return acc;
         }, {})
       );
@@ -129,10 +129,10 @@ export const EditLesson = () => {
 
   const handleCreateNewNugget = () => {
 
-      if (selectedSectionIndex === null) {
-        setSelectedSectionIndex(0);
-      }
-      setShowUploadModal(true);
+    if (selectedSectionIndex === null) {
+      setSelectedSectionIndex(0);
+    }
+    setShowUploadModal(true);
   };
 
   const handleNewNuggetAdded = (newNugget) => {
@@ -148,7 +148,7 @@ export const EditLesson = () => {
   const closeUploadModal = () => {
     setShowUploadModal(false);
   };
-  
+
   const deleteSection = (index) => {
     const updatedSections = sections.filter((_, i) => i !== index);
     setSections(updatedSections);
@@ -156,7 +156,7 @@ export const EditLesson = () => {
       ...prevData,
       sections: updatedSections,
     }));
-  }; 
+  };
 
   const handleSectionChange = (index, value) => {
     const updatedSections = [...sections];
@@ -582,15 +582,15 @@ export const EditLesson = () => {
           </button>
         </Modal>
         <Modal isOpen={showUploadModal} onRequestClose={closeUploadModal}>
-                <UploadContent
-                  fromLesson={closeUploadModal}
-                  onNuggetCreated={handleNewNuggetAdded}
-                  isPublic={false}
-                  type={formData.type}
-                  category={formData.category}
-                  level={formData.level}
-                />
-              </Modal>
+          <UploadContent
+            fromLesson={closeUploadModal}
+            onNuggetCreated={handleNewNuggetAdded}
+            isPublic={false}
+            type={formData.type}
+            category={formData.category}
+            level={formData.level}
+          />
+        </Modal>
       </div>
     </div>
   );
