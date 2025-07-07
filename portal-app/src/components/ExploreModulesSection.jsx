@@ -923,6 +923,19 @@ const MODULE_POPUP_INFO = [
   },
 ];
 
+const CARD_IMAGES = [
+  aiExploreImg,
+  aiExploreImg2,
+  aiExploreImg3,
+  barchartImg,
+  laptopImg,
+  teacherImg,
+  physicsImg,
+  textbooksImg,
+  microscopeImg,
+  pencilImg,
+];
+
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
   const navigate = useNavigate();
@@ -1024,6 +1037,46 @@ const ExploreModulesSection = () => {
     setFiltersApplied(false);
   };
 
+  // Add this UpgradePrompt component near the top of your file (outside ExploreModulesSection):
+
+  function UpgradePrompt({ open, onClose }) {
+    if (!open) return null;
+    return (
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.3)", zIndex: 4000,
+        display: "flex", alignItems: "center", justifyContent: "center"
+      }}>
+        <div style={{
+          background: "#fff", borderRadius: 12, padding: 32, minWidth: 100, maxWidth: 400, width: "90%",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.18)", textAlign: "center", position: "relative"
+        }}>
+          <button onClick={onClose} style={{
+            position: "absolute", top: 10, right: 16, background: "none", border: "none",
+            fontSize: "1.5rem", cursor: "pointer", color: "#888"
+          }}>×</button>
+          <div style={{ fontWeight: 700, fontSize: "1.4rem", marginBottom: 16 }}>
+            Upgrade Required
+          </div>
+          <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
+            You need to upgrade to Teacher Plus to access this course.
+          </div>
+          <button
+            onClick={() => window.location.href = "/upgrade"}
+            style={{
+              background: "#162040", color: "#fff", border: "none", borderRadius: 6,
+              padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
+            }}
+          >
+            Go to Upgrade Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const [upgradePromptOpen, setUpgradePromptOpen] = useState(false);
+
   return (
     <div
       style={{
@@ -1057,7 +1110,7 @@ const ExploreModulesSection = () => {
             letterSpacing: "1px"
           }}
         >
-          Explore Learning Modules
+          Featured Modules
         </h2>
         <p
           style={{
@@ -1069,7 +1122,7 @@ const ExploreModulesSection = () => {
             fontWeight: 500,
           }}
         >
-          Browse our modules and discover engaging content for your learning journey.
+          Explore the latest modules available for your class.
         </p>
 
         {/* Three square subsections */}
@@ -1293,7 +1346,7 @@ const ExploreModulesSection = () => {
               <span
                 style={{
                   display: "block",
-                  fontWeight: "600",
+                  fontWeight: 600,
                   fontSize: "1.15rem",
                   color: "#162040",
                   letterSpacing: "1px"
@@ -1304,7 +1357,7 @@ const ExploreModulesSection = () => {
               <span
                 style={{
                   display: "block",
-                  fontWeight: "700",
+                  fontWeight: 700,
                   fontSize: "1.35rem",
                   color: "#222",
                   marginTop: "8px",
@@ -1492,47 +1545,110 @@ const ExploreModulesSection = () => {
               {filteredItems.length === 0 ? (
                 "No modules found."
               ) : (
-                filteredItems.map(item => (
-                  <div
-                    key={item.id}
-                    style={{
-                      width: "200px",
-                      height: "200px",
-                      background: "#fff",
-                      borderRadius: "16px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                      border: "1px solid #e0dfdb",
-                      padding: "18px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "flex-start",
-                      transition: "box-shadow 0.2s",
-                      textAlign: "left",
-                      overflow: "hidden",
-                      cursor: "default"
-                    }}
-                  >
-                    <div style={{
-                      fontWeight: 700,
-                      fontSize: "1.15rem",
-                      color: "#162040",
-                      marginBottom: 8,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      width: "100%"
-                    }}>
-                      {item.title || item.Title}
+                filteredItems.map((item, idx) => {
+                  const imgSrc = CARD_IMAGES[idx % CARD_IMAGES.length];
+
+                  // Determine access status for teacherDefault
+                  let cardAccess = "free";
+                  if (isTeacherDefault) {
+                    if ((item.role || item.Role) === "teacherPlus") cardAccess = "paid";
+                  }
+
+                  // Card click handler
+                  const handleCardClick = () => {
+                    if (isTeacherDefault) {
+                      if (cardAccess === "paid") {
+                        setUpgradePromptOpen(true);
+                      } else {
+                        if (item._type === "Module") window.open(`/modules/${item.id}`, "_blank");
+                        else if (item._type === "Lesson Plan") window.open(`/lesson-plans/${item.id}`, "_blank");
+                        else if (item._type === "Nuggets") window.open(`/content/${item.id}`, "_blank");
+                      }
+                    } else {
+                      // All non-teacherDefault: always open the corresponding page
+                      if (item._type === "Module") window.open(`/modules/${item.id}`, "_blank");
+                      else if (item._type === "Lesson Plan") window.open(`/lesson-plans/${item.id}`, "_blank");
+                      else if (item._type === "Nuggets") window.open(`/content/${item.id}`, "_blank");
+                    }
+                  };
+
+                  return (
+                    <div
+                      key={item.id}
+                      style={{
+                        width: "420px",
+                        minHeight: "320px",
+                        background: "#fff",
+                        borderRadius: "18px",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                        border: "1px solid #e0dfdb",
+                        padding: "32px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        transition: "box-shadow 0.2s",
+                        textAlign: "left",
+                        overflow: "hidden",
+                        cursor: (isTeacherDefault && cardAccess === "paid") ? "not-allowed" : "pointer",
+                        position: "relative"
+                      }}
+                      onClick={handleCardClick}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={isTeacherDefault && cardAccess === "paid" ? "Paid module" : "Open module"}
+                    >
+                      {/* Free/Paid label for teacherDefault only */}
+                      {isTeacherDefault && (
+                        <div style={{
+                          position: "absolute",
+                          top: 18,
+                          left: 24,
+                          background: cardAccess === "paid" ? "#ffe0e0" : "#e0e0e0",
+                          color: cardAccess === "paid" ? "#a00" : "#222",
+                          borderRadius: "6px",
+                          padding: "4px 14px",
+                          fontSize: "0.98rem",
+                          fontWeight: 600,
+                          letterSpacing: "0.5px",
+                          zIndex: 2,
+                          border: cardAccess === "paid" ? "1px solid #a00" : "1px solid #bbb"
+                        }}>
+                          {cardAccess === "paid" ? "Paid" : "Free"}
+                        </div>
+                      )}
+                      <img
+                        src={imgSrc}
+                        alt="Module Visual"
+                        style={{
+                          width: "100%",
+                          height: "200px",
+                          objectFit: "cover",
+                          borderRadius: "12px",
+                          marginBottom: "20px"
+                        }}
+                      />
+                      <div style={{
+                        fontWeight: 700,
+                        fontSize: "1.45rem",
+                        color: "#162040",
+                        marginBottom: 14,
+                        width: "100%",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "normal"
+                      }}>
+                        {item.title || item.Title}
+                      </div>
+                      <div style={{ color: "#555", fontSize: "1.08rem", marginBottom: 6, width: "100%" }}>
+                        Level: {capitalizeWords(item.level || item.Level || "N/A")}
+                      </div>
+                      <div style={{ color: "#888", fontSize: "1.05rem", width: "100%" }}>
+                        Type: {capitalizeWords(item._type || "")}
+                      </div>
                     </div>
-                    <div style={{ color: "#555", fontSize: "1rem", marginBottom: 4 }}>
-                      Level: {capitalizeWords(item.level || item.Level || "N/A")}
-                    </div>
-                    <div style={{ color: "#888", fontSize: "0.95rem" }}>
-                      Type: {capitalizeWords(item._type || "")}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </>
@@ -1625,16 +1741,16 @@ const ExploreModulesSection = () => {
                 lineHeight: 1.2
               }}
             >
-              What Our Users Say
 
             </h2>
             <p
               style={{
                 fontSize: "1.15rem",
                 color: "#222",
-                maxWidth: "480px",
+                maxWidth: "1000px",
                 lineHeight: 1.6,
-                margin: 0
+                margin: 0,
+                textAlign: "center" // <-- Add this line to center the text
               }}
             >
               Discover how our platform has transformed the teaching and learning experience for educators and students alike.
@@ -1647,6 +1763,7 @@ const ExploreModulesSection = () => {
           </div>
         </section>
       )}
+      <UpgradePrompt open={upgradePromptOpen} onClose={() => setUpgradePromptOpen(false)} />
     </div>
   );
 };
