@@ -15,7 +15,31 @@ import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
+// Add this helper function near the top of your file, outside the ExploreModulesSection component:
+function capitalizeWords(str) {
+  return (str || "")
+    .toLowerCase()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
 
+// Place these SVGs near the top of your file, outside the component:
+const OpenLockIcon = (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#1a7f37" strokeWidth="2" fill="#e8f5e9" />
+    <path d="M7 10V7a4 4 0 1 1 8 0" stroke="#1a7f37" strokeWidth="2" fill="none" />
+    <circle cx="11" cy="14" r="1.2" fill="#1a7f37" />
+    {/* Open lock: no vertical bar connecting the shackle to the body */}
+  </svg>
+);
+
+const ClosedLockIcon = (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#a00" strokeWidth="2" fill="#ffe0e0" />
+    <path d="M7 10V7a4 4 0 1 1 8 0v3" stroke="#a00" strokeWidth="2" fill="none" />
+    <rect x="10" y="14" width="2" height="3" rx="1" fill="#a00" />
+    <circle cx="11" cy="14" r="1.2" fill="#a00" />
+  </svg>
+);
 // --- Sign Up Prompt Modal ---
 const SignUpPrompt = ({ open, onClose, type }) => {
   if (!open) return null;
@@ -228,7 +252,7 @@ const TeacherRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Ready-to-use Modules
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -278,7 +302,7 @@ const TeacherRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Lesson Plan Builder
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -328,7 +352,7 @@ const TeacherRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Classroom Management
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -378,7 +402,7 @@ const TeacherRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Share with Community
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -461,7 +485,7 @@ const StudentRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Learning Modules
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -511,7 +535,7 @@ const StudentRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Project Ideas for Science Fair
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -867,7 +891,7 @@ function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
           position: "absolute", top: 10, right: 16, background: "none", border: "none",
           fontSize: "1.5rem", cursor: "pointer", color: "#888"
         }}>×</button>
-        <div style={{ fontWeight: 700, fontSize: "1.4rem", marginBottom: 16 }}>
+        <div style={{ fontWeight: "700", fontSize: "1.4rem", marginBottom: 16 }}>
           {moduleTitle}
         </div>
         <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
@@ -942,7 +966,6 @@ const ExploreModulesSection = () => {
   const isTeacherDefault = role === "teacherDefault";
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupModule, setPopupModule] = useState(null);
-
   // Filter state
   const [contentType, setContentType] = useState("All");
   const [category, setCategory] = useState("All");
@@ -956,6 +979,53 @@ const ExploreModulesSection = () => {
   const [nuggets, setNuggets] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [filtersApplied, setFiltersApplied] = useState(false);
+
+  // Pagination state - dynamic based on window size
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(9); // Will be calculated dynamically
+
+  // Update items per page based on screen size - flexible rows
+  useEffect(() => {
+    const updateItemsPerPage = () => {
+      const screenWidth = window.innerWidth;
+      let itemsPerRow, maxRows;
+
+      if (screenWidth >= 1200) {
+        itemsPerRow = 4; // 4 items per row on large screens
+        maxRows = 3; // Up to 3 rows
+      } else if (screenWidth >= 900) {
+        itemsPerRow = 3; // 3 items per row on medium-large screens
+        maxRows = 3; // Up to 3 rows
+      } else if (screenWidth >= 600) {
+        itemsPerRow = 2; // 2 items per row on medium screens
+        maxRows = 4; // Up to 4 rows
+      } else {
+        itemsPerRow = 1; // 1 item per row on small screens
+        maxRows = 6; // Up to 6 rows
+      }
+
+      setItemsPerPage(itemsPerRow * maxRows);
+    };
+
+    updateItemsPerPage();
+    window.addEventListener('resize', updateItemsPerPage);
+
+    return () => window.removeEventListener('resize', updateItemsPerPage);
+  }, []);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset to page 1 when filters change or items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredItems, itemsPerPage]);
+
+
 
   // Fetch all data on mount
   useEffect(() => {
@@ -1065,7 +1135,7 @@ const ExploreModulesSection = () => {
             position: "absolute", top: 10, right: 16, background: "none", border: "none",
             fontSize: "1.5rem", cursor: "pointer", color: "#888"
           }}>×</button>
-          <div style={{ fontWeight: 700, fontSize: "1.4rem", marginBottom: 16 }}>
+          <div style={{ fontWeight: "700", fontSize: "1.4rem", marginBottom: 16 }}>
             Upgrade Required
           </div>
           <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
@@ -1356,7 +1426,7 @@ const ExploreModulesSection = () => {
               <span
                 style={{
                   display: "block",
-                  fontWeight: 600,
+                  fontWeight: "600",
                   fontSize: "1.15rem",
                   color: "#162040",
                   letterSpacing: "1px"
@@ -1367,7 +1437,7 @@ const ExploreModulesSection = () => {
               <span
                 style={{
                   display: "block",
-                  fontWeight: 700,
+                  fontWeight: "700",
                   fontSize: "1.35rem",
                   color: "#222",
                   marginTop: "8px",
@@ -1424,7 +1494,7 @@ const ExploreModulesSection = () => {
             }}>
               {/* Content Type Filter */}
               <div>
-                <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>Content Type</label>
+                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Content Type</label>
                 <select
                   value={contentType}
                   onChange={e => setContentType(e.target.value)}
@@ -1442,7 +1512,7 @@ const ExploreModulesSection = () => {
               </div>
               {/* Category Filter */}
               <div>
-                <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>Category</label>
+                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Category</label>
                 <select
                   value={category}
                   onChange={e => setCategory(e.target.value)}
@@ -1460,7 +1530,7 @@ const ExploreModulesSection = () => {
               </div>
               {/* Level Filter */}
               <div>
-                <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>Level</label>
+                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Level</label>
                 <select
                   value={level}
                   onChange={e => setLevel(e.target.value)}
@@ -1478,7 +1548,7 @@ const ExploreModulesSection = () => {
               </div>
               {/* Lock Status Filter */}
               <div>
-                <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>Lock Status</label>
+                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Lock Status</label>
                 <select
                   value={lockStatus}
                   onChange={e => setLockStatus(e.target.value)}
@@ -1497,7 +1567,7 @@ const ExploreModulesSection = () => {
             </div>
             {/* Keyword Filter */}
             <div style={{ marginBottom: "18px", width: "100%", maxWidth: 400 }}>
-              <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>
+              <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>
                 Keyword
               </label>
               <input
@@ -1526,7 +1596,7 @@ const ExploreModulesSection = () => {
                   border: "1px solid #bbb",
                   background: "#fff",
                   color: "#222",
-                  fontWeight: 600,
+                  fontWeight: "600",
                   fontSize: "1rem",
                   cursor: "pointer"
                 }}
@@ -1542,7 +1612,7 @@ const ExploreModulesSection = () => {
                   border: "none",
                   background: "#162040",
                   color: "#fff",
-                  fontWeight: 600,
+                  fontWeight: "600",
                   fontSize: "1rem",
                   cursor: "pointer"
                 }}
@@ -1550,7 +1620,6 @@ const ExploreModulesSection = () => {
                 Apply Filters
               </button>
             </div>
-            {/* Filtered modules/cards */}
             <div
               style={{
                 width: "100%",
@@ -1560,127 +1629,111 @@ const ExploreModulesSection = () => {
                 border: "1px dashed #bbb",
                 display: "flex",
                 flexWrap: "wrap",
-                alignItems: "flex-start",
+                gap: "40px",
+                padding: "40px",
                 justifyContent: "center",
+                alignItems: "start",
                 color: "#888",
                 fontSize: "1.05rem",
                 fontStyle: "italic",
                 marginBottom: "16px",
-                gap: "24px",
-                padding: "24px"
+                boxSizing: "border-box"
               }}
             >
-              {filteredItems.length === 0 ? (
-                "No modules found."
+              {paginatedItems.length === 0 ? (
+                <div style={{ width: "100%", textAlign: "center" }}>
+                  No modules found.
+                </div>
               ) : (
-                filteredItems.map((item, idx) => {
-                  const imgSrc = CARD_IMAGES[idx % CARD_IMAGES.length];
-
-                  // Determine access status for teacherDefault
-                  let cardAccess = "free";
-                  if (isTeacherDefault) {
-                    if ((item.role || item.Role) === "teacherPlus") cardAccess = "paid";
-                  }
-
-                  // Card click handler
-                  const handleCardClick = () => {
-                    if (isTeacherDefault) {
-                      if (cardAccess === "paid") {
-                        setUpgradePromptOpen(true);
-                      } else {
-                        if (item._type === "Module") window.open(`/modules/${item.id}`, "_blank");
-                        else if (item._type === "Lesson Plan") window.open(`/lesson-plans/${item.id}`, "_blank");
-                        else if (item._type === "Nuggets") window.open(`/content/${item.id}`, "_blank");
-                      }
-                    } else {
-                      // All non-teacherDefault: always open the corresponding page
-                      if (item._type === "Module") window.open(`/modules/${item.id}`, "_blank");
-                      else if (item._type === "Lesson Plan") window.open(`/lesson-plans/${item.id}`, "_blank");
-                      else if (item._type === "Nuggets") window.open(`/content/${item.id}`, "_blank");
-                    }
-                  };
-
-                  return (
-                    <div
-                      key={item.id}
-                      style={{
-                        width: "420px",
-                        minHeight: "320px",
-                        background: "#fff",
-                        borderRadius: "18px",
-                        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                        border: "1px solid #e0dfdb",
-                        padding: "32px",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "flex-start",
-                        alignItems: "center",
-                        transition: "box-shadow 0.2s",
-                        textAlign: "left",
-                        overflow: "hidden",
-                        cursor: (isTeacherDefault && cardAccess === "paid") ? "not-allowed" : "pointer",
-                        position: "relative"
-                      }}
-                      onClick={handleCardClick}
-                      tabIndex={0}
-                      role="button"
-                      aria-label={isTeacherDefault && cardAccess === "paid" ? "Locked module" : "Open module"}
-                    >
-                      {/* Lock icon for teacherDefault only */}
-                      {isTeacherDefault && (
-                        <div style={{
-                          position: "absolute",
-                          top: 18,
-                          left: 24,
-                          background: cardAccess === "paid" ? "#ffe0e0" : "#e8f5e9",
-                          borderRadius: "6px",
-                          padding: "4px 10px",
-                          zIndex: 2,
-                          border: cardAccess === "paid" ? "1px solid #a00" : "1px solid #1a7f37",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center"
-                        }}>
-                          {cardAccess === "paid" ? ClosedLockIcon : OpenLockIcon}
-                        </div>
-                      )}
-                      <img
-                        src={imgSrc}
-                        alt="Module Visual"
-                        style={{
-                          width: "100%",
-                          height: "200px",
-                          objectFit: "cover",
-                          borderRadius: "12px",
-                          marginBottom: "20px"
-                        }}
-                      />
-                      <div style={{
-                        fontWeight: 700,
-                        fontSize: "1.45rem",
-                        color: "#162040",
-                        marginBottom: 14,
-                        width: "100%",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "normal"
-                      }}>
-                        {item.title || item.Title}
-                      </div>
-                      <div style={{ color: "#555", fontSize: "1.08rem", marginBottom: 6, width: "100%" }}>
-                        Level: {capitalizeWords(item.level || item.Level || "N/A")}
-                      </div>
-                      <div style={{ color: "#888", fontSize: "1.05rem", width: "100%" }}>
-                        Type: {capitalizeWords(item._type || "")}
-                      </div>
+                paginatedItems.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      aspectRatio: "1 / 1",
+                      width: "100%",
+                      maxWidth: "300px",
+                      minWidth: "260px",
+                      background: "#fff",
+                      borderRadius: "24px",
+                      boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                      border: "1px solid #e0dfdb",
+                      padding: "32px",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "flex-start",
+                      transition: "box-shadow 0.2s",
+                      textAlign: "left",
+                      overflow: "hidden",
+                      cursor: "default",
+                      flex: "0 0 auto"
+                    }}
+                  >
+                    <div style={{
+                      fontWeight: "700",
+                      fontSize: "1.35rem",
+                      color: "#162040",
+                      marginBottom: 12,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      width: "100%"
+                    }}>
+                      {item.title || item.Title}
                     </div>
-                  );
-                })
+                    <div style={{ color: "#555", fontSize: "1.15rem", marginBottom: 8 }}>
+                      Level: {capitalizeWords(item.level || item.Level || "N/A")}
+                    </div>
+                    <div style={{ color: "#888", fontSize: "1.1rem" }}>
+                      Type: {capitalizeWords(item._type || "")}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
+
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: "24px", marginBottom: "32px" }}>
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: "10px 28px",
+                    borderRadius: 6,
+                    border: "1px solid #bbb",
+                    background: currentPage === 1 ? "#eee" : "#fff",
+                    color: "#222",
+                    fontWeight: "600",
+                    fontSize: "1rem",
+                    cursor: currentPage === 1 ? "not-allowed" : "pointer"
+                  }}
+                >
+                  Back
+                </button>
+                <span style={{ alignSelf: "center", fontWeight: "600", color: "#162040" }}>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: "10px 28px",
+                    borderRadius: 6,
+                    border: "1px solid #bbb",
+                    background: currentPage === totalPages ? "#eee" : "#fff",
+                    color: "#222",
+                    fontWeight: "600",
+                    fontSize: "1rem",
+                    cursor: currentPage === totalPages ? "not-allowed" : "pointer"
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </>
         )}
-
       </section>
 
       {/* Only show For Teachers if NOT a student and NOT teacherDefault */}
@@ -1740,10 +1793,9 @@ const ExploreModulesSection = () => {
             gap: "16px",
             maxWidth: "100%"
           }}>
-
             <h2 style={{
               fontSize: "2.5rem",
-              fontWeight: 700,
+              fontWeight: "700",
               color: "#162040",
               marginBottom: "18px",
               textAlign: "center",
@@ -1754,21 +1806,6 @@ const ExploreModulesSection = () => {
               textOverflow: "ellipsis"
             }}>
               Testimonials
-
-            </h2>
-
-            <h2
-              style={{
-                fontSize: "2.5rem",
-                fontWeight: "700",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif",
-                margin: 0,
-                letterSpacing: "1px",
-                lineHeight: 1.2
-              }}
-            >
-
             </h2>
             <p
               style={{
@@ -1777,7 +1814,7 @@ const ExploreModulesSection = () => {
                 maxWidth: "1000px",
                 lineHeight: 1.6,
                 margin: 0,
-                textAlign: "center" // <-- Add this line to center the text
+                textAlign: "center"
               }}
             >
               Discover how our platform has transformed the teaching and learning experience for educators and students alike.
@@ -1795,32 +1832,5 @@ const ExploreModulesSection = () => {
   );
 };
 
-// Add this helper function near the top of your file, outside the ExploreModulesSection component:
-
-function capitalizeWords(str) {
-  return (str || "")
-    .toLowerCase()
-    .replace(/\b\w/g, c => c.toUpperCase());
-}
-
-// Place these SVGs near the top of your file, outside the component:
-
-const OpenLockIcon = (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#1a7f37" strokeWidth="2" fill="#e8f5e9"/>
-    <path d="M7 10V7a4 4 0 1 1 8 0" stroke="#1a7f37" strokeWidth="2" fill="none"/>
-    <circle cx="11" cy="14" r="1.2" fill="#1a7f37"/>
-    {/* Open lock: no vertical bar connecting the shackle to the body */}
-  </svg>
-);
-
-const ClosedLockIcon = (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#a00" strokeWidth="2" fill="#ffe0e0"/>
-    <path d="M7 10V7a4 4 0 1 1 8 0v3" stroke="#a00" strokeWidth="2" fill="none"/>
-    <rect x="10" y="14" width="2" height="3" rx="1" fill="#a00"/>
-    <circle cx="11" cy="14" r="1.2" fill="#a00"/>
-  </svg>
-);
-
 export default ExploreModulesSection;
+
