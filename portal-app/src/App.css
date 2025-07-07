@@ -14,7 +14,7 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #292f3f;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -32,6 +32,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -76,6 +77,524 @@
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+
+/* Teacher Signup Page Styles */
+.teacher-signup-page {
+  font-family: sans-serif;
+  min-height: 100vh;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Hero Section */
+.teacher-signup-page .signup-hero {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  background: #19213a;
+  padding: 56px 0 48px 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.teacher-signup-page .signup-hero h1 {
+  color: #fff;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 14px;
+  letter-spacing: -1px;
+}
+
+.teacher-signup-page .signup-hero p {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 32px;
+  max-width: 540px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.teacher-signup-page .auth-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.teacher-signup-page .auth-buttons button {
+  padding: 12px 0;
+  width: 260px;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: bold;
+  margin-bottom: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.teacher-signup-page .auth-buttons button:first-child {
+  background: #ffc940;
+  color: #222;
+  border: none;
+  font-weight: bold;
+  box-shadow: 0 2px 0 #bfa12e;
+  padding: 16px 16px;
+  /* Increased vertical padding */
+  width: 350px;
+  /* Slightly wider */
+  font-size: 1.08rem;
+}
+
+.teacher-signup-page .auth-buttons button.create-account-btn {
+  background: #fff;
+  color: #222;
+  margin-top: 8px;
+}
+
+/* Barrier/Card for the form */
+.teacher-signup-page .form-barrier {
+  margin: 0 auto;
+  margin-top: 48px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px 0 rgba(41, 47, 63, 0.10), 0 1.5px 0 #e5e7ef;
+  padding: 48px 48px 32px 48px;
+  max-width: 1000px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Main Form Section */
+.form-section {
+  display: flex;
+  gap: 60px;
+  justify-content: center;
+  align-items: flex-start;
+  background: transparent;
+  width: 100%;
+}
+
+.form-left {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+  margin-top: 20px;
+}
+
+.form-left h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #222;
+  text-align: left;
+}
+
+.form-left p {
+  color: #222;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 400;
+  text-align: left;
+  margin-bottom: 0;
+}
+
+.form-right {
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+
+.form-right label {
+  font-weight: bold;
+  color: #222;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.form-right input[type="text"],
+.form-right input[type="email"] {
+  padding: 8px 12px;
+  border: 1.5px solid #bbb;
+  border-radius: 5px;
+  font-size: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  background: #fff;
+  transition: border 0.2s;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-right input[type="text"]:focus,
+.form-right input[type="email"]:focus {
+  border-color: #292f3f;
+}
+
+
+/* Multi-select Dropdown Styles */
+.multi-select {
+  position: relative;
+  width: 100%;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+
+.multi-select-label {
+  background: #f5f5f5;
+  border: 1.5px solid #bbb;
+  border-radius: 7px;
+  padding: 10px 12px;
+  cursor: pointer;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: border 0.2s;
+  font-weight: 500;
+  color: #222;
+  user-select: none;
+}
+
+.multi-select-label.open,
+.multi-select-label:focus {
+  border-color: #292f3f;
+  outline: none;
+}
+
+.dropdown-arrow {
+  margin-left: 10px;
+  font-size: 1.1em;
+  color: #888;
+}
+
+.multi-select-dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid #bbb;
+  border-radius: 7px;
+  box-shadow: 0 4px 16px 0 rgba(41, 47, 63, 0.10);
+  z-index: 10;
+  padding: 6px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.multi-select-option {
+  padding: 8px 16px 8px 36px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #222;
+  display: flex;
+  align-items: center;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.multi-select-option:hover {
+  background: #f0f0f0;
+}
+
+.multi-select-option.selected {
+  background: #e9f6e9;
+  font-weight: bold;
+}
+
+.multi-select-option .checkbox {
+  position: absolute;
+  left: 12px;
+  font-size: 1.1em;
+  color: #1a8f3c;
+  width: 18px;
+  display: inline-block;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+
+  .multi-select-label,
+  .multi-select-dropdown {
+    font-size: 14px;
+    padding: 8px 8px;
+  }
+}
+
+.form-right .helper-text {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 8px;
+  margin-top: -8px;
+}
+
+/* Footer styles */
+.teacher-signup-page .footer-bar {
+  width: 100vw;
+  background: #292f3f;
+  padding: 32px 0 24px 0;
+  margin: 0 calc(-50vw + 50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.teacher-signup-page .footer-links {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.teacher-signup-page .footer-links a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.teacher-signup-page .footer-links a:hover {
+  color: #ffc940;
+}
+
+.teacher-signup-page .footer-meta {
+  color: #fff;
+  font-size: 0.95rem;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+
+/* Student Sign Up Page Styles */
+.student-signup-page {
+  padding: 40px 0 0 0;
+  font-family: sans-serif;
+  max-width: 950px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-signup-page header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.student-signup-page h1 {
+  font-size: 2.3rem;
+  margin-bottom: 10px;
+  font-weight: bold;
+  letter-spacing: -1px;
+}
+
+.student-signup-page p {
+  color: #222;
+  margin-bottom: 20px;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.auth-buttons {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth-buttons button {
+  padding: 12px 0;
+  width: 260px;
+  cursor: pointer;
+  font-size: 15px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  transition: background 0.2s, color 0.2s;
+  margin-bottom: 0;
+  font-weight: bold;
+}
+
+.auth-buttons button:first-child {
+  background-color: #fff;
+  color: #333;
+  border: 1.5px solid #bbb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-buttons button.create-account-btn {
+  background-color: #000;
+  color: #fff;
+  border: 1.5px solid #000;
+}
+
+.student-form-section {
+  display: flex;
+  gap: 60px;
+  margin-top: 60px;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 350px;
+}
+
+.form-left {
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+}
+
+.form-left h2 {
+  font-size: 2.3rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #222;
+  text-align: left;
+}
+
+.form-left p {
+  color: #222;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: bold;
+  text-align: left;
+}
+
+.form-right {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  justify-content: center;
+}
+
+.form-right label {
+  font-weight: bold;
+  color: #333;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.form-right input[type="text"],
+.form-right input[type="email"] {
+  padding: 10px 12px;
+  border: 2px solid #bbb;
+  border-radius: 7px;
+  font-size: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  background: #fff;
+  transition: border 0.2s;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.form-right input[type="text"]:focus,
+.form-right input[type="email"]:focus {
+  border-color: #000;
+}
+
+.helper-text {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+  margin-top: -8px;
+}
+
+.confirm {
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confirm input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  margin-right: 6px;
+  vertical-align: middle;
+  accent-color: #222;
+  position: static;
+}
+
+.confirm label {
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  align-items: flex-end;
+  /* Align items to the bottom */
+  line-height: 1.2;
+  gap: 4px;
+}
+
+.register-btn {
+  width: 100%;
+  padding: 13px 0;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 22px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-bottom: 90px;
+  /* Space before footer */
+}
+
+.register-btn:hover {
+  background: #222;
+}
+
+.student-signup-page footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin: 0 0 60px 0;
+  font-size: 1.25rem;
+  font-weight: bold;
+  padding-bottom: 60px;
+}
+
+.student-signup-page footer a {
+  color: #222;
+  text-decoration: none;
+  transition: color 0.2s;
+  font-weight: bold;
+}
+
+.student-signup-page footer a:hover {
+  color: #000;
 }
