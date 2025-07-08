@@ -948,6 +948,7 @@ const ExploreModulesSection = () => {
   const [category, setCategory] = useState("All");
   const [level, setLevel] = useState("All");
   const [keyword, setKeyword] = useState("");
+  const [lockStatus, setLockStatus] = useState("All");
 
   // Data state
   const [modules, setModules] = useState([]);
@@ -1023,6 +1024,14 @@ const ExploreModulesSection = () => {
       );
     }
 
+    // Filter by lock status if not "All" (only for teacherDefault)
+    if (isTeacherDefault && lockStatus !== "All") {
+      items = items.filter(item => {
+        const isLocked = (item.role || item.Role) === "teacherPlus";
+        return lockStatus === "Locked" ? isLocked : !isLocked;
+      });
+    }
+
     setFilteredItems(items);
     setFiltersApplied(true);
   };
@@ -1033,6 +1042,7 @@ const ExploreModulesSection = () => {
     setCategory("All");
     setLevel("All");
     setKeyword("");
+    setLockStatus("All");
     setFilteredItems([]);
     setFiltersApplied(false);
   };
@@ -1466,6 +1476,24 @@ const ExploreModulesSection = () => {
                   ))}
                 </select>
               </div>
+              {/* Lock Status Filter */}
+              <div>
+                <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>Lock Status</label>
+                <select
+                  value={lockStatus}
+                  onChange={e => setLockStatus(e.target.value)}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: 6,
+                    border: "1px solid #bbb",
+                    fontSize: "1rem"
+                  }}
+                >
+                  <option value="All">All</option>
+                  <option value="Unlocked">Unlocked</option>
+                  <option value="Locked">Locked</option>
+                </select>
+              </div>
             </div>
             {/* Keyword Filter */}
             <div style={{ marginBottom: "18px", width: "100%", maxWidth: 400 }}>
@@ -1596,25 +1624,24 @@ const ExploreModulesSection = () => {
                       onClick={handleCardClick}
                       tabIndex={0}
                       role="button"
-                      aria-label={isTeacherDefault && cardAccess === "paid" ? "Paid module" : "Open module"}
+                      aria-label={isTeacherDefault && cardAccess === "paid" ? "Locked module" : "Open module"}
                     >
-                      {/* Free/Paid label for teacherDefault only */}
+                      {/* Lock icon for teacherDefault only */}
                       {isTeacherDefault && (
                         <div style={{
                           position: "absolute",
                           top: 18,
                           left: 24,
-                          background: cardAccess === "paid" ? "#ffe0e0" : "#e0e0e0",
-                          color: cardAccess === "paid" ? "#a00" : "#222",
+                          background: cardAccess === "paid" ? "#ffe0e0" : "#e8f5e9",
                           borderRadius: "6px",
-                          padding: "4px 14px",
-                          fontSize: "0.98rem",
-                          fontWeight: 600,
-                          letterSpacing: "0.5px",
+                          padding: "4px 10px",
                           zIndex: 2,
-                          border: cardAccess === "paid" ? "1px solid #a00" : "1px solid #bbb"
+                          border: cardAccess === "paid" ? "1px solid #a00" : "1px solid #1a7f37",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
                         }}>
-                          {cardAccess === "paid" ? "Paid" : "Free"}
+                          {cardAccess === "paid" ? ClosedLockIcon : OpenLockIcon}
                         </div>
                       )}
                       <img
@@ -1775,5 +1802,25 @@ function capitalizeWords(str) {
     .toLowerCase()
     .replace(/\b\w/g, c => c.toUpperCase());
 }
+
+// Place these SVGs near the top of your file, outside the component:
+
+const OpenLockIcon = (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#1a7f37" strokeWidth="2" fill="#e8f5e9"/>
+    <path d="M7 10V7a4 4 0 1 1 8 0" stroke="#1a7f37" strokeWidth="2" fill="none"/>
+    <circle cx="11" cy="14" r="1.2" fill="#1a7f37"/>
+    {/* Open lock: no vertical bar connecting the shackle to the body */}
+  </svg>
+);
+
+const ClosedLockIcon = (
+  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#a00" strokeWidth="2" fill="#ffe0e0"/>
+    <path d="M7 10V7a4 4 0 1 1 8 0v3" stroke="#a00" strokeWidth="2" fill="none"/>
+    <rect x="10" y="14" width="2" height="3" rx="1" fill="#a00"/>
+    <circle cx="11" cy="14" r="1.2" fill="#a00"/>
+  </svg>
+);
 
 export default ExploreModulesSection;
