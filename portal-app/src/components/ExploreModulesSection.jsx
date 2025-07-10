@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import aiExploreImg from "../assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png";
 import aiExploreImg2 from "../assets/ChatGPT Image Jun 13, 2025, 02_17_05 PM.png";
 import aiExploreImg3 from "../assets/ChatGPT Image Jun 13, 2025, 02_25_51 PM.png";
@@ -15,6 +15,65 @@ import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
+// Add this function near the top of your file, after the imports
+const getItemImage = (item) => {
+  const itemType = item._type;
+  const category = (item.category || item.Category || "").toLowerCase();
+  const level = (item.level || item.Level || "").toLowerCase();
+
+  // Return images based on type and category
+  if (itemType === "Module") {
+    if (category.includes("ai") || category.includes("python")) {
+      return level === "basic" ? aiExploreImg : aiExploreImg2;
+    } else if (category.includes("physics")) {
+      return physicsImg;
+    } else {
+      return aiExploreImg3; // Default for modules
+    }
+  } else if (itemType === "Lesson Plan") {
+    return laptopImg; // Use laptop image for lesson plans
+  } else if (itemType === "Nuggets") {
+    return textbooksImg; // Use textbooks image for nuggets
+  }
+
+  // Fallback image
+  return aiExploreImg;
+};
+
+// Lock/Unlock icons component
+const LockIcon = ({ isLocked }) => (
+  <svg
+    width="24" // Increased from 20
+    height="24" // Increased from 20
+    viewBox="0 0 24 24"
+    fill="none"
+    style={{
+      position: "absolute",
+      top: "16px", // Increased from 12px
+      left: "16px", // Increased from 12px
+      zIndex: 10,
+      background: "rgba(255,255,255,0.95)", // More opaque
+      borderRadius: "6px", // Less rounded
+      padding: "4px", // Increased padding
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)" // Added shadow
+    }}
+  >
+    {isLocked ? (
+      <>
+        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#dc3545" strokeWidth="2" fill="#fff" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#dc3545" strokeWidth="2" />
+        <circle cx="12" cy="16" r="1" fill="#dc3545" />
+      </>
+    ) : (
+      <>
+        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#28a745" strokeWidth="2" fill="#fff" />
+        <path d="M7 11V7a5 5 0 0 1 10 0" stroke="#28a745" strokeWidth="2" />
+        <circle cx="12" cy="16" r="1" fill="#28a745" />
+      </>
+    )}
+  </svg>
+);
+
 // Add this helper function near the top of your file, outside the ExploreModulesSection component:
 function capitalizeWords(str) {
   return (str || "")
@@ -22,24 +81,7 @@ function capitalizeWords(str) {
     .replace(/\b\w/g, c => c.toUpperCase());
 }
 
-// Place these SVGs near the top of your file, outside the component:
-const OpenLockIcon = (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#1a7f37" strokeWidth="2" fill="#e8f5e9" />
-    <path d="M7 10V7a4 4 0 1 1 8 0" stroke="#1a7f37" strokeWidth="2" fill="none" />
-    <circle cx="11" cy="14" r="1.2" fill="#1a7f37" />
-    {/* Open lock: no vertical bar connecting the shackle to the body */}
-  </svg>
-);
 
-const ClosedLockIcon = (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#a00" strokeWidth="2" fill="#ffe0e0" />
-    <path d="M7 10V7a4 4 0 1 1 8 0v3" stroke="#a00" strokeWidth="2" fill="none" />
-    <rect x="10" y="14" width="2" height="3" rx="1" fill="#a00" />
-    <circle cx="11" cy="14" r="1.2" fill="#a00" />
-  </svg>
-);
 // --- Sign Up Prompt Modal ---
 const SignUpPrompt = ({ open, onClose, type }) => {
   if (!open) return null;
@@ -947,18 +989,6 @@ const MODULE_POPUP_INFO = [
   },
 ];
 
-const CARD_IMAGES = [
-  aiExploreImg,
-  aiExploreImg2,
-  aiExploreImg3,
-  barchartImg,
-  laptopImg,
-  teacherImg,
-  physicsImg,
-  textbooksImg,
-  microscopeImg,
-  pencilImg,
-];
 
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
@@ -984,27 +1014,24 @@ const ExploreModulesSection = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9); // Will be calculated dynamically
 
-  // Update items per page based on screen size - flexible rows
+  // Update items per page based on screen size - ALWAYS 2 rows
   useEffect(() => {
     const updateItemsPerPage = () => {
       const screenWidth = window.innerWidth;
-      let itemsPerRow, maxRows;
+      let itemsPerRow;
 
-      if (screenWidth >= 1200) {
-        itemsPerRow = 4; // 4 items per row on large screens
-        maxRows = 3; // Up to 3 rows
-      } else if (screenWidth >= 900) {
-        itemsPerRow = 3; // 3 items per row on medium-large screens
-        maxRows = 3; // Up to 3 rows
-      } else if (screenWidth >= 600) {
-        itemsPerRow = 2; // 2 items per row on medium screens
-        maxRows = 4; // Up to 4 rows
+      if (screenWidth >= 1400) {
+        itemsPerRow = 3; // 3 cards per row on very large screens
+      } else if (screenWidth >= 1000) {
+        itemsPerRow = 3; // 3 cards per row on large screens
+      } else if (screenWidth >= 800) {
+        itemsPerRow = 2; // 2 cards per row on medium screens
       } else {
-        itemsPerRow = 1; // 1 item per row on small screens
-        maxRows = 6; // Up to 6 rows
+        itemsPerRow = 1; // 1 card per row on small screens
       }
 
-      setItemsPerPage(itemsPerRow * maxRows);
+      // ALWAYS show exactly 2 rows
+      setItemsPerPage(itemsPerRow * 2);
     };
 
     updateItemsPerPage();
@@ -1013,19 +1040,30 @@ const ExploreModulesSection = () => {
     return () => window.removeEventListener('resize', updateItemsPerPage);
   }, []);
 
-  // Calculate pagination
+  // Calculate pagination - ensure we always show 2 full rows
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const paginatedItems = filteredItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  let paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+  // If we don't have enough items to fill 2 rows, duplicate items or add placeholders
+  if (paginatedItems.length < itemsPerPage && filteredItems.length > 0) {
+    const itemsNeeded = itemsPerPage - paginatedItems.length;
+
+    // Repeat items from the beginning to fill the remaining slots
+    for (let i = 0; i < itemsNeeded; i++) {
+      const itemToAdd = filteredItems[i % filteredItems.length];
+      paginatedItems.push({
+        ...itemToAdd,
+        id: `${itemToAdd.id}-duplicate-${i}`, // Ensure unique keys
+        isDuplicate: true
+      });
+    }
+  }
 
   // Reset to page 1 when filters change or items per page changes
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredItems, itemsPerPage]);
-
-
 
   // Fetch all data on mount
   useEffect(() => {
@@ -1230,7 +1268,8 @@ const ExploreModulesSection = () => {
               justifyContent: "flex-end",
               overflow: "hidden",
               padding: 0,
-              cursor: "pointer"
+              cursor: "pointer",
+              position: "relative"
             }}
             onClick={() => {
               if (!user) {
@@ -1254,9 +1293,12 @@ const ExploreModulesSection = () => {
               }
             }}
           >
+            {/* Add the lock icon here */}
+            <LockIcon isLocked={false} />
+
             <div style={{
               width: "100%",
-              height: "calc(100% - 90px)",
+              height: "calc(100% - 70px)",
               display: "flex",
               alignItems: "stretch",
               justifyContent: "center"
@@ -1317,7 +1359,8 @@ const ExploreModulesSection = () => {
               alignItems: "center",
               justifyContent: "flex-end",
               overflow: "hidden",
-              cursor: "pointer"
+              cursor: "pointer",
+              position: "relative" // ADD THIS
             }}
             onClick={() => {
               if (!user) {
@@ -1327,14 +1370,17 @@ const ExploreModulesSection = () => {
                 navigate("/modules/ai-insights");
               }
             }}
+
             tabIndex={0}
             role="button"
             aria-label="Go to AI Insights"
             onKeyPress={e => { if (e.key === "Enter" || e.key === " ") { if (user) navigate("/modules/ai-insights"); else navigate("/login"); } }}
           >
+            {/* ADD THIS LINE HERE */}
+            <LockIcon isLocked={true} />
             <div style={{
               width: "100%",
-              height: "calc(100% - 90px)",
+              height: "calc(100% - 70px)",
               display: "flex",
               alignItems: "stretch",
               justifyContent: "center"
@@ -1389,7 +1435,8 @@ const ExploreModulesSection = () => {
               alignItems: "center",
               justifyContent: "flex-end",
               overflow: "hidden",
-              cursor: "pointer"
+              cursor: "pointer",
+              position: "relative" // ADD THIS LINE
             }}
             onClick={() => {
               if (!user) {
@@ -1404,9 +1451,11 @@ const ExploreModulesSection = () => {
             aria-label="Go to AI & Physics"
             onKeyPress={e => { if (e.key === "Enter" || e.key === " ") { if (user) navigate("/modules/ai-physics"); else navigate("/login"); } }}
           >
+            {/* ADD THIS LINE */}
+            <LockIcon isLocked={false} />
             <div style={{
               width: "100%",
-              height: "calc(100% - 90px)",
+              height: "calc(100% - 70px)",
               display: "flex",
               alignItems: "stretch",
               justifyContent: "center"
@@ -1422,7 +1471,7 @@ const ExploreModulesSection = () => {
                 }}
               />
             </div>
-            <div style={{ width: "100%", height: "90px", padding: "18px 0 0 0", textAlign: "center", background: "#fff" }}>
+            <div style={{ width: "100%", height: "90px", padding: "10px 0 0 0", textAlign: "center", background: "#fff" }}>
               <span
                 style={{
                   display: "block",
@@ -1627,8 +1676,9 @@ const ExploreModulesSection = () => {
                 background: "#f6f8fa",
                 borderRadius: "8px",
                 border: "1px dashed #bbb",
-                display: "flex",
-                flexWrap: "wrap",
+                display: "grid", // Changed from flex to grid
+                gridTemplateColumns: "repeat(3, 380px)", // Exactly 3 columns of 380px each
+                gridTemplateRows: "repeat(2, 380px)", // Exactly 2 rows of 380px each
                 gap: "40px",
                 padding: "40px",
                 justifyContent: "center",
@@ -1637,11 +1687,17 @@ const ExploreModulesSection = () => {
                 fontSize: "1.05rem",
                 fontStyle: "italic",
                 marginBottom: "16px",
-                boxSizing: "border-box"
+                boxSizing: "border-box",
+                maxWidth: "1300px", // Limit container width
+                margin: "0 auto" // Center the container
               }}
             >
               {paginatedItems.length === 0 ? (
-                <div style={{ width: "100%", textAlign: "center" }}>
+                <div style={{
+                  gridColumn: "1 / -1", // Span all columns
+                  width: "100%",
+                  textAlign: "center"
+                }}>
                   No modules found.
                 </div>
               ) : (
@@ -1649,43 +1705,96 @@ const ExploreModulesSection = () => {
                   <div
                     key={item.id}
                     style={{
-                      aspectRatio: "1 / 1",
-                      width: "100%",
-                      maxWidth: "300px",
-                      minWidth: "260px",
                       background: "#fff",
-                      borderRadius: "24px",
-                      boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                      border: "1px solid #e0dfdb",
-                      padding: "32px",
+                      borderRadius: "12px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                      width: "380px",
+                      height: "380px",
                       display: "flex",
                       flexDirection: "column",
-                      justifyContent: "center",
-                      alignItems: "flex-start",
-                      transition: "box-shadow 0.2s",
-                      textAlign: "left",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
                       overflow: "hidden",
-                      cursor: "default",
-                      flex: "0 0 auto"
+                      cursor: "pointer",
+                      position: "relative",
+                      transition: "box-shadow 0.2s"
+                    }}
+                    onClick={() => {
+                      // Handle navigation based on item type and lock status
+                      const isLocked = (item.role || item.Role) === "teacherPlus";
+                      if (isLocked && role === "teacherDefault") {
+                        setUpgradePromptOpen(true);
+                      } else {
+                        // Navigate to appropriate page based on item type
+                        if (item._type === "Module") {
+                          navigate(`/modules/${item.id}`);
+                        } else if (item._type === "Lesson Plan") {
+                          navigate(`/lesson-plans/${item.id}`);
+                        } else if (item._type === "Nuggets") {
+                          navigate(`/nuggets/${item.id}`);
+                        }
+                      }
                     }}
                   >
+                    {/* Rest of your card content remains the same */}
+                    <LockIcon isLocked={(item.role || item.Role) === "teacherPlus"} />
+
                     <div style={{
-                      fontWeight: "700",
-                      fontSize: "1.35rem",
-                      color: "#162040",
-                      marginBottom: 12,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      width: "100%"
+                      width: "100%",
+                      height: "calc(100% - 70px)",
+                      display: "flex",
+                      alignItems: "stretch",
+                      justifyContent: "center",
+                      background: "#f0f0f0"
                     }}>
-                      {item.title || item.Title}
+                      <img
+                        src={getItemImage(item)}
+                        alt={item.title || item.Title}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block"
+                        }}
+                      />
                     </div>
-                    <div style={{ color: "#555", fontSize: "1.15rem", marginBottom: 8 }}>
-                      Level: {capitalizeWords(item.level || item.Level || "N/A")}
-                    </div>
-                    <div style={{ color: "#888", fontSize: "1.1rem" }}>
-                      Type: {capitalizeWords(item._type || "")}
+
+                    <div style={{
+                      width: "100%",
+                      height: "70px",
+                      padding: "12px 0 0 0",
+                      textAlign: "center",
+                      background: "#fff"
+                    }}>
+                      <span
+                        style={{
+                          display: "block",
+                          fontWeight: "600",
+                          fontSize: "1rem",
+                          color: "#162040",
+                          letterSpacing: "1px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {capitalizeWords(item.level || item.Level || "N/A")}
+                      </span>
+                      <span
+                        style={{
+                          display: "block",
+                          fontWeight: "700",
+                          fontSize: "1.2rem",
+                          color: "#222",
+                          marginTop: "4px",
+                          textAlign: "center",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {item.title || item.Title}
+                      </span>
                     </div>
                   </div>
                 ))

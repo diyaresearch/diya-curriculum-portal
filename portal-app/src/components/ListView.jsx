@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import TileItem from "./TileItem";
 import Overlay from "./Overlay";
 import useUserData from "../hooks/useUserData";
@@ -188,37 +188,37 @@ const ListView = ({ content }) => {
   const scroll = (direction) => {
     const { current } = scrollRef;
     if (!current) return;
-  
+
     const scrollAmount = current.offsetWidth; // scroll by one full container
     const newScrollLeft = direction === "left"
       ? current.scrollLeft - scrollAmount
       : current.scrollLeft + scrollAmount;
-  
+
     current.scrollTo({ left: newScrollLeft, behavior: "smooth" });
-  
+
     setTimeout(() => updateArrowVisibility(), 300); // delay to let scroll happen
   };
-  
+
   const updateArrowVisibility = () => {
     const { current } = scrollRef;
     if (!current) return;
-    
+
     const tolerance = 10;
     setShowLeftArrow(current.scrollLeft > tolerance);
     setShowRightArrow(current.scrollLeft + current.offsetWidth < current.scrollWidth - tolerance);
   };
-  
+
   useEffect(() => {
     updateArrowVisibility();
   }, [modules]);
-  
+
   useEffect(() => {
     const { current } = scrollRef;
     if (!current) return;
-  
+
     current.addEventListener("scroll", updateArrowVisibility);
     return () => current.removeEventListener("scroll", updateArrowVisibility);
-  }, []);  
+  }, []);
 
   return (
     <div className="text-center mt-10">
@@ -245,7 +245,7 @@ const ListView = ({ content }) => {
           )}
 
 
-          <div ref={scrollRef} className="flex space-x-4 scroll-smooth no-scrollbar snap-x snap-mandatory" style={{overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div ref={scrollRef} className="flex space-x-4 scroll-smooth no-scrollbar snap-x snap-mandatory" style={{ overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {modules.map((module, index) => (
               <div
                 key={index}
@@ -263,7 +263,7 @@ const ListView = ({ content }) => {
                     <span className="text-gray-500 text-sm">Image Placeholder</span>
                   )}
                 </div>
-      
+
                 <h3 className="text-xl font-bold mb-2 text-center">{module.title}</h3>
                 <div className="flex flex-wrap gap-1 justify-center">
                   {module.tags &&
