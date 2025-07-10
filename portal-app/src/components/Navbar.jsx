@@ -270,7 +270,7 @@ const Navbar = () => {
                 My Modules
               </a>
               <a
-                href="/community"
+                href="/upgrade"
                 className="hover:underline"
                 style={{
                   fontSize: "15px",
@@ -289,7 +289,7 @@ const Navbar = () => {
                   alignItems: "center"
                 }}
               >
-                Community
+                Upgrade
               </a>
             </>
           ) : (
