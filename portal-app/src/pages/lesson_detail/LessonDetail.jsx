@@ -1,6 +1,25 @@
 import React from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 
+// Lock/Unlock icons
+const LockIcon = ({ isLocked }) => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ position: "absolute", top: "12px", left: "12px" }}>
+        {isLocked ? (
+            <>
+                <rect x="5" y="11" width="14" height="10" rx="2" stroke="#dc3545" strokeWidth="2" fill="#fff" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#dc3545" strokeWidth="2" />
+                <circle cx="12" cy="16" r="1" fill="#dc3545" />
+            </>
+        ) : (
+            <>
+                <rect x="5" y="11" width="14" height="10" rx="2" stroke="#28a745" strokeWidth="2" fill="#fff" />
+                <path d="M7 11V7a5 5 0 0 1 10 0" stroke="#28a745" strokeWidth="2" />
+                <circle cx="12" cy="16" r="1" fill="#28a745" />
+            </>
+        )}
+    </svg>
+);
+
 // Sample lesson content data - this would normally come from a database
 const LESSON_CONTENT = {
     "ai-exploration": {
@@ -143,7 +162,6 @@ const LessonDetail = () => {
 
     // Get lesson data from URL state or fallback to static data
     const lessonFromState = location.state?.lesson;
-    const moduleTitle = location.state?.moduleTitle || "Module";
     const fromAllLessonPlans = location.state?.fromAllLessonPlans || false;
 
     // Get lesson content from our static data
