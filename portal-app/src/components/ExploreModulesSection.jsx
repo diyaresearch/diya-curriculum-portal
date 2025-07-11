@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import aiExploreImg from "../assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png";
 import aiExploreImg2 from "../assets/ChatGPT Image Jun 13, 2025, 02_17_05 PM.png";
 import aiExploreImg3 from "../assets/ChatGPT Image Jun 13, 2025, 02_25_51 PM.png";
@@ -14,6 +14,72 @@ import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+
+// Add this function near the top of your file, after the imports
+const getItemImage = (item) => {
+  const itemType = item._type;
+  const category = (item.category || item.Category || "").toLowerCase();
+  const level = (item.level || item.Level || "").toLowerCase();
+
+  // Return images based on type and category
+  if (itemType === "Module") {
+    if (category.includes("ai") || category.includes("python")) {
+      return level === "basic" ? aiExploreImg : aiExploreImg2;
+    } else if (category.includes("physics")) {
+      return physicsImg;
+    } else {
+      return aiExploreImg3; // Default for modules
+    }
+  } else if (itemType === "Lesson Plan") {
+    return laptopImg; // Use laptop image for lesson plans
+  } else if (itemType === "Nuggets") {
+    return textbooksImg; // Use textbooks image for nuggets
+  }
+
+  // Fallback image
+  return aiExploreImg;
+};
+
+// Lock/Unlock icons component
+const LockIcon = ({ isLocked }) => (
+  <svg
+    width="24" // Increased from 20
+    height="24" // Increased from 20
+    viewBox="0 0 24 24"
+    fill="none"
+    style={{
+      position: "absolute",
+      top: "16px", // Increased from 12px
+      left: "16px", // Increased from 12px
+      zIndex: 10,
+      background: "rgba(255,255,255,0.95)", // More opaque
+      borderRadius: "6px", // Less rounded
+      padding: "4px", // Increased padding
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)" // Added shadow
+    }}
+  >
+    {isLocked ? (
+      <>
+        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#dc3545" strokeWidth="2" fill="#fff" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#dc3545" strokeWidth="2" />
+        <circle cx="12" cy="16" r="1" fill="#dc3545" />
+      </>
+    ) : (
+      <>
+        <rect x="5" y="11" width="14" height="10" rx="2" stroke="#28a745" strokeWidth="2" fill="#fff" />
+        <path d="M7 11V7a5 5 0 0 1 10 0" stroke="#28a745" strokeWidth="2" />
+        <circle cx="12" cy="16" r="1" fill="#28a745" />
+      </>
+    )}
+  </svg>
+);
+
+// Add this helper function near the top of your file, outside the ExploreModulesSection component:
+function capitalizeWords(str) {
+  return (str || "")
+    .toLowerCase()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
 
 
 // --- Sign Up Prompt Modal ---
@@ -228,7 +294,7 @@ const TeacherRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Ready-to-use Modules
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -278,7 +344,7 @@ const TeacherRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Lesson Plan Builder
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -328,7 +394,7 @@ const TeacherRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Classroom Management
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -378,7 +444,7 @@ const TeacherRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Share with Community
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -461,7 +527,7 @@ const StudentRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Learning Modules
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -511,7 +577,7 @@ const StudentRectangles = () => {
             />
           </div>
           <div>
-            <span style={{ fontWeight: 700, fontSize: "1.25rem", color: "#162040" }}>
+            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
               Project Ideas for Science Fair
             </span>
             <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
@@ -867,7 +933,7 @@ function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
           position: "absolute", top: 10, right: 16, background: "none", border: "none",
           fontSize: "1.5rem", cursor: "pointer", color: "#888"
         }}>×</button>
-        <div style={{ fontWeight: 700, fontSize: "1.4rem", marginBottom: 16 }}>
+        <div style={{ fontWeight: "700", fontSize: "1.4rem", marginBottom: 16 }}>
           {moduleTitle}
         </div>
         <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
@@ -923,18 +989,6 @@ const MODULE_POPUP_INFO = [
   },
 ];
 
-const CARD_IMAGES = [
-  aiExploreImg,
-  aiExploreImg2,
-  aiExploreImg3,
-  barchartImg,
-  laptopImg,
-  teacherImg,
-  physicsImg,
-  textbooksImg,
-  microscopeImg,
-  pencilImg,
-];
 
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
@@ -942,7 +996,6 @@ const ExploreModulesSection = () => {
   const isTeacherDefault = role === "teacherDefault";
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupModule, setPopupModule] = useState(null);
-
   // Filter state
   const [contentType, setContentType] = useState("All");
   const [category, setCategory] = useState("All");
@@ -956,6 +1009,61 @@ const ExploreModulesSection = () => {
   const [nuggets, setNuggets] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [filtersApplied, setFiltersApplied] = useState(false);
+
+  // Pagination state - dynamic based on window size
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(9); // Will be calculated dynamically
+
+  // Update items per page based on screen size - ALWAYS 2 rows
+  useEffect(() => {
+    const updateItemsPerPage = () => {
+      const screenWidth = window.innerWidth;
+      let itemsPerRow;
+
+      if (screenWidth >= 1400) {
+        itemsPerRow = 3; // 3 cards per row on very large screens
+      } else if (screenWidth >= 1000) {
+        itemsPerRow = 3; // 3 cards per row on large screens
+      } else if (screenWidth >= 800) {
+        itemsPerRow = 2; // 2 cards per row on medium screens
+      } else {
+        itemsPerRow = 1; // 1 card per row on small screens
+      }
+
+      // ALWAYS show exactly 2 rows
+      setItemsPerPage(itemsPerRow * 2);
+    };
+
+    updateItemsPerPage();
+    window.addEventListener('resize', updateItemsPerPage);
+
+    return () => window.removeEventListener('resize', updateItemsPerPage);
+  }, []);
+
+  // Calculate pagination - ensure we always show 2 full rows
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  let paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+  // If we don't have enough items to fill 2 rows, duplicate items or add placeholders
+  if (paginatedItems.length < itemsPerPage && filteredItems.length > 0) {
+    const itemsNeeded = itemsPerPage - paginatedItems.length;
+
+    // Repeat items from the beginning to fill the remaining slots
+    for (let i = 0; i < itemsNeeded; i++) {
+      const itemToAdd = filteredItems[i % filteredItems.length];
+      paginatedItems.push({
+        ...itemToAdd,
+        id: `${itemToAdd.id}-duplicate-${i}`, // Ensure unique keys
+        isDuplicate: true
+      });
+    }
+  }
+
+  // Reset to page 1 when filters change or items per page changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredItems, itemsPerPage]);
 
   // Fetch all data on mount
   useEffect(() => {
@@ -1065,7 +1173,7 @@ const ExploreModulesSection = () => {
             position: "absolute", top: 10, right: 16, background: "none", border: "none",
             fontSize: "1.5rem", cursor: "pointer", color: "#888"
           }}>×</button>
-          <div style={{ fontWeight: 700, fontSize: "1.4rem", marginBottom: 16 }}>
+          <div style={{ fontWeight: "700", fontSize: "1.4rem", marginBottom: 16 }}>
             Upgrade Required
           </div>
           <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
@@ -1160,7 +1268,8 @@ const ExploreModulesSection = () => {
               justifyContent: "flex-end",
               overflow: "hidden",
               padding: 0,
-              cursor: "pointer"
+              cursor: "pointer",
+              position: "relative"
             }}
             onClick={() => {
               if (!user) {
@@ -1184,9 +1293,12 @@ const ExploreModulesSection = () => {
               }
             }}
           >
+            {/* Add the lock icon here */}
+            <LockIcon isLocked={false} />
+
             <div style={{
               width: "100%",
-              height: "calc(100% - 90px)",
+              height: "calc(100% - 70px)",
               display: "flex",
               alignItems: "stretch",
               justifyContent: "center"
@@ -1247,7 +1359,8 @@ const ExploreModulesSection = () => {
               alignItems: "center",
               justifyContent: "flex-end",
               overflow: "hidden",
-              cursor: "pointer"
+              cursor: "pointer",
+              position: "relative" // ADD THIS
             }}
             onClick={() => {
               if (!user) {
@@ -1257,14 +1370,17 @@ const ExploreModulesSection = () => {
                 navigate("/modules/ai-insights");
               }
             }}
+
             tabIndex={0}
             role="button"
             aria-label="Go to AI Insights"
             onKeyPress={e => { if (e.key === "Enter" || e.key === " ") { if (user) navigate("/modules/ai-insights"); else navigate("/login"); } }}
           >
+            {/* ADD THIS LINE HERE */}
+            <LockIcon isLocked={true} />
             <div style={{
               width: "100%",
-              height: "calc(100% - 90px)",
+              height: "calc(100% - 70px)",
               display: "flex",
               alignItems: "stretch",
               justifyContent: "center"
@@ -1319,7 +1435,8 @@ const ExploreModulesSection = () => {
               alignItems: "center",
               justifyContent: "flex-end",
               overflow: "hidden",
-              cursor: "pointer"
+              cursor: "pointer",
+              position: "relative" // ADD THIS LINE
             }}
             onClick={() => {
               if (!user) {
@@ -1334,9 +1451,11 @@ const ExploreModulesSection = () => {
             aria-label="Go to AI & Physics"
             onKeyPress={e => { if (e.key === "Enter" || e.key === " ") { if (user) navigate("/modules/ai-physics"); else navigate("/login"); } }}
           >
+            {/* ADD THIS LINE */}
+            <LockIcon isLocked={false} />
             <div style={{
               width: "100%",
-              height: "calc(100% - 90px)",
+              height: "calc(100% - 70px)",
               display: "flex",
               alignItems: "stretch",
               justifyContent: "center"
@@ -1352,11 +1471,11 @@ const ExploreModulesSection = () => {
                 }}
               />
             </div>
-            <div style={{ width: "100%", height: "90px", padding: "18px 0 0 0", textAlign: "center", background: "#fff" }}>
+            <div style={{ width: "100%", height: "90px", padding: "10px 0 0 0", textAlign: "center", background: "#fff" }}>
               <span
                 style={{
                   display: "block",
-                  fontWeight: 600,
+                  fontWeight: "600",
                   fontSize: "1.15rem",
                   color: "#162040",
                   letterSpacing: "1px"
@@ -1367,7 +1486,7 @@ const ExploreModulesSection = () => {
               <span
                 style={{
                   display: "block",
-                  fontWeight: 700,
+                  fontWeight: "700",
                   fontSize: "1.35rem",
                   color: "#222",
                   marginTop: "8px",
@@ -1424,7 +1543,7 @@ const ExploreModulesSection = () => {
             }}>
               {/* Content Type Filter */}
               <div>
-                <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>Content Type</label>
+                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Content Type</label>
                 <select
                   value={contentType}
                   onChange={e => setContentType(e.target.value)}
@@ -1442,7 +1561,7 @@ const ExploreModulesSection = () => {
               </div>
               {/* Category Filter */}
               <div>
-                <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>Category</label>
+                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Category</label>
                 <select
                   value={category}
                   onChange={e => setCategory(e.target.value)}
@@ -1460,7 +1579,7 @@ const ExploreModulesSection = () => {
               </div>
               {/* Level Filter */}
               <div>
-                <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>Level</label>
+                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Level</label>
                 <select
                   value={level}
                   onChange={e => setLevel(e.target.value)}
@@ -1478,7 +1597,7 @@ const ExploreModulesSection = () => {
               </div>
               {/* Lock Status Filter */}
               <div>
-                <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>Lock Status</label>
+                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Lock Status</label>
                 <select
                   value={lockStatus}
                   onChange={e => setLockStatus(e.target.value)}
@@ -1497,7 +1616,7 @@ const ExploreModulesSection = () => {
             </div>
             {/* Keyword Filter */}
             <div style={{ marginBottom: "18px", width: "100%", maxWidth: 400 }}>
-              <label style={{ fontWeight: 600, color: "#162040", marginRight: 8 }}>
+              <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>
                 Keyword
               </label>
               <input
@@ -1526,7 +1645,7 @@ const ExploreModulesSection = () => {
                   border: "1px solid #bbb",
                   background: "#fff",
                   color: "#222",
-                  fontWeight: 600,
+                  fontWeight: "600",
                   fontSize: "1rem",
                   cursor: "pointer"
                 }}
@@ -1542,7 +1661,7 @@ const ExploreModulesSection = () => {
                   border: "none",
                   background: "#162040",
                   color: "#fff",
-                  fontWeight: 600,
+                  fontWeight: "600",
                   fontSize: "1rem",
                   cursor: "pointer"
                 }}
@@ -1550,7 +1669,6 @@ const ExploreModulesSection = () => {
                 Apply Filters
               </button>
             </div>
-            {/* Filtered modules/cards */}
             <div
               style={{
                 width: "100%",
@@ -1558,129 +1676,173 @@ const ExploreModulesSection = () => {
                 background: "#f6f8fa",
                 borderRadius: "8px",
                 border: "1px dashed #bbb",
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "flex-start",
+                display: "grid", // Changed from flex to grid
+                gridTemplateColumns: "repeat(3, 380px)", // Exactly 3 columns of 380px each
+                gridTemplateRows: "repeat(2, 380px)", // Exactly 2 rows of 380px each
+                gap: "40px",
+                padding: "40px",
                 justifyContent: "center",
+                alignItems: "start",
                 color: "#888",
                 fontSize: "1.05rem",
                 fontStyle: "italic",
                 marginBottom: "16px",
-                gap: "24px",
-                padding: "24px"
+                boxSizing: "border-box",
+                maxWidth: "1300px", // Limit container width
+                margin: "0 auto" // Center the container
               }}
             >
-              {filteredItems.length === 0 ? (
-                "No modules found."
+              {paginatedItems.length === 0 ? (
+                <div style={{
+                  gridColumn: "1 / -1", // Span all columns
+                  width: "100%",
+                  textAlign: "center"
+                }}>
+                  No modules found.
+                </div>
               ) : (
-                filteredItems.map((item, idx) => {
-                  const imgSrc = CARD_IMAGES[idx % CARD_IMAGES.length];
-
-                  // Determine access status for teacherDefault
-                  let cardAccess = "free";
-                  if (isTeacherDefault) {
-                    if ((item.role || item.Role) === "teacherPlus") cardAccess = "paid";
-                  }
-
-                  // Card click handler
-                  const handleCardClick = () => {
-                    if (isTeacherDefault) {
-                      if (cardAccess === "paid") {
+                paginatedItems.map((item) => (
+                  <div
+                    key={item.id}
+                    style={{
+                      background: "#fff",
+                      borderRadius: "12px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                      width: "380px",
+                      height: "380px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      position: "relative",
+                      transition: "box-shadow 0.2s"
+                    }}
+                    onClick={() => {
+                      // Handle navigation based on item type and lock status
+                      const isLocked = (item.role || item.Role) === "teacherPlus";
+                      if (isLocked && role === "teacherDefault") {
                         setUpgradePromptOpen(true);
                       } else {
-                        if (item._type === "Module") window.open(`/modules/${item.id}`, "_blank");
-                        else if (item._type === "Lesson Plan") window.open(`/lesson-plans/${item.id}`, "_blank");
-                        else if (item._type === "Nuggets") window.open(`/content/${item.id}`, "_blank");
+                        // Navigate to appropriate page based on item type
+                        if (item._type === "Module") {
+                          navigate(`/modules/${item.id}`);
+                        } else if (item._type === "Lesson Plan") {
+                          navigate(`/lesson-plans/${item.id}`);
+                        } else if (item._type === "Nuggets") {
+                          navigate(`/nuggets/${item.id}`);
+                        }
                       }
-                    } else {
-                      // All non-teacherDefault: always open the corresponding page
-                      if (item._type === "Module") window.open(`/modules/${item.id}`, "_blank");
-                      else if (item._type === "Lesson Plan") window.open(`/lesson-plans/${item.id}`, "_blank");
-                      else if (item._type === "Nuggets") window.open(`/content/${item.id}`, "_blank");
-                    }
-                  };
+                    }}
+                  >
+                    {/* Rest of your card content remains the same */}
+                    <LockIcon isLocked={(item.role || item.Role) === "teacherPlus"} />
 
-                  return (
-                    <div
-                      key={item.id}
-                      style={{
-                        width: "420px",
-                        minHeight: "320px",
-                        background: "#fff",
-                        borderRadius: "18px",
-                        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                        border: "1px solid #e0dfdb",
-                        padding: "32px",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "flex-start",
-                        alignItems: "center",
-                        transition: "box-shadow 0.2s",
-                        textAlign: "left",
-                        overflow: "hidden",
-                        cursor: (isTeacherDefault && cardAccess === "paid") ? "not-allowed" : "pointer",
-                        position: "relative"
-                      }}
-                      onClick={handleCardClick}
-                      tabIndex={0}
-                      role="button"
-                      aria-label={isTeacherDefault && cardAccess === "paid" ? "Locked module" : "Open module"}
-                    >
-                      {/* Lock icon for teacherDefault only */}
-                      {isTeacherDefault && (
-                        <div style={{
-                          position: "absolute",
-                          top: 18,
-                          left: 24,
-                          background: cardAccess === "paid" ? "#ffe0e0" : "#e8f5e9",
-                          borderRadius: "6px",
-                          padding: "4px 10px",
-                          zIndex: 2,
-                          border: cardAccess === "paid" ? "1px solid #a00" : "1px solid #1a7f37",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center"
-                        }}>
-                          {cardAccess === "paid" ? ClosedLockIcon : OpenLockIcon}
-                        </div>
-                      )}
+                    <div style={{
+                      width: "100%",
+                      height: "calc(100% - 70px)",
+                      display: "flex",
+                      alignItems: "stretch",
+                      justifyContent: "center",
+                      background: "#f0f0f0"
+                    }}>
                       <img
-                        src={imgSrc}
-                        alt="Module Visual"
+                        src={getItemImage(item)}
+                        alt={item.title || item.Title}
                         style={{
                           width: "100%",
-                          height: "200px",
+                          height: "100%",
                           objectFit: "cover",
-                          borderRadius: "12px",
-                          marginBottom: "20px"
+                          display: "block"
                         }}
                       />
-                      <div style={{
-                        fontWeight: 700,
-                        fontSize: "1.45rem",
-                        color: "#162040",
-                        marginBottom: 14,
-                        width: "100%",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "normal"
-                      }}>
-                        {item.title || item.Title}
-                      </div>
-                      <div style={{ color: "#555", fontSize: "1.08rem", marginBottom: 6, width: "100%" }}>
-                        Level: {capitalizeWords(item.level || item.Level || "N/A")}
-                      </div>
-                      <div style={{ color: "#888", fontSize: "1.05rem", width: "100%" }}>
-                        Type: {capitalizeWords(item._type || "")}
-                      </div>
                     </div>
-                  );
-                })
+
+                    <div style={{
+                      width: "100%",
+                      height: "70px",
+                      padding: "12px 0 0 0",
+                      textAlign: "center",
+                      background: "#fff"
+                    }}>
+                      <span
+                        style={{
+                          display: "block",
+                          fontWeight: "600",
+                          fontSize: "1rem",
+                          color: "#162040",
+                          letterSpacing: "1px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {capitalizeWords(item.level || item.Level || "N/A")}
+                      </span>
+                      <span
+                        style={{
+                          display: "block",
+                          fontWeight: "700",
+                          fontSize: "1.2rem",
+                          color: "#222",
+                          marginTop: "4px",
+                          textAlign: "center",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {item.title || item.Title}
+                      </span>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
+
+            {/* Pagination controls */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: "24px", marginBottom: "32px" }}>
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{
+                    padding: "10px 28px",
+                    borderRadius: 6,
+                    border: "1px solid #bbb",
+                    background: currentPage === 1 ? "#eee" : "#fff",
+                    color: "#222",
+                    fontWeight: "600",
+                    fontSize: "1rem",
+                    cursor: currentPage === 1 ? "not-allowed" : "pointer"
+                  }}
+                >
+                  Back
+                </button>
+                <span style={{ alignSelf: "center", fontWeight: "600", color: "#162040" }}>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{
+                    padding: "10px 28px",
+                    borderRadius: 6,
+                    border: "1px solid #bbb",
+                    background: currentPage === totalPages ? "#eee" : "#fff",
+                    color: "#222",
+                    fontWeight: "600",
+                    fontSize: "1rem",
+                    cursor: currentPage === totalPages ? "not-allowed" : "pointer"
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </>
         )}
-
       </section>
 
       {/* Only show For Teachers if NOT a student and NOT teacherDefault */}
@@ -1740,10 +1902,9 @@ const ExploreModulesSection = () => {
             gap: "16px",
             maxWidth: "100%"
           }}>
-
             <h2 style={{
               fontSize: "2.5rem",
-              fontWeight: 700,
+              fontWeight: "700",
               color: "#162040",
               marginBottom: "18px",
               textAlign: "center",
@@ -1754,21 +1915,6 @@ const ExploreModulesSection = () => {
               textOverflow: "ellipsis"
             }}>
               Testimonials
-
-            </h2>
-
-            <h2
-              style={{
-                fontSize: "2.5rem",
-                fontWeight: "700",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif",
-                margin: 0,
-                letterSpacing: "1px",
-                lineHeight: 1.2
-              }}
-            >
-
             </h2>
             <p
               style={{
@@ -1777,7 +1923,7 @@ const ExploreModulesSection = () => {
                 maxWidth: "1000px",
                 lineHeight: 1.6,
                 margin: 0,
-                textAlign: "center" // <-- Add this line to center the text
+                textAlign: "center"
               }}
             >
               Discover how our platform has transformed the teaching and learning experience for educators and students alike.
@@ -1795,32 +1941,5 @@ const ExploreModulesSection = () => {
   );
 };
 
-// Add this helper function near the top of your file, outside the ExploreModulesSection component:
-
-function capitalizeWords(str) {
-  return (str || "")
-    .toLowerCase()
-    .replace(/\b\w/g, c => c.toUpperCase());
-}
-
-// Place these SVGs near the top of your file, outside the component:
-
-const OpenLockIcon = (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#1a7f37" strokeWidth="2" fill="#e8f5e9"/>
-    <path d="M7 10V7a4 4 0 1 1 8 0" stroke="#1a7f37" strokeWidth="2" fill="none"/>
-    <circle cx="11" cy="14" r="1.2" fill="#1a7f37"/>
-    {/* Open lock: no vertical bar connecting the shackle to the body */}
-  </svg>
-);
-
-const ClosedLockIcon = (
-  <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-    <rect x="4" y="10" width="14" height="8" rx="2" stroke="#a00" strokeWidth="2" fill="#ffe0e0"/>
-    <path d="M7 10V7a4 4 0 1 1 8 0v3" stroke="#a00" strokeWidth="2" fill="none"/>
-    <rect x="10" y="14" width="2" height="3" rx="1" fill="#a00"/>
-    <circle cx="11" cy="14" r="1.2" fill="#a00"/>
-  </svg>
-);
-
 export default ExploreModulesSection;
+
