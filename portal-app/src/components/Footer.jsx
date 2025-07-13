@@ -4,11 +4,11 @@ const Footer = () => {
   return (
     <footer
       style={{
-        backgroundColor: "#1f2937",
+        backgroundColor: "#162040", // Navy blue to match hero section
         width: "100%",
         color: "white",
         textAlign: "center",
-        padding: "80px 10px", // Even thicker footer
+        padding: "80px 10px",
         fontFamily: "Open Sans, sans-serif",
         fontSize: "16px",
       }}

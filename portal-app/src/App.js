@@ -17,6 +17,7 @@ import AllLessonPlans from "./pages/all_lesson_plans";
 import { TeacherSignup, StudentSignup } from './pages/sign_up';
 import UpgradePage from './pages/upgrade_page/UpgradePage.jsx';
 
+import NuggetBuilderPage from "./pages/nugget-builder"; // adjust path if needed
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="/teacher-signup" element={<TeacherSignup />} />
           <Route path="/student-signup" element={<StudentSignup />} />
           <Route path="/upgrade" element={<UpgradePage />} />
+          <Route path="/nugget-builder" element={<NuggetBuilderPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
