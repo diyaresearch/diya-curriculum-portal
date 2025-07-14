@@ -2,12 +2,21 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
+import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
 Modal.setAppElement("#root");
 
-export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic, type, category, level }) => {
+export const UploadContent = ({
+  fromLesson,
+  onNuggetCreated,
+  isPublic,
+  type,
+  category,
+  level,
+  title,
+}) => {
   const [formData, setFormData] = useState({
     Title: "",
     Category: category || "",
@@ -16,11 +25,13 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic, type, cat
     Duration: "",
     isPublic: isPublic || false,
     Abstract: "",
-    fileUrl: "",
+    Instructions: "",
   });
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const navigate = useNavigate();
 
@@ -36,14 +47,41 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic, type, cat
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+    // Only clear the error for the field being edited
+    setFieldErrors((prev) => ({ ...prev, [e.target.id]: "" }));
   };
 
   const handleAbstractChange = (value) => {
     setFormData({ ...formData, Abstract: value });
+    setFieldErrors((prev) => ({ ...prev, Abstract: "" }));
+  };
+
+  function stripHtml(html) {
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+  }
+
+  // Validate required fields
+  const validateFields = () => {
+    const errors = {};
+    if (!formData.Title.trim()) errors.Title = "Title is required.";
+    if (!formData.Abstract || !stripHtml(formData.Abstract).trim()) errors.Abstract = "Description is required.";
+    if (!formData.Category.trim()) errors.Category = "Category is required.";
+    if (!formData.Level.trim()) errors.Level = "Level is required.";
+    if (!formData.Duration.trim()) errors.Duration = "Duration is required.";
+    if (!formData.Type.trim()) errors.Type = "Type is required.";
+    if (!formData.Instructions.trim()) errors.Instructions = "Instructions/Notes are required.";
+    return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const errors = validateFields();
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      return;
+    }
 
     const auth = getAuth();
     const user = auth.currentUser;
@@ -53,39 +91,27 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic, type, cat
       return;
     }
 
-    const userId = user.uid;
-    const token = await user.getIdToken();
-
-    const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/`; // Replace with your backend endpoint URL
+    // Capitalize first letter of displayName (if present)
+    let authorName = user.displayName || user.email || user.uid;
+    if (user.displayName) {
+      authorName = user.displayName.charAt(0).toUpperCase() + user.displayName.slice(1);
+    }
 
     try {
-      const formDataToSend = {
+      const db = getFirestore();
+      const plainDescription = stripHtml(formData.Abstract);
+
+      await addDoc(collection(db, "content"), {
         Title: formData.Title,
+        Description: plainDescription,
         Category: formData.Category,
         Level: formData.Level,
-        Type: formData.Type,
         Duration: formData.Duration,
-        Abstract: formData.Abstract,
-        isPublic: formData.isPublic,
-        fileUrl: formData.fileUrl,
-        Author: userId,
-      };
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include the token in the request headers
-        },
-        body: JSON.stringify(formDataToSend),
+        Type: formData.Type,
+        Instructions: formData.Instructions,
+        Author: authorName,
+        createdAt: serverTimestamp(),
       });
-
-      if (!response.ok) {
-        throw new Error("Error submitting content");
-      }
-
-      const newNugget = await response.json();
-      console.log("New Nugget:", newNugget);
 
       setModalMessage("Content submitted successfully");
       setFormData({
@@ -96,19 +122,16 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic, type, cat
         Duration: "",
         isPublic: false,
         Abstract: "",
-        fileUrl: "",
+        Instructions: "",
       });
+      setFieldErrors({});
 
       setModalIsOpen(true);
       if (fromLesson) {
         closeModal();
         if (onNuggetCreated) {
-          onNuggetCreated(newNugget); // Call the callback if inside a modal
+          onNuggetCreated();
         }
-      } else {
-        setTimeout(() => {
-          navigate("/");
-        }, 2000);
       }
     } catch (error) {
       setModalMessage("Error submitting content: " + error.message);
@@ -138,160 +161,314 @@ export const UploadContent = ({ fromLesson, onNuggetCreated, isPublic, type, cat
   };
 
   return (
-    <div className="min-h-screen bg-blue-100 flex flex-col items-center justify-center">
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-lg">
-        <h2 className="text-2xl mb-4 text-center">Upload contents</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Title">
-              Title:
+    <div style={{ width: "100%" }}>
+      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+          {/* Title */}
+          <div>
+            <label htmlFor="Title" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
+              Title
             </label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="Title"
               type="text"
-              placeholder="Title"
+              placeholder="Enter the title of the nugget"
               value={formData.Title}
               onChange={handleChange}
-              required
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "6px",
+                border: "1.5px solid #bbb",
+                fontSize: "1rem",
+                marginBottom: "2px",
+                background: "#fafbfc",
+                fontFamily: "Open Sans, sans-serif",
+              }}
             />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Category">
-              Category:
-            </label>
-            <select
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="Category"
-              value={formData.Category}
-              onChange={handleChange}
-              required
-            >
-              <option>Select a category</option>
-              <option value="Python">Python</option>
-              <option value="Physics">Physics</option>
-              <option value="Chemistry">Chemistry</option>
-              <option value="Biology">Biology</option>
-              <option value="Economics">Economics</option>
-              <option value="Earth Science">Earth Science</option>
-            </select>
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Type">
-              Type:
-            </label>
-            <select
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="Type"
-              value={formData.Type}
-              onChange={handleChange}
-              required
-            >
-              <option>Select an option</option>
-              <option value="Lectures">Lectures</option>
-              <option value="Assignments">Assignments</option>
-              <option value="Quiz">Quiz</option>
-              <option value="Projects">Projects</option>
-              <option value="Case studies">Case studies</option>
-              <option value="Data sets">Data sets</option>
-            </select>
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Level">
-              Level:
-            </label>
-            <select
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="Level"
-              value={formData.Level}
-              onChange={handleChange}
-              required
-            >
-              <option>Select an option</option>
-              <option value="Basic">Basic</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-            </select>
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Duration">
-              Duration (minutes):
-            </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="Duration"
-              type="text"
-              placeholder="Duration"
-              value={formData.Duration}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          {!fromLesson && (
-            <div className="mb-4 flex items-center">
-              <input
-                className="mr-2 leading-tight"
-                type="checkbox"
-                id="isPublic"
-                checked={formData.isPublic}
-                onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-              />
-              <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">
-                Make Public
-              </label>
+            {fieldErrors.Title && (
+              <div style={{ color: "red", fontSize: "0.95rem" }}>
+                Please fill out this field.
+              </div>
+            )}
+            <div style={{ fontSize: "0.92rem", color: "#888", fontFamily: "Open Sans, sans-serif" }}>
+              Provide a concise title for your content.
             </div>
-          )}
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="Abstract">
-              Abstract:
+          </div>
+
+          {/* Description */}
+          <div>
+            <label htmlFor="Abstract" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
+              Description
             </label>
             <ReactQuill
               theme="snow"
               value={formData.Abstract}
               onChange={handleAbstractChange}
               className="bg-white"
+              style={{
+                background: "#fafbfc",
+                borderRadius: "6px",
+                marginBottom: "2px",
+                fontFamily: "Open Sans, sans-serif",
+              }}
             />
+            {fieldErrors.Abstract && (
+              <div style={{ color: "red", fontSize: "0.95rem" }}>
+                Please fill out this field.
+              </div>
+            )}
+            <div style={{ fontSize: "0.92rem", color: "#888", fontFamily: "Open Sans, sans-serif" }}>
+              Summarize the content of the nugget.
+            </div>
           </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fileUrl">
-              Content Url:
+
+          {/* Category */}
+          <div>
+            <label htmlFor="Category" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+              Category
+            </label>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {["AI Principles", "Data Science", "Machine Learning", "Statistics", "Other"].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({ ...prev, Category: cat }));
+                    setFieldErrors((prev) => ({ ...prev, Category: "" }));
+                  }}
+                  style={{
+                    background: formData.Category === cat ? "#162040" : "#fff",
+                    color: formData.Category === cat ? "#fff" : "#222",
+                    border: formData.Category === cat ? "2px solid #162040" : "1.5px solid #bbb",
+                    borderRadius: "6px",
+                    padding: "7px 18px",
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            {fieldErrors.Category && (
+              <div style={{ color: "red", fontSize: "0.95rem" }}>
+                Please fill out this field.
+              </div>
+            )}
+            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+              Select a relevant category.
+            </div>
+          </div>
+
+          {/* Level */}
+          <div>
+            <label htmlFor="Level" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+              Level
+            </label>
+            <div style={{ display: "flex", gap: "8px" }}>
+              {["Basic", "Intermediate", "Advanced"].map((lvl) => (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({ ...prev, Level: lvl }));
+                    setFieldErrors((prev) => ({ ...prev, Level: "" }));
+                  }}
+                  style={{
+                    background: formData.Level === lvl ? "#162040" : "#fff",
+                    color: formData.Level === lvl ? "#fff" : "#222",
+                    border: formData.Level === lvl ? "2px solid #162040" : "1.5px solid #bbb",
+                    borderRadius: "6px",
+                    padding: "7px 18px",
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  {lvl}
+                </button>
+              ))}
+            </div>
+            {fieldErrors.Level && (
+              <div style={{ color: "red", fontSize: "0.95rem" }}>
+                Please fill out this field.
+              </div>
+            )}
+            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+              Choose the difficulty level.
+            </div>
+          </div>
+
+          {/* Duration */}
+          <div>
+            <label htmlFor="Duration" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+              Duration (minutes)
             </label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="fileUrl"
+              id="Duration"
               type="text"
-              placeholder="File Url"
-              value={formData.fileUrl}
+              placeholder="Enter estimated duration"
+              value={formData.Duration}
               onChange={handleChange}
-              required
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "6px",
+                border: "1.5px solid #bbb",
+                fontSize: "1rem",
+                marginBottom: "2px",
+                background: "#fafbfc",
+              }}
             />
+            {fieldErrors.Duration && (
+              <div style={{ color: "red", fontSize: "0.95rem" }}>
+                Please fill out this field.
+              </div>
+            )}
+            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+              How long will the content take to consume?
+            </div>
           </div>
-          <div className="flex items-center justify-center">
-            <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-              type="submit"
-            >
-              Submit
-            </button>
+
+          {/* Type */}
+          <div>
+            <label htmlFor="Type" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+              Type
+            </label>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {["Lecture", "Assignment", "Dataset"].map((tp) => (
+                <button
+                  key={tp}
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({ ...prev, Type: tp }));
+                    setFieldErrors((prev) => ({ ...prev, Type: "" }));
+                  }}
+                  style={{
+                    background: formData.Type === tp ? "#162040" : "#fff",
+                    color: formData.Type === tp ? "#fff" : "#222",
+                    border: formData.Type === tp ? "2px solid #162040" : "1.5px solid #bbb",
+                    borderRadius: "6px",
+                    padding: "7px 18px",
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  {tp}
+                </button>
+              ))}
+            </div>
+            {fieldErrors.Type && (
+              <div style={{ color: "red", fontSize: "0.95rem" }}>
+                Please fill out this field.
+              </div>
+            )}
+            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+              Select the content type.
+            </div>
           </div>
-        </form>
-        <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={closeModal}
-          style={customStyles}
-          contentLabel="Submission Result"
+
+          {/* Instructions/Notes (no file upload) */}
+          <div>
+            <label htmlFor="Instructions" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+              Instructions/Notes
+            </label>
+            <input
+              id="Instructions"
+              type="text"
+              placeholder="Add any further instructions or notes..."
+              value={formData.Instructions}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "6px",
+                border: "1.5px solid #bbb",
+                fontSize: "1rem",
+                marginBottom: "8px",
+                background: "#fafbfc",
+              }}
+            />
+            {fieldErrors.Instructions && (
+              <div style={{ color: "red", fontSize: "0.95rem" }}>
+                Please fill out this field.
+              </div>
+            )}
+            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+              Use this area for each content's detailed instructions.
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom row: Cancel and Save Nugget */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "24px",
+            marginTop: "32px",
+          }}
         >
-          <h2>{modalMessage}</h2>
           <button
-            onClick={() => {
-              window.location.href = process.env.REACT_APP_HOME_PAGE;
+            type="button"
+            onClick={() => navigate(-1)}
+            style={{
+              background: "#fff",
+              color: "#222",
+              border: "1.5px solid #222",
+              borderRadius: "6px",
+              padding: "12px 48px",
+              fontWeight: 600,
+              fontSize: "1.08rem",
+              cursor: "pointer",
+              minWidth: "180px",
+              transition: "background 0.2s, color 0.2s, border 0.2s",
+              fontFamily: "Open Sans, sans-serif",
             }}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
-            Close
+            Cancel
           </button>
-        </Modal>
-      </div>
+          <button
+            type="submit"
+            style={{
+              background: "#162040", // navy blue
+              color: "#fff",
+              border: "1.5px solid #162040",
+              borderRadius: "6px",
+              padding: "12px 48px",
+              fontWeight: 600,
+              fontSize: "1.08rem",
+              cursor: "pointer",
+              minWidth: "180px",
+              transition: "background 0.2s, color 0.2s, border 0.2s",
+              fontFamily: "Open Sans, sans-serif",
+            }}
+          >
+            Save Nugget
+          </button>
+        </div>
+      </form>
+      {/* Modal remains unchanged */}
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        style={customStyles}
+        contentLabel="Submission Result"
+      >
+        <h2>{modalMessage}</h2>
+        <button
+          onClick={() => {
+            // Go back to the nugget builder page instead of home
+            window.location.href = "/nugget-builder";
+          }}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+        >
+          Close
+        </button>
+      </Modal>
     </div>
   );
 };
