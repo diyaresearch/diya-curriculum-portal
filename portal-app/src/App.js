@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, Link } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import "./index.css";
 import { EditContent } from "./pages/edit_content";
@@ -16,38 +16,93 @@ import ModuleDetail from "./pages/modules/ModuleDetail";
 import AllLessonPlans from "./pages/all_lesson_plans";
 import { TeacherSignup, StudentSignup } from './pages/sign_up';
 import UpgradePage from './pages/upgrade_page/UpgradePage.jsx';
-
-import NuggetBuilderPage from "./pages/nugget-builder"; // adjust path if needed
+import PaymentPage from './pages/payment/PaymentPage';
 
 function App() {
   return (
     <BrowserRouter>
-      <Layout>
-        {/* Move your navigation here if you want it on every page */}
+      <Routes>
+        {/* Payment page without Layout (standalone page) */}
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/payment/premium" element={<PaymentPage />} />
 
-
-
-
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/upload-content" element={<UploadContent />} />
-          <Route path="/edit-content/:id" element={<EditContent />} />
-          <Route path="/view-content/:UnitID" element={<ViewContent />} />
-          <Route path="/lesson-generator" element={<LessonGenerator />} />
-          <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
-          <Route path="/my-plans" element={<MyPlans />} />
-          <Route path="/lesson/:lessonId" element={<LessonDetail />} />
-          <Route path="/lesson/:moduleId/:lessonIndex" element={<LessonDetailNew />} />
-          <Route path="/user-profile" element={<UserProfile />} />
-          {/* Only keep this route */}
-          <Route path="/modules/:moduleId" element={<ModuleDetail />} />
-          <Route path="/all-lesson-plans/:moduleId" element={<AllLessonPlans />} />
-          <Route path="/teacher-signup" element={<TeacherSignup />} />
-          <Route path="/student-signup" element={<StudentSignup />} />
-          <Route path="/upgrade" element={<UpgradePage />} />
-          <Route path="/nugget-builder" element={<NuggetBuilderPage />} />
-        </Routes>
-      </Layout>
+        {/* All other pages with Layout */}
+        <Route path="/" element={
+          <Layout>
+            <Home />
+          </Layout>
+        } />
+        <Route path="/upload-content" element={
+          <Layout>
+            <UploadContent />
+          </Layout>
+        } />
+        <Route path="/edit-content/:id" element={
+          <Layout>
+            <EditContent />
+          </Layout>
+        } />
+        <Route path="/view-content/:UnitID" element={
+          <Layout>
+            <ViewContent />
+          </Layout>
+        } />
+        <Route path="/lesson-generator" element={
+          <Layout>
+            <LessonGenerator />
+          </Layout>
+        } />
+        <Route path="/edit-lesson/:lessonId" element={
+          <Layout>
+            <EditLesson />
+          </Layout>
+        } />
+        <Route path="/my-plans" element={
+          <Layout>
+            <MyPlans />
+          </Layout>
+        } />
+        <Route path="/lesson/:lessonId" element={
+          <Layout>
+            <LessonDetail />
+          </Layout>
+        } />
+        <Route path="/lesson/:moduleId/:lessonIndex" element={
+          <Layout>
+            <LessonDetailNew />
+          </Layout>
+        } />
+        <Route path="/user-profile" element={
+          <Layout>
+            <UserProfile />
+          </Layout>
+        } />
+        <Route path="/modules/:moduleId" element={
+          <Layout>
+            <ModuleDetail />
+          </Layout>
+        } />
+        <Route path="/all-lesson-plans/:moduleId" element={
+          <Layout>
+            <AllLessonPlans />
+          </Layout>
+        } />
+        <Route path="/teacher-signup" element={
+          <Layout>
+            <TeacherSignup />
+          </Layout>
+        } />
+        <Route path="/student-signup" element={
+          <Layout>
+            <StudentSignup />
+          </Layout>
+        } />
+        <Route path="/upgrade" element={
+          <Layout>
+            <UpgradePage />
+          </Layout>
+        } />
+      </Routes>
     </BrowserRouter>
   );
 }
