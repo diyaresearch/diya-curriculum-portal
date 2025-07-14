@@ -1,8 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useUserData from '../../hooks/useUserData';
 
 const UpgradePage = () => {
     const navigate = useNavigate();
+    const { userData } = useUserData();
+    const [showContactModal, setShowContactModal] = useState(false);
+
+    // Determine current plan based on user data
+    const currentPlan = userData?.subscriptionType || 'basic';
+
+    // Debug logging to understand the issue
+    console.log('=== UpgradePage Debug ===');
+    console.log('userData:', userData);
+    console.log('currentPlan:', currentPlan);
+    console.log('userRole:', userData?.role);
+    console.log('subscriptionType:', userData?.subscriptionType);
+    console.log('========================');
+
+    const handleUpgradeClick = () => {
+        console.log('=== handleUpgradeClick Debug ===');
+        console.log('Button clicked!');
+        console.log('User role:', userData?.role);
+        console.log('Current plan:', currentPlan);
+        console.log('Navigating to /payment/premium');
+        console.log('================================');
+
+        // Navigate to payment page
+        navigate('/payment/premium');
+    };
+
+    const handleContactSales = () => {
+        setShowContactModal(true);
+    };
+
+    const closeContactModal = () => {
+        setShowContactModal(false);
+    };
 
     return (
         <div style={{
@@ -38,7 +72,7 @@ const UpgradePage = () => {
                     Select the perfect subscription plan that meets your needs for teaching and learning.
                 </p>
                 <button
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate('/')}
                     style={{
                         background: '#162040',
                         color: '#fff',
@@ -78,7 +112,8 @@ const UpgradePage = () => {
                     display: 'grid',
                     gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                     gap: '30px',
-                    padding: '0 20px'
+                    padding: '0 20px',
+                    alignItems: 'stretch'
                 }}>
                     {/* Basic Plan */}
                     <div style={{
@@ -88,66 +123,90 @@ const UpgradePage = () => {
                         padding: '30px',
                         textAlign: 'center',
                         position: 'relative',
-                        border: '2px solid transparent'
+                        border: currentPlan === 'basic' ? '3px solid #F9C74F' : '2px solid transparent',
+                        display: 'flex',
+                        flexDirection: 'column'
                     }}>
-                        <div style={{
-                            background: '#f0f0f0',
-                            borderRadius: '8px',
-                            padding: '20px',
-                            marginBottom: '20px',
-                            minHeight: '120px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            <span style={{ color: '#999', fontSize: '1.2rem' }}>Basic Plan Image</span>
-                        </div>
-                        <h3 style={{
-                            fontSize: '1.5rem',
-                            fontWeight: '700',
-                            color: '#162040',
-                            marginBottom: '15px'
-                        }}>
-                            Basic
-                        </h3>
-                        <p style={{
-                            color: '#666',
-                            lineHeight: 1.6,
-                            marginBottom: '20px',
-                            minHeight: '60px'
-                        }}>
-                            Access selected free modules and basic functionalities.
-                        </p>
-                        <div style={{
-                            fontSize: '1.2rem',
-                            fontWeight: '600',
-                            color: '#162040',
-                            marginBottom: '20px'
-                        }}>
-                            Free
+                        {currentPlan === 'basic' && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '-10px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                background: '#F9C74F',
+                                color: '#000',
+                                padding: '5px 20px',
+                                borderRadius: '20px',
+                                fontSize: '0.9rem',
+                                fontWeight: '600'
+                            }}>
+                                CURRENT PLAN
+                            </div>
+                        )}
+                        <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{
+                                background: '#f0f0f0',
+                                borderRadius: '8px',
+                                padding: '20px',
+                                marginBottom: '20px',
+                                minHeight: '120px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <img
+                                    src="https://cdn-icons-png.flaticon.com/512/167/167707.png"
+                                    alt="Basic Plan"
+                                    style={{ width: '48px', height: '48px', opacity: 0.7 }}
+                                />
+                            </div>
+                            <h3 style={{
+                                fontSize: '1.5rem',
+                                fontWeight: '700',
+                                color: '#162040',
+                                marginBottom: '15px'
+                            }}>
+                                Basic
+                            </h3>
+                            <ul style={{
+                                color: '#666',
+                                lineHeight: 1.6,
+                                marginBottom: '20px',
+                                minHeight: '140px',
+                                textAlign: 'left',
+                                paddingLeft: '20px',
+                                flex: '1'
+                            }}>
+                                <li>Access to selected free modules</li>
+                                <li>Basic lesson viewing</li>
+                                <li>Community access</li>
+                                <li>Basic support</li>
+                            </ul>
+                            <div style={{
+                                fontSize: '1.2rem',
+                                fontWeight: '600',
+                                color: '#162040',
+                                marginBottom: '20px'
+                            }}>
+                                Free
+                            </div>
                         </div>
                         <button
+                            disabled={currentPlan === 'basic'}
                             style={{
                                 width: '100%',
-                                background: '#fff',
-                                color: '#162040',
-                                border: '2px solid #162040',
+                                background: currentPlan === 'basic' ? '#F9C74F' : '#fff',
+                                color: currentPlan === 'basic' ? '#000' : '#162040',
+                                border: currentPlan === 'basic' ? 'none' : '2px solid #162040',
                                 borderRadius: '6px',
                                 padding: '12px 24px',
                                 fontWeight: '600',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                            }}
-                            onMouseOver={(e) => {
-                                e.target.style.background = '#162040';
-                                e.target.style.color = '#fff';
-                            }}
-                            onMouseOut={(e) => {
-                                e.target.style.background = '#fff';
-                                e.target.style.color = '#162040';
+                                cursor: currentPlan === 'basic' ? 'not-allowed' : 'pointer',
+                                transition: 'all 0.2s',
+                                opacity: currentPlan === 'basic' ? 1 : 0.8
                             }}
                         >
-                            Current Plan
+                            {currentPlan === 'basic' ? 'Current Plan' : 'Select Basic'}
                         </button>
                     </div>
 
@@ -159,74 +218,179 @@ const UpgradePage = () => {
                         padding: '30px',
                         textAlign: 'center',
                         position: 'relative',
-                        border: '2px solid #162040'
+                        border: currentPlan === 'premium' ? '3px solid #F9C74F' : '2px solid #162040',
+                        display: 'flex',
+                        flexDirection: 'column'
                     }}>
-                        <div style={{
-                            position: 'absolute',
-                            top: '-10px',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            background: '#162040',
-                            color: '#fff',
-                            padding: '5px 20px',
-                            borderRadius: '20px',
-                            fontSize: '0.9rem',
-                            fontWeight: '600'
-                        }}>
-                            POPULAR
-                        </div>
-                        <div style={{
-                            background: '#f0f0f0',
-                            borderRadius: '8px',
-                            padding: '20px',
-                            marginBottom: '20px',
-                            minHeight: '120px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            <span style={{ color: '#999', fontSize: '1.2rem' }}>Premium Plan Image</span>
-                        </div>
-                        <h3 style={{
-                            fontSize: '1.5rem',
-                            fontWeight: '700',
-                            color: '#162040',
-                            marginBottom: '15px'
-                        }}>
-                            Premium
-                        </h3>
-                        <p style={{
-                            color: '#666',
-                            lineHeight: 1.6,
-                            marginBottom: '20px',
-                            minHeight: '60px'
-                        }}>
-                            All Free features + comprehensive lesson modules creation, and community sharing.
-                        </p>
-                        <div style={{
-                            fontSize: '1.2rem',
-                            fontWeight: '600',
-                            color: '#162040',
-                            marginBottom: '20px'
-                        }}>
-                            $9.99/month
-                        </div>
-                        <button
-                            style={{
-                                width: '100%',
+                        {currentPlan === 'premium' ? (
+                            <div style={{
+                                position: 'absolute',
+                                top: '-10px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                background: '#F9C74F',
+                                color: '#000',
+                                padding: '5px 20px',
+                                borderRadius: '20px',
+                                fontSize: '0.9rem',
+                                fontWeight: '600'
+                            }}>
+                                CURRENT PLAN
+                            </div>
+                        ) : (
+                            <div style={{
+                                position: 'absolute',
+                                top: '-10px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
                                 background: '#162040',
                                 color: '#fff',
+                                padding: '5px 20px',
+                                borderRadius: '20px',
+                                fontSize: '0.9rem',
+                                fontWeight: '600'
+                            }}>
+                                POPULAR
+                            </div>
+                        )}
+                        <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{
+                                background: '#f0f0f0',
+                                borderRadius: '8px',
+                                padding: '20px',
+                                marginBottom: '20px',
+                                minHeight: '120px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <img
+                                    src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png"
+                                    alt="Premium Plan"
+                                    style={{ width: '48px', height: '48px', opacity: 0.7 }}
+                                />
+                            </div>
+                            <h3 style={{
+                                fontSize: '1.5rem',
+                                fontWeight: '700',
+                                color: '#162040',
+                                marginBottom: '15px'
+                            }}>
+                                Premium
+                            </h3>
+                            <ul style={{
+                                color: '#666',
+                                lineHeight: 1.6,
+                                marginBottom: '20px',
+                                minHeight: '140px',
+                                textAlign: 'left',
+                                paddingLeft: '20px',
+                                flex: '1'
+                            }}>
+                                <li>All Free features</li>
+                                <li>Comprehensive lesson module creation</li>
+                                <li>Community sharing</li>
+                                <li>Advanced lesson generator</li>
+                                <li>Priority support</li>
+                            </ul>
+                            <div style={{
+                                fontSize: '1.2rem',
+                                fontWeight: '600',
+                                color: '#162040',
+                                marginBottom: '20px'
+                            }}>
+                                $9.99/month
+                            </div>
+                        </div>
+                        <button
+                            onClick={(() => {
+                                // Allow teacherDefault users to upgrade, disable for premium users
+                                const userRole = userData?.role;
+                                const isTeacherDefault = userRole === 'teacherDefault';
+                                const isPremium = currentPlan === 'premium';
+
+                                console.log('Button click check - Role:', userRole, 'isPremium:', isPremium, 'isTeacherDefault:', isTeacherDefault);
+
+                                if (isPremium && !isTeacherDefault) {
+                                    return null; // Premium users can't upgrade (unless teacherDefault)
+                                }
+                                return handleUpgradeClick;
+                            })()}
+                            disabled={(() => {
+                                const userRole = userData?.role;
+                                const isTeacherDefault = userRole === 'teacherDefault';
+                                const isPremium = currentPlan === 'premium';
+
+                                // Only disable if premium and not teacherDefault
+                                return isPremium && !isTeacherDefault;
+                            })()}
+                            style={{
+                                width: '100%',
+                                background: (() => {
+                                    const userRole = userData?.role;
+                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isPremium = currentPlan === 'premium';
+
+                                    if (isPremium && !isTeacherDefault) {
+                                        return '#F9C74F'; // Premium color for existing premium users
+                                    }
+                                    return '#162040'; // Normal upgrade button color
+                                })(),
+                                color: (() => {
+                                    const userRole = userData?.role;
+                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isPremium = currentPlan === 'premium';
+
+                                    if (isPremium && !isTeacherDefault) {
+                                        return '#000'; // Black text for premium
+                                    }
+                                    return '#fff'; // White text for upgrade button
+                                })(),
                                 border: 'none',
                                 borderRadius: '6px',
                                 padding: '12px 24px',
                                 fontWeight: '600',
-                                cursor: 'pointer',
-                                transition: 'background 0.2s'
+                                cursor: (() => {
+                                    const userRole = userData?.role;
+                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isPremium = currentPlan === 'premium';
+
+                                    if (isPremium && !isTeacherDefault) {
+                                        return 'not-allowed';
+                                    }
+                                    return 'pointer';
+                                })(),
+                                transition: 'all 0.2s',
+                                opacity: 1
                             }}
-                            onMouseOver={(e) => e.target.style.background = '#0f1530'}
-                            onMouseOut={(e) => e.target.style.background = '#162040'}
+                            onMouseOver={(e) => {
+                                if (currentPlan !== 'premium') {
+                                    e.target.style.background = '#fff';
+                                    e.target.style.border = '2px solid #162040';
+                                    e.target.style.color = '#162040';
+                                }
+                            }}
+                            onMouseOut={(e) => {
+                                if (currentPlan !== 'premium') {
+                                    e.target.style.background = '#162040';
+                                    e.target.style.border = 'none';
+                                    e.target.style.color = '#fff';
+                                }
+                            }}
                         >
-                            Upgrade Now
+                            {(() => {
+                                const userRole = userData?.role;
+                                const isTeacherDefault = userRole === 'teacherDefault';
+                                const isPremium = currentPlan === 'premium';
+
+                                if (isTeacherDefault) {
+                                    return 'Upgrade Now'; // teacherDefault can always upgrade
+                                } else if (isPremium) {
+                                    return 'Current Plan'; // Non-teacherDefault premium users
+                                } else {
+                                    return 'Upgrade Now'; // Basic users
+                                }
+                            })()}
                         </button>
                     </div>
 
@@ -238,104 +402,190 @@ const UpgradePage = () => {
                         padding: '30px',
                         textAlign: 'center',
                         position: 'relative',
-                        border: '2px solid transparent'
+                        border: currentPlan === 'enterprise' ? '3px solid #F9C74F' : '2px solid transparent',
+                        display: 'flex',
+                        flexDirection: 'column'
                     }}>
-                        <div style={{
-                            background: '#f0f0f0',
-                            borderRadius: '8px',
-                            padding: '20px',
-                            marginBottom: '20px',
-                            minHeight: '120px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                        }}>
-                            <span style={{ color: '#999', fontSize: '1.2rem' }}>Enterprise Plan Image</span>
-                        </div>
-                        <h3 style={{
-                            fontSize: '1.5rem',
-                            fontWeight: '700',
-                            color: '#162040',
-                            marginBottom: '15px'
-                        }}>
-                            Enterprise
-                        </h3>
-                        <p style={{
-                            color: '#666',
-                            lineHeight: 1.6,
-                            marginBottom: '20px',
-                            minHeight: '60px'
-                        }}>
-                            All Premium features + tailored pricing and dedicated onboarding.
-                        </p>
-                        <div style={{
-                            fontSize: '1.2rem',
-                            fontWeight: '600',
-                            color: '#162040',
-                            marginBottom: '20px'
-                        }}>
-                            Contact Us
+                        {currentPlan === 'enterprise' && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '-10px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                background: '#F9C74F',
+                                color: '#000',
+                                padding: '5px 20px',
+                                borderRadius: '20px',
+                                fontSize: '0.9rem',
+                                fontWeight: '600'
+                            }}>
+                                CURRENT PLAN
+                            </div>
+                        )}
+                        <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{
+                                background: '#f0f0f0',
+                                borderRadius: '8px',
+                                padding: '20px',
+                                marginBottom: '20px',
+                                minHeight: '120px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <img
+                                    src="https://cdn-icons-png.flaticon.com/512/684/684809.png"
+                                    alt="Enterprise Plan"
+                                    style={{ width: '48px', height: '48px', opacity: 0.7 }}
+                                />
+                            </div>
+                            <h3 style={{
+                                fontSize: '1.5rem',
+                                fontWeight: '700',
+                                color: '#162040',
+                                marginBottom: '15px'
+                            }}>
+                                Enterprise
+                            </h3>
+                            <ul style={{
+                                color: '#666',
+                                lineHeight: 1.6,
+                                marginBottom: '20px',
+                                minHeight: '140px',
+                                textAlign: 'left',
+                                paddingLeft: '20px',
+                                flex: '1'
+                            }}>
+                                <li>All Premium features</li>
+                                <li>Tailored pricing</li>
+                                <li>Dedicated onboarding</li>
+                                <li>Custom integrations</li>
+                                <li>24/7 dedicated support</li>
+                            </ul>
+                            <div style={{
+                                fontSize: '1.2rem',
+                                fontWeight: '600',
+                                color: '#162040',
+                                marginBottom: '20px'
+                            }}>
+                                Contact Us
+                            </div>
                         </div>
                         <button
+                            onClick={currentPlan === 'enterprise' ? null : handleContactSales}
+                            disabled={currentPlan === 'enterprise'}
                             style={{
                                 width: '100%',
-                                background: '#fff',
-                                color: '#162040',
-                                border: '2px solid #162040',
+                                background: currentPlan === 'enterprise' ? '#F9C74F' : '#fff',
+                                color: currentPlan === 'enterprise' ? '#000' : '#162040',
+                                border: currentPlan === 'enterprise' ? 'none' : '2px solid #162040',
                                 borderRadius: '6px',
                                 padding: '12px 24px',
                                 fontWeight: '600',
-                                cursor: 'pointer',
+                                cursor: currentPlan === 'enterprise' ? 'not-allowed' : 'pointer',
                                 transition: 'all 0.2s'
                             }}
                             onMouseOver={(e) => {
-                                e.target.style.background = '#162040';
-                                e.target.style.color = '#fff';
+                                if (currentPlan !== 'enterprise') {
+                                    e.target.style.background = '#162040';
+                                    e.target.style.color = '#fff';
+                                }
                             }}
                             onMouseOut={(e) => {
-                                e.target.style.background = '#fff';
-                                e.target.style.color = '#162040';
+                                if (currentPlan !== 'enterprise') {
+                                    e.target.style.background = '#fff';
+                                    e.target.style.color = '#162040';
+                                }
                             }}
                         >
-                            Contact Sales
+                            {currentPlan === 'enterprise' ? 'Current Plan' : 'Contact Sales'}
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Footer Links */}
-            <div style={{
-                display: 'flex',
-                gap: '30px',
-                marginTop: '40px',
-                flexWrap: 'wrap',
-                justifyContent: 'center'
-            }}>
-                <a href="/privacy" style={{
-                    color: '#666',
-                    textDecoration: 'none',
-                    fontSize: '0.9rem'
+            {/* Contact Sales Modal */}
+            {showContactModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
                 }}>
-                    Privacy Policy
-                </a>
-                <a href="/terms" style={{
-                    color: '#666',
-                    textDecoration: 'none',
-                    fontSize: '0.9rem'
-                }}>
-                    Terms of Service
-                </a>
-                <a href="/contact" style={{
-                    color: '#666',
-                    textDecoration: 'none',
-                    fontSize: '0.9rem'
-                }}>
-                    Contact Us
-                </a>
-            </div>
+                    <div style={{
+                        background: '#fff',
+                        borderRadius: '12px',
+                        padding: '40px',
+                        maxWidth: '500px',
+                        width: '90%',
+                        textAlign: 'center',
+                        position: 'relative'
+                    }}>
+                        <button
+                            onClick={closeContactModal}
+                            style={{
+                                position: 'absolute',
+                                top: '15px',
+                                right: '20px',
+                                background: 'none',
+                                border: 'none',
+                                fontSize: '1.5rem',
+                                cursor: 'pointer',
+                                color: '#666'
+                            }}
+                        >
+                            ×
+                        </button>
+                        <h3 style={{
+                            fontSize: '1.8rem',
+                            fontWeight: '700',
+                            color: '#162040',
+                            marginBottom: '20px'
+                        }}>
+                            Contact Sales
+                        </h3>
+                        <p style={{
+                            color: '#666',
+                            marginBottom: '30px',
+                            lineHeight: 1.6
+                        }}>
+                            Ready to transform your educational experience? Our sales team is here to help you find the perfect Enterprise solution.
+                        </p>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center'
+                        }}>
+                            <a
+                                href="mailto:sales@diya.education?subject=Enterprise%20Plan%20Inquiry"
+                                style={{
+                                    background: '#162040',
+                                    color: '#fff',
+                                    padding: '12px 24px',
+                                    borderRadius: '6px',
+                                    textDecoration: 'none',
+                                    fontWeight: '600',
+                                    transition: 'background 0.2s',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}
+                                onMouseOver={(e) => e.target.style.background = '#0f1530'}
+                                onMouseOut={(e) => e.target.style.background = '#162040'}
+                            >
+                                Send Email
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
 export default UpgradePage;
-
