@@ -99,7 +99,7 @@ const HeroSection = () => {
               transition: "background 0.2s, color 0.2s, border 0.2s",
               marginTop: "40px"
             }}
-            onClick={() => navigate("/upgrade-teacher-plus")}
+            onClick={() => navigate("/upgrade")}
           >
             Upgrade to Teacher Plus
           </button>

@@ -9,19 +9,24 @@ import LessonGenerator from "./pages/lesson_generator";
 import EditLesson from "./pages/edit_lesson";
 import MyPlans from "./pages/my_plan";
 import LessonDetail from "./pages/lesson_detail";
+import LessonDetailNew from "./pages/lesson_detail/LessonDetail";
 import Layout from "./components/Layout";
 import UserProfile from "./pages/profile_detail";
 import ModuleDetail from "./pages/modules/ModuleDetail";
+import AllLessonPlans from "./pages/all_lesson_plans";
 import { TeacherSignup, StudentSignup } from './pages/sign_up';
+import UpgradePage from './pages/upgrade_page/UpgradePage.jsx';
+
+import NuggetBuilderPage from "./pages/nugget-builder"; // adjust path if needed
 
 function App() {
   return (
     <BrowserRouter>
       <Layout>
         {/* Move your navigation here if you want it on every page */}
-        
-        
-        
+
+
+
 
         <Routes>
           <Route path="/" element={<Home />} />
@@ -32,11 +37,15 @@ function App() {
           <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
           <Route path="/my-plans" element={<MyPlans />} />
           <Route path="/lesson/:lessonId" element={<LessonDetail />} />
+          <Route path="/lesson/:moduleId/:lessonIndex" element={<LessonDetailNew />} />
           <Route path="/user-profile" element={<UserProfile />} />
           {/* Only keep this route */}
           <Route path="/modules/:moduleId" element={<ModuleDetail />} />
+          <Route path="/all-lesson-plans/:moduleId" element={<AllLessonPlans />} />
           <Route path="/teacher-signup" element={<TeacherSignup />} />
           <Route path="/student-signup" element={<StudentSignup />} />
+          <Route path="/upgrade" element={<UpgradePage />} />
+          <Route path="/nugget-builder" element={<NuggetBuilderPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
