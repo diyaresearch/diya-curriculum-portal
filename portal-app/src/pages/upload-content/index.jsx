@@ -111,6 +111,7 @@ export const UploadContent = ({
         Instructions: formData.Instructions,
         Author: authorName,
         createdAt: serverTimestamp(),
+        Role: "teacherPlus", // <-- Added static Role field
       });
 
       setModalMessage("Content submitted successfully");

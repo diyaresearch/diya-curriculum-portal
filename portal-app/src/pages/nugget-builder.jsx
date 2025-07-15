@@ -10,7 +10,7 @@ const NuggetBuilderPage = () => (
       flexDirection: "column",
       alignItems: "center",
       paddingTop: "40px",
-      paddingBottom: "64px", // Add space below the section and the footer
+      paddingBottom: "64px",
       fontFamily: "Open Sans, sans-serif"
     }}
   >
@@ -44,46 +44,15 @@ const NuggetBuilderPage = () => (
       <div
         style={{
           display: "flex",
-          flexDirection: "row",
-          gap: "48px",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
           marginTop: "40px",
-          alignItems: "flex-start",
-          justifyContent: "center"
         }}
       >
-        {/* Left side: Nugget Info */}
         <div
           style={{
-            flex: "0 0 260px",
-            minWidth: "220px",
-            maxWidth: "300px",
-            padding: "32px 0 0 0"
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "2rem",
-              fontWeight: 700,
-              color: "#111",
-              marginBottom: "16px"
-            }}
-          >
-            Nugget Info
-          </h2>
-          <p
-            style={{
-              fontSize: "1.05rem",
-              color: "#444",
-              lineHeight: 1.6
-            }}
-          >
-            Fill in the details for your new nugget.
-          </p>
-        </div>
-        {/* Right side: UploadContent form */}
-        <div
-          style={{
-            flex: "1 1 500px",
+            width: "100%",
             maxWidth: "600px",
             background: "#fff",
             borderRadius: "18px",

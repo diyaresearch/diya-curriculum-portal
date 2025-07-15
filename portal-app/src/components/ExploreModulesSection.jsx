@@ -336,9 +336,9 @@ const TeacherRectangles = () => {
               src={laptopImg}
               alt="Laptop"
               style={{
-                width: "80px",
-                height: "80px",
-                objectFit: "contain",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
                 display: "block"
               }}
             />
@@ -1103,20 +1103,20 @@ const ExploreModulesSection = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   let paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
-  // If we don't have enough items to fill 2 rows, duplicate items or add placeholders
-  if (paginatedItems.length < itemsPerPage && filteredItems.length > 0) {
-    const itemsNeeded = itemsPerPage - paginatedItems.length;
+  // // If we don't have enough items to fill 2 rows, duplicate items or add placeholders
+  // if (paginatedItems.length < itemsPerPage && filteredItems.length > 0) {
+  //   const itemsNeeded = itemsPerPage - paginatedItems.length;
 
-    // Repeat items from the beginning to fill the remaining slots
-    for (let i = 0; i < itemsNeeded; i++) {
-      const itemToAdd = filteredItems[i % filteredItems.length];
-      paginatedItems.push({
-        ...itemToAdd,
-        id: `${itemToAdd.id}-duplicate-${i}`, // Ensure unique keys
-        isDuplicate: true
-      });
-    }
-  }
+  //   // Repeat items from the beginning to fill the remaining slots
+  //   for (let i = 0; i < itemsNeeded; i++) {
+  //     const itemToAdd = filteredItems[i % filteredItems.length];
+  //     paginatedItems.push({
+  //       ...itemToAdd,
+  //       id: `${itemToAdd.id}-duplicate-${i}`, // Ensure unique keys
+  //       isDuplicate: true
+  //     });
+  //   }
+  // }
 
   // Reset to page 1 when filters change or items per page changes
   useEffect(() => {
@@ -1462,8 +1462,8 @@ const ExploreModulesSection = () => {
               justifyContent: "center"
             }}>
               <img
-                src={aiExploreImg2}
-                alt="AI Insights"
+                src={laptopImg} // <-- Always use laptop image
+                alt="Laptop"
                 style={{
                   width: "100%",
                   height: "100%",
@@ -1824,8 +1824,8 @@ const ExploreModulesSection = () => {
                       background: "#f0f0f0"
                     }}>
                       <img
-                        src={getItemImage(item)}
-                        alt={item.title || item.Title}
+                        src={laptopImg} // <-- Always use laptop image
+                        alt="Laptop"
                         style={{
                           width: "100%",
                           height: "100%",
@@ -1837,7 +1837,7 @@ const ExploreModulesSection = () => {
 
                     <div style={{
                       width: "100%",
-                      height: "70px",
+                      height: "100px", // <-- increase from 70px to 90px
                       padding: "12px 0 0 0",
                       textAlign: "center",
                       background: "#fff"
@@ -1845,13 +1845,27 @@ const ExploreModulesSection = () => {
                       <span
                         style={{
                           display: "block",
+                          fontWeight: "700",
+                          fontSize: "1.15rem",
+                          color: "#222",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden"
+                        }}
+                      >
+                        {item.title || item.Title}
+                      </span>
+                      <span
+                        style={{
+                          display: "block",
                           fontWeight: "600",
                           fontSize: "1rem",
                           color: "#162040",
                           letterSpacing: "1px",
-                          overflow: "hidden",
+                          marginTop: "2px",
                           textOverflow: "ellipsis",
-                          whiteSpace: "nowrap"
+                          whiteSpace: "nowrap",
+                          overflow: "hidden"
                         }}
                       >
                         {capitalizeWords(item.level || item.Level || "N/A")}
@@ -1859,17 +1873,17 @@ const ExploreModulesSection = () => {
                       <span
                         style={{
                           display: "block",
-                          fontWeight: "700",
-                          fontSize: "1.2rem",
-                          color: "#222",
-                          marginTop: "4px",
-                          textAlign: "center",
-                          overflow: "hidden",
+                          fontWeight: "600",
+                          fontSize: "1rem",
+                          color: "#162040",
+                          letterSpacing: "1px",
+                          marginTop: "2px",
                           textOverflow: "ellipsis",
-                          whiteSpace: "nowrap"
+                          whiteSpace: "nowrap",
+                          overflow: "hidden"
                         }}
                       >
-                        {item.title || item.Title}
+                        {typeLabel[item._type] || item._type}
                       </span>
                     </div>
                   </div>
@@ -2018,4 +2032,10 @@ const ExploreModulesSection = () => {
 };
 
 export default ExploreModulesSection;
+
+const typeLabel = {
+  Module: "Module",
+  "Lesson Plan": "Lesson Plan",
+  Nuggets: "Nugget"
+};
 
