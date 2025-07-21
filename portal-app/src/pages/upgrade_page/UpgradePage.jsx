@@ -4,7 +4,7 @@ import useUserData from '../../hooks/useUserData';
 
 const UpgradePage = () => {
     const navigate = useNavigate();
-    const { userData } = useUserData();
+    const { user, userData, loading } = useUserData();
     const [showContactModal, setShowContactModal] = useState(false);
 
     // Determine current plan based on user data
@@ -18,19 +18,91 @@ const UpgradePage = () => {
     console.log('subscriptionType:', userData?.subscriptionType);
     console.log('========================');
 
-    const handleUpgradeClick = () => {
+    const handleUpgradeClick = async () => {
         console.log('=== handleUpgradeClick Debug ===');
         console.log('Button clicked!');
         console.log('User role:', userData?.role);
         console.log('Current plan:', currentPlan);
-        console.log('Navigating to /payment/premium');
+        console.log('Initiating upgrade process...');
         console.log('================================');
 
-        // Navigate to payment page
-        navigate('/payment/premium');
+        try {
+            // Get the server URL from environment
+            const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || 'http://localhost:3001';
+            console.log('Server URL:', serverUrl);
+            console.log('User data:', userData);
+
+            // Check if user is authenticated
+            if (!user || !userData) {
+                alert('Please log in to upgrade your account');
+                return;
+            }
+
+            const token = await user.getIdToken();
+            console.log('Token obtained:', !!token);
+
+            // First, initiate the upgrade process with backend
+            const response = await fetch(`${serverUrl}/api/subscription/initiate-upgrade`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    targetPlan: 'premium'
+                })
+            });
+
+            console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
+
+            const result = await response.json();
+            console.log('Response data:', result);
+
+            if (response.ok) {
+                console.log('Upgrade initiated:', result);
+                // Navigate to payment page
+                navigate('/payment/premium');
+            } else {
+                console.error('Upgrade initiation failed:', result.message);
+                alert('Failed to initiate upgrade: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error initiating upgrade:', error);
+            console.error('Error details:', error.message);
+            console.error('Error stack:', error.stack);
+            alert('Error starting upgrade process. Please try again.');
+        }
     };
 
-    const handleContactSales = () => {
+    const handleContactSales = async () => {
+        try {
+            // Get the server URL from environment
+            const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || 'http://localhost:3001';
+
+            const response = await fetch(`${serverUrl}/api/subscription/enterprise-contact`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${await user?.getIdToken()}`
+                },
+                body: JSON.stringify({
+                    message: 'Enterprise plan inquiry',
+                    contactPreference: 'email'
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('Enterprise contact request submitted successfully! Our team will reach out to you soon.');
+            } else {
+                console.error('Contact request failed:', result.message);
+            }
+        } catch (error) {
+            console.error('Error submitting contact request:', error);
+        }
+
         setShowContactModal(true);
     };
 
