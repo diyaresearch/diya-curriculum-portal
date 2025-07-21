@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -7,6 +7,7 @@ import {
     useStripe,
     useElements
 } from '@stripe/react-stripe-js';
+import useUserData from '../../hooks/useUserData';
 
 // Replace with your actual Stripe publishable key
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_your_stripe_publishable_key_here');
@@ -15,15 +16,56 @@ const PaymentForm = () => {
     const stripe = useStripe();
     const elements = useElements();
     const navigate = useNavigate();
+    const { user, userData, loading } = useUserData();
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState(null);
+    const [clientSecret, setClientSecret] = useState('');
+    const [paymentIntentId, setPaymentIntentId] = useState('');
+
+    useEffect(() => {
+        // Create payment intent when component mounts
+        const createPaymentIntent = async () => {
+            try {
+                // Get the server URL from environment
+                const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || 'http://localhost:3001';
+
+                const response = await fetch(`${serverUrl}/api/payment/create-payment-intent`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${await user?.getIdToken()}`
+                    },
+                    body: JSON.stringify({
+                        planType: 'premium'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    setClientSecret(data.clientSecret);
+                    setPaymentIntentId(data.paymentIntentId);
+                } else {
+                    setError(data.message || 'Failed to initialize payment');
+                }
+            } catch (err) {
+                setError('Failed to initialize payment');
+                console.error('Payment intent creation error:', err);
+            }
+        };
+
+        if (user && userData) {
+            createPaymentIntent();
+        }
+    }, [user, userData]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
         setIsProcessing(true);
         setError(null);
 
-        if (!stripe || !elements) {
+        if (!stripe || !elements || !clientSecret) {
+            setError('Payment system not ready');
             setIsProcessing(false);
             return;
         }
@@ -31,10 +73,15 @@ const PaymentForm = () => {
         const cardElement = elements.getElement(CardElement);
 
         try {
-            // Create payment method
-            const { error, paymentMethod } = await stripe.createPaymentMethod({
-                type: 'card',
-                card: cardElement,
+            // Confirm payment with Stripe
+            const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+                payment_method: {
+                    card: cardElement,
+                    billing_details: {
+                        name: userData?.fullName || userData?.firstName + ' ' + userData?.lastName,
+                        email: userData?.email,
+                    },
+                }
             });
 
             if (error) {
@@ -43,19 +90,36 @@ const PaymentForm = () => {
                 return;
             }
 
-            // Here you would typically send the paymentMethod.id to your backend
-            // For now, we'll simulate a successful payment
-            console.log('Payment Method:', paymentMethod);
+            if (paymentIntent.status === 'succeeded') {
+                // Get the server URL from environment
+                const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || 'http://localhost:3001';
 
-            // Simulate API call
-            setTimeout(() => {
-                setIsProcessing(false);
-                alert('Payment successful! Redirecting to dashboard...');
-                navigate('/');
-            }, 2000);
+                // Confirm payment with our backend
+                const response = await fetch(`${serverUrl}/api/payment/confirm-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${await user?.getIdToken()}`
+                    },
+                    body: JSON.stringify({
+                        paymentIntentId: paymentIntent.id
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Payment successful! Welcome to Premium!');
+                    navigate('/');
+                } else {
+                    setError(result.message || 'Payment confirmation failed');
+                }
+            }
 
         } catch (err) {
-            setError('An unexpected error occurred.');
+            setError('Payment processing failed');
+            console.error('Payment error:', err);
+        } finally {
             setIsProcessing(false);
         }
     };
