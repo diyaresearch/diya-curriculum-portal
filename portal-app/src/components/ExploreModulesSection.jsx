@@ -1048,6 +1048,64 @@ const NuggetBuilderSection = () => (
   </section>
 );
 
+const LessonPlanBuilderSection = () => (
+  <section
+    style={{
+      width: "100%",
+      background: "#F6F8FA",
+      padding: "60px 0 0 0",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "flex-start"
+    }}
+  >
+    <h2
+      style={{
+        fontSize: "2.5rem",
+        fontWeight: "700",
+        color: "#111",
+        fontFamily: "Open Sans, sans-serif",
+        textAlign: "center",
+        margin: 0,
+        letterSpacing: "1px"
+      }}
+    >
+      Lesson Plan Builder
+    </h2>
+    <p
+      style={{
+        marginTop: "18px",
+        fontSize: "1.15rem",
+        color: "#222",
+        textAlign: "center",
+        maxWidth: "600px",
+        fontWeight: 500,
+      }}
+    >
+      Create and customize your own lesson plans for your classes.
+    </p>
+    <button
+      style={{
+        marginTop: "32px",
+        background: "#162040",
+        color: "#fff",
+        border: "2px solid #162040",
+        borderRadius: "6px",
+        padding: "14px 48px",
+        fontSize: "1.08rem",
+        fontWeight: "600",
+        cursor: "pointer",
+        transition: "background 0.2s, color 0.2s, border 0.2s",
+        minWidth: "260px",
+      }}
+      onClick={() => window.location.href = "/lesson-plans/builder"}
+    >
+      Go to Lesson Plan Builder
+    </button>
+  </section>
+);
+
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
   const navigate = useNavigate();
@@ -1267,6 +1325,7 @@ const ExploreModulesSection = () => {
         }}
       >
         <NuggetBuilderSection />
+        <LessonPlanBuilderSection />
       </div>
     );
   }
