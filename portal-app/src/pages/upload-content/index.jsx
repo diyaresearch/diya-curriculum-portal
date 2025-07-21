@@ -110,6 +110,7 @@ export const UploadContent = ({
         Type: formData.Type,
         Instructions: formData.Instructions,
         Author: authorName,
+        User: user.uid, // <-- Add this line to store the user ID
         createdAt: serverTimestamp(),
         Role: "teacherPlus", // <-- Added static Role field
       });
