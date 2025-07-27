@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, getDocs, query, where } from "firebase/firestore";
+import { getFirestore, collection, getDocs, query, where, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import OverlayTileView from "../../components/OverlayTileView";
 import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { FaExternalLinkAlt } from "react-icons/fa";
 
 Modal.setAppElement("#root");
 
@@ -24,7 +23,6 @@ const LessonPlanBuilder = () => {
     isPublic: false,
   });
   const [objectives, setObjectives] = useState([""]);
-
   const [showOverlay, setShowOverlay] = useState(false);
   const [selectedSectionIndex, setSelectedSectionIndex] = useState(null);
   const [portalContent, setPortalContent] = useState([]);
@@ -36,9 +34,8 @@ const LessonPlanBuilder = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const { userData } = useUserData();
-  const userRole = userData?.role;
 
-  // --- CHANGE: Pull all nuggets from Firebase "content" table ---
+  // Load user's nuggets for overlay
   useEffect(() => {
     const db = getFirestore();
     const auth = getAuth();
@@ -48,7 +45,6 @@ const LessonPlanBuilder = () => {
         setPortalContent([]);
         return;
       }
-      // Query only nuggets created by the current user for speed
       const nuggetsQuery = query(
         collection(db, "content"),
         where("User", "==", user.uid)
@@ -64,29 +60,29 @@ const LessonPlanBuilder = () => {
 
     return () => unsubscribe();
   }, []);
-  // --- END CHANGE ---
 
+  // Load draft from localStorage if present
   useEffect(() => {
     const savedDraft = localStorage.getItem("lessonPlanDraft");
     if (savedDraft) {
       const parsedDraft = JSON.parse(savedDraft);
       setFormData(parsedDraft);
       setSections(parsedDraft.sections || [{ intro: "", contentIds: [] }]);
+      setObjectives(parsedDraft.objectives || [""]);
       const restoredMaterials = {};
       if (parsedDraft.sections) {
         parsedDraft.sections.forEach((section, index) => {
-          restoredMaterials[index] = section.contentIds.map(
-            (contentId) => portalContent.find((item) => item.id === contentId) || { id: contentId }
-          );
+          restoredMaterials[index] = section.contentIds
+            ? section.contentIds.map(
+                (contentId) => portalContent.find((item) => item.id === contentId) || { id: contentId }
+              )
+            : [];
         });
       }
       setSelectedMaterials(restoredMaterials);
+      localStorage.removeItem("lessonPlanDraft");
     }
   }, [portalContent]);
-
-  const handleExit = () => {
-    navigate("/");
-  };
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -148,7 +144,7 @@ const LessonPlanBuilder = () => {
   };
 
   const handleCreateNewNugget = () => {
-    navigate("/nugget-builder"); // Redirects to nugget builder page
+    navigate("/nugget-builder");
   };
 
   const closeUploadModal = () => {
@@ -165,21 +161,61 @@ const LessonPlanBuilder = () => {
     }
   };
 
-  const handleSaveSession = () => {
-    const savedData = {
+  // --- Save as Draft ---
+  const handleSaveSession = async () => {
+    // Require description
+    if (!formData.description || formData.description.trim() === "") {
+      alert("Description is required.");
+      return;
+    }
+
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      alert("You must be logged in to save a draft.");
+      return;
+    }
+    const db = getFirestore();
+    const draftData = {
       ...formData,
+      objectives,
       sections: sections.map((section, index) => ({
-        ...section,
-        contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
+        title: section.title || "",
+        intro: section.intro || "",
+        contentIds: (selectedMaterials[index]?.map((material) => material.id) || []),
       })),
+      author: user.uid,
+      isDraft: true,
+      updatedAt: serverTimestamp(),
     };
-    localStorage.setItem("lessonPlanDraft", JSON.stringify(savedData));
+    if (formData.id) {
+      await setDoc(doc(db, "lesson", formData.id), draftData);
+    } else {
+      await addDoc(collection(db, "lesson"), draftData);
+    }
+    localStorage.removeItem("lessonPlanDraft");
     alert("Lesson plan draft saved successfully!");
+    window.location.reload();
   };
 
+  // --- Submit (Publish) ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
+
+    // Require description
+    if (!formData.description || formData.description.trim() === "") {
+      alert("Description is required.");
+      setIsSubmitting(false);
+      return;
+    }
+    // Require section content
+    if (sections.some(section => !section.intro || section.intro.trim() === "")) {
+      alert("Section content is required for all sections.");
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
 
     const auth = getAuth();
@@ -226,6 +262,7 @@ const LessonPlanBuilder = () => {
         isPublic: formData.isPublic,
         sections: sections.map((section, index) => ({
           id: index,
+          title: section.title, // <-- add this line
           intro: section.intro,
           contentIds: selectedMaterials[index]?.map((material) => material.id) || [],
         })),
@@ -245,22 +282,17 @@ const LessonPlanBuilder = () => {
         throw new Error("Error generating lesson plan");
       }
 
+      // Remove the draft from Firestore if it exists
+      if (formData.id) {
+        const db = getFirestore();
+        await deleteDoc(doc(db, "lesson", formData.id));
+      }
+
       setModalMessage("Lesson plan generated successfully");
-      setFormData({
-        title: "",
-        category: "",
-        type: "",
-        level: "",
-        duration: "",
-        sections: [],
-        description: "",
-        isPublic: false,
-      });
-      setSections([{ intro: "", contentIds: [] }]);
-      setSelectedMaterials({});
       setModalIsOpen(true);
       setIsSubmitting(false);
       localStorage.removeItem("lessonPlanDraft");
+      // REMOVE window.location.reload(); from here!
     } catch (error) {
       setModalMessage("Error generating lesson plan: " + error.message);
       setModalIsOpen(true);
@@ -269,7 +301,21 @@ const LessonPlanBuilder = () => {
 
   const closeModal = () => {
     setModalIsOpen(false);
-    navigate("/my-plans");
+    setFormData({
+      title: "",
+      category: "",
+      type: "",
+      level: "",
+      duration: "",
+      sections: [],
+      description: "",
+      isPublic: false,
+    });
+    setSections([{ intro: "", contentIds: [] }]);
+    setSelectedMaterials({});
+    setObjectives([""]);
+    localStorage.removeItem("lessonPlanDraft");
+    window.location.reload(); // Only here!
   };
 
   const onSelectMaterial = (material) => {
@@ -324,17 +370,16 @@ const LessonPlanBuilder = () => {
         minHeight: "100vh",
         width: "100%",
         paddingTop: "60px",
-        color: "#111", // Make all text black
+        color: "#111",
         fontFamily: "Open Sans, sans-serif"
       }}
     >
-      {/* Heading and Description at the top of the page */}
       <div style={{ width: "100%", maxWidth: 700, marginBottom: 32, textAlign: "center" }}>
         <h2
           style={{
             fontSize: "2.8rem",
             fontWeight: "700",
-            color: "#111", // Black
+            color: "#111",
             margin: 0,
             letterSpacing: "1px",
             fontFamily: "Open Sans, sans-serif"
@@ -346,7 +391,7 @@ const LessonPlanBuilder = () => {
           style={{
             marginTop: 16,
             fontSize: "1.18rem",
-            color: "#111", // Black
+            color: "#111",
             fontWeight: 500,
             fontFamily: "Open Sans, sans-serif"
           }}
@@ -363,7 +408,7 @@ const LessonPlanBuilder = () => {
           boxShadow: "0 4px 24px rgba(22,32,64,0.10)",
           padding: "48px 40px 40px 40px",
           marginBottom: "32px",
-          color: "#111", // Black
+          color: "#111",
           fontFamily: "Open Sans, sans-serif"
         }}
       >
@@ -372,23 +417,12 @@ const LessonPlanBuilder = () => {
             type="button"
             className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
             style={{
-              color: "#111", // Black
+              color: "#111",
               fontFamily: "Open Sans, sans-serif"
             }}
-            onClick={() => navigate("/my-plans")}
+            onClick={() => navigate("/lesson-plans/drafts")}
           >
-            Plans
-          </button>
-          <button
-            type="button"
-            className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
-            style={{
-              color: "#111", // Black
-              fontFamily: "Open Sans, sans-serif"
-            }}
-            onClick={handleExit}
-          >
-            Exit
+            Drafts
           </button>
         </div>
         <form
@@ -400,7 +434,7 @@ const LessonPlanBuilder = () => {
             display: "flex",
             flexDirection: "column",
             gap: "24px",
-            color: "#111", // Black
+            color: "#111",
             fontFamily: "Open Sans, sans-serif"
           }}
         >
@@ -441,109 +475,81 @@ const LessonPlanBuilder = () => {
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
               Category
             </label>
-            <div style={{ display: "flex", gap: 12, marginBottom: 8 }}>
-              {["Math", "Science", "Technology", "Arts"].map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, category: cat })}
-                  style={{
-                    padding: "10px 20px",
-                    borderRadius: 6,
-                    border: formData.category === cat ? "2px solid #111" : "1px solid #bbb",
-                    background: formData.category === cat ? "#111" : "#fff",
-                    color: formData.category === cat ? "#fff" : "#111",
-                    fontWeight: 600,
-                    fontFamily: "Open Sans, sans-serif",
-                    cursor: "pointer",
-                    fontSize: "1.08rem", // Match label font size
-                    outline: "none",
-                  }}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-            <input
-              type="hidden"
+            <select
               id="category"
               value={formData.category}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: 6,
+                border: "1px solid #bbb",
+                fontSize: "1.08rem",
+                color: "#111",
+                fontFamily: "Open Sans, sans-serif",
+                marginBottom: 8,
+              }}
               required
-              readOnly
-            />
+            >
+              <option value="">Select a category</option>
+              <option value="AI Principles">AI Principles</option>
+              <option value="Data Science">Data Science</option>
+              <option value="Machine Learning">Machine Learning</option>
+              <option value="Statistics">Statistics</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
-          {/* Remove the entire Type field */}
-          {/* 
-          <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
-              Type
-            </label>
-            <div style={{ display: "flex", gap: 12, marginBottom: 8 }}>
-              {["Lectures", "Assignments", "Quiz", "Projects", "Case studies", "Data sets"].map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, type })}
-                  style={{
-                    padding: "10px 20px",
-                    borderRadius: 6,
-                    border: formData.type === type ? "2px solid #111" : "1px solid #bbb",
-                    background: formData.type === type ? "#111" : "#fff",
-                    color: formData.type === type ? "#fff" : "#111",
-                    fontWeight: 600,
-                    fontFamily: "Open Sans, sans-serif",
-                    cursor: "pointer",
-                    fontSize: "1.08rem",
-                    outline: "none",
-                  }}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-            <input
-              type="hidden"
-              id="type"
-              value={formData.type}
-              required
-              readOnly
-            />
-          </div>
-          */}
           <div>
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
               Level
             </label>
-            <div style={{ display: "flex", gap: 12, marginBottom: 8 }}>
-              {["Basic", "Intermediate", "Advanced"].map((level) => (
-                <button
-                  key={level}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, level })}
-                  style={{
-                    padding: "10px 20px",
-                    borderRadius: 6,
-                    border: formData.level === level ? "2px solid #111" : "1px solid #bbb",
-                    background: formData.level === level ? "#111" : "#fff",
-                    color: formData.level === level ? "#fff" : "#111",
-                    fontWeight: 600,
-                    fontFamily: "Open Sans, sans-serif",
-                    cursor: "pointer",
-                    fontSize: "1.08rem",
-                    outline: "none",
-                  }}
-                >
-                  {level}
-                </button>
-              ))}
-            </div>
-            <input
-              type="hidden"
+            <select
               id="level"
               value={formData.level}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: 6,
+                border: "1px solid #bbb",
+                fontSize: "1.08rem",
+                color: "#111",
+                fontFamily: "Open Sans, sans-serif",
+                marginBottom: 8,
+              }}
               required
-              readOnly
-            />
+            >
+              <option value="">Select a level</option>
+              <option value="Basic">Basic</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+              Type
+            </label>
+            <select
+              id="type"
+              value={formData.type}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: 6,
+                border: "1px solid #bbb",
+                fontSize: "1.08rem",
+                color: "#111",
+                fontFamily: "Open Sans, sans-serif",
+                marginBottom: 8,
+              }}
+              required
+            >
+              <option value="">Select a type</option>
+              <option value="Lecture">Lecture</option>
+              <option value="Assignment">Assignment</option>
+              <option value="Dataset">Dataset</option>
+            </select>
           </div>
           <div>
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
@@ -556,11 +562,11 @@ const LessonPlanBuilder = () => {
                 borderRadius: 6,
                 border: "1px solid #bbb",
                 fontSize: "1.08rem",
-                color: "#111", // Black
+                color: "#111",
                 fontFamily: "Open Sans, sans-serif"
               }}
               id="duration"
-              type="text" // changed from "number" to "text"
+              type="text"
               placeholder="Duration"
               value={formData.duration}
               onChange={handleChange}
@@ -627,18 +633,6 @@ const LessonPlanBuilder = () => {
             >
               + Add Objective
             </button>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <input
-              type="checkbox"
-              id="isPublic"
-              checked={formData.isPublic}
-              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-              style={{ width: 18, height: 18 }}
-            />
-            <label htmlFor="isPublic" style={{ color: "#111", fontWeight: 600 , fontSize: "1.08rem"}}>
-              Make Public
-            </label>
           </div>
           <div>
             {sections.map((section, index) => (
@@ -732,7 +726,7 @@ const LessonPlanBuilder = () => {
                   <button
                     type="button"
                     style={{
-                      background: "#111C44", // Navy blue to match footer
+                      background: "#111C44",
                       color: "#fff",
                       border: "none",
                       borderRadius: "6px",
@@ -744,7 +738,7 @@ const LessonPlanBuilder = () => {
                     }}
                     onClick={() => {
                       setSelectedSectionIndex(index);
-                      handleCreateNewNugget(); // Redirects the page
+                      handleCreateNewNugget();
                     }}
                   >
                     + Create New Nugget
@@ -778,86 +772,72 @@ const LessonPlanBuilder = () => {
                     marginTop: 10,
                   }}
                 >
-                  {selectedMaterials[index]?.map((material) => (
-                    <div
-                      key={material.id}
-                      style={{
-                        background: "#fafbfc",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "10px",
-                        padding: "18px 16px",
-                        color: "#111",
-                        fontFamily: "Open Sans, sans-serif",
-                        boxShadow: "0 2px 8px rgba(22,32,64,0.06)",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "8px",
-                        minWidth: "0",
-                        width: "100%",
-                        maxWidth: "340px",
-                      }}
-                    >
-                      <div style={{ fontWeight: 700, fontSize: "1.08rem", color: "#111" }}>
-                        {material.Title}
+                  {selectedMaterials[index]?.map((material) => {
+                    // Try to get the full nugget from portalContent
+                    const fullNugget = portalContent.find((n) => n.id === material.id) || material;
+                    return (
+                      <div
+                        key={material.id}
+                        style={{
+                          background: "#fafbfc",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "10px",
+                          padding: "18px 16px",
+                          color: "#111",
+                          fontFamily: "Open Sans, sans-serif",
+                          boxShadow: "0 2px 8px rgba(22,32,64,0.06)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
+                          minWidth: "0",
+                          width: "100%",
+                          maxWidth: "340px",
+                          position: "relative",
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, fontSize: "1.08rem", color: "#111" }}>
+                          {fullNugget.Title || "Untitled Nugget"}
+                        </div>
+                        <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                          <a
+                            href={`/view-content/${material.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              background: "#fff",
+                              color: "#1a73e8",
+                              border: "1px solid #1a73e8",
+                              borderRadius: "6px",
+                              padding: "6px 14px",
+                              fontWeight: 600,
+                              fontFamily: "Open Sans, sans-serif",
+                              fontSize: "1.02rem",
+                              textDecoration: "none",
+                              display: "inline-block",
+                            }}
+                          >
+                            View
+                          </a>
+                          <button
+                            onClick={() => removeMaterial(material.id, index)}
+                            style={{
+                              background: "none",
+                              color: "#e74c3c",
+                              border: "none",
+                              fontWeight: 700,
+                              fontSize: "1.1rem",
+                              marginLeft: 4,
+                              cursor: "pointer",
+                              fontFamily: "Open Sans, sans-serif"
+                            }}
+                            title="Remove"
+                          >
+                            &times;
+                          </button>
+                        </div>
                       </div>
-                      <div style={{ fontSize: "0.98rem", color: "#444" }}>
-                        {material.Description}
-                      </div>
-                      <div style={{ fontSize: "0.92rem", color: "#888" }}>
-                        {material.Category} &middot; {material.Type} &middot; {material.Level}
-                      </div>
-                      <div style={{ fontSize: "0.92rem", color: "#888" }}>
-                        Created: {
-                          material.createdAt
-                            ? (
-                                typeof material.createdAt.toDate === "function"
-                                  ? material.createdAt.toDate().toLocaleDateString()
-                                  : !isNaN(Date.parse(material.createdAt))
-                                    ? new Date(material.createdAt).toLocaleDateString()
-                                    : ""
-                            )
-                          : ""
-                        }
-                      </div>
-                      <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-                        <a
-                          href={`/view-content/${material.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            background: "#fff",
-                            color: "#1a73e8",
-                            border: "1px solid #1a73e8",
-                            borderRadius: "6px",
-                            padding: "6px 14px",
-                            fontWeight: 600,
-                            fontFamily: "Open Sans, sans-serif",
-                            fontSize: "1.02rem",
-                            textDecoration: "none",
-                            display: "inline-block",
-                          }}
-                        >
-                          View
-                        </a>
-                        <button
-                          onClick={() => removeMaterial(material.id, index)}
-                          style={{
-                            background: "none",
-                            color: "#e74c3c",
-                            border: "none",
-                            fontWeight: 700,
-                            fontSize: "1.1rem",
-                            marginLeft: 4,
-                            cursor: "pointer",
-                            fontFamily: "Open Sans, sans-serif"
-                          }}
-                          title="Remove"
-                        >
-                          &times;
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -878,6 +858,19 @@ const LessonPlanBuilder = () => {
             >
               Add another Section
             </button>
+          </div>
+          {/* Make Public checkbox at the bottom */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <input
+              type="checkbox"
+              id="isPublic"
+              checked={formData.isPublic}
+              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+              style={{ width: 18, height: 18 }}
+            />
+            <label htmlFor="isPublic" style={{ color: "#111", fontWeight: 600 , fontSize: "1.08rem"}}>
+              Make Public
+            </label>
           </div>
           <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
             <button
@@ -901,7 +894,7 @@ const LessonPlanBuilder = () => {
               type="submit"
               disabled={isSubmitting}
               style={{
-                background: isSubmitting ? "#bbb" : "#111C44", // Navy blue when enabled
+                background: isSubmitting ? "#bbb" : "#111C44",
                 color: "#fff",
                 border: "none",
                 borderRadius: "6px",
@@ -910,7 +903,6 @@ const LessonPlanBuilder = () => {
                 fontSize: "1.08rem",
                 cursor: isSubmitting ? "not-allowed" : "pointer",
                 fontFamily: "Open Sans, sans-serif"
-                , fontSize: "1.08rem"
               }}
             >
               {isSubmitting ? "Submitting..." : "Submit"}
@@ -925,11 +917,8 @@ const LessonPlanBuilder = () => {
             initialSelectedTiles={Object.values(selectedMaterials || {})
               .flat()
               .map((item) => item.id)}
-            type={formData.type}
-            category={formData.category}
-            level={formData.level}
             contentType={"nugget"}
-            typeOptions={["Lecture", "Assignment", "Dataset"]} // <-- Only these types
+            typeOptions={["Lecture", "Assignment", "Dataset"]}
           />
         )}
         <Modal
@@ -960,6 +949,5 @@ const LessonPlanBuilder = () => {
     </div>
   );
 };
-
 
 export default LessonPlanBuilder;

@@ -20,6 +20,7 @@ import UpgradePage from './pages/upgrade_page/UpgradePage.jsx';
 import NuggetBuilderPage from "./pages/nugget-builder"; // adjust path if needed
 import LessonPlanBuilder from "./pages/lesson-plans/builder";
 import NuggetDetails from "./pages/nugget-details";
+import LessonPlanDrafts from "./pages/lesson-plans/drafts";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
           <Route path="/nugget-builder" element={<NuggetBuilderPage />} />
           <Route path="/lesson-plans/builder" element={<LessonPlanBuilder />} />
           <Route path="/view-content/:id" element={<NuggetDetails />} />
+          <Route path="/lesson-plans/drafts" element={<LessonPlanDrafts />} />
         </Routes>
       </Layout>
     </BrowserRouter>
