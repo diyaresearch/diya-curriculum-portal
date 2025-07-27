@@ -1,4 +1,4 @@
-runtime: nodejs18
+runtime: nodejs20
 
 # This service name can be 'default' or a custom name
 service: default
