@@ -1,10 +1,15 @@
-runtime: nodejs18
+runtime: nodejs20
 
 # This service name can be 'default' or a custom name
 service: default
 
 # The instance class defines the compute resources allocated to the service
 instance_class: F2
+
+# Automatic scaling configuration
+automatic_scaling:
+  max_instances: 10
+  min_instances: 1
 
 # Environment variables
 env_variables:
