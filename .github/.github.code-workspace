@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../portal-app"
+		},
+		{
+			"path": "../server"
+		}
+	]
+}
