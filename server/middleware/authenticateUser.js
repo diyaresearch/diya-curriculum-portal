@@ -1,5 +1,11 @@
 const admin = require("firebase-admin");
-const { admin: firebaseAdmin } = require("../config/firebaseConfig");
+
+// Initialize Firebase Admin SDK if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
+  });
+}
 
 const authenticateUser = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
@@ -8,7 +14,7 @@ const authenticateUser = async (req, res, next) => {
   }
 
   try {
-    const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+    const decodedToken = await admin.auth().verifyIdToken(token);
     req.user = decodedToken;
     next();
   } catch (error) {
