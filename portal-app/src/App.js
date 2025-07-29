@@ -20,6 +20,7 @@ import PaymentPage from './pages/payment/PaymentPage';
 import LessonPlanBuilder from "./pages/lesson-plans/builder";
 import NuggetDetails from "./pages/nugget-details";
 import LessonPlanDrafts from "./pages/lesson-plans/drafts";
+import NuggetBuilderPage from "./pages/nugget-builder";
 
 function App() {
   return (
@@ -27,15 +28,16 @@ function App() {
       <Layout>
         {/* Move your navigation here if you want it on every page */}
                 {/* Payment page without Layout (standalone page) */}
-        <Route path="/payment" element={<PaymentPage />} />
-        <Route path="/payment/premium" element={<PaymentPage />} />
-
+        
 
 
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/upload-content" element={<UploadContent />} />
           <Route path="/edit-content/:id" element={<EditContent />} />
+          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/payment/premium" element={<PaymentPage />} />
+
 
           <Route path="/lesson-generator" element={<LessonGenerator />} />
           <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
