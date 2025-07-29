@@ -1,0 +1,11 @@
+{
+  "name": "curriculum-portal-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node index.js",
+    "build": "echo 'No build step required'"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
