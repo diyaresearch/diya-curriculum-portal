@@ -766,14 +766,13 @@ const LessonPlanBuilder = () => {
                 </div>
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, minmax(260px, 1fr))",
-                    gap: "16px",
-                    marginTop: 10,
+                    display: "flex",           // changed from grid to flex
+                    flexWrap: "wrap",
+                    gap: "2px",                // minimal gap between nuggets
+                    marginTop: 6,
                   }}
                 >
                   {selectedMaterials[index]?.map((material) => {
-                    // Try to get the full nugget from portalContent
                     const fullNugget = portalContent.find((n) => n.id === material.id) || material;
                     return (
                       <div
@@ -782,59 +781,82 @@ const LessonPlanBuilder = () => {
                           background: "#fafbfc",
                           border: "1px solid #e5e7eb",
                           borderRadius: "10px",
-                          padding: "18px 16px",
+                          padding: "4px 6px",      // tighter padding
                           color: "#111",
                           fontFamily: "Open Sans, sans-serif",
                           boxShadow: "0 2px 8px rgba(22,32,64,0.06)",
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
-                          minWidth: "0",
-                          width: "100%",
-                          maxWidth: "340px",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          width: "fit-content",
+                          maxWidth: "100%",
                           position: "relative",
+                          margin: 0,               // no margin between nuggets
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
                       >
-                        <div style={{ fontWeight: 700, fontSize: "1.08rem", color: "#111" }}>
-                          {fullNugget.Title || "Untitled Nugget"}
-                        </div>
-                        <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                        <span style={{
+                          fontWeight: 700,
+                          fontSize: "1.02rem",
+                          color: "#111",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          maxWidth: 120
+                        }}>
+                          <span style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            display: "inline-block",
+                            maxWidth: 90
+                          }}>
+                            {fullNugget.Title || "Untitled Nugget"}
+                          </span>
                           <a
                             href={`/view-content/${material.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              background: "#fff",
+                              marginLeft: 4,
+                              padding: "0 4px",
+                              fontSize: "10px",
+                              background: "#f3f4f6",
+                              borderRadius: "4px",
                               color: "#1a73e8",
-                              border: "1px solid #1a73e8",
-                              borderRadius: "6px",
-                              padding: "6px 14px",
-                              fontWeight: 600,
-                              fontFamily: "Open Sans, sans-serif",
-                              fontSize: "1.02rem",
+                              border: "1px solid #e5e7eb",
                               textDecoration: "none",
-                              display: "inline-block",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              height: "16px",
+                              lineHeight: 1,
                             }}
+                            title="View"
                           >
                             View
                           </a>
-                          <button
-                            onClick={() => removeMaterial(material.id, index)}
-                            style={{
-                              background: "none",
-                              color: "#e74c3c",
-                              border: "none",
-                              fontWeight: 700,
-                              fontSize: "1.1rem",
-                              marginLeft: 4,
-                              cursor: "pointer",
-                              fontFamily: "Open Sans, sans-serif"
-                            }}
-                            title="Remove"
-                          >
-                            &times;
-                          </button>
-                        </div>
+                        </span>
+                        <button
+                          onClick={() => removeMaterial(material.id, index)}
+                          style={{
+                            background: "none",
+                            color: "#e74c3c",
+                            border: "none",
+                            fontWeight: 700,
+                            fontSize: "1.1rem",
+                            marginLeft: 4,
+                            cursor: "pointer",
+                            fontFamily: "Open Sans, sans-serif",
+                            alignSelf: "center"
+                          }}
+                          title="Remove"
+                        >
+                          &times;
+                        </button>
                       </div>
                     );
                   })}
