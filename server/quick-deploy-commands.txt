@@ -1,0 +1,13 @@
+# After installing Google Cloud CLI, run these commands:
+
+# 1. Authenticate with Google Cloud
+gcloud auth login
+
+# 2. Set the project
+gcloud config set project curriculum-portal-1ce8f
+
+# 3. Deploy the backend
+gcloud app deploy app.yaml --quiet
+
+# 4. Test the deployment
+# Visit: https://curriculum-portal-1ce8f.appspot.com/api/subscription/test

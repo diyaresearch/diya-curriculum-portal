@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, Link } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
 import "./index.css";
 import { EditContent } from "./pages/edit_content";
@@ -16,8 +16,7 @@ import ModuleDetail from "./pages/modules/ModuleDetail";
 import AllLessonPlans from "./pages/all_lesson_plans";
 import { TeacherSignup, StudentSignup } from './pages/sign_up';
 import UpgradePage from './pages/upgrade_page/UpgradePage.jsx';
-
-import NuggetBuilderPage from "./pages/nugget-builder"; // adjust path if needed
+import PaymentPage from './pages/payment/PaymentPage';
 import LessonPlanBuilder from "./pages/lesson-plans/builder";
 import NuggetDetails from "./pages/nugget-details";
 import LessonPlanDrafts from "./pages/lesson-plans/drafts";
@@ -27,7 +26,9 @@ function App() {
     <BrowserRouter>
       <Layout>
         {/* Move your navigation here if you want it on every page */}
-
+                {/* Payment page without Layout (standalone page) */}
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/payment/premium" element={<PaymentPage />} />
 
 
 

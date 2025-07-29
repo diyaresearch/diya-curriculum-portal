@@ -5,15 +5,29 @@ const admin = require("firebase-admin");
 const router = express.Router();
 
 const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
-const TABLE_USERS =  SCHEMA_QUALIFIER + "users"; 
+const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 
 // Get current user details
 router.get("/me", authenticateUser, async (req, res) => {
   try {
     const userId = req.user.uid;
     const db = admin.firestore();
-    const userRef = db.collection(TABLE_USERS).doc(userId);
-    const userSnap = await userRef.get();
+
+    // Check in teachers collection first
+    let userRef = db.collection("teachers").doc(userId);
+    let userSnap = await userRef.get();
+
+    if (!userSnap.exists) {
+      // Then check students collection
+      userRef = db.collection("students").doc(userId);
+      userSnap = await userRef.get();
+    }
+
+    if (!userSnap.exists) {
+      // Finally check unified users collection
+      userRef = db.collection(TABLE_USERS).doc(userId);
+      userSnap = await userRef.get();
+    }
 
     if (!userSnap.exists) {
       return res.status(404).json({ message: "User not found" });
@@ -49,9 +63,9 @@ router.get("/:userId", async (req, res) => {
 router.post("/register", authenticateUser, async (req, res) => {
   try {
     const userId = req.user.uid;
-    const { 
-      email, 
-      fullName, 
+    const {
+      email,
+      fullName,
       firstName,
       lastName,
       institution,
@@ -77,6 +91,10 @@ router.post("/register", authenticateUser, async (req, res) => {
         jobTitle,
         subjects,
         role,
+        subscriptionType: 'basic',
+        subscriptionStatus: 'active',
+        subscriptionStartDate: admin.firestore.FieldValue.serverTimestamp(),
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
       return res.status(201).json({ message: "User registered successfully", fullName, role });
     } else {
