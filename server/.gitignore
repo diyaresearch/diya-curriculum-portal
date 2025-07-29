@@ -2,3 +2,5 @@ node_modules
 serviceAccountKey.json
 .env.*
 .env
+*.env
+.env.txt
