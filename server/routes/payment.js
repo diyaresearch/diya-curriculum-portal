@@ -4,7 +4,10 @@ const admin = require("firebase-admin");
 
 const router = express.Router();
 
-// Initialize Stripe with secret key from environment
+// Validate and initialize Stripe with secret key from environment
+if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("STRIPE_SECRET_KEY is not defined in the environment variables. Please set it before starting the application.");
+}
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
