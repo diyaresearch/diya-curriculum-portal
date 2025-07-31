@@ -1,7 +1,7 @@
 import React from "react";
 import UploadContent from "./upload-content"; // adjust path if needed
 
-const NuggetBuilderPage = () => (
+const NuggetBuilderPage = (props) => (
   <div
     style={{
       minHeight: "100vh",
@@ -11,9 +11,32 @@ const NuggetBuilderPage = () => (
       alignItems: "center",
       paddingTop: "40px",
       paddingBottom: "64px",
-      fontFamily: "Open Sans, sans-serif"
+      fontFamily: "Open Sans, sans-serif",
+      position: "relative"
     }}
   >
+    {/* X button fixed to top right of popup/modal */}
+    <button
+      onClick={props.onCancel}
+      style={{
+        position: "fixed",
+        top: 32,
+        right: 32,
+        background: "none",
+        border: "none",
+        fontSize: "2.2rem",
+        color: "#888",
+        cursor: "pointer",
+        zIndex: 2000,
+        fontWeight: 700,
+        lineHeight: 1,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.07)"
+      }}
+      aria-label="Close"
+      type="button"
+    >
+      &times;
+    </button>
     <div style={{ width: "100%", maxWidth: 1100, margin: "0 auto" }}>
       <h1
         style={{
@@ -62,7 +85,11 @@ const NuggetBuilderPage = () => (
             minWidth: "320px"
           }}
         >
-          <UploadContent title="Nugget Builder" />
+          <UploadContent
+            title="Nugget Builder"
+            fromLesson={props.onCancel}
+            onNuggetCreated={props.onSave}
+          />
         </div>
       </div>
     </div>

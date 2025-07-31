@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
@@ -101,7 +101,7 @@ export const UploadContent = ({
       const db = getFirestore();
       const plainDescription = stripHtml(formData.Abstract);
 
-      await addDoc(collection(db, "content"), {
+      const docRef = await addDoc(collection(db, "content"), {
         Title: formData.Title,
         Description: plainDescription,
         Category: formData.Category,
@@ -114,6 +114,8 @@ export const UploadContent = ({
         createdAt: serverTimestamp(),
         Role: "teacherPlus", // <-- Added static Role field
       });
+      const savedDoc = await getDoc(docRef);
+      const newNugget = { id: docRef.id, ...savedDoc.data() };
 
       setModalMessage("Content submitted successfully");
       setFormData({
@@ -130,10 +132,12 @@ export const UploadContent = ({
 
       setModalIsOpen(true);
       if (fromLesson) {
-        closeModal();
         if (onNuggetCreated) {
-          onNuggetCreated();
+          onNuggetCreated(newNugget); // <-- Pass new nugget up
         }
+        fromLesson(); // <-- Close the modal
+      } else {
+        setModalIsOpen(true); // Only show the modal if not in lesson builder popup
       }
     } catch (error) {
       setModalMessage("Error submitting content: " + error.message);
@@ -230,30 +234,28 @@ export const UploadContent = ({
             <label htmlFor="Category" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
               Category
             </label>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {["AI Principles", "Data Science", "Machine Learning", "Statistics", "Other"].map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => {
-                    setFormData((prev) => ({ ...prev, Category: cat }));
-                    setFieldErrors((prev) => ({ ...prev, Category: "" }));
-                  }}
-                  style={{
-                    background: formData.Category === cat ? "#162040" : "#fff",
-                    color: formData.Category === cat ? "#fff" : "#222",
-                    border: formData.Category === cat ? "2px solid #162040" : "1.5px solid #bbb",
-                    borderRadius: "6px",
-                    padding: "7px 18px",
-                    fontWeight: 600,
-                    fontSize: "1rem",
-                    cursor: "pointer",
-                  }}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+            <select
+              id="Category"
+              value={formData.Category}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "6px",
+                border: "1.5px solid #bbb",
+                fontSize: "1rem",
+                background: "#fafbfc",
+                fontFamily: "Open Sans, sans-serif",
+                marginBottom: "2px",
+              }}
+            >
+              <option value="">Select Category</option>
+              <option value="AI Principles">AI Principles</option>
+              <option value="Data Science">Data Science</option>
+              <option value="Machine Learning">Machine Learning</option>
+              <option value="Statistics">Statistics</option>
+              <option value="Other">Other</option>
+            </select>
             {fieldErrors.Category && (
               <div style={{ color: "red", fontSize: "0.95rem" }}>
                 Please fill out this field.
@@ -269,30 +271,26 @@ export const UploadContent = ({
             <label htmlFor="Level" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
               Level
             </label>
-            <div style={{ display: "flex", gap: "8px" }}>
-              {["Basic", "Intermediate", "Advanced"].map((lvl) => (
-                <button
-                  key={lvl}
-                  type="button"
-                  onClick={() => {
-                    setFormData((prev) => ({ ...prev, Level: lvl }));
-                    setFieldErrors((prev) => ({ ...prev, Level: "" }));
-                  }}
-                  style={{
-                    background: formData.Level === lvl ? "#162040" : "#fff",
-                    color: formData.Level === lvl ? "#fff" : "#222",
-                    border: formData.Level === lvl ? "2px solid #162040" : "1.5px solid #bbb",
-                    borderRadius: "6px",
-                    padding: "7px 18px",
-                    fontWeight: 600,
-                    fontSize: "1rem",
-                    cursor: "pointer",
-                  }}
-                >
-                  {lvl}
-                </button>
-              ))}
-            </div>
+            <select
+              id="Level"
+              value={formData.Level}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "6px",
+                border: "1.5px solid #bbb",
+                fontSize: "1rem",
+                background: "#fafbfc",
+                fontFamily: "Open Sans, sans-serif",
+                marginBottom: "2px",
+              }}
+            >
+              <option value="">Select Level</option>
+              <option value="Basic">Basic</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
             {fieldErrors.Level && (
               <div style={{ color: "red", fontSize: "0.95rem" }}>
                 Please fill out this field.
@@ -300,6 +298,41 @@ export const UploadContent = ({
             )}
             <div style={{ fontSize: "0.92rem", color: "#888" }}>
               Choose the difficulty level.
+            </div>
+          </div>
+
+          {/* Type (now under Level) */}
+          <div>
+            <label htmlFor="Type" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+              Type
+            </label>
+            <select
+              id="Type"
+              value={formData.Type}
+              onChange={handleChange}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "6px",
+                border: "1.5px solid #bbb",
+                fontSize: "1rem",
+                background: "#fafbfc",
+                fontFamily: "Open Sans, sans-serif",
+                marginBottom: "2px",
+              }}
+            >
+              <option value="">Select Type</option>
+              <option value="Lecture">Lecture</option>
+              <option value="Assignment">Assignment</option>
+              <option value="Dataset">Dataset</option>
+            </select>
+            {fieldErrors.Type && (
+              <div style={{ color: "red", fontSize: "0.95rem" }}>
+                Please fill out this field.
+              </div>
+            )}
+            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+              Select the content type.
             </div>
           </div>
 
@@ -331,45 +364,6 @@ export const UploadContent = ({
             )}
             <div style={{ fontSize: "0.92rem", color: "#888" }}>
               How long will the content take to consume?
-            </div>
-          </div>
-
-          {/* Type */}
-          <div>
-            <label htmlFor="Type" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
-              Type
-            </label>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-              {["Lecture", "Assignment", "Dataset"].map((tp) => (
-                <button
-                  key={tp}
-                  type="button"
-                  onClick={() => {
-                    setFormData((prev) => ({ ...prev, Type: tp }));
-                    setFieldErrors((prev) => ({ ...prev, Type: "" }));
-                  }}
-                  style={{
-                    background: formData.Type === tp ? "#162040" : "#fff",
-                    color: formData.Type === tp ? "#fff" : "#222",
-                    border: formData.Type === tp ? "2px solid #162040" : "1.5px solid #bbb",
-                    borderRadius: "6px",
-                    padding: "7px 18px",
-                    fontWeight: 600,
-                    fontSize: "1rem",
-                    cursor: "pointer",
-                  }}
-                >
-                  {tp}
-                </button>
-              ))}
-            </div>
-            {fieldErrors.Type && (
-              <div style={{ color: "red", fontSize: "0.95rem" }}>
-                Please fill out this field.
-              </div>
-            )}
-            <div style={{ fontSize: "0.92rem", color: "#888" }}>
-              Select the content type.
             </div>
           </div>
 
@@ -414,25 +408,27 @@ export const UploadContent = ({
             marginTop: "32px",
           }}
         >
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            style={{
-              background: "#fff",
-              color: "#222",
-              border: "1.5px solid #222",
-              borderRadius: "6px",
-              padding: "12px 48px",
-              fontWeight: 600,
-              fontSize: "1.08rem",
-              cursor: "pointer",
-              minWidth: "180px",
-              transition: "background 0.2s, color 0.2s, border 0.2s",
-              fontFamily: "Open Sans, sans-serif",
-            }}
-          >
-            Cancel
-          </button>
+          {!fromLesson && (
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              style={{
+                background: "#fff",
+                color: "#222",
+                border: "1.5px solid #222",
+                borderRadius: "6px",
+                padding: "12px 48px",
+                fontWeight: 600,
+                fontSize: "1.08rem",
+                cursor: "pointer",
+                minWidth: "180px",
+                transition: "background 0.2s, color 0.2s, border 0.2s",
+                fontFamily: "Open Sans, sans-serif",
+              }}
+            >
+              Cancel
+            </button>
+          )}
           <button
             type="submit"
             style={{

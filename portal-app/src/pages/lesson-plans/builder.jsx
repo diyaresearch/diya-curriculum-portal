@@ -8,6 +8,7 @@ import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import NuggetBuilderPage from "../nugget-builder";
 
 Modal.setAppElement("#root");
 
@@ -30,6 +31,8 @@ const LessonPlanBuilder = () => {
   const [modalMessage, setModalMessage] = useState("");
   const [sections, setSections] = useState([{ intro: "", contentIds: [] }]);
   const [selectedMaterials, setSelectedMaterials] = useState({});
+  const [showNuggetBuilderModal, setShowNuggetBuilderModal] = useState(false);
+  const [nuggetBuilderSectionIndex, setNuggetBuilderSectionIndex] = useState(null);
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -143,22 +146,24 @@ const LessonPlanBuilder = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
   };
 
-  const handleCreateNewNugget = () => {
-    navigate("/nugget-builder");
+  const handleCreateNewNugget = (sectionIndex) => {
+    setNuggetBuilderSectionIndex(sectionIndex);
+    setShowNuggetBuilderModal(true);
   };
 
-  const closeUploadModal = () => {
-    setShowUploadModal(false);
-  };
-
-  const handleNewNuggetAdded = (newNugget) => {
-    setShowUploadModal(false);
-    if (selectedSectionIndex !== null) {
-      setSelectedMaterials((prevMaterials) => ({
-        ...prevMaterials,
-        [selectedSectionIndex]: [...(prevMaterials[selectedSectionIndex] || []), newNugget],
+  // Handler for when a new nugget is created from the modal
+  const handleNuggetBuilderSave = async (newNugget) => {
+    setShowNuggetBuilderModal(false);
+    if (nuggetBuilderSectionIndex !== null) {
+      setSelectedMaterials((prev) => ({
+        ...prev,
+        [nuggetBuilderSectionIndex]: [
+          ...(prev[nuggetBuilderSectionIndex] || []),
+          newNugget,
+        ],
       }));
     }
+    await reloadUserNuggets(); // <-- Add this line
   };
 
   // --- Save as Draft ---
@@ -353,13 +358,51 @@ const LessonPlanBuilder = () => {
       bottom: "auto",
       marginRight: "-50%",
       transform: "translate(-50%, -50%)",
-      width: "400px",
+      width: "95vw",           // Responsive width
+      maxWidth: "540px",       // Limit max width
+      maxHeight: "90vh",       // Limit max height
+      overflowY: "auto",       // Scroll if content is too tall
       padding: "20px",
       textAlign: "center",
+      borderRadius: "12px",
+      boxSizing: "border-box",
     },
     overlay: {
       backgroundColor: "rgba(0, 0, 0, 0.75)",
+      zIndex: 1000,
     },
+  };
+
+  const closeUploadModal = () => setShowUploadModal(false);
+
+  const handleNewNuggetAdded = (newNugget) => {
+    setShowUploadModal(false);
+    if (nuggetBuilderSectionIndex !== null) {
+      setSelectedMaterials((prev) => ({
+        ...prev,
+        [nuggetBuilderSectionIndex]: [
+          ...(prev[nuggetBuilderSectionIndex] || []),
+          newNugget,
+        ],
+      }));
+    }
+  };
+
+  const reloadUserNuggets = async () => {
+    const db = getFirestore();
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+    const nuggetsQuery = query(
+      collection(db, "content"),
+      where("User", "==", user.uid)
+    );
+    const snapshot = await getDocs(nuggetsQuery);
+    const userNuggets = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setPortalContent(userNuggets);
   };
 
   return (
@@ -736,10 +779,7 @@ const LessonPlanBuilder = () => {
                       fontFamily: "Open Sans, sans-serif",
                       fontSize: "1.08rem"
                     }}
-                    onClick={() => {
-                      setSelectedSectionIndex(index);
-                      handleCreateNewNugget();
-                    }}
+                    onClick={() => handleCreateNewNugget(index)}
                   >
                     + Create New Nugget
                   </button>
@@ -966,6 +1006,18 @@ const LessonPlanBuilder = () => {
           type={formData.type}
           category={formData.category}
           level={formData.level}
+        />
+      </Modal>
+      {/* Nugget Builder Modal */}
+      <Modal
+        isOpen={showNuggetBuilderModal}
+        onRequestClose={() => setShowNuggetBuilderModal(false)}
+        style={customStyles}
+        contentLabel="Create New Nugget"
+      >
+        <NuggetBuilderPage
+          onSave={handleNuggetBuilderSave}
+          onCancel={() => setShowNuggetBuilderModal(false)}
         />
       </Modal>
     </div>
