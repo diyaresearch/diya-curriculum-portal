@@ -15,28 +15,30 @@ const NuggetBuilderPage = (props) => (
       position: "relative"
     }}
   >
-    {/* X button fixed to top right of popup/modal */}
-    <button
-      onClick={props.onCancel}
-      style={{
-        position: "fixed",
-        top: 32,
-        right: 32,
-        background: "none",
-        border: "none",
-        fontSize: "2.2rem",
-        color: "#888",
-        cursor: "pointer",
-        zIndex: 2000,
-        fontWeight: 700,
-        lineHeight: 1,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.07)"
-      }}
-      aria-label="Close"
-      type="button"
-    >
-      &times;
-    </button>
+    {/* Only show X button if onCancel is provided (i.e. in popup/modal) */}
+    {props.onCancel && (
+      <button
+        onClick={props.onCancel}
+        style={{
+          position: "fixed",
+          top: 32,
+          right: 32,
+          background: "none",
+          border: "none",
+          fontSize: "2.2rem",
+          color: "#888",
+          cursor: "pointer",
+          zIndex: 2000,
+          fontWeight: 700,
+          lineHeight: 1,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.07)"
+        }}
+        aria-label="Close"
+        type="button"
+      >
+        &times;
+      </button>
+    )}
     <div style={{ width: "100%", maxWidth: 1100, margin: "0 auto" }}>
       <h1
         style={{
