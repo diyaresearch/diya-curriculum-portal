@@ -12,6 +12,117 @@ import NuggetBuilderPage from "../nugget-builder";
 
 Modal.setAppElement("#root");
 
+const CATEGORY_OPTIONS = [
+  "AI Principles",
+  "Data Science",
+  "Machine Learning",
+  "Statistics",
+  "Other"
+];
+const LEVEL_OPTIONS = [
+  "Basic",
+  "Intermediate",
+  "Advanced"
+];
+const TYPE_OPTIONS = [
+  "Lecture",
+  "Assignment",
+  "Dataset"
+];
+
+// --- MultiCheckboxDropdown component ---
+function MultiCheckboxDropdown({ label, options, selected, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const dropdownRef = React.useRef(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
+  const handleCheckboxChange = (value) => {
+    if (selected.includes(value)) {
+      onChange(selected.filter((v) => v !== value));
+    } else {
+      onChange([...selected, value]);
+    }
+  };
+
+  return (
+    <div ref={dropdownRef} style={{ position: "relative", marginBottom: 0 }}>
+      <label style={{ fontWeight: 600, marginBottom: 6, display: "block", color: "#222" }}>
+        {label}
+      </label>
+      <div
+        style={{
+          border: "1.5px solid #bbb",
+          borderRadius: 6,
+          background: "#fafbfc",
+          padding: "10px 14px",
+          cursor: "pointer",
+          minHeight: 40,
+          fontFamily: "Open Sans, sans-serif",
+        }}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {selected.length === 0 ? (
+          <span style={{ color: "#888" }}>Select {label.toLowerCase()}...</span>
+        ) : (
+          selected.join(", ")
+        )}
+      </div>
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "#fff",
+            border: "1.5px solid #bbb",
+            borderRadius: 6,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            zIndex: 100,
+            maxHeight: 180,
+            overflowY: "auto",
+            marginTop: 2,
+          }}
+        >
+          {options.map((opt) => (
+            <label
+              key={opt}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "8px 12px",
+                cursor: "pointer",
+                fontFamily: "Open Sans, sans-serif",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={selected.includes(opt)}
+                onChange={() => handleCheckboxChange(opt)}
+                style={{ marginRight: 8 }}
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const LessonPlanBuilder = () => {
   const [formData, setFormData] = useState({
     title: "",
@@ -521,84 +632,28 @@ const LessonPlanBuilder = () => {
             />
           </div>
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
-              Category
-            </label>
-            <select
-              id="category"
-              value={formData.category}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: 6,
-                border: "1px solid #bbb",
-                fontSize: "1.08rem",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif",
-                marginBottom: 8,
-              }}
-              required
-            >
-              <option value="">Select a category</option>
-              <option value="AI Principles">AI Principles</option>
-              <option value="Data Science">Data Science</option>
-              <option value="Machine Learning">Machine Learning</option>
-              <option value="Statistics">Statistics</option>
-              <option value="Other">Other</option>
-            </select>
+            <MultiCheckboxDropdown
+              label="Category"
+              options={CATEGORY_OPTIONS}
+              selected={formData.category || []}
+              onChange={(values) => setFormData({ ...formData, category: values })}
+            />
           </div>
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
-              Level
-            </label>
-            <select
-              id="level"
-              value={formData.level}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: 6,
-                border: "1px solid #bbb",
-                fontSize: "1.08rem",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif",
-                marginBottom: 8,
-              }}
-              required
-            >
-              <option value="">Select a level</option>
-              <option value="Basic">Basic</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-            </select>
+            <MultiCheckboxDropdown
+              label="Level"
+              options={LEVEL_OPTIONS}
+              selected={formData.level || []}
+              onChange={(values) => setFormData({ ...formData, level: values })}
+            />
           </div>
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
-              Type
-            </label>
-            <select
-              id="type"
-              value={formData.type}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: 6,
-                border: "1px solid #bbb",
-                fontSize: "1.08rem",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif",
-                marginBottom: 8,
-              }}
-              required
-            >
-              <option value="">Select a type</option>
-              <option value="Lecture">Lecture</option>
-              <option value="Assignment">Assignment</option>
-              <option value="Dataset">Dataset</option>
-            </select>
+            <MultiCheckboxDropdown
+              label="Type"
+              options={TYPE_OPTIONS}
+              selected={formData.type || []}
+              onChange={(values) => setFormData({ ...formData, type: values })}
+            />
           </div>
           <div>
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
