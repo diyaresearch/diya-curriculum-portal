@@ -4,9 +4,123 @@ import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, addDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css"; // Import Quill CSS
+import "react-quill/dist/quill.snow.css";
 
 Modal.setAppElement("#root");
+
+// Centralized options
+const CATEGORY_OPTIONS = [
+  "AI Principles",
+  "Data Science",
+  "Machine Learning",
+  "Statistics",
+  "Other"
+];
+const LEVEL_OPTIONS = [
+  "Basic",
+  "Intermediate",
+  "Advanced"
+];
+const TYPE_OPTIONS = [
+  "Lecture",
+  "Assignment",
+  "Dataset"
+];
+
+// --- Custom MultiCheckboxDropdown ---
+function MultiCheckboxDropdown({ label, options, selected, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const dropdownRef = React.useRef(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
+  const handleCheckboxChange = (value) => {
+    if (selected.includes(value)) {
+      onChange(selected.filter((v) => v !== value));
+    } else {
+      onChange([...selected, value]);
+    }
+  };
+
+  return (
+    <div ref={dropdownRef} style={{ position: "relative", marginBottom: 0 }}>
+      <label style={{ fontWeight: 600, marginBottom: 6, display: "block", color: "#222" }}>
+        {label}
+      </label>
+      <div
+        style={{
+          border: "1.5px solid #bbb",
+          borderRadius: 6,
+          background: "#fafbfc",
+          padding: "10px 14px",
+          cursor: "pointer",
+          minHeight: 40,
+          fontFamily: "Open Sans, sans-serif",
+        }}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {selected.length === 0 ? (
+          <span style={{ color: "#888" }}>Select {label.toLowerCase()}...</span>
+        ) : (
+          selected.join(", ")
+        )}
+      </div>
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "#fff",
+            border: "1.5px solid #bbb",
+            borderRadius: 6,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            zIndex: 100,
+            maxHeight: 180,
+            overflowY: "auto",
+            marginTop: 2,
+          }}
+        >
+          {options.map((opt) => (
+            <label
+              key={opt}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "8px 12px",
+                cursor: "pointer",
+                fontFamily: "Open Sans, sans-serif",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={selected.includes(opt)}
+                onChange={() => handleCheckboxChange(opt)}
+                style={{ marginRight: 8 }}
+              />
+              {opt}
+            </label>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 export const UploadContent = ({
   fromLesson,
@@ -19,9 +133,9 @@ export const UploadContent = ({
 }) => {
   const [formData, setFormData] = useState({
     Title: "",
-    Category: category || "",
-    Type: type || "",
-    Level: level || "",
+    Category: [],
+    Type: [],
+    Level: [],
     Duration: "",
     isPublic: isPublic || false,
     Abstract: "",
@@ -35,7 +149,6 @@ export const UploadContent = ({
 
   const navigate = useNavigate();
 
-  // Ensure form updates if new props are passed in
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
@@ -47,7 +160,6 @@ export const UploadContent = ({
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
-    // Only clear the error for the field being edited
     setFieldErrors((prev) => ({ ...prev, [e.target.id]: "" }));
   };
 
@@ -67,10 +179,10 @@ export const UploadContent = ({
     const errors = {};
     if (!formData.Title.trim()) errors.Title = "Title is required.";
     if (!formData.Abstract || !stripHtml(formData.Abstract).trim()) errors.Abstract = "Description is required.";
-    if (!formData.Category.trim()) errors.Category = "Category is required.";
-    if (!formData.Level.trim()) errors.Level = "Level is required.";
+    if (!formData.Category.length) errors.Category = "Category is required.";
+    if (!formData.Level.length) errors.Level = "Level is required.";
     if (!formData.Duration.trim()) errors.Duration = "Duration is required.";
-    if (!formData.Type.trim()) errors.Type = "Type is required.";
+    if (!formData.Type.length) errors.Type = "Type is required.";
     if (!formData.Instructions.trim()) errors.Instructions = "Instructions/Notes are required.";
     return errors;
   };
@@ -120,9 +232,9 @@ export const UploadContent = ({
       setModalMessage("Content submitted successfully");
       setFormData({
         Title: "",
-        Category: category || "",
-        Type: type || "",
-        Level: level || "",
+        Category: [],
+        Type: [],
+        Level: [],
         Duration: "",
         isPublic: false,
         Abstract: "",
@@ -231,107 +343,54 @@ export const UploadContent = ({
 
           {/* Category */}
           <div>
-            <label htmlFor="Category" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
-              Category
-            </label>
-            <select
-              id="Category"
-              value={formData.Category}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "6px",
-                border: "1.5px solid #bbb",
-                fontSize: "1rem",
-                background: "#fafbfc",
-                fontFamily: "Open Sans, sans-serif",
-                marginBottom: "2px",
-              }}
-            >
-              <option value="">Select Category</option>
-              <option value="AI Principles">AI Principles</option>
-              <option value="Data Science">Data Science</option>
-              <option value="Machine Learning">Machine Learning</option>
-              <option value="Statistics">Statistics</option>
-              <option value="Other">Other</option>
-            </select>
+            <MultiCheckboxDropdown
+              label="Category"
+              options={CATEGORY_OPTIONS}
+              selected={formData.Category}
+              onChange={(values) => setFormData((prev) => ({ ...prev, Category: values }))}
+            />
             {fieldErrors.Category && (
-              <div style={{ color: "red", fontSize: "0.95rem" }}>
+              <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
                 Please fill out this field.
               </div>
             )}
-            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+            <div style={{ fontSize: "0.92rem", color: "#888", marginTop: 0, marginBottom: 0 }}>
               Select a relevant category.
             </div>
           </div>
 
           {/* Level */}
           <div>
-            <label htmlFor="Level" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
-              Level
-            </label>
-            <select
-              id="Level"
-              value={formData.Level}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "6px",
-                border: "1.5px solid #bbb",
-                fontSize: "1rem",
-                background: "#fafbfc",
-                fontFamily: "Open Sans, sans-serif",
-                marginBottom: "2px",
-              }}
-            >
-              <option value="">Select Level</option>
-              <option value="Basic">Basic</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-            </select>
+            <MultiCheckboxDropdown
+              label="Level"
+              options={LEVEL_OPTIONS}
+              selected={formData.Level}
+              onChange={(values) => setFormData((prev) => ({ ...prev, Level: values }))}
+            />
             {fieldErrors.Level && (
-              <div style={{ color: "red", fontSize: "0.95rem" }}>
+              <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
                 Please fill out this field.
               </div>
             )}
-            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+            <div style={{ fontSize: "0.92rem", color: "#888", marginTop: 0, marginBottom: 0 }}>
               Choose the difficulty level.
             </div>
           </div>
 
-          {/* Type (now under Level) */}
+          {/* Type */}
           <div>
-            <label htmlFor="Type" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
-              Type
-            </label>
-            <select
-              id="Type"
-              value={formData.Type}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "6px",
-                border: "1.5px solid #bbb",
-                fontSize: "1rem",
-                background: "#fafbfc",
-                fontFamily: "Open Sans, sans-serif",
-                marginBottom: "2px",
-              }}
-            >
-              <option value="">Select Type</option>
-              <option value="Lecture">Lecture</option>
-              <option value="Assignment">Assignment</option>
-              <option value="Dataset">Dataset</option>
-            </select>
+            <MultiCheckboxDropdown
+              label="Type"
+              options={TYPE_OPTIONS}
+              selected={formData.Type}
+              onChange={(values) => setFormData((prev) => ({ ...prev, Type: values }))}
+            />
             {fieldErrors.Type && (
-              <div style={{ color: "red", fontSize: "0.95rem" }}>
+              <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
                 Please fill out this field.
               </div>
             )}
-            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+            <div style={{ fontSize: "0.92rem", color: "#888", marginTop: 0, marginBottom: 0 }}>
               Select the content type.
             </div>
           </div>
@@ -367,25 +426,21 @@ export const UploadContent = ({
             </div>
           </div>
 
-          {/* Instructions/Notes (no file upload) */}
+          {/* Instructions/Notes */}
           <div>
-            <label htmlFor="Instructions" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+            <label htmlFor="Instructions" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
               Instructions/Notes
             </label>
-            <input
-              id="Instructions"
-              type="text"
-              placeholder="Add any further instructions or notes..."
+            <ReactQuill
+              theme="snow"
               value={formData.Instructions}
-              onChange={handleChange}
+              onChange={value => setFormData(prev => ({ ...prev, Instructions: value }))}
+              className="bg-white"
               style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "6px",
-                border: "1.5px solid #bbb",
-                fontSize: "1rem",
-                marginBottom: "8px",
                 background: "#fafbfc",
+                borderRadius: "6px",
+                marginBottom: "2px",
+                fontFamily: "Open Sans, sans-serif",
               }}
             />
             {fieldErrors.Instructions && (
@@ -394,7 +449,7 @@ export const UploadContent = ({
               </div>
             )}
             <div style={{ fontSize: "0.92rem", color: "#888" }}>
-              Use this area for each content's detailed instructions.
+              Use this area for each content's detailed instructions. You can add links, formatting, etc.
             </div>
           </div>
         </div>
@@ -432,7 +487,7 @@ export const UploadContent = ({
           <button
             type="submit"
             style={{
-              background: "#162040", // navy blue
+              background: "#162040",
               color: "#fff",
               border: "1.5px solid #162040",
               borderRadius: "6px",
@@ -459,7 +514,6 @@ export const UploadContent = ({
         <h2>{modalMessage}</h2>
         <button
           onClick={() => {
-            // Go back to the nugget builder page instead of home
             window.location.href = "/nugget-builder";
           }}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"

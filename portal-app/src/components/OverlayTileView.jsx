@@ -261,7 +261,11 @@ const OverlayTileView = ({
                         {item.Description}
                       </div>
                       <div style={{ fontSize: "0.92rem", color: "#888" }}>
-                        {item.Category} &middot; {item.Type} &middot; {item.Level}
+                        {(Array.isArray(item.Category) ? item.Category.join(", ") : item.Category) || ""}
+                        {" \u00b7 "}
+                        {(Array.isArray(item.Type) ? item.Type.join(", ") : item.Type) || ""}
+                        {" \u00b7 "}
+                        {(Array.isArray(item.Level) ? item.Level.join(", ") : item.Level) || ""}
                       </div>
                       <div style={{ fontSize: "0.92rem", color: "#888" }}>
                         Created: {
