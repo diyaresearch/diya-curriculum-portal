@@ -8,6 +8,7 @@ import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import NuggetBuilderPage from "../nugget-builder";
 
 Modal.setAppElement("#root");
 
@@ -30,6 +31,8 @@ const LessonPlanBuilder = () => {
   const [modalMessage, setModalMessage] = useState("");
   const [sections, setSections] = useState([{ intro: "", contentIds: [] }]);
   const [selectedMaterials, setSelectedMaterials] = useState({});
+  const [showNuggetBuilderModal, setShowNuggetBuilderModal] = useState(false);
+  const [nuggetBuilderSectionIndex, setNuggetBuilderSectionIndex] = useState(null);
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -143,29 +146,31 @@ const LessonPlanBuilder = () => {
     setSections([...sections, { intro: "", contentIds: [] }]);
   };
 
-  const handleCreateNewNugget = () => {
-    navigate("/nugget-builder");
+  const handleCreateNewNugget = (sectionIndex) => {
+    setNuggetBuilderSectionIndex(sectionIndex);
+    setShowNuggetBuilderModal(true);
   };
 
-  const closeUploadModal = () => {
-    setShowUploadModal(false);
-  };
-
-  const handleNewNuggetAdded = (newNugget) => {
-    setShowUploadModal(false);
-    if (selectedSectionIndex !== null) {
-      setSelectedMaterials((prevMaterials) => ({
-        ...prevMaterials,
-        [selectedSectionIndex]: [...(prevMaterials[selectedSectionIndex] || []), newNugget],
+  // Handler for when a new nugget is created from the modal
+  const handleNuggetBuilderSave = async (newNugget) => {
+    setShowNuggetBuilderModal(false);
+    if (nuggetBuilderSectionIndex !== null) {
+      setSelectedMaterials((prev) => ({
+        ...prev,
+        [nuggetBuilderSectionIndex]: [
+          ...(prev[nuggetBuilderSectionIndex] || []),
+          newNugget,
+        ],
       }));
     }
+    await reloadUserNuggets(); // <-- Add this line
   };
 
   // --- Save as Draft ---
   const handleSaveSession = async () => {
-    // Require description
-    if (!formData.description || formData.description.trim() === "") {
-      alert("Description is required.");
+    // Require learning objectives for draft
+    if (!objectives[0] || objectives[0].trim() === "" || objectives[0] === "<p><br></p>") {
+      alert("Learning objectives are required.");
       return;
     }
 
@@ -204,8 +209,14 @@ const LessonPlanBuilder = () => {
     if (isSubmitting) return;
 
     // Require description
-    if (!formData.description || formData.description.trim() === "") {
+    if (!formData.description || formData.description.trim() === "" || formData.description === "<p><br></p>") {
       alert("Description is required.");
+      setIsSubmitting(false);
+      return;
+    }
+    // Require learning objectives
+    if (!objectives[0] || objectives[0].trim() === "" || objectives[0] === "<p><br></p>") {
+      alert("Learning objectives are required.");
       setIsSubmitting(false);
       return;
     }
@@ -353,13 +364,51 @@ const LessonPlanBuilder = () => {
       bottom: "auto",
       marginRight: "-50%",
       transform: "translate(-50%, -50%)",
-      width: "400px",
+      width: "95vw",           // Responsive width
+      maxWidth: "540px",       // Limit max width
+      maxHeight: "90vh",       // Limit max height
+      overflowY: "auto",       // Scroll if content is too tall
       padding: "20px",
       textAlign: "center",
+      borderRadius: "12px",
+      boxSizing: "border-box",
     },
     overlay: {
       backgroundColor: "rgba(0, 0, 0, 0.75)",
+      zIndex: 1000,
     },
+  };
+
+  const closeUploadModal = () => setShowUploadModal(false);
+
+  const handleNewNuggetAdded = (newNugget) => {
+    setShowUploadModal(false);
+    if (nuggetBuilderSectionIndex !== null) {
+      setSelectedMaterials((prev) => ({
+        ...prev,
+        [nuggetBuilderSectionIndex]: [
+          ...(prev[nuggetBuilderSectionIndex] || []),
+          newNugget,
+        ],
+      }));
+    }
+  };
+
+  const reloadUserNuggets = async () => {
+    const db = getFirestore();
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+    const nuggetsQuery = query(
+      collection(db, "content"),
+      where("User", "==", user.uid)
+    );
+    const snapshot = await getDocs(nuggetsQuery);
+    const userNuggets = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setPortalContent(userNuggets);
   };
 
   return (
@@ -577,62 +626,17 @@ const LessonPlanBuilder = () => {
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
               Learning Objectives
             </label>
-            {objectives.map((obj, idx) => (
-              <div key={idx} style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-                <input
-                  type="text"
-                  value={obj}
-                  onChange={e => handleObjectiveChange(idx, e.target.value)}
-                  placeholder={`Objective ${idx + 1}`}
-                  style={{
-                    flex: 1,
-                    padding: "10px",
-                    borderRadius: 6,
-                    border: "1px solid #bbb",
-                    fontSize: "1.08rem",
-                    color: "#111",
-                    fontFamily: "Open Sans, sans-serif"
-                  }}
-                  required
-                />
-                {objectives.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeObjective(idx)}
-                    style={{
-                      marginLeft: 8,
-                      background: "none",
-                      color: "#e74c3c",
-                      border: "none",
-                      fontWeight: 700,
-                      fontSize: "1.3rem",
-                      cursor: "pointer"
-                    }}
-                    title="Remove"
-                  >
-                    &times;
-                  </button>
-                )}
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addObjective}
+            <ReactQuill
+              theme="snow"
+              value={objectives[0]}
+              onChange={value => setObjectives([value])}
               style={{
                 background: "#fff",
+                borderRadius: 6,
                 color: "#111",
-                border: "1px solid #111",
-                borderRadius: "6px",
-                padding: "8px 18px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "Open Sans, sans-serif",
-                fontSize: "1.08rem",
-                marginTop: 4
+                fontFamily: "Open Sans, sans-serif"
               }}
-            >
-              + Add Objective
-            </button>
+            />
           </div>
           <div>
             {sections.map((section, index) => (
@@ -654,7 +658,7 @@ const LessonPlanBuilder = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder="Section Title"
+                  placeholder= "Section Title"
                   value={section.title || ""}
                   onChange={e => {
                     const updatedSections = [...sections];
@@ -683,7 +687,7 @@ const LessonPlanBuilder = () => {
                     fontSize: "1.08rem"
                   }}
                 >
-                  Content
+                  Description
                 </label>
                 <ReactQuill
                   theme="snow"
@@ -701,7 +705,6 @@ const LessonPlanBuilder = () => {
                     fontFamily: "Open Sans, sans-serif",
                     marginBottom: 10,
                   }}
-                  placeholder="Section Content"
                 />
                 <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
                   <button
@@ -736,10 +739,7 @@ const LessonPlanBuilder = () => {
                       fontFamily: "Open Sans, sans-serif",
                       fontSize: "1.08rem"
                     }}
-                    onClick={() => {
-                      setSelectedSectionIndex(index);
-                      handleCreateNewNugget();
-                    }}
+                    onClick={() => handleCreateNewNugget(index)}
                   >
                     + Create New Nugget
                   </button>
@@ -781,7 +781,7 @@ const LessonPlanBuilder = () => {
                           background: "#fafbfc",
                           border: "1px solid #e5e7eb",
                           borderRadius: "10px",
-                          padding: "4px 6px",      // tighter padding
+                          padding: "4px 6px",
                           color: "#111",
                           fontFamily: "Open Sans, sans-serif",
                           boxShadow: "0 2px 8px rgba(22,32,64,0.06)",
@@ -791,7 +791,7 @@ const LessonPlanBuilder = () => {
                           width: "fit-content",
                           maxWidth: "100%",
                           position: "relative",
-                          margin: 0,               // no margin between nuggets
+                          margin: 0,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
@@ -808,36 +808,28 @@ const LessonPlanBuilder = () => {
                           textOverflow: "ellipsis",
                           maxWidth: 120
                         }}>
-                          <span style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            display: "inline-block",
-                            maxWidth: 90
-                          }}>
-                            {fullNugget.Title || "Untitled Nugget"}
-                          </span>
                           <a
                             href={`/view-content/${material.id}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              marginLeft: 4,
-                              padding: "0 4px",
-                              fontSize: "10px",
-                              background: "#f3f4f6",
-                              borderRadius: "4px",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              display: "inline-block",
+                              maxWidth: 90,
                               color: "#1a73e8",
-                              border: "1px solid #e5e7eb",
-                              textDecoration: "none",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              height: "16px",
-                              lineHeight: 1,
+                              textDecoration: "underline",
+                              fontWeight: 700,
+                              fontSize: "1.02rem",
+                              background: "none",
+                              border: "none",
+                              padding: 0,
+                              margin: 0,
                             }}
-                            title="View"
+                            title="View Nugget"
                           >
-                            View
+                            {fullNugget.Title || "Untitled Nugget"}
                           </a>
                         </span>
                         <button
@@ -966,6 +958,18 @@ const LessonPlanBuilder = () => {
           type={formData.type}
           category={formData.category}
           level={formData.level}
+        />
+      </Modal>
+      {/* Nugget Builder Modal */}
+      <Modal
+        isOpen={showNuggetBuilderModal}
+        onRequestClose={() => setShowNuggetBuilderModal(false)}
+        style={customStyles}
+        contentLabel="Create New Nugget"
+      >
+        <NuggetBuilderPage
+          onSave={handleNuggetBuilderSave}
+          onCancel={() => setShowNuggetBuilderModal(false)}
         />
       </Modal>
     </div>

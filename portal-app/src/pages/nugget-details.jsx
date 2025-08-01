@@ -44,11 +44,19 @@ const NuggetDetails = () => {
       <div style={{ display: "flex", gap: 32, marginBottom: 24 }}>
         <div>
           <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Category</div>
-          <div style={{ fontSize: "1.08rem", color: "#444" }}>{nugget.Category}</div>
+          <div style={{ fontSize: "1.08rem", color: "#444" }}>
+            {Array.isArray(nugget.Category)
+              ? nugget.Category.join(", ")
+              : nugget.Category}
+          </div>
         </div>
         <div>
           <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Level</div>
-          <div style={{ fontSize: "1.08rem", color: "#444" }}>{nugget.Level}</div>
+          <div style={{ fontSize: "1.08rem", color: "#444" }}>
+            {Array.isArray(nugget.Level)
+              ? nugget.Level.join(", ")
+              : nugget.Level}
+          </div>
         </div>
         <div>
           <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Duration</div>
@@ -56,7 +64,11 @@ const NuggetDetails = () => {
         </div>
         <div>
           <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Type</div>
-          <div style={{ fontSize: "1.08rem", color: "#444" }}>{nugget.Type}</div>
+          <div style={{ fontSize: "1.08rem", color: "#444" }}>
+            {Array.isArray(nugget.Type)
+              ? nugget.Type.join(", ")
+              : nugget.Type}
+          </div>
         </div>
       </div>
       <div>
