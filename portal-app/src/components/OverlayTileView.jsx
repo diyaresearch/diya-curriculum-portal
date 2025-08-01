@@ -258,7 +258,13 @@ const OverlayTileView = ({
                         {item.Title}
                       </div>
                       <div style={{ fontSize: "0.98rem", color: "#444" }}>
-                        {item.Description}
+                        {/* Display Description as plain text, cut off if too long */}
+                        {item.Description
+                          ? (() => {
+                              const plain = item.Description.replace(/<[^>]+>/g, "");
+                              return plain.length > 20 ? plain.slice(0, 20) + "..." : plain;
+                            })()
+                          : ""}
                       </div>
                       <div style={{ fontSize: "0.92rem", color: "#888" }}>
                         {(Array.isArray(item.Category) ? item.Category.join(", ") : item.Category) || ""}

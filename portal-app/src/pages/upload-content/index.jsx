@@ -211,11 +211,11 @@ export const UploadContent = ({
 
     try {
       const db = getFirestore();
-      const plainDescription = stripHtml(formData.Abstract);
+      const htmlDescription = formData.Abstract; // This is the HTML from ReactQuill
 
       const docRef = await addDoc(collection(db, "content"), {
         Title: formData.Title,
-        Description: plainDescription,
+        Description: htmlDescription, // <-- Save HTML!
         Category: formData.Category,
         Level: formData.Level,
         Duration: formData.Duration,
