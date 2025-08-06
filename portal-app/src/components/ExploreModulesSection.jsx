@@ -74,9 +74,23 @@ const LockIcon = ({ isLocked }) => (
   </svg>
 );
 
-// Add this helper function near the top of your file, outside the ExploreModulesSection component:
+// Replace the existing capitalizeWords function with this more robust version:
 function capitalizeWords(str) {
-  return (str || "")
+  // Handle all possible non-string cases
+  if (str === null || str === undefined) {
+    return 'N/A';
+  }
+
+  // Convert to string safely
+  const stringValue = String(str);
+
+  // Check if the result is a valid string
+  if (typeof stringValue !== 'string') {
+    console.warn('capitalizeWords: String conversion failed for:', str);
+    return 'N/A';
+  }
+
+  return stringValue
     .toLowerCase()
     .replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -1048,64 +1062,6 @@ const NuggetBuilderSection = () => (
   </section>
 );
 
-const LessonPlanBuilderSection = () => (
-  <section
-    style={{
-      width: "100%",
-      background: "#F6F8FA",
-      padding: "60px 0 0 0",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "flex-start"
-    }}
-  >
-    <h2
-      style={{
-        fontSize: "2.5rem",
-        fontWeight: "700",
-        color: "#111",
-        fontFamily: "Open Sans, sans-serif",
-        textAlign: "center",
-        margin: 0,
-        letterSpacing: "1px"
-      }}
-    >
-      Lesson Plan Builder
-    </h2>
-    <p
-      style={{
-        marginTop: "18px",
-        fontSize: "1.15rem",
-        color: "#222",
-        textAlign: "center",
-        maxWidth: "600px",
-        fontWeight: 500,
-      }}
-    >
-      Create and customize your own lesson plans for your classes.
-    </p>
-    <button
-      style={{
-        marginTop: "32px",
-        background: "#162040",
-        color: "#fff",
-        border: "2px solid #162040",
-        borderRadius: "6px",
-        padding: "14px 48px",
-        fontSize: "1.08rem",
-        fontWeight: "600",
-        cursor: "pointer",
-        transition: "background 0.2s, color 0.2s, border 0.2s",
-        minWidth: "260px",
-      }}
-      onClick={() => window.location.href = "/lesson-plans/builder"}
-    >
-      Go to Lesson Plan Builder
-    </button>
-  </section>
-);
-
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
   const navigate = useNavigate();
@@ -1185,9 +1141,27 @@ const ExploreModulesSection = () => {
   useEffect(() => {
     const db = getFirestore(firebaseApp);
 
-    // Fetch modules
+    // Fetch modules - FIXED VERSION
     getDocs(collection(db, "module")).then(snapshot => {
-      setModules(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: "Module" })));
+      const moduleData = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        moduleData.push({
+          id: doc.id,
+          title: data.title || "Untitled Module",
+          description: data.description || "",
+          image: data.image || "module1",
+          tags: data.tags || [],
+          level: data.level || "Basic",
+          category: data.category || "General",
+          lessonPlans: data.lessonPlans || {},
+          _type: "Module"
+        });
+      });
+      console.log("Fetched modules:", moduleData); // Add this for debugging
+      setModules(moduleData);
+    }).catch(error => {
+      console.error("Error fetching modules:", error);
     });
 
     // Fetch lessons
@@ -1325,7 +1299,6 @@ const ExploreModulesSection = () => {
         }}
       >
         <NuggetBuilderSection />
-        <LessonPlanBuilderSection />
       </div>
     );
   }
