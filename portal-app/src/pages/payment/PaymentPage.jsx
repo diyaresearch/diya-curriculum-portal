@@ -43,9 +43,11 @@ const PaymentForm = () => {
                 const data = await response.json();
 
                 if (response.ok) {
+                    // FIX: Store clientSecret instead of redirecting immediately
                     setClientSecret(data.clientSecret);
                     setPaymentIntentId(data.paymentIntentId);
                 } else {
+                    // FIX: Change 'result' to 'data'
                     setError(data.message || 'Failed to initialize payment');
                 }
             } catch (err) {
@@ -57,7 +59,7 @@ const PaymentForm = () => {
         if (user && userData) {
             createPaymentIntent();
         }
-    }, [user, userData]);
+    }, [user, userData, navigate]); // FIX: Add navigate to dependency array
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -110,12 +112,11 @@ const PaymentForm = () => {
 
                 if (response.ok) {
                     alert('Payment successful! Welcome to Premium!');
-                    navigate('/');
+                    navigate('/teacher-plus'); // Changed from '/' to '/teacher-plus'
                 } else {
                     setError(result.message || 'Payment confirmation failed');
                 }
             }
-
         } catch (err) {
             setError('Payment processing failed');
             console.error('Payment error:', err);
