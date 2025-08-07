@@ -74,9 +74,23 @@ const LockIcon = ({ isLocked }) => (
   </svg>
 );
 
-// Add this helper function near the top of your file, outside the ExploreModulesSection component:
+// Replace the existing capitalizeWords function with this more robust version:
 function capitalizeWords(str) {
-  return (str || "")
+  // Handle all possible non-string cases
+  if (str === null || str === undefined) {
+    return 'N/A';
+  }
+
+  // Convert to string safely
+  const stringValue = String(str);
+
+  // Check if the result is a valid string
+  if (typeof stringValue !== 'string') {
+    console.warn('capitalizeWords: String conversion failed for:', str);
+    return 'N/A';
+  }
+
+  return stringValue
     .toLowerCase()
     .replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -336,9 +350,9 @@ const TeacherRectangles = () => {
               src={laptopImg}
               alt="Laptop"
               style={{
-                width: "80px",
-                height: "80px",
-                objectFit: "contain",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
                 display: "block"
               }}
             />
@@ -959,11 +973,15 @@ function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
 const MODULE_CONTENT_TYPES = ["Module", "Lesson Plan", "Nuggets"];
 const MODULE_CATEGORIES = [
   "All",
-  "Python for AI",
-  "AI Insights",
-  "AI Forge",
-  "Physics & AI",
-  "Chemistry"
+  "AI Principles",
+  "Data Science",
+  "Machine Learning",
+  "Statistics",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Economics",
+  "Other"
 ];
 const MODULE_LEVELS = ["All", "Basic", "Intermediate", "Advanced"];
 
@@ -1048,6 +1066,71 @@ const NuggetBuilderSection = () => (
   </section>
 );
 
+// Add this section component near the top of your file
+function ModuleBuilderPromo() {
+  const navigate = useNavigate();
+
+  return (
+    <section
+      style={{
+        width: "100%",
+        padding: "60px 0 0 0",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        background: "#F6F8FA"
+      }}
+    >
+      <h2
+        style={{
+          fontSize: "2.5rem",
+          fontWeight: "700",
+          color: "#111",
+          fontFamily: "Open Sans, sans-serif",
+          textAlign: "center",
+          margin: 0,
+          letterSpacing: "1px"
+        }}
+      >
+        Module Builder
+      </h2>
+      <p
+        style={{
+          marginTop: "18px",
+          fontSize: "1.15rem",
+          color: "#222",
+          textAlign: "center",
+          maxWidth: "600px",
+          fontWeight: 500,
+        }}
+      >
+        Create and organize modules. Add lesson plans to build a comprehensive learning experience.
+      </p>
+      <button
+        onClick={() => {
+          window.location.href = "/module-builder"; // This will refresh and go to module builder
+        }}
+        style={{
+          marginTop: "32px",
+          background: "#162040",
+          color: "#fff",
+          border: "2px solid #162040",
+          borderRadius: "6px",
+          padding: "14px 48px",
+          fontSize: "1.08rem",
+          fontWeight: "600",
+          cursor: "pointer",
+          transition: "background 0.2s, color 0.2s, border 0.2s",
+          minWidth: "260px",
+        }}
+      >
+        Go to Module Builder
+      </button>
+    </section>
+  );
+}
+
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
   const navigate = useNavigate();
@@ -1103,20 +1186,20 @@ const ExploreModulesSection = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   let paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
-  // If we don't have enough items to fill 2 rows, duplicate items or add placeholders
-  if (paginatedItems.length < itemsPerPage && filteredItems.length > 0) {
-    const itemsNeeded = itemsPerPage - paginatedItems.length;
+  // // If we don't have enough items to fill 2 rows, duplicate items or add placeholders
+  // if (paginatedItems.length < itemsPerPage && filteredItems.length > 0) {
+  //   const itemsNeeded = itemsPerPage - paginatedItems.length;
 
-    // Repeat items from the beginning to fill the remaining slots
-    for (let i = 0; i < itemsNeeded; i++) {
-      const itemToAdd = filteredItems[i % filteredItems.length];
-      paginatedItems.push({
-        ...itemToAdd,
-        id: `${itemToAdd.id}-duplicate-${i}`, // Ensure unique keys
-        isDuplicate: true
-      });
-    }
-  }
+  //   // Repeat items from the beginning to fill the remaining slots
+  //   for (let i = 0; i < itemsNeeded; i++) {
+  //     const itemToAdd = filteredItems[i % filteredItems.length];
+  //     paginatedItems.push({
+  //       ...itemToAdd,
+  //       id: `${itemToAdd.id}-duplicate-${i}`, // Ensure unique keys
+  //       isDuplicate: true
+  //     });
+  //   }
+  // }
 
   // Reset to page 1 when filters change or items per page changes
   useEffect(() => {
@@ -1127,14 +1210,38 @@ const ExploreModulesSection = () => {
   useEffect(() => {
     const db = getFirestore(firebaseApp);
 
-    // Fetch modules
+    // Fetch modules - FIXED VERSION
     getDocs(collection(db, "module")).then(snapshot => {
-      setModules(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: "Module" })));
+      const moduleData = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        moduleData.push({
+          id: doc.id,
+          title: data.title || "Untitled Module",
+          description: data.description || "",
+          image: data.image || "module1",
+          tags: data.tags || [],
+          level: data.level || "Basic",
+          category: data.category || "General",
+          lessonPlans: data.lessonPlans || {},
+          isDraft: data.isDraft || false, // <-- Add this line
+          _type: "Module"
+        });
+      });
+      console.log("Fetched modules:", moduleData); // Add this for debugging
+      setModules(moduleData);
+    }).catch(error => {
+      console.error("Error fetching modules:", error);
     });
 
     // Fetch lessons
     getDocs(collection(db, "lesson")).then(snapshot => {
-      setLessons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: "Lesson Plan" })));
+      setLessons(snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        isDraft: doc.data().isDraft || false, // <-- Add this line
+        _type: "Lesson Plan"
+      })));
     });
 
     // Fetch nuggets/content
@@ -1143,43 +1250,52 @@ const ExploreModulesSection = () => {
     });
   }, []);
 
+  // Initial display should exclude drafts
   useEffect(() => {
-    // Show all cards by default when data is loaded and no filters have been applied
     if (!filtersApplied && (modules.length > 0 || lessons.length > 0 || nuggets.length > 0)) {
-      setFilteredItems([...modules, ...lessons, ...nuggets]);
+      const publishedModules = modules.filter(m => !m.isDraft);
+      const publishedLessons = lessons.filter(l => !l.isDraft);
+      setFilteredItems([...publishedModules, ...publishedLessons, ...nuggets]);
     }
-    // eslint-disable-next-line
   }, [modules, lessons, nuggets, filtersApplied]);
 
   // Filtering logic, only runs when Apply Filters is clicked
   const handleApplyFilters = () => {
     let items = [];
+    // Filter out drafts before applying other filters
+    const publishedModules = modules.filter(m => !m.isDraft);
+    const publishedLessons = lessons.filter(l => !l.isDraft);
+
     if (contentType === "All") {
       items = [
-        ...modules,
-        ...lessons,
+        ...publishedModules,
+        ...publishedLessons,
         ...nuggets,
       ];
     } else if (contentType === "Module") {
-      items = modules;
+      items = publishedModules;
     } else if (contentType === "Lesson Plan") {
-      items = lessons;
+      items = publishedLessons;
     } else if (contentType === "Nuggets") {
       items = nuggets;
     }
 
     // Filter by category if not "All"
     if (category !== "All") {
-      items = items.filter(item =>
-        ((item.category || item.Category || "").toLowerCase() === category.toLowerCase())
-      );
+      items = items.filter(item => {
+        let cat = item.category || item.Category || "";
+        if (Array.isArray(cat)) cat = cat.join(", ");
+        return cat.toString().toLowerCase() === category.toLowerCase();
+      });
     }
 
     // Filter by level if not "All"
     if (level !== "All") {
-      items = items.filter(item =>
-        ((item.level || item.Level || "").toLowerCase() === level.toLowerCase())
-      );
+      items = items.filter(item => {
+        let lvl = item.level || item.Level || "";
+        if (Array.isArray(lvl)) lvl = lvl.join(", ");
+        return lvl.toString().toLowerCase() === level.toLowerCase();
+      });
     }
 
     // Filter by keyword if not empty
@@ -1267,6 +1383,7 @@ const ExploreModulesSection = () => {
         }}
       >
         <NuggetBuilderSection />
+        <ModuleBuilderPromo />
       </div>
     );
   }
@@ -1462,8 +1579,8 @@ const ExploreModulesSection = () => {
               justifyContent: "center"
             }}>
               <img
-                src={aiExploreImg2}
-                alt="AI Insights"
+                src={laptopImg} // <-- Always use laptop image
+                alt="Laptop"
                 style={{
                   width: "100%",
                   height: "100%",
@@ -1606,7 +1723,7 @@ const ExploreModulesSection = () => {
                 textAlign: "center",
                 maxWidth: "600px",
                 fontWeight: 500,
-                marginBottom: 24
+                marginBottom: "24px"
               }}
             >
               Select your preferences to filter available modules.
@@ -1824,8 +1941,8 @@ const ExploreModulesSection = () => {
                       background: "#f0f0f0"
                     }}>
                       <img
-                        src={getItemImage(item)}
-                        alt={item.title || item.Title}
+                        src={laptopImg} // <-- Always use laptop image
+                        alt="Laptop"
                         style={{
                           width: "100%",
                           height: "100%",
@@ -1837,7 +1954,7 @@ const ExploreModulesSection = () => {
 
                     <div style={{
                       width: "100%",
-                      height: "70px",
+                      height: "100px", // <-- increase from 70px to 90px
                       padding: "12px 0 0 0",
                       textAlign: "center",
                       background: "#fff"
@@ -1845,13 +1962,27 @@ const ExploreModulesSection = () => {
                       <span
                         style={{
                           display: "block",
+                          fontWeight: "700",
+                          fontSize: "1.15rem",
+                          color: "#222",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden"
+                        }}
+                      >
+                        {item.title || item.Title}
+                      </span>
+                      <span
+                        style={{
+                          display: "block",
                           fontWeight: "600",
                           fontSize: "1rem",
                           color: "#162040",
                           letterSpacing: "1px",
-                          overflow: "hidden",
+                          marginTop: "2px",
                           textOverflow: "ellipsis",
-                          whiteSpace: "nowrap"
+                          whiteSpace: "nowrap",
+                          overflow: "hidden"
                         }}
                       >
                         {capitalizeWords(item.level || item.Level || "N/A")}
@@ -1859,17 +1990,17 @@ const ExploreModulesSection = () => {
                       <span
                         style={{
                           display: "block",
-                          fontWeight: "700",
-                          fontSize: "1.2rem",
-                          color: "#222",
-                          marginTop: "4px",
-                          textAlign: "center",
-                          overflow: "hidden",
+                          fontWeight: "600",
+                          fontSize: "1rem",
+                          color: "#162040",
+                          letterSpacing: "1px",
+                          marginTop: "2px",
                           textOverflow: "ellipsis",
-                          whiteSpace: "nowrap"
+                          whiteSpace: "nowrap",
+                          overflow: "hidden"
                         }}
                       >
-                        {item.title || item.Title}
+                        {typeLabel[item._type] || item._type}
                       </span>
                     </div>
                   </div>
@@ -2018,4 +2149,10 @@ const ExploreModulesSection = () => {
 };
 
 export default ExploreModulesSection;
+
+const typeLabel = {
+  Module: "Module",
+  "Lesson Plan": "Lesson Plan",
+  Nuggets: "Nugget"
+};
 

@@ -1,7 +1,7 @@
 import React from "react";
 import UploadContent from "./upload-content"; // adjust path if needed
 
-const NuggetBuilderPage = () => (
+const NuggetBuilderPage = (props) => (
   <div
     style={{
       minHeight: "100vh",
@@ -10,10 +10,35 @@ const NuggetBuilderPage = () => (
       flexDirection: "column",
       alignItems: "center",
       paddingTop: "40px",
-      paddingBottom: "64px", // Add space below the section and the footer
-      fontFamily: "Open Sans, sans-serif"
+      paddingBottom: "64px",
+      fontFamily: "Open Sans, sans-serif",
+      position: "relative"
     }}
   >
+    {/* Only show X button if onCancel is provided (i.e. in popup/modal) */}
+    {props.onCancel && (
+      <button
+        onClick={props.onCancel}
+        style={{
+          position: "fixed",
+          top: 32,
+          right: 32,
+          background: "none",
+          border: "none",
+          fontSize: "2.2rem",
+          color: "#888",
+          cursor: "pointer",
+          zIndex: 2000,
+          fontWeight: 700,
+          lineHeight: 1,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.07)"
+        }}
+        aria-label="Close"
+        type="button"
+      >
+        &times;
+      </button>
+    )}
     <div style={{ width: "100%", maxWidth: 1100, margin: "0 auto" }}>
       <h1
         style={{
@@ -44,46 +69,15 @@ const NuggetBuilderPage = () => (
       <div
         style={{
           display: "flex",
-          flexDirection: "row",
-          gap: "48px",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
           marginTop: "40px",
-          alignItems: "flex-start",
-          justifyContent: "center"
         }}
       >
-        {/* Left side: Nugget Info */}
         <div
           style={{
-            flex: "0 0 260px",
-            minWidth: "220px",
-            maxWidth: "300px",
-            padding: "32px 0 0 0"
-          }}
-        >
-          <h2
-            style={{
-              fontSize: "2rem",
-              fontWeight: 700,
-              color: "#111",
-              marginBottom: "16px"
-            }}
-          >
-            Nugget Info
-          </h2>
-          <p
-            style={{
-              fontSize: "1.05rem",
-              color: "#444",
-              lineHeight: 1.6
-            }}
-          >
-            Fill in the details for your new nugget.
-          </p>
-        </div>
-        {/* Right side: UploadContent form */}
-        <div
-          style={{
-            flex: "1 1 500px",
+            width: "100%",
             maxWidth: "600px",
             background: "#fff",
             borderRadius: "18px",
@@ -93,7 +87,11 @@ const NuggetBuilderPage = () => (
             minWidth: "320px"
           }}
         >
-          <UploadContent title="Nugget Builder" />
+          <UploadContent
+            title="Nugget Builder"
+            fromLesson={props.onCancel}
+            onNuggetCreated={props.onSave}
+          />
         </div>
       </div>
     </div>

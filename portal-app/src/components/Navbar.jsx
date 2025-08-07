@@ -152,6 +152,8 @@ const Navbar = () => {
     navigate("/user-profile");
   };
 
+  // ...existing code...
+
   // Google login handler with Firestore check
   const handleGoogleLogin = async () => {
     setErrorMsg("");
@@ -161,14 +163,31 @@ const Navbar = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
-      const studentDoc = await getDoc(doc(db, "students", user.uid));
-      if (!teacherDoc.exists() && !studentDoc.exists()) {
-        await signOut(auth);
-        navigate("?showSignUpPopup=1", { replace: false });
-        setErrorMsg(renderSignUpError());
-        return;
+
+      if (teacherDoc.exists()) {
+        const userData = teacherDoc.data();
+        console.log("User role:", userData.role); // Debug log
+
+        // Redirect based on user role
+        if (userData.role === "teacherPlus") {
+          navigate("/teacher-plus");
+        } else if (userData.role === "admin") {
+          navigate("/"); // or wherever admins should go
+        } else {
+          navigate("/"); // teacherDefault goes to home
+        }
+      } else {
+        // Check if it's a student
+        const studentDoc = await getDoc(doc(db, "students", user.uid));
+        if (!teacherDoc.exists() && !studentDoc.exists()) {
+          await signOut(auth);
+          navigate("?showSignUpPopup=1", { replace: false });
+          setErrorMsg(renderSignUpError());
+          return;
+        }
+        // Student login - redirect to home or student dashboard
+        navigate("/");
       }
-      // else: proceed as normal
     } catch (error) {
       setErrorMsg(error.message);
     }
