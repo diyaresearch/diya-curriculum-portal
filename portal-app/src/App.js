@@ -27,6 +27,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 // import DashboardContainer from './components/DashboardContainer';
 import ModuleBuilder from "./pages/module_builder/builder";
 import ModuleDrafts from "./pages/module_builder/drafts";
+import LessonDetailsPage from "./pages/lesson-details/LessonDetailsPage";
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
           <Route path="/teacherplus" element={<TeacherPlusPage />} />
           <Route path="/module-builder" element={<ModuleBuilder />} />
           <Route path="/module_builder/drafts" element={<ModuleDrafts />} />
+          <Route path="/lesson-details/:id" element={<LessonDetailsPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

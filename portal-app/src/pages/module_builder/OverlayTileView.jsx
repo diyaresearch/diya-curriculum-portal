@@ -241,10 +241,11 @@ const OverlayTileView = ({
                         {item.description
                           ? (() => {
                               const plain = item.description.replace(/<[^>]+>/g, "");
-                              return plain.length > 40 ? plain.slice(0, 40) + "..." : plain;
+                              const preview = plain.slice(0, 15);
+                              return preview + (plain.length > 15 ? "..." : "");
                             })()
                           : item.summary
-                            ? item.summary.slice(0, 40) + "..."
+                            ? item.summary.slice(0, 15) + (item.summary.length > 15 ? "..." : "")
                             : ""}
                       </div>
                       <div style={{ fontSize: "0.92rem", color: "#888" }}>
@@ -293,7 +294,7 @@ const OverlayTileView = ({
                           {isSelected ? "Selected" : "Select"}
                         </button>
                         <a
-                          href={`/view-content/${item.id}`}
+                          href={`/lesson-details/${item.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{

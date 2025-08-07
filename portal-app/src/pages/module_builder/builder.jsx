@@ -604,7 +604,6 @@ const ModuleBuilder = () => {
               }}
             >
               {selectedMaterials.map((material) => {
-                // Only show title and link
                 return (
                   <div
                     key={material.id}
@@ -643,6 +642,7 @@ const ModuleBuilder = () => {
                         whiteSpace: "nowrap",
                         display: "inline-block",
                         maxWidth: "90%",
+                        cursor: "pointer"
                       }}
                       title="View Lesson Details"
                     >
