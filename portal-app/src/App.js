@@ -25,6 +25,8 @@ import TeacherPlusPage from "./pages/teacherplus/teacherplusPage";
 import ProtectedRoute from './components/ProtectedRoute';
 // Remove this line since DashboardContainer doesn't exist
 // import DashboardContainer from './components/DashboardContainer';
+import ModuleBuilder from "./pages/module_builder/builder";
+import ModuleDrafts from "./pages/module_builder/drafts";
 
 function App() {
   return (
@@ -54,6 +56,8 @@ function App() {
           {/* Simplified teacher-plus routes - removed duplicates and DashboardContainer */}
           <Route path="/teacher-plus" element={<TeacherPlusPage />} />
           <Route path="/teacherplus" element={<TeacherPlusPage />} />
+          <Route path="/module-builder" element={<ModuleBuilder />} />
+          <Route path="/module_builder/drafts" element={<ModuleDrafts />} />
         </Routes>
       </Layout>
     </BrowserRouter>

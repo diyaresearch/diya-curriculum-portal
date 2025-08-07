@@ -60,7 +60,7 @@ function MultiCheckboxDropdown({ label, options, selected, onChange }) {
   return (
     <div ref={dropdownRef} style={{ position: "relative", marginBottom: 0 }}>
       <label style={{ fontWeight: 600, marginBottom: 6, display: "block", color: "#222" }}>
-        {label}
+        {label} <RequiredAsterisk />
       </label>
       <div
         style={{
@@ -123,7 +123,12 @@ function MultiCheckboxDropdown({ label, options, selected, onChange }) {
   );
 }
 
-const LessonPlanBuilder = () => {
+// Add this helper for required asterisks
+const RequiredAsterisk = () => (
+  <span style={{ color: "red", marginLeft: 4 }}>*</span>
+);
+
+const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave }) => {
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -279,11 +284,8 @@ const LessonPlanBuilder = () => {
 
   // --- Save as Draft ---
   const handleSaveSession = async () => {
-    // Require learning objectives for draft
-    if (!objectives[0] || objectives[0].trim() === "" || objectives[0] === "<p><br></p>") {
-      alert("Learning objectives are required.");
-      return;
-    }
+    // REMOVE learning objectives required check for draft!
+    // (Do not check objectives[0] for draft save)
 
     const auth = getAuth();
     const user = auth.currentUser;
@@ -334,6 +336,20 @@ const LessonPlanBuilder = () => {
     // Require section content
     if (sections.some(section => !section.intro || section.intro.trim() === "")) {
       alert("Section content is required for all sections.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Require category, type, and level
+    if (
+      !formData.category ||
+      (Array.isArray(formData.category) && formData.category.length === 0) ||
+      !formData.type ||
+      (Array.isArray(formData.type) && formData.type.length === 0) ||
+      !formData.level ||
+      (Array.isArray(formData.level) && formData.level.length === 0)
+    ) {
+      alert("Category, Type, and Level are required.");
       setIsSubmitting(false);
       return;
     }
@@ -402,6 +418,14 @@ const LessonPlanBuilder = () => {
 
       if (!response.ok) {
         throw new Error("Error generating lesson plan");
+      }
+      const result = await response.json();
+      if (onSave) {
+        onSave({
+          id: result.id,
+          title: lessonData.title,
+          // add other fields if needed
+        });
       }
 
       // Remove the draft from Firestore if it exists
@@ -573,17 +597,19 @@ const LessonPlanBuilder = () => {
         }}
       >
         <div className="absolute top-4 right-4 flex space-x-2">
-          <button
-            type="button"
-            className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
-            style={{
-              color: "#111",
-              fontFamily: "Open Sans, sans-serif"
-            }}
-            onClick={() => navigate("/lesson-plans/drafts")}
-          >
-            Drafts
-          </button>
+          {showDrafts !== false && (
+            <button
+              type="button"
+              className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
+              style={{
+                color: "#111",
+                fontFamily: "Open Sans, sans-serif"
+              }}
+              onClick={() => navigate("/lesson-plans/drafts")}
+            >
+              Drafts
+            </button>
+          )}
         </div>
         <form
           onSubmit={handleSubmit}
@@ -600,7 +626,7 @@ const LessonPlanBuilder = () => {
         >
           <div>
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
-              Title
+              Title <RequiredAsterisk />
             </label>
             <input
               style={{
@@ -622,7 +648,7 @@ const LessonPlanBuilder = () => {
           </div>
           <div>
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
-              Description
+              Description <RequiredAsterisk />
             </label>
             <ReactQuill
               theme="snow"
@@ -657,7 +683,7 @@ const LessonPlanBuilder = () => {
           </div>
           <div>
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
-              Lesson Duration (minutes)
+              Lesson Duration (minutes) <RequiredAsterisk />
             </label>
             <input
               style={{
@@ -679,7 +705,7 @@ const LessonPlanBuilder = () => {
           </div>
           <div>
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
-              Learning Objectives
+              Learning Objectives <RequiredAsterisk />
             </label>
             <ReactQuill
               theme="snow"
@@ -709,7 +735,7 @@ const LessonPlanBuilder = () => {
                 }}
               >
                 <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
-                  Section #{index + 1}
+                  Section #{index + 1} <RequiredAsterisk />
                 </label>
                 <input
                   type="text"
@@ -742,7 +768,7 @@ const LessonPlanBuilder = () => {
                     fontSize: "1.08rem"
                   }}
                 >
-                  Description
+                  Description <RequiredAsterisk />
                 </label>
                 <ReactQuill
                   theme="snow"
@@ -942,23 +968,25 @@ const LessonPlanBuilder = () => {
             </label>
           </div>
           <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
-            <button
-              type="button"
-              onClick={handleSaveSession}
-              style={{
-                background: "#fff",
-                color: "#111",
-                border: "1px solid #111",
-                borderRadius: "6px",
-                padding: "8px 18px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "Open Sans, sans-serif",
-                fontSize: "1.08rem"
-              }}
-            >
-              Save as Draft
-            </button>
+            {showSaveAsDraft !== false && (
+              <button
+                type="button"
+                onClick={handleSaveSession}
+                style={{
+                  background: "#fff",
+                  color: "#111",
+                  border: "1px solid #111",
+                  borderRadius: "6px",
+                  padding: "8px 18px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontFamily: "Open Sans, sans-serif",
+                  fontSize: "1.08rem"
+                }}
+              >
+                Save as Draft
+              </button>
+            )}
             <button
               type="submit"
               disabled={isSubmitting}

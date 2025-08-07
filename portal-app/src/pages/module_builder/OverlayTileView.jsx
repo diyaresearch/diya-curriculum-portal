@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import TileItem from "./TileItem";
 
 const categories = ["AI Principles", "Data Science", "Machine Learning", "Statistics", "Other"];
-const types = ["Lecture", "Assignment","Dataset"];
-
+const types = ["Lecture", "Assignment", "Dataset"];
 const levels = ["Basic", "Intermediate", "Advanced"];
 
 const OverlayTileView = ({
@@ -28,9 +26,7 @@ const OverlayTileView = ({
   const [selectedTiles, setSelectedTiles] = useState(initialSelectedTiles || []);
 
   useEffect(() => {
-    if (content !== filteredContent) {
-      setFilteredContent(content);
-    }
+    setFilteredContent(content);
   }, [content]);
 
   useEffect(() => {
@@ -41,74 +37,39 @@ const OverlayTileView = ({
 
   useEffect(() => {
     filterContent();
-  }, [selectedCategory, selectedType, selectedLevel, searchTerm]);
+  }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
 
   const filterContent = useCallback(() => {
     let filtered = [...content];
 
     if (selectedCategory) {
-      if (contentType === "nugget") {
-        filtered = filtered.filter((item) =>
-          Array.isArray(item.Category)
-            ? item.Category.includes(selectedCategory)
-            : item.Category === selectedCategory
-        );
-      } else if (contentType === "lessonPlan") {
-        filtered = filtered.filter((item) =>
-          Array.isArray(item.category)
-            ? item.category.includes(selectedCategory)
-            : item.category === selectedCategory
-        );
-      }
+      filtered = filtered.filter((item) =>
+        Array.isArray(item.category)
+          ? item.category.includes(selectedCategory)
+          : item.category === selectedCategory
+      );
     }
-
     if (selectedType) {
-      if (contentType === "nugget") {
-        filtered = filtered.filter((item) =>
-          Array.isArray(item.Type)
-            ? item.Type.includes(selectedType)
-            : item.Type === selectedType
-        );
-      } else if (contentType === "lessonPlan") {
-        filtered = filtered.filter((item) =>
-          Array.isArray(item.type)
-            ? item.type.includes(selectedType)
-            : item.type === selectedType
-        );
-      }
+      filtered = filtered.filter((item) =>
+        Array.isArray(item.type)
+          ? item.type.includes(selectedType)
+          : item.type === selectedType
+      );
     }
-
     if (selectedLevel) {
-      if (contentType === "nugget") {
-        filtered = filtered.filter((item) =>
-          Array.isArray(item.Level)
-            ? item.Level.includes(selectedLevel)
-            : item.Level === selectedLevel
-        );
-      } else if (contentType === "lessonPlan") {
-        filtered = filtered.filter((item) =>
-          Array.isArray(item.level)
-            ? item.level.includes(selectedLevel)
-            : item.level === selectedLevel
-        );
-      }
+      filtered = filtered.filter((item) =>
+        Array.isArray(item.level)
+          ? item.level.includes(selectedLevel)
+          : item.level === selectedLevel
+      );
     }
-
     if (searchTerm) {
-      // Handle search for both content types
-      if (contentType === "nugget") {
-        filtered = filtered.filter((item) =>
-          item.Title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      } else if (contentType === "lessonPlan") {
-        filtered = filtered.filter((item) =>
-          item.title.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
+      filtered = filtered.filter((item) =>
+        (item.title || "").toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
-
     setFilteredContent(filtered);
-  }, [selectedCategory, selectedType, selectedLevel, searchTerm, content, contentType]);
+  }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
 
   const handlePageChange = (direction) => {
     if (direction === "prev" && currentPage > 1) {
@@ -125,7 +86,7 @@ const OverlayTileView = ({
     <div
       className="fixed inset-0 flex justify-center items-center"
       style={{
-        background: "rgba(246, 248, 250, 0.98)", // Match builder background
+        background: "rgba(246, 248, 250, 0.98)",
         zIndex: 1000,
         fontFamily: "Open Sans, sans-serif",
       }}
@@ -171,8 +132,6 @@ const OverlayTileView = ({
           >
             &times;
           </button>
-
-
 
           <div className="flex justify-center mt-4 space-x-4">
             <select
@@ -238,7 +197,7 @@ const OverlayTileView = ({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search for ..."
+            placeholder="Search for lesson title..."
             className="mt-4 p-2 border rounded w-full"
             style={{
               fontFamily: "Open Sans, sans-serif",
@@ -254,7 +213,7 @@ const OverlayTileView = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {filteredContent
                 .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                .map((item, index) => {
+                .map((item) => {
                   const isSelected = selectedTiles.includes(item.id);
                   return (
                     <div
@@ -276,23 +235,24 @@ const OverlayTileView = ({
                       }}
                     >
                       <div style={{ fontWeight: 700, fontSize: "1.08rem", color: "#111" }}>
-                        {item.Title}
+                        {item.title || item.Title || "Untitled Lesson"}
                       </div>
                       <div style={{ fontSize: "0.98rem", color: "#444" }}>
-                        {/* Display Description as plain text, cut off if too long */}
-                        {item.Description
+                        {item.description
                           ? (() => {
-                              const plain = item.Description.replace(/<[^>]+>/g, "");
-                              return plain.length > 20 ? plain.slice(0, 20) + "..." : plain;
+                              const plain = item.description.replace(/<[^>]+>/g, "");
+                              return plain.length > 40 ? plain.slice(0, 40) + "..." : plain;
                             })()
-                          : ""}
+                          : item.summary
+                            ? item.summary.slice(0, 40) + "..."
+                            : ""}
                       </div>
                       <div style={{ fontSize: "0.92rem", color: "#888" }}>
-                        {(Array.isArray(item.Category) ? item.Category.join(", ") : item.Category) || ""}
+                        {(Array.isArray(item.category) ? item.category.join(", ") : item.category) || ""}
                         {" \u00b7 "}
-                        {(Array.isArray(item.Type) ? item.Type.join(", ") : item.Type) || ""}
+                        {(Array.isArray(item.type) ? item.type.join(", ") : item.type) || ""}
                         {" \u00b7 "}
-                        {(Array.isArray(item.Level) ? item.Level.join(", ") : item.Level) || ""}
+                        {(Array.isArray(item.level) ? item.level.join(", ") : item.level) || ""}
                       </div>
                       <div style={{ fontSize: "0.92rem", color: "#888" }}>
                         Created: {

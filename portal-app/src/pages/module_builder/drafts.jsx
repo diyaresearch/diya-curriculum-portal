@@ -16,7 +16,7 @@ const LessonPlanDrafts = () => {
       }
       const db = getFirestore();
       const q = query(
-        collection(db, "lesson"),
+        collection(db, "module"),
         where("author", "==", user.uid),
         where("isDraft", "==", true)
       );
@@ -47,14 +47,14 @@ const LessonPlanDrafts = () => {
   }, []);
 
   const handleEditDraft = (draft) => {
-    localStorage.setItem("lessonPlanDraft", JSON.stringify(draft));
-    navigate("/lesson-plans/builder");
+    localStorage.setItem("moduleDraft", JSON.stringify(draft));
+    navigate("/module-builder");
   };
 
   const handleDeleteDraft = async (draftId) => {
     if (!window.confirm("Are you sure you want to delete this draft?")) return;
     const db = getFirestore();
-    await deleteDoc(doc(db, "lesson", draftId));
+    await deleteDoc(doc(db, "module", draftId));
     setDrafts((prev) => prev.filter((d) => d.id !== draftId));
   };
 
@@ -81,7 +81,7 @@ const LessonPlanDrafts = () => {
             fontFamily: "Open Sans, sans-serif"
           }}
         >
-          Lesson Plan Drafts
+          Module Drafts
         </h2>
         <p
           style={{
@@ -92,7 +92,7 @@ const LessonPlanDrafts = () => {
             fontFamily: "Open Sans, sans-serif"
           }}
         >
-          Continue editing your saved lesson plan drafts below.
+          Continue editing your saved module drafts below.
         </p>
       </div>
       <div
@@ -168,7 +168,7 @@ const LessonPlanDrafts = () => {
                 &times;
               </button>
               <div style={{ fontWeight: 700, fontSize: "1.02rem", color: "#111", marginBottom: 2 }}>
-                {draft.title || "Untitled Lesson Plan"}
+                {draft.title || "Untitled Module"}
               </div>
               <div style={{ color: "#666", fontSize: "0.92rem", marginBottom: 2 }}>
                 {(Array.isArray(draft.category) ? draft.category.join(", ") : draft.category) || ""}
@@ -209,7 +209,7 @@ const LessonPlanDrafts = () => {
         )}
       </div>
       <button
-        onClick={() => navigate("/lesson-plans/builder")}
+        onClick={() => navigate("/module-builder")}
         style={{
           background: "#fff",
           color: "#111",
@@ -222,7 +222,7 @@ const LessonPlanDrafts = () => {
           fontSize: "1.08rem"
         }}
       >
-        + Create New Lesson Plan
+        + Create New Module
       </button>
     </div>
   );
