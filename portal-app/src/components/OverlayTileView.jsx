@@ -47,29 +47,50 @@ const OverlayTileView = ({
     let filtered = [...content];
 
     if (selectedCategory) {
-      // Handle filtering for both content types
       if (contentType === "nugget") {
-        filtered = filtered.filter((item) => item.Category === selectedCategory);
+        filtered = filtered.filter((item) =>
+          Array.isArray(item.Category)
+            ? item.Category.includes(selectedCategory)
+            : item.Category === selectedCategory
+        );
       } else if (contentType === "lessonPlan") {
-        filtered = filtered.filter((item) => item.category === selectedCategory);
+        filtered = filtered.filter((item) =>
+          Array.isArray(item.category)
+            ? item.category.includes(selectedCategory)
+            : item.category === selectedCategory
+        );
       }
     }
 
     if (selectedType) {
-      // Handle filtering for both content types
       if (contentType === "nugget") {
-        filtered = filtered.filter((item) => item.Type === selectedType);
+        filtered = filtered.filter((item) =>
+          Array.isArray(item.Type)
+            ? item.Type.includes(selectedType)
+            : item.Type === selectedType
+        );
       } else if (contentType === "lessonPlan") {
-        filtered = filtered.filter((item) => item.type === selectedType);
+        filtered = filtered.filter((item) =>
+          Array.isArray(item.type)
+            ? item.type.includes(selectedType)
+            : item.type === selectedType
+        );
       }
     }
 
     if (selectedLevel) {
-      // Handle filtering for both content types
       if (contentType === "nugget") {
-        filtered = filtered.filter((item) => item.Level === selectedLevel);
+        filtered = filtered.filter((item) =>
+          Array.isArray(item.Level)
+            ? item.Level.includes(selectedLevel)
+            : item.Level === selectedLevel
+        );
       } else if (contentType === "lessonPlan") {
-        filtered = filtered.filter((item) => item.level === selectedLevel);
+        filtered = filtered.filter((item) =>
+          Array.isArray(item.level)
+            ? item.level.includes(selectedLevel)
+            : item.level === selectedLevel
+        );
       }
     }
 

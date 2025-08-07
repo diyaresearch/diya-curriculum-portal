@@ -1062,6 +1062,71 @@ const NuggetBuilderSection = () => (
   </section>
 );
 
+// Add this section component near the top of your file
+function ModuleBuilderPromo() {
+  const navigate = useNavigate();
+
+  return (
+    <section
+      style={{
+        width: "100%",
+        padding: "60px 0 0 0",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        background: "#F6F8FA"
+      }}
+    >
+      <h2
+        style={{
+          fontSize: "2.5rem",
+          fontWeight: "700",
+          color: "#111",
+          fontFamily: "Open Sans, sans-serif",
+          textAlign: "center",
+          margin: 0,
+          letterSpacing: "1px"
+        }}
+      >
+        Module Builder
+      </h2>
+      <p
+        style={{
+          marginTop: "18px",
+          fontSize: "1.15rem",
+          color: "#222",
+          textAlign: "center",
+          maxWidth: "600px",
+          fontWeight: 500,
+        }}
+      >
+        Create and organize modules. Add lesson plans to build a comprehensive learning experience.
+      </p>
+      <button
+        onClick={() => {
+          window.location.href = "/module-builder"; // This will refresh and go to module builder
+        }}
+        style={{
+          marginTop: "32px",
+          background: "#162040",
+          color: "#fff",
+          border: "2px solid #162040",
+          borderRadius: "6px",
+          padding: "14px 48px",
+          fontSize: "1.08rem",
+          fontWeight: "600",
+          cursor: "pointer",
+          transition: "background 0.2s, color 0.2s, border 0.2s",
+          minWidth: "260px",
+        }}
+      >
+        Go to Module Builder
+      </button>
+    </section>
+  );
+}
+
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
   const navigate = useNavigate();
@@ -1299,6 +1364,7 @@ const ExploreModulesSection = () => {
         }}
       >
         <NuggetBuilderSection />
+        <ModuleBuilderPromo />
       </div>
     );
   }

@@ -58,7 +58,7 @@ function MultiCheckboxDropdown({ label, options, selected, onChange }) {
   return (
     <div ref={dropdownRef} style={{ position: "relative", marginBottom: 0 }}>
       <label style={{ fontWeight: 600, marginBottom: 6, display: "block", color: "#222" }}>
-        {label}
+        {label} <RequiredAsterisk />
       </label>
       <div
         style={{
@@ -121,6 +121,10 @@ function MultiCheckboxDropdown({ label, options, selected, onChange }) {
   );
 }
 
+// Add this helper for required asterisks
+const RequiredAsterisk = () => (
+  <span style={{ color: "red", marginLeft: 4 }}>*</span>
+);
 
 export const UploadContent = ({
   fromLesson,
@@ -285,7 +289,7 @@ export const UploadContent = ({
           {/* Title */}
           <div>
             <label htmlFor="Title" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
-              Title
+              Title <RequiredAsterisk />
             </label>
             <input
               id="Title"
@@ -317,7 +321,7 @@ export const UploadContent = ({
           {/* Description */}
           <div>
             <label htmlFor="Abstract" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
-              Description
+              Description <RequiredAsterisk />
             </label>
             <ReactQuill
               theme="snow"
@@ -398,7 +402,7 @@ export const UploadContent = ({
           {/* Duration */}
           <div>
             <label htmlFor="Duration" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
-              Duration (minutes)
+              Duration (minutes) <RequiredAsterisk />
             </label>
             <input
               id="Duration"
@@ -429,7 +433,7 @@ export const UploadContent = ({
           {/* Instructions/Notes */}
           <div>
             <label htmlFor="Instructions" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
-              Instructions/Notes
+              Instructions/Notes <RequiredAsterisk />
             </label>
             <ReactQuill
               theme="snow"

@@ -21,7 +21,27 @@ const LessonPlanDrafts = () => {
         where("isDraft", "==", true)
       );
       const snapshot = await getDocs(q);
-      setDrafts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setDrafts(
+        snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          category: Array.isArray(doc.data().category)
+            ? doc.data().category
+            : doc.data().category
+              ? [doc.data().category]
+              : [],
+          type: Array.isArray(doc.data().type)
+            ? doc.data().type
+            : doc.data().type
+              ? [doc.data().type]
+              : [],
+          level: Array.isArray(doc.data().level)
+            ? doc.data().level
+            : doc.data().level
+              ? [doc.data().level]
+              : [],
+        }))
+      );
     });
     return () => unsubscribe();
   }, []);
@@ -151,7 +171,9 @@ const LessonPlanDrafts = () => {
                 {draft.title || "Untitled Lesson Plan"}
               </div>
               <div style={{ color: "#666", fontSize: "0.92rem", marginBottom: 2 }}>
-                {draft.category} &middot; {draft.level} &middot; {draft.type}
+                {(Array.isArray(draft.category) ? draft.category.join(", ") : draft.category) || ""}
+                &middot; {(Array.isArray(draft.level) ? draft.level.join(", ") : draft.level) || ""}
+                &middot; {(Array.isArray(draft.type) ? draft.type.join(", ") : draft.type) || ""}
               </div>
               <div style={{ display: "flex", gap: 8, marginTop: "auto", marginBottom: 18 }}>
                 <span
