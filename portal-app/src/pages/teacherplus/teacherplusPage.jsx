@@ -4,37 +4,24 @@ import useUserData from '../../hooks/useUserData';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { app as firebaseApp } from '../../firebase/firebaseConfig';
 
-// Import necessary components and constants
 import {
     MODULE_CONTENT_TYPES,
     MODULE_CATEGORIES,
     MODULE_LEVELS,
 } from '../../constants/moduleConstants';
 
-// Import assets directly
 import aiExploreImg from '../../assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png';
 import laptopImg from '../../assets/laptop.png';
 import physicsImg from '../../assets/finphysics.png';
 
-// Helper function
 function capitalizeWords(str) {
-    if (str === null || str === undefined) {
-        return 'N/A';
-    }
-
+    if (str === null || str === undefined) return 'N/A';
     const stringValue = String(str);
-
-    if (typeof stringValue !== 'string') {
-        console.warn('capitalizeWords: String conversion failed for:', str);
-        return 'N/A';
-    }
-
     return stringValue
         .toLowerCase()
         .replace(/\b\w/g, c => c.toUpperCase());
 }
 
-// LockIcon component
 const LockIcon = ({ isLocked }) => (
     <svg
         width="24"
@@ -71,66 +58,46 @@ const LockIcon = ({ isLocked }) => (
 const TeacherPlusPage = () => {
     const navigate = useNavigate();
     const { user, userData, loading } = useUserData();
-
-    // Get role from userData instead of useUserRole hook
     const role = userData?.role;
 
-    // Redirect if not authenticated or not teacherPlus
     useEffect(() => {
         if (!loading && (!user || role !== 'teacherPlus')) {
             navigate('/');
         }
     }, [user, role, loading, navigate]);
 
-    // ...existing code...
-
-    // Filter state
     const [contentType, setContentType] = useState("All");
     const [category, setCategory] = useState("All");
     const [level, setLevel] = useState("All");
     const [keyword, setKeyword] = useState("");
     const [lockStatus, setLockStatus] = useState("All");
 
-    // Data state
     const [modules, setModules] = useState([]);
     const [lessons, setLessons] = useState([]);
     const [nuggets, setNuggets] = useState([]);
     const [filteredItems, setFilteredItems] = useState([]);
     const [filtersApplied, setFiltersApplied] = useState(false);
 
-    // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(6);
 
-    // Update items per page based on screen size
     useEffect(() => {
         const updateItemsPerPage = () => {
             const screenWidth = window.innerWidth;
             let itemsPerRow;
-
-            if (screenWidth >= 1400) {
-                itemsPerRow = 3;
-            } else if (screenWidth >= 1000) {
-                itemsPerRow = 3;
-            } else if (screenWidth >= 800) {
-                itemsPerRow = 2;
-            } else {
-                itemsPerRow = 1;
-            }
-
+            if (screenWidth >= 1400) itemsPerRow = 3;
+            else if (screenWidth >= 1000) itemsPerRow = 3;
+            else if (screenWidth >= 800) itemsPerRow = 2;
+            else itemsPerRow = 1;
             setItemsPerPage(itemsPerRow * 2);
         };
-
         updateItemsPerPage();
         window.addEventListener('resize', updateItemsPerPage);
         return () => window.removeEventListener('resize', updateItemsPerPage);
     }, []);
 
-    // Fetch all data on mount
     useEffect(() => {
         const db = getFirestore(firebaseApp);
-
-        // Fetch modules
         getDocs(collection(db, "module")).then(snapshot => {
             const moduleData = [];
             snapshot.forEach(doc => {
@@ -144,6 +111,7 @@ const TeacherPlusPage = () => {
                     level: data.level || "Basic",
                     category: data.category || "General",
                     lessonPlans: data.lessonPlans || {},
+                    isDraft: data.isDraft || false,
                     _type: "Module"
                 });
             });
@@ -152,56 +120,69 @@ const TeacherPlusPage = () => {
             console.error("Error fetching modules:", error);
         });
 
-        // Fetch lessons
         getDocs(collection(db, "lesson")).then(snapshot => {
-            setLessons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: "Lesson Plan" })));
+            setLessons(snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                isDraft: doc.data().isDraft || false,
+                _type: "Lesson Plan"
+            })));
         });
 
-        // Fetch nuggets/content
         getDocs(collection(db, "content")).then(snapshot => {
-            setNuggets(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: "Nuggets" })));
+            setNuggets(snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                _type: "Nuggets"
+            })));
         });
     }, []);
 
     useEffect(() => {
         if (!filtersApplied && (modules.length > 0 || lessons.length > 0 || nuggets.length > 0)) {
-            setFilteredItems([...modules, ...lessons, ...nuggets]);
+            const publishedModules = modules.filter(m => !m.isDraft);
+            const publishedLessons = lessons.filter(l => !l.isDraft);
+            setFilteredItems([...publishedModules, ...publishedLessons, ...nuggets]);
         }
     }, [modules, lessons, nuggets, filtersApplied]);
 
-    // Calculate pagination
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     let paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
-    // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1);
     }, [filteredItems, itemsPerPage]);
 
-    // Filtering logic
     const handleApplyFilters = () => {
         let items = [];
+        const publishedModules = modules.filter(m => !m.isDraft);
+        const publishedLessons = lessons.filter(l => !l.isDraft);
+
         if (contentType === "All") {
-            items = [...modules, ...lessons, ...nuggets];
+            items = [...publishedModules, ...publishedLessons, ...nuggets];
         } else if (contentType === "Module") {
-            items = modules;
+            items = publishedModules;
         } else if (contentType === "Lesson Plan") {
-            items = lessons;
+            items = publishedLessons;
         } else if (contentType === "Nuggets") {
             items = nuggets;
         }
 
         if (category !== "All") {
-            items = items.filter(item =>
-                ((item.category || item.Category || "").toLowerCase() === category.toLowerCase())
-            );
+            items = items.filter(item => {
+                let cat = item.category || item.Category || "";
+                if (Array.isArray(cat)) cat = cat.join(", ");
+                return cat.toString().toLowerCase() === category.toLowerCase();
+            });
         }
 
         if (level !== "All") {
-            items = items.filter(item =>
-                ((item.level || item.Level || "").toLowerCase() === level.toLowerCase())
-            );
+            items = items.filter(item => {
+                let lvl = item.level || item.Level || "";
+                if (Array.isArray(lvl)) lvl = lvl.join(", ");
+                return lvl.toString().toLowerCase() === level.toLowerCase();
+            });
         }
 
         if (keyword.trim()) {

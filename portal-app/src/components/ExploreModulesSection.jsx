@@ -973,11 +973,15 @@ function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
 const MODULE_CONTENT_TYPES = ["Module", "Lesson Plan", "Nuggets"];
 const MODULE_CATEGORIES = [
   "All",
-  "Python for AI",
-  "AI Insights",
-  "AI Forge",
-  "Physics & AI",
-  "Chemistry"
+  "AI Principles",
+  "Data Science",
+  "Machine Learning",
+  "Statistics",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Economics",
+  "Other"
 ];
 const MODULE_LEVELS = ["All", "Basic", "Intermediate", "Advanced"];
 
@@ -1220,6 +1224,7 @@ const ExploreModulesSection = () => {
           level: data.level || "Basic",
           category: data.category || "General",
           lessonPlans: data.lessonPlans || {},
+          isDraft: data.isDraft || false, // <-- Add this line
           _type: "Module"
         });
       });
@@ -1231,7 +1236,12 @@ const ExploreModulesSection = () => {
 
     // Fetch lessons
     getDocs(collection(db, "lesson")).then(snapshot => {
-      setLessons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: "Lesson Plan" })));
+      setLessons(snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        isDraft: doc.data().isDraft || false, // <-- Add this line
+        _type: "Lesson Plan"
+      })));
     });
 
     // Fetch nuggets/content
@@ -1240,43 +1250,52 @@ const ExploreModulesSection = () => {
     });
   }, []);
 
+  // Initial display should exclude drafts
   useEffect(() => {
-    // Show all cards by default when data is loaded and no filters have been applied
     if (!filtersApplied && (modules.length > 0 || lessons.length > 0 || nuggets.length > 0)) {
-      setFilteredItems([...modules, ...lessons, ...nuggets]);
+      const publishedModules = modules.filter(m => !m.isDraft);
+      const publishedLessons = lessons.filter(l => !l.isDraft);
+      setFilteredItems([...publishedModules, ...publishedLessons, ...nuggets]);
     }
-    // eslint-disable-next-line
   }, [modules, lessons, nuggets, filtersApplied]);
 
   // Filtering logic, only runs when Apply Filters is clicked
   const handleApplyFilters = () => {
     let items = [];
+    // Filter out drafts before applying other filters
+    const publishedModules = modules.filter(m => !m.isDraft);
+    const publishedLessons = lessons.filter(l => !l.isDraft);
+
     if (contentType === "All") {
       items = [
-        ...modules,
-        ...lessons,
+        ...publishedModules,
+        ...publishedLessons,
         ...nuggets,
       ];
     } else if (contentType === "Module") {
-      items = modules;
+      items = publishedModules;
     } else if (contentType === "Lesson Plan") {
-      items = lessons;
+      items = publishedLessons;
     } else if (contentType === "Nuggets") {
       items = nuggets;
     }
 
     // Filter by category if not "All"
     if (category !== "All") {
-      items = items.filter(item =>
-        ((item.category || item.Category || "").toLowerCase() === category.toLowerCase())
-      );
+      items = items.filter(item => {
+        let cat = item.category || item.Category || "";
+        if (Array.isArray(cat)) cat = cat.join(", ");
+        return cat.toString().toLowerCase() === category.toLowerCase();
+      });
     }
 
     // Filter by level if not "All"
     if (level !== "All") {
-      items = items.filter(item =>
-        ((item.level || item.Level || "").toLowerCase() === level.toLowerCase())
-      );
+      items = items.filter(item => {
+        let lvl = item.level || item.Level || "";
+        if (Array.isArray(lvl)) lvl = lvl.join(", ");
+        return lvl.toString().toLowerCase() === level.toLowerCase();
+      });
     }
 
     // Filter by keyword if not empty
@@ -1704,7 +1723,7 @@ const ExploreModulesSection = () => {
                 textAlign: "center",
                 maxWidth: "600px",
                 fontWeight: 500,
-                marginBottom: 24
+                marginBottom: "24px"
               }}
             >
               Select your preferences to filter available modules.
