@@ -35,7 +35,8 @@ router.post("/create-payment-intent", authenticateUser, async (req, res) => {
         const userId = req.user.uid;
         const { planType } = req.body;
 
-        if (planType !== 'premium') {
+        // Accept both premium variants
+        if (!planType || !['premium', 'premiumYearly'].includes(planType)) {
             return res.status(400).json({ message: "Invalid plan type" });
         }
 
@@ -63,9 +64,12 @@ router.post("/create-payment-intent", authenticateUser, async (req, res) => {
 
         const userData = userSnap.data();
 
+        // Set amount based on plan type
+        const amount = planType === 'premiumYearly' ? 10000 : 999; // $100.00 or $9.99 in cents
+
         // Create payment intent with Stripe
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: 999, // $9.99 in cents
+            amount: amount,
             currency: 'usd',
             automatic_payment_methods: {
                 enabled: true,
@@ -87,7 +91,7 @@ router.post("/create-payment-intent", authenticateUser, async (req, res) => {
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             status: 'payment_intent_created',
             paymentIntentId: paymentIntent.id,
-            amount: 999,
+            amount: amount,
             currency: 'usd',
             userEmail: userData.email
         });
@@ -168,7 +172,13 @@ router.post("/confirm-payment", authenticateUser, async (req, res) => {
 
         // Update user subscription
         const endDate = new Date();
-        endDate.setMonth(endDate.getMonth() + 1);
+        if (targetPlan === 'premiumYearly') {
+            // Yearly subscription - add 12 months
+            endDate.setFullYear(endDate.getFullYear() + 1);
+        } else {
+            // Monthly subscription - add 1 month
+            endDate.setMonth(endDate.getMonth() + 1);
+        }
 
         await userRef.update({
             subscriptionType: targetPlan,
@@ -178,7 +188,7 @@ router.post("/confirm-payment", authenticateUser, async (req, res) => {
             stripePaymentIntentId: paymentIntentId,
             stripeCustomerId: paymentIntent.customer || null,
             lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
-            role: targetPlan === 'premium' ? 'teacherPlus' : (targetPlan === 'enterprise' ? 'teacherEnterprise' : userData.role)
+            role: (targetPlan === 'premium' || targetPlan === 'premiumYearly') ? 'teacherPlus' : (targetPlan === 'enterprise' ? 'teacherEnterprise' : userData.role)
         });
 
         // Log successful payment
