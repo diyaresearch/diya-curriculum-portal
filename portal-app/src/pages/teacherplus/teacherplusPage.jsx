@@ -1316,11 +1316,11 @@ const TeacherPlusPage = () => {
                                 }}
                                 onClick={() => {
                                     if (item._type === "Module") {
-                                        navigate(`/modules/${item.id}`);
+                                        navigate(`/module/${item.id}`);  // Changed from /modules/ to /module/
                                     } else if (item._type === "Lesson Plan") {
-                                        navigate(`/lesson-plans/${item.id}`);
+                                        navigate(`/lesson/${item.id}`);   // Changed from /lesson-plans/ to /lesson/
                                     } else if (item._type === "Nuggets") {
-                                        navigate(`/nuggets/${item.id}`);
+                                        navigate(`/content/${item.id}`);  // Changed from /nuggets/ to /content/
                                     }
                                 }}
                             >

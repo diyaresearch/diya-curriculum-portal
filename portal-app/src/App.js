@@ -23,11 +23,12 @@ import LessonPlanDrafts from "./pages/lesson-plans/drafts";
 import NuggetBuilderPage from "./pages/nugget-builder";
 import TeacherPlusPage from "./pages/teacherplus/teacherplusPage";
 import ProtectedRoute from './components/ProtectedRoute';
-// Remove this line since DashboardContainer doesn't exist
-// import DashboardContainer from './components/DashboardContainer';
-import ModuleBuilder from "./pages/module_builder/builder";
-import ModuleDrafts from "./pages/module_builder/drafts";
-import LessonDetailsPage from "./pages/lesson-details/LessonDetailsPage";
+import ModuleDetails from './components/ModuleDetails';
+import LessonDetails from './components/LessonDetails';
+import ContentDetails from './components/ContentDetails';
+import CancelSubscriptionPage from './pages/cancel-subscription/CancelSubscriptionPage';
+import YearlyPaymentPage from './pages/payment/YearlyPaymentPage';
+
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="/edit-content/:id" element={<EditContent />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/payment/premium" element={<PaymentPage />} />
+          <Route path="/payment/yearly" element={<YearlyPaymentPage />} />
           <Route path="/lesson-generator" element={<LessonGenerator />} />
           <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
           <Route path="/my-plans" element={<MyPlans />} />
@@ -57,9 +59,10 @@ function App() {
           {/* Simplified teacher-plus routes - removed duplicates and DashboardContainer */}
           <Route path="/teacher-plus" element={<TeacherPlusPage />} />
           <Route path="/teacherplus" element={<TeacherPlusPage />} />
-          <Route path="/module-builder" element={<ModuleBuilder />} />
-          <Route path="/module_builder/drafts" element={<ModuleDrafts />} />
-          <Route path="/lesson-details/:id" element={<LessonDetailsPage />} />
+          <Route path="/module/:id" element={<ModuleDetails />} />
+          <Route path="/lesson/:id" element={<LessonDetails />} />
+          <Route path="/content/:id" element={<ContentDetails />} />
+          <Route path="/cancel-subscription" element={<CancelSubscriptionPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

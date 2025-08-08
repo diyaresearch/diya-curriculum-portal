@@ -18,60 +18,31 @@ const UpgradePage = () => {
     console.log('subscriptionType:', userData?.subscriptionType);
     console.log('========================');
 
-    const handleUpgradeClick = async () => {
+    const handleUpgradeClick = (planType = 'premium') => {
         console.log('=== handleUpgradeClick Debug ===');
         console.log('Button clicked!');
         console.log('User role:', userData?.role);
         console.log('Current plan:', currentPlan);
-        console.log('Initiating upgrade process...');
+        console.log('Target plan:', planType);
         console.log('================================');
 
-        try {
-            // Get the server URL from environment
-            const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || 'http://localhost:3001';
-            console.log('Server URL:', serverUrl);
-            console.log('User data:', userData);
+        // Check if user is authenticated
+        if (!user || !userData) {
+            alert('Please log in to upgrade your account');
+            return;
+        }
 
-            // Check if user is authenticated
-            if (!user || !userData) {
-                alert('Please log in to upgrade your account');
-                return;
-            }
-
-            const token = await user.getIdToken();
-            console.log('Token obtained:', !!token);
-
-            // First, initiate the upgrade process with backend
-            const response = await fetch(`${serverUrl}/api/subscription/initiate-upgrade`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    targetPlan: 'premium'
-                })
-            });
-
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
-
-            const result = await response.json();
-            console.log('Response data:', result);
-
-            if (response.ok) {
-                console.log('Upgrade initiated:', result);
-                // Navigate to payment page
-                navigate('/payment/premium');
-            } else {
-                console.error('Upgrade initiation failed:', result.message);
-                alert('Failed to initiate upgrade: ' + result.message);
-            }
-        } catch (error) {
-            console.error('Error initiating upgrade:', error);
-            console.error('Error details:', error.message);
-            console.error('Error stack:', error.stack);
-            alert('Error starting upgrade process. Please try again.');
+        // Navigate directly to the appropriate payment page
+        if (planType === 'premium') {
+            console.log('Navigating to monthly premium payment page');
+            navigate('/payment/premium');
+        } else if (planType === 'premiumYearly') {
+            console.log('Navigating to yearly premium payment page');
+            navigate('/payment/yearly');
+        } else {
+            console.log('Fallback navigation for plan:', planType);
+            // Fallback for any other plan types
+            navigate(`/payment/${planType}`);
         }
     };
 
@@ -141,32 +112,14 @@ const UpgradePage = () => {
                     lineHeight: 1.6,
                     marginBottom: '30px'
                 }}>
-                    Select the perfect subscription plan that meets your needs for teaching and learning.
+                    The Teacher Default account offers access to core teaching resources and standard features for effective lesson delivery. The Teacher Premium account adds the ability to create custom modules, lessons, and nuggets, plus full access to all locked and unlocked content. This makes it ideal for educators seeking maximum flexibility and creative control in their teaching.
                 </p>
-                <button
-                    onClick={() => navigate('/')}
-                    style={{
-                        background: '#162040',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: '12px 32px',
-                        fontWeight: '600',
-                        fontSize: '1rem',
-                        cursor: 'pointer',
-                        transition: 'background 0.2s'
-                    }}
-                    onMouseOver={(e) => e.target.style.background = '#0f1530'}
-                    onMouseOut={(e) => e.target.style.background = '#162040'}
-                >
-                    Start Learning Today
-                </button>
             </div>
 
             {/* Subscription Plans Section */}
             <div style={{
                 width: '100%',
-                maxWidth: '1200px',
+                maxWidth: '1400px',
                 marginBottom: '40px'
             }}>
                 <h2 style={{
@@ -182,8 +135,8 @@ const UpgradePage = () => {
 
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '30px',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '25px',
                     padding: '0 20px',
                     alignItems: 'stretch'
                 }}>
@@ -282,7 +235,7 @@ const UpgradePage = () => {
                         </button>
                     </div>
 
-                    {/* Premium Plan */}
+                    {/* Monthly Premium Plan */}
                     <div style={{
                         background: '#fff',
                         borderRadius: '12px',
@@ -338,7 +291,7 @@ const UpgradePage = () => {
                             }}>
                                 <img
                                     src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png"
-                                    alt="Premium Plan"
+                                    alt="Monthly Premium Plan"
                                     style={{ width: '48px', height: '48px', opacity: 0.7 }}
                                 />
                             </div>
@@ -348,7 +301,7 @@ const UpgradePage = () => {
                                 color: '#162040',
                                 marginBottom: '15px'
                             }}>
-                                Premium
+                                Monthly Premium
                             </h3>
                             <ul style={{
                                 color: '#666',
@@ -371,29 +324,15 @@ const UpgradePage = () => {
                                 color: '#162040',
                                 marginBottom: '20px'
                             }}>
-                                $9.99/month
+                                $10.00/month
                             </div>
                         </div>
                         <button
-                            onClick={(() => {
-                                // Allow teacherDefault users to upgrade, disable for premium users
-                                const userRole = userData?.role;
-                                const isTeacherDefault = userRole === 'teacherDefault';
-                                const isPremium = currentPlan === 'premium';
-
-                                console.log('Button click check - Role:', userRole, 'isPremium:', isPremium, 'isTeacherDefault:', isTeacherDefault);
-
-                                if (isPremium && !isTeacherDefault) {
-                                    return null; // Premium users can't upgrade (unless teacherDefault)
-                                }
-                                return handleUpgradeClick;
-                            })()}
+                            onClick={() => handleUpgradeClick('premium')}
                             disabled={(() => {
                                 const userRole = userData?.role;
                                 const isTeacherDefault = userRole === 'teacherDefault';
                                 const isPremium = currentPlan === 'premium';
-
-                                // Only disable if premium and not teacherDefault
                                 return isPremium && !isTeacherDefault;
                             })()}
                             style={{
@@ -402,21 +341,19 @@ const UpgradePage = () => {
                                     const userRole = userData?.role;
                                     const isTeacherDefault = userRole === 'teacherDefault';
                                     const isPremium = currentPlan === 'premium';
-
                                     if (isPremium && !isTeacherDefault) {
-                                        return '#F9C74F'; // Premium color for existing premium users
+                                        return '#F9C74F';
                                     }
-                                    return '#162040'; // Normal upgrade button color
+                                    return '#162040';
                                 })(),
                                 color: (() => {
                                     const userRole = userData?.role;
                                     const isTeacherDefault = userRole === 'teacherDefault';
                                     const isPremium = currentPlan === 'premium';
-
                                     if (isPremium && !isTeacherDefault) {
-                                        return '#000'; // Black text for premium
+                                        return '#000';
                                     }
-                                    return '#fff'; // White text for upgrade button
+                                    return '#fff';
                                 })(),
                                 border: 'none',
                                 borderRadius: '6px',
@@ -426,7 +363,6 @@ const UpgradePage = () => {
                                     const userRole = userData?.role;
                                     const isTeacherDefault = userRole === 'teacherDefault';
                                     const isPremium = currentPlan === 'premium';
-
                                     if (isPremium && !isTeacherDefault) {
                                         return 'not-allowed';
                                     }
@@ -454,13 +390,179 @@ const UpgradePage = () => {
                                 const userRole = userData?.role;
                                 const isTeacherDefault = userRole === 'teacherDefault';
                                 const isPremium = currentPlan === 'premium';
-
                                 if (isTeacherDefault) {
-                                    return 'Upgrade Now'; // teacherDefault can always upgrade
+                                    return 'Upgrade Now';
                                 } else if (isPremium) {
-                                    return 'Current Plan'; // Non-teacherDefault premium users
+                                    return 'Current Plan';
                                 } else {
-                                    return 'Upgrade Now'; // Basic users
+                                    return 'Upgrade Now';
+                                }
+                            })()}
+                        </button>
+                    </div>
+
+                    {/* Yearly Premium Plan */}
+                    <div style={{
+                        background: '#fff',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                        padding: '30px',
+                        textAlign: 'center',
+                        position: 'relative',
+                        border: currentPlan === 'premiumYearly' ? '3px solid #F9C74F' : '2px solid #28a745',
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}>
+                        {currentPlan === 'premiumYearly' ? (
+                            <div style={{
+                                position: 'absolute',
+                                top: '-10px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                background: '#F9C74F',
+                                color: '#000',
+                                padding: '5px 20px',
+                                borderRadius: '20px',
+                                fontSize: '0.9rem',
+                                fontWeight: '600'
+                            }}>
+                                CURRENT PLAN
+                            </div>
+                        ) : (
+                            <div style={{
+                                position: 'absolute',
+                                top: '-10px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                background: '#28a745',
+                                color: '#fff',
+                                padding: '5px 20px',
+                                borderRadius: '20px',
+                                fontSize: '0.9rem',
+                                fontWeight: '600'
+                            }}>
+                                SAVE 17%
+                            </div>
+                        )}
+                        <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{
+                                background: '#f0f0f0',
+                                borderRadius: '8px',
+                                padding: '20px',
+                                marginBottom: '20px',
+                                minHeight: '120px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <img
+                                    src="https://cdn-icons-png.flaticon.com/512/3039/3039393.png"
+                                    alt="Yearly Premium Plan"
+                                    style={{ width: '48px', height: '48px', opacity: 0.7 }}
+                                />
+                            </div>
+                            <h3 style={{
+                                fontSize: '1.5rem',
+                                fontWeight: '700',
+                                color: '#162040',
+                                marginBottom: '15px'
+                            }}>
+                                Yearly Premium
+                            </h3>
+                            <ul style={{
+                                color: '#666',
+                                lineHeight: 1.6,
+                                marginBottom: '20px',
+                                minHeight: '140px',
+                                textAlign: 'left',
+                                paddingLeft: '20px',
+                                flex: '1'
+                            }}>
+                                <li>All Premium features</li>
+                                <li>Comprehensive lesson module creation</li>
+                                <li>Community sharing</li>
+                                <li>Advanced lesson generator</li>
+                                <li>Priority support</li>
+                                <li style={{ color: '#28a745', fontWeight: '600' }}>Save $20 per year</li>
+                            </ul>
+                            <div style={{
+                                fontSize: '1.2rem',
+                                fontWeight: '600',
+                                color: '#162040',
+                                marginBottom: '5px'
+                            }}>
+                                $100.00/year
+                            </div>
+                            <div style={{
+                                fontSize: '0.9rem',
+                                color: '#28a745',
+                                fontWeight: '600',
+                                marginBottom: '20px'
+                            }}>
+                                ($8.33/month)
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => handleUpgradeClick('premiumYearly')}
+                            disabled={(() => {
+                                const userRole = userData?.role;
+                                const isTeacherDefault = userRole === 'teacherDefault';
+                                const isPremiumYearly = currentPlan === 'premiumYearly';
+                                return isPremiumYearly && !isTeacherDefault;
+                            })()}
+                            style={{
+                                width: '100%',
+                                background: (() => {
+                                    const userRole = userData?.role;
+                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isPremiumYearly = currentPlan === 'premiumYearly';
+                                    if (isPremiumYearly && !isTeacherDefault) {
+                                        return '#F9C74F';
+                                    }
+                                    return '#28a745';
+                                })(),
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '6px',
+                                padding: '12px 24px',
+                                fontWeight: '600',
+                                cursor: (() => {
+                                    const userRole = userData?.role;
+                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isPremiumYearly = currentPlan === 'premiumYearly';
+                                    if (isPremiumYearly && !isTeacherDefault) {
+                                        return 'not-allowed';
+                                    }
+                                    return 'pointer';
+                                })(),
+                                transition: 'all 0.2s',
+                                opacity: 1
+                            }}
+                            onMouseOver={(e) => {
+                                if (currentPlan !== 'premiumYearly') {
+                                    e.target.style.background = '#fff';
+                                    e.target.style.border = '2px solid #28a745';
+                                    e.target.style.color = '#28a745';
+                                }
+                            }}
+                            onMouseOut={(e) => {
+                                if (currentPlan !== 'premiumYearly') {
+                                    e.target.style.background = '#28a745';
+                                    e.target.style.border = 'none';
+                                    e.target.style.color = '#fff';
+                                }
+                            }}
+                        >
+                            {(() => {
+                                const userRole = userData?.role;
+                                const isTeacherDefault = userRole === 'teacherDefault';
+                                const isPremiumYearly = currentPlan === 'premiumYearly';
+                                if (isTeacherDefault) {
+                                    return 'Upgrade Now';
+                                } else if (isPremiumYearly) {
+                                    return 'Current Plan';
+                                } else {
+                                    return 'Upgrade Now';
                                 }
                             })()}
                         </button>

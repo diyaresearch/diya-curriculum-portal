@@ -15,7 +15,7 @@ const HomePage = ({ user }) => {
   return (
     <>
       <HeroSection />
-      <ExploreModulesSection />
+      <ExploreModulesSection userData={userData} />
       {/* Footer or any content you want to keep below */}
     </>
   );
