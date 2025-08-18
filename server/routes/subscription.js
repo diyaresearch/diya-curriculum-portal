@@ -372,7 +372,7 @@ router.post("/cancel", authenticateUser, async (req, res) => {
         }
 
         // If user has a Stripe subscription, cancel it
-        if (userData.stripePaymentIntentId && userData.subscriptionType === 'premium') {
+        if (userData.stripePaymentIntentId && ['premium', 'premiumYearly'].includes(userData.subscriptionType)) {
             // Note: In a real implementation, you would also cancel the recurring subscription in Stripe
             // For now, we'll just update the database
         }
