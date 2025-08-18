@@ -324,7 +324,7 @@ const UpgradePage = () => {
                                 color: '#162040',
                                 marginBottom: '20px'
                             }}>
-                                $10.00/month
+                                $9.99/month
                             </div>
                         </div>
                         <button
