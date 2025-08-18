@@ -48,7 +48,10 @@ const PaymentPage = () => {
                     planType: 'premium',
                     amount: 9.99,
                     cardInfo: cardInfo,
-                    billingCycle: 'month'
+                    planType: planType,
+                    amount: amount,
+                    cardInfo: cardInfo,
+                    billingCycle: billingCycle
                 })
             });
 
