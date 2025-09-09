@@ -50,7 +50,7 @@ router.get("/status", authenticateUser, async (req, res) => {
             subscriptionType,
             subscriptionStatus,
             subscriptionEndDate,
-            canUpgrade: subscriptionType !== 'premium' && subscriptionType !== 'enterprise'
+            canUpgrade: !['premium', 'premiumYearly', 'enterprise'].includes(subscriptionType)
         });
     } catch (error) {
         console.error("Error fetching subscription status:", error);
@@ -64,7 +64,9 @@ router.post("/initiate-upgrade", authenticateUser, async (req, res) => {
         const userId = req.user.uid;
         const { targetPlan } = req.body;
 
-        if (!targetPlan || !['premium', 'enterprise'].includes(targetPlan)) {
+        // Accept both premium variants and enterprise
+        const validPlans = ['premium', 'premiumYearly', 'enterprise'];
+        if (!targetPlan || !validPlans.includes(targetPlan)) {
             return res.status(400).json({ message: "Invalid target plan" });
         }
 
@@ -136,7 +138,9 @@ router.post("/complete-upgrade", authenticateUser, async (req, res) => {
         const userId = req.user.uid;
         const { targetPlan, paymentIntentId, upgradeSessionId } = req.body;
 
-        if (!targetPlan || !['premium', 'enterprise'].includes(targetPlan)) {
+        // Accept both premium variants and enterprise
+        const validPlans = ['premium', 'premiumYearly', 'enterprise'];
+        if (!targetPlan || !validPlans.includes(targetPlan)) {
             return res.status(400).json({ message: "Invalid target plan" });
         }
 
@@ -174,13 +178,19 @@ router.post("/complete-upgrade", authenticateUser, async (req, res) => {
             subscriptionStatus: 'active',
             subscriptionStartDate: admin.firestore.FieldValue.serverTimestamp(),
             lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
-            role: targetPlan === 'premium' ? 'teacherPlus' : (targetPlan === 'enterprise' ? 'teacherEnterprise' : userData.role)
+            role: (targetPlan === 'premium' || targetPlan === 'premiumYearly') ? 'teacherPlus' : (targetPlan === 'enterprise' ? 'teacherEnterprise' : userData.role)
         };
 
-        if (targetPlan === 'premium') {
-            // Calculate end date (monthly subscription)
+        if (targetPlan === 'premium' || targetPlan === 'premiumYearly') {
+            // Calculate end date based on plan type
             const endDate = new Date();
-            endDate.setMonth(endDate.getMonth() + 1);
+            if (targetPlan === 'premiumYearly') {
+                // Yearly subscription - add 12 months
+                endDate.setFullYear(endDate.getFullYear() + 1);
+            } else {
+                // Monthly subscription - add 1 month
+                endDate.setMonth(endDate.getMonth() + 1);
+            }
             updateData.subscriptionEndDate = admin.firestore.Timestamp.fromDate(endDate);
             updateData.stripePaymentIntentId = paymentIntentId;
         }
@@ -317,6 +327,268 @@ router.get("/admin/logs", authenticateUser, async (req, res) => {
     } catch (error) {
         console.error("Error fetching admin logs:", error);
         res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Cancel subscription endpoint
+router.post("/cancel", authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.uid;
+        const { reason, feedback } = req.body; // Optional cancellation reason and feedback
+
+        const db = admin.firestore();
+
+        // Check in teachers collection first
+        let userRef = db.collection("teachers").doc(userId);
+        let userSnap = await userRef.get();
+        let collectionName = "teachers";
+
+        if (!userSnap.exists) {
+            // Then check students collection
+            userRef = db.collection("students").doc(userId);
+            userSnap = await userRef.get();
+            collectionName = "students";
+        }
+
+        if (!userSnap.exists) {
+            // Finally check unified users collection
+            userRef = db.collection(TABLE_USERS).doc(userId);
+            userSnap = await userRef.get();
+            collectionName = TABLE_USERS;
+        }
+
+        if (!userSnap.exists) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const userData = userSnap.data();
+        const currentPlan = userData.subscriptionType || 'basic';
+
+        // Don't allow canceling basic subscription
+        if (currentPlan === 'basic') {
+            return res.status(400).json({
+                message: "Cannot cancel basic subscription"
+            });
+        }
+
+        // If user has a Stripe subscription, cancel it
+        if (userData.stripePaymentIntentId && ['premium', 'premiumYearly'].includes(userData.subscriptionType)) {
+            // Note: In a real implementation, you would also cancel the recurring subscription in Stripe
+        if (userData.stripeSubscriptionId && userData.subscriptionType === 'premium') {
+            try {
+                // Cancel the Stripe subscription
+                await stripe.subscriptions.del(userData.stripeSubscriptionId);
+            } catch (err) {
+                console.error("Failed to cancel Stripe subscription:", err);
+                return res.status(500).json({ message: "Failed to cancel Stripe subscription. Please try again later." });
+            }
+        }
+
+        // Update user subscription to cancelled
+        const updateData = {
+            subscriptionType: 'basic', // Downgrade to basic
+            subscriptionStatus: 'cancelled',
+            subscriptionEndDate: admin.firestore.FieldValue.serverTimestamp(), // End immediately
+            cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+            cancellationReason: reason || null,
+            cancellationFeedback: feedback || null,
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+            role: 'teacherDefault' // Reset to default role
+        };
+
+        await userRef.update(updateData);
+
+        // Log the cancellation
+        await db.collection(TABLE_PAYMENT_LOGS).add({
+            userId,
+            action: 'subscription_cancelled',
+            fromPlan: currentPlan,
+            toPlan: 'basic',
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            status: 'cancelled',
+            reason: reason || null,
+            feedback: feedback || null,
+            userEmail: userData.email
+        });
+
+        return res.status(200).json({
+            message: "Subscription cancelled successfully",
+            newPlan: 'basic',
+            subscriptionStatus: 'cancelled'
+        });
+
+    } catch (error) {
+        console.error("Error cancelling subscription:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Reactivate cancelled subscription
+router.post("/reactivate", authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.uid;
+        const db = admin.firestore();
+
+        // Check in teachers collection first
+        let userRef = db.collection("teachers").doc(userId);
+        let userSnap = await userRef.get();
+
+        if (!userSnap.exists) {
+            // Then check students collection
+            userRef = db.collection("students").doc(userId);
+            userSnap = await userRef.get();
+        }
+
+        if (!userSnap.exists) {
+            // Finally check unified users collection
+            userRef = db.collection(TABLE_USERS).doc(userId);
+            userSnap = await userRef.get();
+        }
+
+        if (!userSnap.exists) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const userData = userSnap.data();
+
+        // Only allow reactivation if subscription was cancelled
+        if (userData.subscriptionStatus !== 'cancelled') {
+            return res.status(400).json({
+                message: "Subscription is not cancelled"
+            });
+        }
+
+        // Reactivate subscription (this would typically require a new payment)
+        const updateData = {
+            subscriptionStatus: 'active',
+            reactivatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+        };
+
+        await userRef.update(updateData);
+
+        // Log the reactivation
+        await db.collection(TABLE_PAYMENT_LOGS).add({
+            userId,
+            action: 'subscription_reactivated',
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            status: 'reactivated',
+            userEmail: userData.email
+        });
+
+        return res.status(200).json({
+            message: "Subscription reactivated successfully",
+            subscriptionStatus: 'active'
+        });
+
+    } catch (error) {
+        console.error("Error reactivating subscription:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Process payment endpoint - combines initiate-upgrade and payment processing
+router.post("/process-payment", authenticateUser, async (req, res) => {
+    try {
+        const userId = req.user.uid;
+        const { planType, amount, cardInfo, billingCycle } = req.body;
+
+        // Validate plan type
+        const validPlans = ['premium', 'premiumYearly', 'enterprise'];
+        if (!planType || !validPlans.includes(planType)) {
+            return res.status(400).json({ message: "Invalid plan type" });
+        }
+
+        // Validate required fields
+        if (!amount || !cardInfo) {
+            return res.status(400).json({ message: "Missing required payment information" });
+        }
+
+        const db = admin.firestore();
+
+        // Check in teachers collection first
+        let userRef = db.collection("teachers").doc(userId);
+        let userSnap = await userRef.get();
+        let collectionName = "teachers";
+
+        if (!userSnap.exists) {
+            // Then check students collection
+            userRef = db.collection("students").doc(userId);
+            userSnap = await userRef.get();
+            collectionName = "students";
+        }
+
+        if (!userSnap.exists) {
+            // Finally check unified users collection
+            userRef = db.collection(TABLE_USERS).doc(userId);
+            userSnap = await userRef.get();
+            collectionName = TABLE_USERS;
+        }
+
+        if (!userSnap.exists) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const userData = userSnap.data();
+        const currentPlan = userData.subscriptionType || 'basic';
+
+        // For demo purposes, we'll simulate a successful payment
+        // In a real implementation, you would integrate with Stripe or another payment processor
+
+        // Simulate payment processing delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Update user subscription
+        const updateData = {
+            subscriptionType: planType,
+            subscriptionStatus: 'active',
+            subscriptionStartDate: admin.firestore.FieldValue.serverTimestamp(),
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+            role: (planType === 'premium' || planType === 'premiumYearly') ? 'teacherPlus' : (planType === 'enterprise' ? 'teacherEnterprise' : userData.role)
+        };
+
+        // Calculate subscription end date
+        if (planType === 'premium' || planType === 'premiumYearly') {
+            const endDate = new Date();
+            if (planType === 'premiumYearly') {
+                // Yearly subscription - add 12 months
+                endDate.setFullYear(endDate.getFullYear() + 1);
+            } else {
+                // Monthly subscription - add 1 month
+                endDate.setMonth(endDate.getMonth() + 1);
+            }
+            updateData.subscriptionEndDate = admin.firestore.Timestamp.fromDate(endDate);
+            // In a real implementation, store the actual payment intent ID
+            updateData.paymentReference = `demo_payment_${Date.now()}`;
+        }
+
+        await userRef.update(updateData);
+
+        // Log the payment
+        await db.collection(TABLE_PAYMENT_LOGS).add({
+            userId,
+            action: 'payment_processed',
+            fromPlan: currentPlan,
+            toPlan: planType,
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            status: 'completed',
+            amount: amount,
+            billingCycle: billingCycle || 'month',
+            paymentMethod: 'demo_card',
+            userEmail: userData.email
+        });
+
+        return res.status(200).json({
+            message: "Payment processed successfully",
+            subscriptionType: planType,
+            subscriptionStatus: 'active',
+            amount: amount,
+            billingCycle: billingCycle
+        });
+
+    } catch (error) {
+        console.error("Error processing payment:", error);
+        res.status(500).json({ message: "Error processing payment. Please try again." });
     }
 });
 

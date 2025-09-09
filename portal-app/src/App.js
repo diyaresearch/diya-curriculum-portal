@@ -12,7 +12,10 @@ import LessonDetail from "./pages/lesson_detail";
 import LessonDetailNew from "./pages/lesson_detail/LessonDetail";
 import Layout from "./components/Layout";
 import UserProfile from "./pages/profile_detail";
-import ModuleDetail from "./pages/modules/ModuleDetail";
+// Import the CORRECT component that has the hardcoded modules
+// import ModuleDetail from "./pages/modules/ModuleDetail";
+import ModuleDetail from "./pages/module_detail"; // This one fetches from Firestore
+// Import the editing component with a different name
 import AllLessonPlans from "./pages/all_lesson_plans";
 import { TeacherSignup, StudentSignup } from './pages/sign_up';
 import UpgradePage from './pages/upgrade_page/UpgradePage.jsx';
@@ -23,11 +26,12 @@ import LessonPlanDrafts from "./pages/lesson-plans/drafts";
 import NuggetBuilderPage from "./pages/nugget-builder";
 import TeacherPlusPage from "./pages/teacherplus/teacherplusPage";
 import ProtectedRoute from './components/ProtectedRoute';
-// Remove this line since DashboardContainer doesn't exist
-// import DashboardContainer from './components/DashboardContainer';
+import ModuleDetails from './components/ModuleDetails';
+import LessonDetails from './components/LessonDetails';
+import ContentDetails from './components/ContentDetails';
+import CancelSubscriptionPage from './pages/cancel-subscription/CancelSubscriptionPage';
+import YearlyPaymentPage from './pages/payment/YearlyPaymentPage';
 import ModuleBuilder from "./pages/module_builder/builder";
-import ModuleDrafts from "./pages/module_builder/drafts";
-import LessonDetailsPage from "./pages/lesson-details/LessonDetailsPage";
 
 function App() {
   return (
@@ -39,13 +43,17 @@ function App() {
           <Route path="/edit-content/:id" element={<EditContent />} />
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/payment/premium" element={<PaymentPage />} />
+          <Route path="/payment/yearly" element={<YearlyPaymentPage />} />
           <Route path="/lesson-generator" element={<LessonGenerator />} />
           <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
           <Route path="/my-plans" element={<MyPlans />} />
           <Route path="/lesson/:lessonId" element={<LessonDetail />} />
           <Route path="/lesson/:moduleId/:lessonIndex" element={<LessonDetailNew />} />
           <Route path="/user-profile" element={<UserProfile />} />
-          <Route path="/modules/:moduleId" element={<ModuleDetail />} />
+          {/* Use the correct component for viewing modules */}
+          {/* <Route path="/modules/:moduleId" element={<ModuleDetail />} /> */}
+          <Route path="/module/:moduleId" element={<ModuleDetail />} />
+          <Route path="/modules/:moduleId" element={<ModuleDetails />} />
           <Route path="/all-lesson-plans/:moduleId" element={<AllLessonPlans />} />
           <Route path="/teacher-signup" element={<TeacherSignup />} />
           <Route path="/student-signup" element={<StudentSignup />} />
@@ -54,12 +62,12 @@ function App() {
           <Route path="/lesson-plans/builder" element={<LessonPlanBuilder />} />
           <Route path="/view-content/:id" element={<NuggetDetails />} />
           <Route path="/lesson-plans/drafts" element={<LessonPlanDrafts />} />
-          {/* Simplified teacher-plus routes - removed duplicates and DashboardContainer */}
           <Route path="/teacher-plus" element={<TeacherPlusPage />} />
           <Route path="/teacherplus" element={<TeacherPlusPage />} />
+          <Route path="/lesson/:id" element={<LessonDetails />} />
+          <Route path="/content/:id" element={<ContentDetails />} />
+          <Route path="/cancel-subscription" element={<CancelSubscriptionPage />} />
           <Route path="/module-builder" element={<ModuleBuilder />} />
-          <Route path="/module_builder/drafts" element={<ModuleDrafts />} />
-          <Route path="/lesson-details/:id" element={<LessonDetailsPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
