@@ -383,6 +383,7 @@ router.post("/cancel", authenticateUser, async (req, res) => {
                 return res.status(500).json({ message: "Failed to cancel Stripe subscription. Please try again later." });
             }
         }
+        }
 
         // Update user subscription to cancelled
         const updateData = {
@@ -417,7 +418,8 @@ router.post("/cancel", authenticateUser, async (req, res) => {
             subscriptionStatus: 'cancelled'
         });
 
-    } catch (error) {
+    }
+    catch(error) {
         console.error("Error cancelling subscription:", error);
         res.status(500).json({ message: "Internal server error" });
     }

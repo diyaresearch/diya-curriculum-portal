@@ -28,6 +28,10 @@ const PaymentPage = () => {
         }));
     };
 
+    const[planType] = useState('premium');
+    const [amount] = useState(9.99);             
+    const [billingCycle] = useState('monthly');
+
     const handlePayment = async (e) => {
         e.preventDefault();
         setIsProcessing(true);
@@ -45,12 +49,9 @@ const PaymentPage = () => {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    planType: 'premium',
-                    amount: 9.99,
-                    cardInfo: cardInfo,
-                    planType: planType,
-                    amount: amount,
-                    cardInfo: cardInfo,
+                    planType,
+                    amount,
+                    cardInfo,
                     billingCycle: billingCycle
                 })
             });
