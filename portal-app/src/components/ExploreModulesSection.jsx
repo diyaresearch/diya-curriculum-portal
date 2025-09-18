@@ -18,8 +18,8 @@ import { useNavigate } from "react-router-dom";
 // Add this function near the top of your file, after the imports
 const getItemImage = (item) => {
   const itemType = item._type;
-  const category = (item.category || item.Category || "").toLowerCase();
-  const level = (item.level || item.Level || "").toLowerCase();
+  const category = String(item.category || item.Category || "").toLowerCase();
+  const level = String(item.level || item.Level || "").toLowerCase();
 
   // Return images based on type and category
   if (itemType === "Module") {
@@ -76,7 +76,7 @@ const LockIcon = ({ isLocked }) => (
 
 // Add this helper function near the top of your file, outside the ExploreModulesSection component:
 function capitalizeWords(str) {
-  return (str || "")
+  return String(str || "")
     .toLowerCase()
     .replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -1171,14 +1171,14 @@ const ExploreModulesSection = () => {
     // Filter by category if not "All"
     if (category !== "All") {
       items = items.filter(item =>
-        ((item.category || item.Category || "").toLowerCase() === category.toLowerCase())
+        (String(item.category || item.Category || "").toLowerCase() === category.toLowerCase())
       );
     }
 
     // Filter by level if not "All"
     if (level !== "All") {
       items = items.filter(item =>
-        ((item.level || item.Level || "").toLowerCase() === level.toLowerCase())
+        (String(item.level || item.Level || "").toLowerCase() === level.toLowerCase())
       );
     }
 
@@ -1186,7 +1186,7 @@ const ExploreModulesSection = () => {
     if (keyword.trim()) {
       const kw = keyword.trim().toLowerCase();
       items = items.filter(item =>
-        (item.title || item.Title || "").toLowerCase().includes(kw)
+        String(item.title || item.Title || "").toLowerCase().includes(kw)
       );
     }
 
