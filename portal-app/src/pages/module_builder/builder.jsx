@@ -139,6 +139,8 @@ const ModuleBuilder = () => {
     level: [],
     duration: "",
     description: "",
+    requirements: "", // Add this
+    learningObjectives: "", // Add this
     isPublic: false,
   });
   const [showOverlay, setShowOverlay] = useState(false);
@@ -153,7 +155,7 @@ const ModuleBuilder = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const { userData } = useUserData();
-  
+
 
   // Load draft from localStorage if present
   useEffect(() => {
@@ -167,6 +169,8 @@ const ModuleBuilder = () => {
         level: parsedDraft.level || [],
         duration: parsedDraft.duration || "",
         description: parsedDraft.description || "",
+        requirements: parsedDraft.requirements || "",
+        learningObjectives: parsedDraft.learningObjectives || "",
         isPublic: parsedDraft.isPublic || false,
       });
       // Restore selected lesson plans/materials if present
@@ -239,6 +243,14 @@ const ModuleBuilder = () => {
     setFormData({ ...formData, description: value });
   };
 
+  const handleRequirementsChange = (value) => {
+    setFormData({ ...formData, requirements: value });
+  };
+
+  const handleLearningObjectivesChange = (value) => {
+    setFormData({ ...formData, learningObjectives: value });
+  };
+
   // --- Save as Draft ---
   const handleSaveSession = async () => {
     const auth = getAuth();
@@ -266,11 +278,18 @@ const ModuleBuilder = () => {
     e.preventDefault();
     if (isSubmitting) return;
 
+    // Update the validation in handleSubmit function (around line 170)
     if (
       !formData.title ||
       !formData.description ||
       formData.description.trim() === "" ||
       formData.description === "<p><br></p>" ||
+      !formData.requirements ||
+      formData.requirements.trim() === "" ||
+      formData.requirements === "<p><br></p>" ||
+      !formData.learningObjectives ||
+      formData.learningObjectives.trim() === "" ||
+      formData.learningObjectives === "<p><br></p>" ||
       formData.category.length === 0 ||
       formData.type.length === 0 ||
       formData.level.length === 0 ||
@@ -325,6 +344,8 @@ const ModuleBuilder = () => {
       level: [],
       duration: "",
       description: "",
+      requirements: "", // Add this
+      learningObjectives: "", // Add this
       isPublic: false,
     });
     setSelectedMaterials([]);
@@ -435,7 +456,7 @@ const ModuleBuilder = () => {
             fontFamily: "Open Sans, sans-serif"
           }}
         >
-        Design your modules and share them with your students and the borader community.
+          Design your modules and share them with your students and the borader community.
         </p>
       </div>
       <div
@@ -507,6 +528,30 @@ const ModuleBuilder = () => {
               theme="snow"
               value={formData.description}
               onChange={handleDescriptionChange}
+              style={{ background: "#fff", borderRadius: 6, color: "#111", fontFamily: "Open Sans, sans-serif" }}
+            />
+          </div>
+          <div>
+            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+              Requirements <RequiredAsterisk />
+            </label>
+            <ReactQuill
+              theme="snow"
+              value={formData.requirements}
+              onChange={handleRequirementsChange}
+              style={{ background: "#fff", borderRadius: 6, color: "#111", fontFamily: "Open Sans, sans-serif" }}
+
+            />
+          </div>
+
+          <div>
+            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+              Learning Objectives <RequiredAsterisk />
+            </label>
+            <ReactQuill
+              theme="snow"
+              value={formData.learningObjectives}
+              onChange={handleLearningObjectivesChange}
               style={{ background: "#fff", borderRadius: 6, color: "#111", fontFamily: "Open Sans, sans-serif" }}
             />
           </div>
@@ -678,7 +723,7 @@ const ModuleBuilder = () => {
               onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
               style={{ width: 18, height: 18 }}
             />
-            <label htmlFor="isPublic" style={{ color: "#111", fontWeight: 600 , fontSize: "1.08rem"}}>
+            <label htmlFor="isPublic" style={{ color: "#111", fontWeight: 600, fontSize: "1.08rem" }}>
               Make Public
             </label>
           </div>

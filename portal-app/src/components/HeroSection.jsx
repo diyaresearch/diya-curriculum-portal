@@ -99,23 +99,25 @@ const HeroSection = () => {
                     >
                         Access educational content and enhance your classroom experience.
                     </p>
-                    <button
-                        style={{
-                            background: "#FFC940",
-                            color: "#000",
-                            border: "1px solid #fff",
-                            borderRadius: "6px",
-                            padding: "14px 32px",
-                            fontSize: "1.08rem",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            transition: "background 0.2s, color 0.2s, border 0.2s",
-                            marginTop: "40px"
-                        }}
-                        onClick={() => navigate("/lesson-generator")}
-                    >
-                        Create Module
-                    </button>
+                    {role === "teacherDefault" && (
+                        <button
+                            style={{
+                                background: "#FFC940",
+                                color: "#000",
+                                border: "1px solid #fff",
+                                borderRadius: "6px",
+                                padding: "14px 32px",
+                                fontSize: "1.08rem",
+                                fontWeight: "600",
+                                cursor: "pointer",
+                                transition: "background 0.2s, color 0.2s, border 0.2s",
+                                marginTop: "40px"
+                            }}
+                            onClick={() => navigate("/upgrade")}
+                        >
+                            Upgrade Now
+                        </button>
+                    )}
                 </div>
             </section>
         );

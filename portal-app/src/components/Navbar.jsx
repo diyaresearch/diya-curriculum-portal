@@ -152,8 +152,6 @@ const Navbar = () => {
     navigate("/user-profile");
   };
 
-  // ...existing code...
-
   // Google login handler with Firestore check
   const handleGoogleLogin = async () => {
     setErrorMsg("");
@@ -205,6 +203,7 @@ const Navbar = () => {
 
   const role = userData?.role;
   const isTeacherDefault = role === "teacherDefault";
+  const isTeacherPlus = role === "teacherPlus";
 
   return (
     <>
@@ -263,55 +262,60 @@ const Navbar = () => {
           >
             Home
           </a>
-          {/* Conditional nav links for teacherDefault */}
-          {isTeacherDefault ? (
-            <>
-              <a
-                href="/my-modules"
-                className="hover:underline"
-                style={{
-                  fontSize: "15px",
-                  fontWeight: "600",
-                  fontFamily: "Open Sans, sans-serif",
-                  letterSpacing: "1.5px",
-                  textUnderlineOffset: "20px",
-                  padding: "0px 20px",
-                  color: "#222",
-                  background: "none",
-                  border: "none",
-                  outline: "none",
-                  cursor: "pointer",
-                  height: "56px",
-                  display: "flex",
-                  alignItems: "center"
-                }}
-              >
-                My Modules
-              </a>
-              <a
-                href="/upgrade"
-                className="hover:underline"
-                style={{
-                  fontSize: "15px",
-                  fontWeight: "600",
-                  fontFamily: "Open Sans, sans-serif",
-                  letterSpacing: "1.5px",
-                  textUnderlineOffset: "20px",
-                  padding: "0px 20px",
-                  color: "#222",
-                  background: "none",
-                  border: "none",
-                  outline: "none",
-                  cursor: "pointer",
-                  height: "56px",
-                  display: "flex",
-                  alignItems: "center"
-                }}
-              >
-                Upgrade
-              </a>
-            </>
-          ) : (
+
+          {/* Conditional nav links based on user role */}
+          {isTeacherDefault && (
+            <a
+              href="/upgrade"
+              className="hover:underline"
+              style={{
+                fontSize: "15px",
+                fontWeight: "600",
+                fontFamily: "Open Sans, sans-serif",
+                letterSpacing: "1.5px",
+                textUnderlineOffset: "20px",
+                padding: "0px 20px",
+                color: "#222",
+                background: "none",
+                border: "none",
+                outline: "none",
+                cursor: "pointer",
+                height: "56px",
+                display: "flex",
+                alignItems: "center"
+              }}
+            >
+              Upgrade
+            </a>
+          )}
+
+
+          {isTeacherPlus && (
+            <button
+              onClick={() => navigate('/cancel-subscription')}
+              className="hover:underline"
+              style={{
+                fontSize: "15px",
+                fontWeight: "600",
+                fontFamily: "Open Sans, sans-serif",
+                letterSpacing: "1.5px",
+                textUnderlineOffset: "20px",
+                padding: "0px 20px",
+                color: "#222",
+                background: "none",
+                border: "none",
+                outline: "none",
+                cursor: "pointer",
+                height: "56px",
+                display: "flex",
+                alignItems: "center"
+              }}
+            >
+              Cancel Subscription
+            </button>
+          )}
+
+          {!isTeacherDefault && !isTeacherPlus && (
             <a
               href="/about"
               className="hover:underline"
@@ -335,6 +339,7 @@ const Navbar = () => {
               About
             </a>
           )}
+
           {!user ? (
             <button
               onClick={handleGoogleLogin}
@@ -376,7 +381,6 @@ const Navbar = () => {
                   height: "56px",
                   display: "flex",
                   alignItems: "center"
-                  // NO cursor: "pointer"
                 }}
               >
                 <img

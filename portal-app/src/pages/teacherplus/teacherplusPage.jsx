@@ -22,38 +22,6 @@ function capitalizeWords(str) {
         .replace(/\b\w/g, c => c.toUpperCase());
 }
 
-const LockIcon = ({ isLocked }) => (
-    <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        style={{
-            position: "absolute",
-            top: "16px",
-            left: "16px",
-            zIndex: 10,
-            background: "rgba(255,255,255,0.95)",
-            borderRadius: "6px",
-            padding: "4px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-        }}
-    >
-        {isLocked ? (
-            <>
-                <rect x="5" y="11" width="14" height="10" rx="2" stroke="#dc3545" strokeWidth="2" fill="#fff" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#dc3545" strokeWidth="2" />
-                <circle cx="12" cy="16" r="1" fill="#dc3545" />
-            </>
-        ) : (
-            <>
-                <rect x="5" y="11" width="14" height="10" rx="2" stroke="#28a745" strokeWidth="2" fill="#fff" />
-                <path d="M7 11V7a5 5 0 0 1 10 0" stroke="#28a745" strokeWidth="2" />
-                <circle cx="12" cy="16" r="1" fill="#28a745" />
-            </>
-        )}
-    </svg>
-);
 
 const TeacherPlusPage = () => {
     const navigate = useNavigate();
@@ -66,11 +34,11 @@ const TeacherPlusPage = () => {
         }
     }, [user, role, loading, navigate]);
 
+    const [userModules, setUserModules] = useState([]);
     const [contentType, setContentType] = useState("All");
     const [category, setCategory] = useState("All");
     const [level, setLevel] = useState("All");
     const [keyword, setKeyword] = useState("");
-    const [lockStatus, setLockStatus] = useState("All");
 
     const [modules, setModules] = useState([]);
     const [lessons, setLessons] = useState([]);
@@ -96,8 +64,14 @@ const TeacherPlusPage = () => {
         return () => window.removeEventListener('resize', updateItemsPerPage);
     }, []);
 
+    // Replace your existing useEffect that fetches modules (around line 65) with this:
+
     useEffect(() => {
+        if (!user) return; // Don't fetch if user is not logged in
+
         const db = getFirestore(firebaseApp);
+
+        // Fetch all modules for the filter section
         getDocs(collection(db, "module")).then(snapshot => {
             const moduleData = [];
             snapshot.forEach(doc => {
@@ -112,14 +86,22 @@ const TeacherPlusPage = () => {
                     category: data.category || "General",
                     lessonPlans: data.lessonPlans || {},
                     isDraft: data.isDraft || false,
+                    author: data.author || "", // Add author field
                     _type: "Module"
                 });
             });
             setModules(moduleData);
+
+            // Filter modules created by current user (exclude drafts)
+            const currentUserModules = moduleData.filter(module =>
+                module.author === user.uid && !module.isDraft
+            );
+            setUserModules(currentUserModules);
         }).catch(error => {
             console.error("Error fetching modules:", error);
         });
 
+        // Fetch lessons and nuggets (keep existing code)
         getDocs(collection(db, "lesson")).then(snapshot => {
             setLessons(snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -136,7 +118,7 @@ const TeacherPlusPage = () => {
                 _type: "Nuggets"
             })));
         });
-    }, []);
+    }, [user]); // Add user as dependency
 
     useEffect(() => {
         if (!filtersApplied && (modules.length > 0 || lessons.length > 0 || nuggets.length > 0)) {
@@ -192,12 +174,7 @@ const TeacherPlusPage = () => {
             );
         }
 
-        if (lockStatus !== "All") {
-            items = items.filter(item => {
-                const isLocked = (item.role || item.Role) === "teacherPlus";
-                return lockStatus === "Locked" ? isLocked : !isLocked;
-            });
-        }
+
 
         setFilteredItems(items);
         setFiltersApplied(true);
@@ -208,7 +185,6 @@ const TeacherPlusPage = () => {
         setCategory("All");
         setLevel("All");
         setKeyword("");
-        setLockStatus("All");
         setFilteredItems([]);
         setFiltersApplied(false);
     };
@@ -561,6 +537,7 @@ const TeacherPlusPage = () => {
                 </div>
             </section>
 
+
             {/* My Modules Section */}
             <section
                 style={{
@@ -596,7 +573,7 @@ const TeacherPlusPage = () => {
                     Your custom teaching modules.
                 </p>
                 <button
-                    onClick={() => navigate("/add-module")}
+                    onClick={() => navigate("/module-builder")}
                     style={{
                         marginTop: "32px",
                         background: "#000",
@@ -612,7 +589,6 @@ const TeacherPlusPage = () => {
                     Add New Module
                 </button>
 
-                {/* Three modules layout */}
                 <div
                     style={{
                         display: "flex",
@@ -620,215 +596,96 @@ const TeacherPlusPage = () => {
                         gap: "40px",
                         marginTop: "60px",
                         width: "100%",
-                        maxWidth: "1100px"
+                        maxWidth: "1100px",
+                        flexWrap: "wrap"
                     }}
                 >
-                    {/* Module 1 */}
-                    <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                            width: "340px",
-                            height: "340px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            position: "relative"
-                        }}
-                        onClick={() => navigate("/modules/ai-exploration")}
-                    >
-                        <LockIcon isLocked={false} />
+                    {userModules.length === 0 ? (
                         <div style={{
-                            width: "100%",
-                            height: "calc(100% - 70px)",
-                            display: "flex",
-                            alignItems: "stretch",
-                            justifyContent: "center"
-                        }}>
-                            <img
-                                src={aiExploreImg}
-                                alt="AI Exploration"
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    display: "block"
-                                }}
-                            />
-                        </div>
-                        <div style={{
-                            width: "100%",
-                            height: "90px",
-                            padding: "18px 0 0 0",
+                            padding: "40px",
                             textAlign: "center",
-                            background: "#fff"
+                            color: "#666",
+                            fontSize: "1.1rem",
+                            fontStyle: "italic"
                         }}>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "600",
-                                    fontSize: "1.15rem",
-                                    color: "#162040",
-                                    letterSpacing: "1px"
-                                }}
-                            >
-                                Basics
-                            </span>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "700",
-                                    fontSize: "1.35rem",
-                                    color: "#222",
-                                    marginTop: "8px"
-                                }}
-                            >
-                                AI Exploration
-                            </span>
+                            No custom modules created yet. Click "Add New Module" to get started!
                         </div>
-                    </div>
-
-                    {/* Module 2 */}
-                    <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                            width: "340px",
-                            height: "340px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            position: "relative"
-                        }}
-                        onClick={() => navigate("/modules/ai-insights")}
-                    >
-                        <LockIcon isLocked={false} />
-                        <div style={{
-                            width: "100%",
-                            height: "calc(100% - 70px)",
-                            display: "flex",
-                            alignItems: "stretch",
-                            justifyContent: "center"
-                        }}>
-                            <img
-                                src={laptopImg}
-                                alt="AI Insights"
+                    ) : (
+                        userModules.map((module) => (
+                            <div
+                                key={module.id}
                                 style={{
+                                    background: "#fff",
+                                    borderRadius: "12px",
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                                    width: "340px",
+                                    height: "340px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "flex-end",
+                                    overflow: "hidden",
+                                    cursor: "pointer",
+                                    position: "relative"
+                                }}
+                                onClick={() => navigate(`/module/${module.id}`)}
+                            >
+                                <div style={{
                                     width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    display: "block"
-                                }}
-                            />
-                        </div>
-                        <div style={{
-                            width: "100%",
-                            height: "90px",
-                            padding: "18px 0 0 0",
-                            textAlign: "center",
-                            background: "#fff"
-                        }}>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "600",
-                                    fontSize: "1.15rem",
-                                    color: "#162040",
-                                    letterSpacing: "1px"
-                                }}
-                            >
-                                Intermediary
-                            </span>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "700",
-                                    fontSize: "1.35rem",
-                                    color: "#222",
-                                    marginTop: "8px"
-                                }}
-                            >
-                                AI Insights
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Module 3 */}
-                    <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                            width: "340px",
-                            height: "340px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            position: "relative"
-                        }}
-                        onClick={() => navigate("/modules/ai-physics")}
-                    >
-                        <LockIcon isLocked={false} />
-                        <div style={{
-                            width: "100%",
-                            height: "calc(100% - 70px)",
-                            display: "flex",
-                            alignItems: "stretch",
-                            justifyContent: "center"
-                        }}>
-                            <img
-                                src={physicsImg}
-                                alt="AI & Physics"
-                                style={{
+                                    height: "calc(100% - 70px)",
+                                    display: "flex",
+                                    alignItems: "stretch",
+                                    justifyContent: "center",
+                                    background: "#f0f0f0"
+                                }}>
+                                    <img
+                                        src={laptopImg} // You can use module.image if you have custom images
+                                        alt={module.title}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            display: "block"
+                                        }}
+                                    />
+                                </div>
+                                <div style={{
                                     width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    display: "block"
-                                }}
-                            />
-                        </div>
-                        <div style={{
-                            width: "100%",
-                            height: "90px",
-                            padding: "10px 0 0 0",
-                            textAlign: "center",
-                            background: "#fff"
-                        }}>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "600",
-                                    fontSize: "1.15rem",
-                                    color: "#162040",
-                                    letterSpacing: "1px"
-                                }}
-                            >
-                                Basic
-                            </span>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "700",
-                                    fontSize: "1.35rem",
-                                    color: "#222",
-                                    marginTop: "8px"
-                                }}
-                            >
-                                AI & Physics
-                            </span>
-                        </div>
-                    </div>
+                                    height: "90px",
+                                    padding: "18px 0 0 0",
+                                    textAlign: "center",
+                                    background: "#fff"
+                                }}>
+                                    <span
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "600",
+                                            fontSize: "1.15rem",
+                                            color: "#162040",
+                                            letterSpacing: "1px"
+                                        }}
+                                    >
+                                        {capitalizeWords(Array.isArray(module.level) ? module.level.join(", ") : module.level)}
+                                    </span>
+                                    <span
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "700",
+                                            fontSize: "1.35rem",
+                                            color: "#222",
+                                            marginTop: "8px",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            padding: "0 10px"
+                                        }}
+                                    >
+                                        {module.title}
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </section>
 
@@ -896,7 +753,7 @@ const TeacherPlusPage = () => {
                         }}
                         onClick={() => navigate("/modules/ai-exploration")}
                     >
-                        <LockIcon isLocked={false} />
+
                         <div style={{
                             width: "100%",
                             height: "calc(100% - 70px)",
@@ -965,7 +822,7 @@ const TeacherPlusPage = () => {
                         }}
                         onClick={() => navigate("/modules/ai-insights")}
                     >
-                        <LockIcon isLocked={true} />
+
                         <div style={{
                             width: "100%",
                             height: "calc(100% - 70px)",
@@ -1034,7 +891,7 @@ const TeacherPlusPage = () => {
                         }}
                         onClick={() => navigate("/modules/ai-physics")}
                     >
-                        <LockIcon isLocked={false} />
+
                         <div style={{
                             width: "100%",
                             height: "calc(100% - 70px)",
@@ -1186,24 +1043,6 @@ const TeacherPlusPage = () => {
                         </select>
                     </div>
 
-                    {/* Lock Status Filter */}
-                    <div>
-                        <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Lock Status</label>
-                        <select
-                            value={lockStatus}
-                            onChange={e => setLockStatus(e.target.value)}
-                            style={{
-                                padding: "8px 16px",
-                                borderRadius: 6,
-                                border: "1px solid #bbb",
-                                fontSize: "1rem"
-                            }}
-                        >
-                            <option value="All">All</option>
-                            <option value="Unlocked">Unlocked</option>
-                            <option value="Locked">Locked</option>
-                        </select>
-                    </div>
                 </div>
 
                 {/* Keyword Filter */}
@@ -1316,15 +1155,15 @@ const TeacherPlusPage = () => {
                                 }}
                                 onClick={() => {
                                     if (item._type === "Module") {
-                                        navigate(`/modules/${item.id}`);
+                                        navigate(`/module/${item.id}`);  // Changed from /modules/ to /module/
                                     } else if (item._type === "Lesson Plan") {
-                                        navigate(`/lesson-plans/${item.id}`);
+                                        navigate(`/lesson/${item.id}`);   // Changed from /lesson-plans/ to /lesson/
                                     } else if (item._type === "Nuggets") {
-                                        navigate(`/nuggets/${item.id}`);
+                                        navigate(`/content/${item.id}`);  // Changed from /nuggets/ to /content/
                                     }
                                 }}
                             >
-                                <LockIcon isLocked={(item.role || item.Role) === "teacherPlus"} />
+
                                 <div style={{
                                     width: "100%",
                                     height: "calc(100% - 70px)",

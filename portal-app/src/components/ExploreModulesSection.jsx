@@ -1186,20 +1186,6 @@ const ExploreModulesSection = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   let paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
-  // // If we don't have enough items to fill 2 rows, duplicate items or add placeholders
-  // if (paginatedItems.length < itemsPerPage && filteredItems.length > 0) {
-  //   const itemsNeeded = itemsPerPage - paginatedItems.length;
-
-  //   // Repeat items from the beginning to fill the remaining slots
-  //   for (let i = 0; i < itemsNeeded; i++) {
-  //     const itemToAdd = filteredItems[i % filteredItems.length];
-  //     paginatedItems.push({
-  //       ...itemToAdd,
-  //       id: `${itemToAdd.id}-duplicate-${i}`, // Ensure unique keys
-  //       isDuplicate: true
-  //     });
-  //   }
-  // }
 
   // Reset to page 1 when filters change or items per page changes
   useEffect(() => {
