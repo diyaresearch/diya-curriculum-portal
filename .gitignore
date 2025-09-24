@@ -1,0 +1,6 @@
+
+# Development environment files
+venv/
+.mcp.json
+.playwright-mcp/
+
