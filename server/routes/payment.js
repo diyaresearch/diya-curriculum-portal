@@ -5,14 +5,38 @@ const admin = require("firebase-admin");
 const router = express.Router();
 
 // Validate and initialize Stripe with secret key from environment
+let stripe = null;
 if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error("STRIPE_SECRET_KEY is not defined in the environment variables. Please set it before starting the application.");
+    console.warn('⚠️  STRIPE_SECRET_KEY is not defined. Payment features will be disabled.');
+    console.warn('   Set STRIPE_SECRET_KEY in your environment file to enable payment functionality.');
+} else {
+    try {
+        stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        console.log('✅ Stripe initialized successfully');
+    } catch (error) {
+        console.error('❌ Failed to initialize Stripe:', error.message);
+        console.warn('⚠️  Payment features will be disabled.');
+    }
 }
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
+
+// Middleware to check if Stripe is available
+const requireStripe = (req, res, next) => {
+    if (!stripe) {
+        return res.status(503).json({
+            success: false,
+            error: {
+                code: 'PAYMENT_SERVICE_UNAVAILABLE',
+                message: 'Payment service is currently unavailable. Please contact support.',
+                details: 'Stripe is not configured on this server.'
+            }
+        });
+    }
+    next();
+};
 
 // Test endpoint for payment system
 router.get("/test", (req, res) => {
@@ -30,7 +54,7 @@ router.get("/test", (req, res) => {
 });
 
 // Create payment intent for premium subscription
-router.post("/create-payment-intent", authenticateUser, async (req, res) => {
+router.post("/create-payment-intent", authenticateUser, requireStripe, async (req, res) => {
     try {
         const userId = req.user.uid;
         const { planType } = req.body;
@@ -121,7 +145,7 @@ router.post("/create-payment-intent", authenticateUser, async (req, res) => {
 });
 
 // Confirm payment and complete subscription
-router.post("/confirm-payment", authenticateUser, async (req, res) => {
+router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res) => {
     try {
         const userId = req.user.uid;
         const { paymentIntentId } = req.body;

@@ -1,25 +1,23 @@
-const admin = require("firebase-admin");
-
-// Initialize Firebase Admin SDK if not already initialized
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-  });
-}
+const { databaseService } = require("../services/databaseService");
+const { sendAuthError } = require("../utils/responseHelpers");
 
 const authenticateUser = async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) {
-    return res.status(401).send("Unauthorized");
+    return sendAuthError(res, "Authorization token required");
   }
 
   try {
+    // Initialize database service if needed
+    await databaseService.initialize();
+    const admin = databaseService.getAdmin();
+
     const decodedToken = await admin.auth().verifyIdToken(token);
     req.user = decodedToken;
     next();
   } catch (error) {
     console.error("Error verifying token:", error);
-    res.status(401).send("Unauthorized");
+    return sendAuthError(res, "Invalid or expired token");
   }
 };
 

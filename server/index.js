@@ -2,9 +2,15 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require('dotenv');
 
+// Load environment configuration
 const env = process.env.NODE_ENV || 'development';
 dotenv.config({ path: `.env.${env}` });
 console.log(`Loaded environment: ${env}`);
+
+// Validate environment variables and set defaults
+const { validateAndExit, setDefaults } = require('./utils/envValidator');
+validateAndExit(false); // Don't exit on failure, just warn
+setDefaults();
 
 const unitsRoutes = require("./routes/units");
 const contentRoutes = require("./routes/units"); 
@@ -59,10 +65,14 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Curriculum Portal API');
 });
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
+// Import error handlers
+const { globalErrorHandler, notFoundHandler } = require('./middleware/errorHandler');
+
+// 404 handler for unmatched routes (must be before global error handler)
+app.use(notFoundHandler);
+
+// Global error handler (must be LAST middleware)
+app.use(globalErrorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
