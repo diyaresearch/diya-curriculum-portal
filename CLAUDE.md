@@ -85,27 +85,53 @@ npm start           # Start server (http://localhost:3001)
 
 ## Environment Configuration
 
-### Frontend (.env in portal-app/)
-```
-REACT_APP_FIREBASE_API_KEY=
-REACT_APP_FIREBASE_AUTH_DOMAIN=
-REACT_APP_FIREBASE_PROJECT_ID=
-REACT_APP_FIREBASE_STORAGE_BUCKET=
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=
-REACT_APP_FIREBASE_APP_ID=
-REACT_APP_FIREBASE_MEASUREMENT_ID=
-```
+⚠️ **IMPORTANT**: Never commit `.env` files or `serviceAccountKey.json` to version control!
 
-### Backend (.env.development/.env.production in server/)
-```
-NODE_ENV=development
-SERVER_ALLOW_ORIGIN=http://localhost:3000
-PORT=3001
-```
+### Setup Instructions
 
-### Firebase Service Account
-- Place `serviceAccountKey.json` in the `server/` directory
-- This file contains Firebase Admin SDK credentials
+1. **Frontend Environment Setup**:
+   ```bash
+   cd portal-app
+   cp .env.example .env.development
+   # Edit .env.development with your actual values
+   ```
+
+2. **Backend Environment Setup**:
+   ```bash
+   cd server
+   cp .env.example .env.development
+   # Edit .env.development with your actual values
+   ```
+
+3. **Firebase Service Account**:
+   - Place your `serviceAccountKey.json` file in the `server/` directory
+   - This file contains Firebase Admin SDK credentials
+   - **NEVER** commit this file to version control
+
+### Environment Variables Reference
+
+**Frontend (.env.development/.env.production in portal-app/):**
+- `REACT_APP_SERVER_ORIGIN_URL` - Backend server URL
+- `REACT_APP_DATABASE_SCHEMA_QUALIFIER` - Database schema prefix
+- `REACT_APP_HOME_PAGE` - Frontend application URL
+- `REACT_APP_DIYA_BASE_URL` - DIYA research organization URL
+- `REACT_APP_FIREBASE_*` - Firebase configuration keys
+- `REACT_APP_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key (pk_test_* or pk_live_*)
+
+**Backend (.env.development/.env.production in server/):**
+- `NODE_ENV` - Environment (development/production)
+- `SERVER_ALLOW_ORIGIN` - CORS allowed origin
+- `PORT` - Server port (default: 3001)
+- `DATABASE_SCHEMA_QUALIFIER` - Schema prefix for multi-environment support
+- `STRIPE_SECRET_KEY` - Stripe secret key (sk_test_* or sk_live_*)
+- `STRIPE_WEBHOOK_SECRET` - Stripe webhook endpoint secret
+- `ENABLE_MOCK_FIREBASE` - Use mock Firebase for development (true/false)
+
+### Security Notes
+- See `SECURITY.md` for security best practices
+- All sensitive data should be in gitignored `.env` files
+- Use `.env.example` files as templates with placeholder values
+- Different keys should be used for development vs production environments
 
 ## User Roles and Features
 

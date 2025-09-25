@@ -4,3 +4,12 @@ venv/
 .mcp.json
 .playwright-mcp/
 
+# Environment files (sensitive data)
+.env*
+!.env.example
+**/serviceAccountKey.json
+**/firebase-admin-key.json
+**/.env
+**/.env.*
+!**/.env.example
+
