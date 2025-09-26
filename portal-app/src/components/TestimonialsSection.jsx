@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { CAROUSEL_CONFIG, SAMPLE_TESTIMONIALS } from "../constants/testimonialData";
 
 // --- Custom Hook to get user and role from Firebase ---
 function useUserRole() {
@@ -46,6 +47,64 @@ function useUserRole() {
   return { user, role };
 }
 
+// Helper function to truncate text to approximately 5 lines
+const truncateToLines = (text, maxCharactersPerLine = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_CHARS_PER_LINE, maxLines = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_LINES) => {
+  const maxLength = maxCharactersPerLine * maxLines;
+  if (text.length <= maxLength) {
+    return { truncated: text, isTruncated: false };
+  }
+
+  // Find a good place to cut off (preferably at word boundary)
+  let cutOff = maxLength;
+  while (cutOff > maxLength - 20 && text[cutOff] !== ' ') {
+    cutOff--;
+  }
+
+  return {
+    truncated: text.substring(0, cutOff).trim(),
+    isTruncated: true
+  };
+};
+
+// Dot Indicators Component
+const DotIndicators = ({ total, current, onDotClick, maxDots = CAROUSEL_CONFIG.MAX_DOTS }) => {
+  // Determine which dots to show (max 5)
+  const showDots = Math.min(total, maxDots);
+  const startDot = Math.max(0, Math.min(current - Math.floor(maxDots / 2), total - maxDots));
+
+  return (
+    <div style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: "8px",
+      marginTop: "20px"
+    }}>
+      {Array.from({ length: showDots }, (_, index) => {
+        const dotIndex = startDot + index;
+        const isActive = dotIndex === current;
+
+        return (
+          <div
+            key={dotIndex}
+            onClick={() => onDotClick(dotIndex)}
+            style={{
+              width: isActive ? "12px" : "8px",
+              height: isActive ? "12px" : "8px",
+              borderRadius: "50%",
+              backgroundColor: isActive ? "#4a90e2" : "#d0d0d0",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              transform: isActive ? "scale(1.2)" : "scale(1)",
+              opacity: isActive ? 1 : 0.6
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
 const PopupTestimonialCard = ({
   testimonial,
   open,
@@ -58,7 +117,8 @@ const PopupTestimonialCard = ({
   isFirst,
   isLast
 }) => {
-  const previewText = forcePreview || testimonial.Text;
+  const textTruncation = truncateToLines(testimonial.Text);
+  const previewText = forcePreview || textTruncation.truncated;
 
   // Only render the preview card if onClick is provided (carousel preview)
   if (!open && onClick) {
@@ -66,46 +126,151 @@ const PopupTestimonialCard = ({
       <div
         onClick={onClick}
         style={{
-          background: "#f3f3f1",
-          borderRadius: "10px",
-          padding: "24px 28px",
-          maxWidth: "260px",
-          minWidth: "220px",
-          minHeight: "250px",
-          height: "300px",
+          background: "#f8f9fa",
+          borderRadius: "16px",
+          padding: "32px",
+          maxWidth: "520px",
+          minWidth: "480px",
+          minHeight: "280px",
+          height: "320px",
           boxSizing: "border-box",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-          border: "1px solid #e0dfdb",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+          border: "1px solid #e9ecef",
           display: "flex",
           flexDirection: "column",
+          alignItems: "center",
           justifyContent: "space-between",
           cursor: "pointer",
           position: "relative",
           zIndex: 1,
+          transition: "all 0.3s ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-4px)";
+          e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.12)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0px)";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
         }}
       >
         <div
           style={{
-            color: "#222",
-            fontSize: "1.05rem",
-            marginBottom: "12px",
+            color: "#343a40",
+            fontSize: "1.1rem",
+            marginBottom: "24px",
             flex: 1,
             overflow: "hidden",
-            lineHeight: 1.5,
-            maxHeight: "200px",
-            minHeight: "60px",
-            transition: "opacity 0.2s"
+            lineHeight: 1.6,
+            maxHeight: "160px",
+            minHeight: "80px",
+            textAlign: "center",
+            fontStyle: "italic",
+            padding: "0 16px",
+            position: "relative"
           }}
         >
-          {`"${previewText}"`}
+          "{previewText}"
+          {textTruncation.isTruncated && (
+            <span style={{
+              color: "#4a90e2",
+              fontSize: "0.9rem",
+              fontStyle: "normal",
+              fontWeight: "500",
+              marginLeft: "8px",
+              cursor: "pointer",
+              display: "block",
+              marginTop: "8px"
+            }}>
+              ... Click to read more
+            </span>
+          )}
         </div>
+
+        {/* Profile Image and Name Section at Bottom */}
         <div style={{
-          color: "#111",
-          fontSize: "0.98rem",
-          fontWeight: "600",
-          marginTop: "8px"
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "16px",
+          marginTop: "auto"
         }}>
-          – {testimonial.Name}
+          {/* Profile Image */}
+          <div style={{
+            width: "60px",
+            height: "60px",
+            borderRadius: "50%",
+            overflow: "hidden",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            backgroundColor: "#e9ecef",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0
+          }}>
+            {testimonial.profileImage ? (
+              <img
+                src={testimonial.profileImage}
+                alt={`${testimonial.Name} profile`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover"
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div style={{
+              display: testimonial.profileImage ? "none" : "flex",
+              width: "100%",
+              height: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1.5rem",
+              color: "#6c757d",
+              backgroundColor: "#f1f3f4"
+            }}>
+              👤
+            </div>
+          </div>
+
+          {/* Name and Institution */}
+          <div style={{
+            textAlign: "left",
+            flex: 1
+          }}>
+            <div style={{
+              color: "#162040",
+              fontSize: "1rem",
+              fontWeight: "600",
+              lineHeight: 1.2
+            }}>
+              {testimonial.Name}
+            </div>
+            {testimonial.Role && (
+              <div style={{
+                fontSize: "0.9rem",
+                fontWeight: "400",
+                color: "#6c757d",
+                marginTop: "2px"
+              }}>
+                {testimonial.Role}
+              </div>
+            )}
+            {testimonial.institutionName && (
+              <div style={{
+                fontSize: "0.85rem",
+                fontWeight: "500",
+                color: "#4a90e2",
+                marginTop: "2px"
+              }}>
+                {testimonial.institutionName}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -133,7 +298,7 @@ const PopupTestimonialCard = ({
           background: "#fff",
           borderRadius: "14px",
           padding: "32px 36px 24px 36px",
-          maxWidth: "400px",
+          maxWidth: "600px",
           width: "90%",
           boxShadow: "0 4px 24px rgba(0,0,0,0.18)",
           position: "relative",
@@ -215,11 +380,94 @@ const PopupTestimonialCard = ({
         >
           ×
         </button>
-        <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: "18px", marginTop: showPopupNav ? "38px" : "0", textAlign: "center" }}>
-          {`"${testimonial.Text}"`}
+
+        {/* Profile Image in Popup */}
+        <div style={{
+          width: "100px",
+          height: "100px",
+          borderRadius: "50%",
+          overflow: "hidden",
+          marginBottom: "24px",
+          marginTop: showPopupNav ? "48px" : "12px",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+          backgroundColor: "#e9ecef",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}>
+          {testimonial.profileImage ? (
+            <img
+              src={testimonial.profileImage}
+              alt={`${testimonial.Name} profile`}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover"
+              }}
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div style={{
+            display: testimonial.profileImage ? "none" : "flex",
+            width: "100%",
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "2.5rem",
+            color: "#6c757d",
+            backgroundColor: "#f1f3f4"
+          }}>
+            👤
+          </div>
         </div>
-        <div style={{ color: "#111", fontSize: "1rem", fontWeight: 600, textAlign: "center" }}>
-          – {testimonial.Name}
+
+        <div style={{ color: "#343a40", fontSize: "1.1rem", marginBottom: "20px", textAlign: "center", lineHeight: 1.6, fontStyle: "italic" }}>
+          "{testimonial.Text}"
+        </div>
+        {/* Profile and Name Section in Popup */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "16px",
+          marginTop: "8px"
+        }}>
+          {/* Name and Institution Info */}
+          <div style={{
+            textAlign: "center"
+          }}>
+            <div style={{
+              color: "#162040",
+              fontSize: "1.1rem",
+              fontWeight: 600,
+              lineHeight: 1.2
+            }}>
+              {testimonial.Name}
+            </div>
+            {testimonial.Role && (
+              <div style={{
+                fontSize: "1rem",
+                fontWeight: "400",
+                color: "#6c757d",
+                marginTop: "4px"
+              }}>
+                {testimonial.Role}
+              </div>
+            )}
+            {testimonial.institutionName && (
+              <div style={{
+                fontSize: "0.95rem",
+                fontWeight: "500",
+                color: "#4a90e2",
+                marginTop: "4px"
+              }}>
+                {testimonial.institutionName}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -231,35 +479,126 @@ const TestimonialsCarousel = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [openIndex, setOpenIndex] = useState(null);
   const [startIndex, setStartIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Use ref for timer to prevent memory leaks
+  const timerRef = useRef(null);
 
   // Fetch testimonials from Firestore on mount
   useEffect(() => {
     const fetchTestimonials = async () => {
-      const db = getFirestore(firebaseApp);
-      const querySnapshot = await getDocs(collection(db, "testimonials"));
-      const data = [];
-      querySnapshot.forEach((doc) => {
-        data.push({ id: doc.id, ...doc.data() });
-      });
-      // Sort: Teachers first, then others
-      data.sort((a, b) => {
-        const roleA = (a.Role || a.role || "").toLowerCase();
-        const roleB = (b.Role || b.role || "").toLowerCase();
-        if (roleA === "teacher" && roleB !== "teacher") return -1;
-        if (roleA !== "teacher" && roleB === "teacher") return 1;
-        return 0;
-      });
-      setTestimonials(data);
+      try {
+        const db = getFirestore(firebaseApp);
+        const querySnapshot = await getDocs(collection(db, "testimonials"));
+        const data = [];
+        querySnapshot.forEach((doc) => {
+          data.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sort: Teachers first, then others
+        data.sort((a, b) => {
+          // Use standardized Role field (supporting legacy lowercase for backwards compatibility)
+          const roleA = (a.Role || a.role || "").toLowerCase();
+          const roleB = (b.Role || b.role || "").toLowerCase();
+          if (roleA === "teacher" && roleB !== "teacher") return -1;
+          if (roleA !== "teacher" && roleB === "teacher") return 1;
+          return 0;
+        });
+
+        // If no data from Firebase, use externalized sample data
+        if (data.length === 0) {
+          setTestimonials(SAMPLE_TESTIMONIALS);
+        } else {
+          setTestimonials(data);
+        }
+      } catch (error) {
+        console.log("Firebase error, using sample testimonials:", error);
+        // Use externalized sample data on Firebase error
+        setTestimonials(SAMPLE_TESTIMONIALS);
+      }
     };
     fetchTestimonials();
   }, []);
 
-  // Show 2 testimonials at a time
-  const testimonialsPerPage = 2;
+  // Auto-advance functionality with proper timer management
+  useEffect(() => {
+    // Clear existing timer to prevent memory leaks
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Don't start timer if conditions aren't met
+    if (testimonials.length === 0 || isPaused || openIndex !== null) {
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setIsTransitioning(true);
+      setStartIndex(prevIndex => {
+        const nextIndex = prevIndex + 1 >= testimonials.length ? 0 : prevIndex + 1;
+        return nextIndex;
+      });
+      setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
+    }, CAROUSEL_CONFIG.AUTO_ADVANCE_INTERVAL);
+
+    // Cleanup function
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [testimonials.length, isPaused, openIndex]); // Removed startIndex to prevent recreation on every advance
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
+
+  // Show 1 testimonial at a time
+  const testimonialsPerPage = 1;
   const maxIndex = Math.max(0, testimonials.length - testimonialsPerPage);
 
-  const handlePrev = () => setStartIndex(i => (i > 0 ? Math.max(0, i - testimonialsPerPage) : i));
-  const handleNext = () => setStartIndex(i => (i < maxIndex ? Math.min(maxIndex, i + testimonialsPerPage) : i));
+  const handlePrev = () => {
+    if (isTransitioning) return;
+
+    // Clear existing timer to prevent interference with manual navigation
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    setIsTransitioning(true);
+    setStartIndex(prevIndex => {
+      const newIndex = prevIndex - 1 < 0 ? testimonials.length - 1 : prevIndex - 1;
+      return newIndex;
+    });
+    setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
+  };
+
+  const handleNext = () => {
+    if (isTransitioning) return;
+
+    // Clear existing timer to prevent interference with manual navigation
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    setIsTransitioning(true);
+    setStartIndex(prevIndex => {
+      const newIndex = prevIndex + 1 >= testimonials.length ? 0 : prevIndex + 1;
+      return newIndex;
+    });
+    setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
+  };
 
   const visibleTestimonials = testimonials.slice(startIndex, startIndex + testimonialsPerPage);
 
@@ -276,69 +615,129 @@ const TestimonialsCarousel = () => {
     if (openIndex < testimonials.length - 1) setOpenIndex(openIndex + 1);
   };
 
+  // Dot click handler
+  const handleDotClick = (index) => {
+    if (isTransitioning || index === startIndex) return;
+
+    // Clear existing timer to prevent interference with manual navigation
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    setIsTransitioning(true);
+    setStartIndex(index);
+    setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
+  };
+
+  // Hover handlers for pause/resume
+  const handleMouseEnter = () => setIsPaused(true);
+  const handleMouseLeave = () => setIsPaused(false);
+
   return (
     <div style={{
       flex: 1,
       display: "flex",
+      flexDirection: "column",
       alignItems: "center",
-      justifyContent: "flex-end",
+      justifyContent: "center",
       minWidth: 0,
       marginLeft: "40px",
       gap: "24px"
     }}>
-      <button
-        onClick={handlePrev}
-        disabled={startIndex === 0}
-        style={{
-          background: "#fff",
-          border: "1px solid #ccc",
-          borderRadius: "50%",
-          width: 36,
-          height: 36,
-          marginRight: 12,
-          fontSize: "1.5rem",
-          color: "#162040",
-          cursor: startIndex === 0 ? "not-allowed" : "pointer",
-          opacity: startIndex === 0 ? 0.4 : 1,
-          transition: "opacity 0.2s"
-        }}
-        aria-label="Previous testimonials"
-      >
-        &#8592;
-      </button>
-      {/* Only render preview cards for visibleTestimonials */}
-      {visibleTestimonials.map((testimonial, idx) => {
-        const globalIdx = startIndex + idx;
-        return (
-          <PopupTestimonialCard
-            key={testimonial.id || globalIdx}
-            testimonial={testimonial}
-            open={false}
-            onClick={() => setOpenIndex(globalIdx)}
-            forcePreview={previews[idx]}
-          />
-        );
-      })}
-      <button
-        onClick={handleNext}
-        disabled={startIndex >= maxIndex}
-        style={{
-          background: "#fff",
-          border: "1px solid #ccc",
-          borderRadius: "50%",
-          width: 36,
-          height: 36,
-          marginLeft: 12,
-          fontSize: "1.5rem",
-          color: "#162040",
-          cursor: startIndex >= maxIndex ? "not-allowed" : "pointer",
-          opacity: startIndex >= maxIndex ? 0.4 : 1,
-          transition: "opacity 0.2s"
-        }}
-        aria-label="Next testimonials"
-      >
-        &#8594;
-      </button>
+      <div style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "24px"
+      }}>
+        <button
+          onClick={handlePrev}
+          style={{
+            background: "#fff",
+            border: "1px solid #ccc",
+            borderRadius: "50%",
+            width: 36,
+            height: 36,
+            marginRight: 12,
+            fontSize: "1.5rem",
+            color: "#162040",
+            cursor: "pointer",
+            opacity: 1,
+            transition: "opacity 0.2s",
+            zIndex: 10
+          }}
+          aria-label="Previous testimonials"
+        >
+          &#8592;
+        </button>
+        {/* Testimonial container with fade animation and hover functionality */}
+        <div
+          style={{
+            position: "relative",
+            width: "520px",
+            height: "320px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {visibleTestimonials.map((testimonial, idx) => {
+            const globalIdx = startIndex + idx;
+            return (
+              <div
+                key={testimonial.id || globalIdx}
+                style={{
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  opacity: isTransitioning ? 0 : 1,
+                  transform: `translateX(${isTransitioning ? '20px' : '0px'})`,
+                  transition: "opacity 0.3s ease, transform 0.3s ease"
+                }}
+              >
+                <PopupTestimonialCard
+                  testimonial={testimonial}
+                  open={false}
+                  onClick={() => setOpenIndex(globalIdx)}
+                  forcePreview={previews[idx]}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={handleNext}
+          style={{
+            background: "#fff",
+            border: "1px solid #ccc",
+            borderRadius: "50%",
+            width: 36,
+            height: 36,
+            marginLeft: 12,
+            fontSize: "1.5rem",
+            color: "#162040",
+            cursor: "pointer",
+            opacity: 1,
+            transition: "opacity 0.2s",
+            zIndex: 10
+          }}
+          aria-label="Next testimonials"
+        >
+          &#8594;
+        </button>
+      </div>
+
+      {/* Dot Indicators */}
+      <DotIndicators
+        total={testimonials.length}
+        current={startIndex}
+        onDotClick={handleDotClick}
+        maxDots={CAROUSEL_CONFIG.MAX_DOTS}
+      />
 
       {/* Popups for all testimonials, only one is open at a time */}
       {testimonials.map((testimonial, idx) => (
