@@ -18,7 +18,7 @@ const SCHEMA_QUALIFIER = `${process.env.REACT_APP_DATABASE_SCHEMA_QUALIFIER}`;
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 
 const Navbar = () => {
-  const { userData } = useUserData();
+  const { userData, logout } = useUserData();
   const [user, setUser] = useState(null);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -193,9 +193,7 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut(getAuth());
-      setUser(null);
-      window.location.reload();
+      await logout();
     } catch (error) {
       alert("Logout failed. Please try again.");
     }
