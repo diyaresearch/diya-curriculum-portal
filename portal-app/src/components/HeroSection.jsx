@@ -150,29 +150,48 @@ const HeroSection = () => {
                 <h1
                     style={{
                         color: "#fff",
-                        fontSize: "2.5rem",
+                        fontSize: "3rem",
                         fontWeight: "700",
                         fontFamily: "Open Sans, sans-serif",
                         textAlign: "center",
-                        letterSpacing: "1.2px",
+                        letterSpacing: "0.5px",
                         margin: 0,
-                        lineHeight: "1.2"
+                        lineHeight: "1.1",
+                        textShadow: "0 2px 4px rgba(0,0,0,0.3)"
                     }}
                 >
                     Empower the Future with AI &amp; Data Science
                 </h1>
                 <p
                     style={{
-                        color: "#fff",
-                        fontSize: "1.15rem",
+                        color: "#FDCB58",
+                        fontSize: "1.4rem",
+                        fontWeight: "600",
+                        fontFamily: "Open Sans, sans-serif",
+                        textAlign: "center",
+                        marginTop: "24px",
+                        marginBottom: "32px",
+                        lineHeight: "1.3",
+                        letterSpacing: "0.5px",
+                        textTransform: "uppercase"
+                    }}
+                >
+                    Learn. Explore. Create with Data.
+                </p>
+                <p
+                    style={{
+                        color: "rgba(255, 255, 255, 0.9)",
+                        fontSize: "1.25rem",
                         fontWeight: "400",
                         fontFamily: "Open Sans, sans-serif",
                         textAlign: "center",
-                        marginTop: "28px",
-                        lineHeight: "1.6"
+                        marginTop: "0",
+                        lineHeight: "1.7",
+                        maxWidth: "580px",
+                        margin: "0 auto"
                     }}
                 >
-                    Unlock potential through hands-on learning experiences for K12 educators and students.
+                    Unlock potential through hands-on AI and Data Science learning experiences designed for K12 students and educators.
                 </p>
                 <div
                     style={{
@@ -183,25 +202,9 @@ const HeroSection = () => {
                 >
                     <button
                         style={{
-                            background: "#FFC940",
-                            color: "#000",
-                            border: "1px solid #fff",
-                            borderRadius: "6px",
-                            padding: "14px 32px",
-                            fontSize: "1.08rem",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            transition: "background 0.2s, color 0.2s, border 0.2s",
-                        }}
-                        onClick={() => navigate("/student-signup")}
-                    >
-                        Sign Up as Student
-                    </button>
-                    <button
-                        style={{
-                            background: "#FFC940",
-                            color: "#000",
-                            border: "1px solid #fff",
+                            background: "#FDCB58",
+                            color: "#162040",
+                            border: "none",
                             borderRadius: "6px",
                             padding: "14px 32px",
                             fontSize: "1.08rem",
@@ -213,7 +216,37 @@ const HeroSection = () => {
                     >
                         Sign Up as Teacher
                     </button>
+                    <button
+                        style={{
+                            background: "transparent",
+                            color: "#FDCB58",
+                            border: "1px solid #FDCB58",
+                            borderRadius: "6px",
+                            padding: "14px 32px",
+                            fontSize: "1.08rem",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            transition: "background 0.2s, color 0.2s, border 0.2s",
+                        }}
+                        onClick={() => navigate("/student-signup")}
+                    >
+                        Sign Up as Student
+                    </button>
                 </div>
+                <p
+                    style={{
+                        color: "rgba(255, 255, 255, 0.7)",
+                        fontSize: "0.9rem",
+                        fontWeight: "400",
+                        fontFamily: "Open Sans, sans-serif",
+                        textAlign: "center",
+                        marginTop: "32px",
+                        lineHeight: "1.4",
+                        margin: "32px 0 0 0"
+                    }}
+                >
+                    Trusted by 1,000+ students and teachers worldwide
+                </p>
             </div>
         </section>
     );
