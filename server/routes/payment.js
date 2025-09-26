@@ -1,6 +1,6 @@
 const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
-const admin = require("firebase-admin");
+const { databaseService } = require("../services/databaseService");
 
 const router = express.Router();
 
@@ -64,23 +64,12 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
             return res.status(400).json({ message: "Invalid plan type" });
         }
 
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-        }
+        // Use the hierarchical user lookup from databaseService
+        const { ref: userRef, snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
 
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
@@ -112,7 +101,7 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
             action: 'payment_intent_created',
             fromPlan: userData.subscriptionType || 'basic',
             toPlan: planType,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'payment_intent_created',
             paymentIntentId: paymentIntent.id,
             amount: amount,
@@ -130,11 +119,13 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
 
         // Log the error
         if (req.user?.uid) {
-            const db = admin.firestore();
+            await databaseService.initialize();
+            const db = databaseService.getDb();
+            const admin = databaseService.getAdmin();
             await db.collection(TABLE_PAYMENT_LOGS).add({
                 userId: req.user.uid,
                 action: 'payment_intent_error',
-                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
                 status: 'error',
                 error: error.message
             });
@@ -169,23 +160,12 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
             return res.status(403).json({ message: "Payment verification failed" });
         }
 
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-        }
+        // Use the hierarchical user lookup from databaseService
+        const { ref: userRef, snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
 
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
@@ -207,11 +187,11 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         await userRef.update({
             subscriptionType: targetPlan,
             subscriptionStatus: 'active',
-            subscriptionStartDate: admin.firestore.FieldValue.serverTimestamp(),
-            subscriptionEndDate: admin.firestore.Timestamp.fromDate(endDate),
+            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            subscriptionEndDate: admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate,
             stripePaymentIntentId: paymentIntentId,
             stripeCustomerId: paymentIntent.customer || null,
-            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             role: (targetPlan === 'premium' || targetPlan === 'premiumYearly') ? 'teacherPlus' : (targetPlan === 'enterprise' ? 'teacherEnterprise' : userData.role)
         });
 
@@ -221,7 +201,7 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
             action: 'payment_confirmed',
             fromPlan: paymentIntent.metadata.upgradeFrom,
             toPlan: targetPlan,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'completed',
             paymentIntentId: paymentIntentId,
             amount: paymentIntent.amount,
@@ -239,11 +219,13 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         console.error("Error confirming payment:", error);
 
         // Log the error
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId: req.user.uid,
             action: 'payment_confirmation_error',
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'error',
             paymentIntentId: req.body.paymentIntentId,
             error: error.message
@@ -267,7 +249,9 @@ router.post("/webhook", express.raw({ type: 'application/json' }), async (req, r
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    const db = admin.firestore();
+    await databaseService.initialize();
+    const db = databaseService.getDb();
+    const admin = databaseService.getAdmin();
 
     // Handle the event
     switch (event.type) {
@@ -278,7 +262,7 @@ router.post("/webhook", express.raw({ type: 'application/json' }), async (req, r
             // Log webhook event
             await db.collection(TABLE_PAYMENT_LOGS).add({
                 action: 'webhook_payment_succeeded',
-                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
                 status: 'webhook_received',
                 paymentIntentId: paymentIntent.id,
                 userId: paymentIntent.metadata.userId || null,
@@ -294,7 +278,7 @@ router.post("/webhook", express.raw({ type: 'application/json' }), async (req, r
             // Log failed payment
             await db.collection(TABLE_PAYMENT_LOGS).add({
                 action: 'webhook_payment_failed',
-                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+                timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
                 status: 'payment_failed',
                 paymentIntentId: failedPayment.id,
                 userId: failedPayment.metadata.userId || null,
@@ -313,7 +297,8 @@ router.post("/webhook", express.raw({ type: 'application/json' }), async (req, r
 router.get("/history", authenticateUser, async (req, res) => {
     try {
         const userId = req.user.uid;
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
 
         const paymentHistory = await db.collection(TABLE_PAYMENT_LOGS)
             .where('userId', '==', userId)

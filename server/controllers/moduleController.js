@@ -1,4 +1,4 @@
-const { db } = require('../config/firebaseConfig');
+const { databaseService } = require('../services/databaseService');
 
 // Define the collections
 const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
@@ -10,6 +10,8 @@ console.log('moduleController tables are', TABLE_MODULE, TABLE_LESSON);
 // Get all modules
 const getAllModules = async (req, res) => {
   try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
     const modulesSnapshot = await db.collection(TABLE_MODULE).get();
     if (modulesSnapshot.empty) {
       return res.status(200).json([]);
@@ -31,6 +33,8 @@ const getAllModules = async (req, res) => {
 // Get a specific module by ID
 const getModuleById = async (req, res) => {
   try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
     const moduleId = req.params.id;
     const moduleDoc = await db.collection(TABLE_MODULE).doc(moduleId).get();
 
@@ -48,6 +52,8 @@ const getModuleById = async (req, res) => {
 // Create a new module
 const createModule = async (req, res) => {
   try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
     const { title, description, tags, lessonPlans, image } = req.body;
 
     const newModule = {
@@ -69,6 +75,8 @@ const createModule = async (req, res) => {
 // Edit an existing module
 const editModule = async (req, res) => {
   try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
     const moduleId = req.params.id;
     const { title, description, tags, lessonPlans, image } = req.body;
 
@@ -100,6 +108,8 @@ const editModule = async (req, res) => {
 // Delete a module
 const deleteModule = async (req, res) => {
   try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
     const moduleId = req.params.id;
     const moduleRef = db.collection(TABLE_MODULE).doc(moduleId);
     const moduleDoc = await moduleRef.get();
