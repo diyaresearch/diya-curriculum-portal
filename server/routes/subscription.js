@@ -1,6 +1,6 @@
 const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
-const admin = require("firebase-admin");
+const { databaseService } = require("../services/databaseService");
 
 const router = express.Router();
 
@@ -19,7 +19,9 @@ router.get("/test", (req, res) => {
 router.get("/status", authenticateUser, async (req, res) => {
     try {
         const userId = req.user.uid;
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
         // Check in teachers collection first
         let userRef = db.collection("teachers").doc(userId);
@@ -70,7 +72,9 @@ router.post("/initiate-upgrade", authenticateUser, async (req, res) => {
             return res.status(400).json({ message: "Invalid target plan" });
         }
 
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
         // Check in teachers collection first
         let userRef = db.collection("teachers").doc(userId);
@@ -104,7 +108,7 @@ router.post("/initiate-upgrade", authenticateUser, async (req, res) => {
             action: 'upgrade_initiated',
             fromPlan: currentPlan,
             toPlan: targetPlan,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'initiated',
             userEmail: userData.email
         });
@@ -144,7 +148,9 @@ router.post("/complete-upgrade", authenticateUser, async (req, res) => {
             return res.status(400).json({ message: "Invalid target plan" });
         }
 
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
         // Check in teachers collection first
         let userRef = db.collection("teachers").doc(userId);
@@ -176,8 +182,8 @@ router.post("/complete-upgrade", authenticateUser, async (req, res) => {
         const updateData = {
             subscriptionType: targetPlan,
             subscriptionStatus: 'active',
-            subscriptionStartDate: admin.firestore.FieldValue.serverTimestamp(),
-            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             role: (targetPlan === 'premium' || targetPlan === 'premiumYearly') ? 'teacherPlus' : (targetPlan === 'enterprise' ? 'teacherEnterprise' : userData.role)
         };
 
@@ -191,7 +197,7 @@ router.post("/complete-upgrade", authenticateUser, async (req, res) => {
                 // Monthly subscription - add 1 month
                 endDate.setMonth(endDate.getMonth() + 1);
             }
-            updateData.subscriptionEndDate = admin.firestore.Timestamp.fromDate(endDate);
+            updateData.subscriptionEndDate = admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate;
             updateData.stripePaymentIntentId = paymentIntentId;
         }
 
@@ -203,7 +209,7 @@ router.post("/complete-upgrade", authenticateUser, async (req, res) => {
             action: 'upgrade_completed',
             fromPlan: currentPlan,
             toPlan: targetPlan,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'completed',
             paymentIntentId: paymentIntentId || null,
             upgradeSessionId: upgradeSessionId || null,
@@ -228,7 +234,9 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
         const userId = req.user.uid;
         const { message, contactPreference } = req.body;
 
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
         // Check in teachers collection first
         let userRef = db.collection("teachers").doc(userId);
@@ -260,7 +268,7 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
             institution: userData.institution,
             message: message || '',
             contactPreference: contactPreference || 'email',
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'pending'
         });
 
@@ -270,7 +278,7 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
             action: 'enterprise_contact_requested',
             fromPlan: userData.subscriptionType || 'basic',
             toPlan: 'enterprise',
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'contact_requested',
             userEmail: userData.email
         });
@@ -289,7 +297,9 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
 router.get("/admin/logs", authenticateUser, async (req, res) => {
     try {
         const userId = req.user.uid;
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
         // Check in teachers collection first
         let userRef = db.collection("teachers").doc(userId);
@@ -336,7 +346,9 @@ router.post("/cancel", authenticateUser, async (req, res) => {
         const userId = req.user.uid;
         const { reason, feedback } = req.body; // Optional cancellation reason and feedback
 
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
         // Check in teachers collection first
         let userRef = db.collection("teachers").doc(userId);
@@ -389,11 +401,11 @@ router.post("/cancel", authenticateUser, async (req, res) => {
         const updateData = {
             subscriptionType: 'basic', // Downgrade to basic
             subscriptionStatus: 'cancelled',
-            subscriptionEndDate: admin.firestore.FieldValue.serverTimestamp(), // End immediately
-            cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+            subscriptionEndDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(), // End immediately
+            cancelledAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             cancellationReason: reason || null,
             cancellationFeedback: feedback || null,
-            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             role: 'teacherDefault' // Reset to default role
         };
 
@@ -405,7 +417,7 @@ router.post("/cancel", authenticateUser, async (req, res) => {
             action: 'subscription_cancelled',
             fromPlan: currentPlan,
             toPlan: 'basic',
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'cancelled',
             reason: reason || null,
             feedback: feedback || null,
@@ -429,7 +441,9 @@ router.post("/cancel", authenticateUser, async (req, res) => {
 router.post("/reactivate", authenticateUser, async (req, res) => {
     try {
         const userId = req.user.uid;
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
         // Check in teachers collection first
         let userRef = db.collection("teachers").doc(userId);
@@ -463,8 +477,8 @@ router.post("/reactivate", authenticateUser, async (req, res) => {
         // Reactivate subscription (this would typically require a new payment)
         const updateData = {
             subscriptionStatus: 'active',
-            reactivatedAt: admin.firestore.FieldValue.serverTimestamp(),
-            lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+            reactivatedAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date()
         };
 
         await userRef.update(updateData);
@@ -473,7 +487,7 @@ router.post("/reactivate", authenticateUser, async (req, res) => {
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId,
             action: 'subscription_reactivated',
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'reactivated',
             userEmail: userData.email
         });
@@ -506,7 +520,9 @@ router.post("/process-payment", authenticateUser, async (req, res) => {
             return res.status(400).json({ message: "Missing required payment information" });
         }
 
-        const db = admin.firestore();
+        await databaseService.initialize();
+        const db = databaseService.getDb();
+        const admin = databaseService.getAdmin();
 
         // Check in teachers collection first
         let userRef = db.collection("teachers").doc(userId);
@@ -544,8 +560,8 @@ router.post("/process-payment", authenticateUser, async (req, res) => {
         const updateData = {
             subscriptionType: planType,
             subscriptionStatus: 'active',
-            subscriptionStartDate: admin.firestore.FieldValue.serverTimestamp(),
-            lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             role: (planType === 'premium' || planType === 'premiumYearly') ? 'teacherPlus' : (planType === 'enterprise' ? 'teacherEnterprise' : userData.role)
         };
 
@@ -559,7 +575,7 @@ router.post("/process-payment", authenticateUser, async (req, res) => {
                 // Monthly subscription - add 1 month
                 endDate.setMonth(endDate.getMonth() + 1);
             }
-            updateData.subscriptionEndDate = admin.firestore.Timestamp.fromDate(endDate);
+            updateData.subscriptionEndDate = admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate;
             // In a real implementation, store the actual payment intent ID
             updateData.paymentReference = `demo_payment_${Date.now()}`;
         }
@@ -572,7 +588,7 @@ router.post("/process-payment", authenticateUser, async (req, res) => {
             action: 'payment_processed',
             fromPlan: currentPlan,
             toPlan: planType,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'completed',
             amount: amount,
             billingCycle: billingCycle || 'month',

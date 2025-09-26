@@ -1,4 +1,4 @@
-const { db } = require('../config/firebaseConfig');
+const { databaseService } = require('../services/databaseService');
 
 // Define the collections
 const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
@@ -14,8 +14,10 @@ const getAllUnits = async (req, res) => {
   // res.setHeader('Access-Control-Allow-Origin', allowOrigin); // or '*' for any origin
   // res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'); // Add other methods if needed
   // res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); // Add any other headers as needed
-  
+
   try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
     const unitsSnapshot = await db.collection(TABLE_CONTENT).get();
     if (unitsSnapshot.empty) {
       res.status(200).json([]);
@@ -40,6 +42,8 @@ const getAllUnits = async (req, res) => {
 // Get a specific unit by ID
 const getUnitById = async (req, res) => {
   try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
     const unitId = req.params.id;
     const unitDoc = await db.collection(TABLE_CONTENT).doc(unitId).get();
     if (!unitDoc.exists) {
@@ -55,6 +59,8 @@ const getUnitById = async (req, res) => {
 
 const getUserUnits = async (req, res) => {
   try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
     const userId = req.user ? req.user.uid : null; // Extract user ID from authenticated request
     if (!userId) {
       return res.status(401).send("Unauthorized");
@@ -83,8 +89,10 @@ const getUserUnits = async (req, res) => {
 
 const deleteUnit = async (req, res) => {
   try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
     const unitId = req.params.id;
-    
+
     // Check if unit exists
     const unitDoc = await db.collection(TABLE_CONTENT).doc(unitId).get();
     if (!unitDoc.exists) {
