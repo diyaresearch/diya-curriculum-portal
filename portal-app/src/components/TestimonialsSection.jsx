@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { CAROUSEL_CONFIG, SAMPLE_TESTIMONIALS } from "../constants/testimonialData";
 
 // --- Custom Hook to get user and role from Firebase ---
 function useUserRole() {
@@ -47,7 +48,7 @@ function useUserRole() {
 }
 
 // Helper function to truncate text to approximately 5 lines
-const truncateToLines = (text, maxCharactersPerLine = 50, maxLines = 5) => {
+const truncateToLines = (text, maxCharactersPerLine = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_CHARS_PER_LINE, maxLines = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_LINES) => {
   const maxLength = maxCharactersPerLine * maxLines;
   if (text.length <= maxLength) {
     return { truncated: text, isTruncated: false };
@@ -66,7 +67,7 @@ const truncateToLines = (text, maxCharactersPerLine = 50, maxLines = 5) => {
 };
 
 // Dot Indicators Component
-const DotIndicators = ({ total, current, onDotClick, maxDots = 5 }) => {
+const DotIndicators = ({ total, current, onDotClick, maxDots = CAROUSEL_CONFIG.MAX_DOTS }) => {
   // Determine which dots to show (max 5)
   const showDots = Math.min(total, maxDots);
   const startDot = Math.max(0, Math.min(current - Math.floor(maxDots / 2), total - maxDots));
@@ -480,7 +481,9 @@ const TestimonialsCarousel = () => {
   const [startIndex, setStartIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
+
+  // Use ref for timer to prevent memory leaks
+  const timerRef = useRef(null);
 
   // Fetch testimonials from Firestore on mount
   useEffect(() => {
@@ -495,6 +498,7 @@ const TestimonialsCarousel = () => {
 
         // Sort: Teachers first, then others
         data.sort((a, b) => {
+          // Use standardized Role field (supporting legacy lowercase for backwards compatibility)
           const roleA = (a.Role || a.role || "").toLowerCase();
           const roleB = (b.Role || b.role || "").toLowerCase();
           if (roleA === "teacher" && roleB !== "teacher") return -1;
@@ -502,131 +506,61 @@ const TestimonialsCarousel = () => {
           return 0;
         });
 
-        // If no data from Firebase, use sample data
+        // If no data from Firebase, use externalized sample data
         if (data.length === 0) {
-          const sampleData = [
-            {
-              id: "1",
-              Name: "Sarah Johnson",
-              Role: "Teacher",
-              institutionName: "Lincoln Elementary School",
-              Text: "DIYA has revolutionized how I create lesson plans. The AI-powered content generation saves me hours every week, and my students are more engaged than ever. The intuitive interface makes it so easy to customize lessons for different learning styles, and the built-in assessment tools help me track student progress effectively. I can't imagine teaching without it now!",
-              profileImage: "https://images.unsplash.com/photo-1494790108755-2616b612b5a4?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-            },
-            {
-              id: "2",
-              Name: "Dr. Michael Chen",
-              Role: "Professor",
-              institutionName: "Stanford University",
-              Text: "As an educator, I'm impressed by the quality and depth of educational materials available on DIYA. It's become an essential tool for curriculum development.",
-              profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-            },
-            {
-              id: "3",
-              Name: "Emily Rodriguez",
-              Role: "Curriculum Designer",
-              institutionName: "Boston Public Schools",
-              Text: "DIYA's comprehensive approach to educational content has transformed our district's teaching methodology. The platform is intuitive and incredibly powerful. We've seen a remarkable improvement in both teacher satisfaction and student outcomes since implementing DIYA across our schools. The collaborative features allow our educators to share resources seamlessly, and the analytics provide valuable insights into student learning patterns. It's truly a game-changer for modern education.",
-              profileImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-            },
-            {
-              id: "4",
-              Name: "James Wilson",
-              Role: "Principal",
-              institutionName: "Riverside High School",
-              Text: "Since implementing DIYA across our school, we've seen a 40% improvement in student engagement and teacher satisfaction. The platform's ability to adapt to different learning styles and provide real-time feedback has been incredible.",
-              profileImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-            },
-            {
-              id: "5",
-              Name: "Dr. Lisa Park",
-              Role: "Education Director",
-              institutionName: "MIT Education Lab",
-              Text: "DIYA represents the future of educational technology. The platform seamlessly blends AI innovation with pedagogical best practices, creating an environment where both educators and students can thrive. The research-backed methodologies integrated into the platform ensure that learning objectives are met while maintaining high levels of engagement. Our studies show significant improvements in comprehension and retention rates among students using DIYA-powered curricula.",
-              profileImage: "https://images.unsplash.com/photo-1559293436-0a4e3c23b0e5?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-            }
-          ];
-          setTestimonials(sampleData);
+          setTestimonials(SAMPLE_TESTIMONIALS);
         } else {
           setTestimonials(data);
         }
       } catch (error) {
         console.log("Firebase error, using sample testimonials:", error);
-        // Use sample data on Firebase error
-        const sampleData = [
-          {
-            id: "1",
-            Name: "Sarah Johnson",
-            Role: "Teacher",
-            institutionName: "Lincoln Elementary School",
-            Text: "DIYA has revolutionized how I create lesson plans. The AI-powered content generation saves me hours every week, and my students are more engaged than ever. The intuitive interface makes it so easy to customize lessons for different learning styles, and the built-in assessment tools help me track student progress effectively. I can't imagine teaching without it now!",
-            profileImage: "https://images.unsplash.com/photo-1494790108755-2616b612b5a4?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-          },
-          {
-            id: "2",
-            Name: "Dr. Michael Chen",
-            Role: "Professor",
-            institutionName: "Stanford University",
-            Text: "As an educator, I'm impressed by the quality and depth of educational materials available on DIYA. It's become an essential tool for curriculum development.",
-            profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-          },
-          {
-            id: "3",
-            Name: "Emily Rodriguez",
-            Role: "Curriculum Designer",
-            institutionName: "Boston Public Schools",
-            Text: "DIYA's comprehensive approach to educational content has transformed our district's teaching methodology. The platform is intuitive and incredibly powerful. We've seen a remarkable improvement in both teacher satisfaction and student outcomes since implementing DIYA across our schools. The collaborative features allow our educators to share resources seamlessly, and the analytics provide valuable insights into student learning patterns. It's truly a game-changer for modern education.",
-            profileImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-          },
-          {
-            id: "4",
-            Name: "James Wilson",
-            Role: "Principal",
-            institutionName: "Riverside High School",
-            Text: "Since implementing DIYA across our school, we've seen a 40% improvement in student engagement and teacher satisfaction. The platform's ability to adapt to different learning styles and provide real-time feedback has been incredible.",
-            profileImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-          },
-          {
-            id: "5",
-            Name: "Dr. Lisa Park",
-            Role: "Education Director",
-            institutionName: "MIT Education Lab",
-            Text: "DIYA represents the future of educational technology. The platform seamlessly blends AI innovation with pedagogical best practices, creating an environment where both educators and students can thrive. The research-backed methodologies integrated into the platform ensure that learning objectives are met while maintaining high levels of engagement. Our studies show significant improvements in comprehension and retention rates among students using DIYA-powered curricula.",
-            profileImage: "https://images.unsplash.com/photo-1559293436-0a4e3c23b0e5?ixlib=rb-4.0.3&w=150&h=150&fit=crop&crop=face"
-          }
-        ];
-        setTestimonials(sampleData);
+        // Use externalized sample data on Firebase error
+        setTestimonials(SAMPLE_TESTIMONIALS);
       }
     };
     fetchTestimonials();
   }, []);
 
-  // Auto-advance functionality
+  // Auto-advance functionality with proper timer management
   useEffect(() => {
-    if (testimonials.length === 0 || isPaused || openIndex !== null) return;
+    // Clear existing timer to prevent memory leaks
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
 
-    const timer = setInterval(() => {
+    // Don't start timer if conditions aren't met
+    if (testimonials.length === 0 || isPaused || openIndex !== null) {
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
       setIsTransitioning(true);
       setStartIndex(prevIndex => {
         const nextIndex = prevIndex + 1 >= testimonials.length ? 0 : prevIndex + 1;
         return nextIndex;
       });
-      setTimeout(() => setIsTransitioning(false), 300);
-    }, 7000); // 7 seconds
+      setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
+    }, CAROUSEL_CONFIG.AUTO_ADVANCE_INTERVAL);
 
-    setAutoAdvanceTimer(timer);
-
+    // Cleanup function
     return () => {
-      if (timer) clearInterval(timer);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
-  }, [testimonials.length, isPaused, openIndex, startIndex]);
+  }, [testimonials.length, isPaused, openIndex]); // Removed startIndex to prevent recreation on every advance
 
   // Clean up timer on unmount
   useEffect(() => {
     return () => {
-      if (autoAdvanceTimer) clearInterval(autoAdvanceTimer);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
-  }, [autoAdvanceTimer]);
+  }, []);
 
   // Show 1 testimonial at a time
   const testimonialsPerPage = 1;
@@ -635,29 +569,35 @@ const TestimonialsCarousel = () => {
   const handlePrev = () => {
     if (isTransitioning) return;
 
-    // Clear existing timer
-    if (autoAdvanceTimer) clearInterval(autoAdvanceTimer);
+    // Clear existing timer to prevent interference with manual navigation
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
 
     setIsTransitioning(true);
     setStartIndex(prevIndex => {
       const newIndex = prevIndex - 1 < 0 ? testimonials.length - 1 : prevIndex - 1;
       return newIndex;
     });
-    setTimeout(() => setIsTransitioning(false), 300);
+    setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
   };
 
   const handleNext = () => {
     if (isTransitioning) return;
 
-    // Clear existing timer
-    if (autoAdvanceTimer) clearInterval(autoAdvanceTimer);
+    // Clear existing timer to prevent interference with manual navigation
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
 
     setIsTransitioning(true);
     setStartIndex(prevIndex => {
       const newIndex = prevIndex + 1 >= testimonials.length ? 0 : prevIndex + 1;
       return newIndex;
     });
-    setTimeout(() => setIsTransitioning(false), 300);
+    setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
   };
 
   const visibleTestimonials = testimonials.slice(startIndex, startIndex + testimonialsPerPage);
@@ -679,12 +619,15 @@ const TestimonialsCarousel = () => {
   const handleDotClick = (index) => {
     if (isTransitioning || index === startIndex) return;
 
-    // Clear existing timer
-    if (autoAdvanceTimer) clearInterval(autoAdvanceTimer);
+    // Clear existing timer to prevent interference with manual navigation
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
 
     setIsTransitioning(true);
     setStartIndex(index);
-    setTimeout(() => setIsTransitioning(false), 300);
+    setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
   };
 
   // Hover handlers for pause/resume
@@ -793,7 +736,7 @@ const TestimonialsCarousel = () => {
         total={testimonials.length}
         current={startIndex}
         onDotClick={handleDotClick}
-        maxDots={5}
+        maxDots={CAROUSEL_CONFIG.MAX_DOTS}
       />
 
       {/* Popups for all testimonials, only one is open at a time */}
