@@ -5,13 +5,14 @@ import aiExploreImg3 from "../assets/ChatGPT Image Jun 13, 2025, 02_25_51 PM.png
 import laptopImg from "../assets/laptop.png";
 import physicsImg from "../assets/finphysics.png";
 import textbooksImg from "../assets/textbooks.png";
+import softwareEngImg from "../assets/software_engineering.png";
 import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
-// Add this function near the top of your file, after the imports
+// This function is used in the filter section for dynamic module display
 const getItemImage = (item) => {
   const itemType = item._type;
   const category = (item.category || item.Category || "").toLowerCase();
@@ -34,6 +35,19 @@ const getItemImage = (item) => {
 
   // Fallback image
   return aiExploreImg;
+};
+
+// Map module keys to appropriate images for featured modules
+const getFeaturedModuleImage = (moduleKey) => {
+  const imageMap = {
+    "python-for-ai": softwareEngImg,
+    "ai-exploration": aiExploreImg,
+    "ai-insights": laptopImg,
+    "physics-ai": physicsImg,
+    "chemistry-ai": textbooksImg,  // Using textbooks for chemistry
+    "biology-ai": aiExploreImg3    // Using AI image variant for biology
+  };
+  return imageMap[moduleKey] || aiExploreImg;
 };
 
 // Lock/Unlock icons component
@@ -210,22 +224,52 @@ const MODULE_LEVELS = ["All", "Basic", "Intermediate", "Advanced"];
 // Add this constant outside the component, near the top of the file:
 const MODULE_POPUP_INFO = [
   {
+    key: "python-for-ai",
+    title: "Python for AI",
+    level: "Beginner",
+    summary:
+      "Learn Python programming fundamentals specifically for AI applications. This module covers essential programming concepts, data structures, and libraries used in artificial intelligence development.",
+    description: "Master Python basics for AI: variables, functions, and essential libraries like NumPy and Pandas for data manipulation and analysis...",
+  },
+  {
     key: "ai-exploration",
     title: "AI Exploration",
+    level: "Beginner",
     summary:
       "Dive into the basics of Artificial Intelligence. This module introduces students to foundational AI concepts, real-world applications, and hands-on activities. Perfect for beginners, it builds curiosity and critical thinking about how AI shapes our world and daily life.",
+    description: "Discover AI fundamentals: machine learning concepts, real-world applications, and ethical considerations in modern technology...",
   },
   {
     key: "ai-insights",
     title: "AI Insights",
+    level: "Intermediate",
     summary:
       "Explore deeper into AI with practical examples and interactive lessons. This module covers data, algorithms, and ethical considerations, helping learners understand how AI systems are built and used. Ideal for those ready to move beyond the basics.",
+    description: "Advanced AI concepts: deep learning algorithms, neural networks, and practical implementation strategies for complex problems...",
   },
   {
-    key: "ai-physics",
-    title: "AI & Physics",
+    key: "physics-ai",
+    title: "Physics & AI",
+    level: "Beginner",
     summary:
       "Discover the intersection of Artificial Intelligence and Physics. This module demonstrates how AI can solve physics problems, analyze data, and simulate experiments, making science learning more engaging and insightful for students.",
+    description: "Explore AI applications in physics: computational modeling, data analysis, and simulation techniques for scientific research...",
+  },
+  {
+    key: "chemistry-ai",
+    title: "Chemistry & AI",
+    level: "Intermediate",
+    summary:
+      "Explore how artificial intelligence revolutionizes chemistry through molecular modeling, drug discovery, and chemical analysis. Learn how AI accelerates research and development in chemical sciences.",
+    description: "AI-driven chemistry: molecular prediction, drug discovery processes, and automated chemical analysis using machine learning...",
+  },
+  {
+    key: "biology-ai",
+    title: "Biology & AI",
+    level: "Advanced",
+    summary:
+      "Dive into bioinformatics and computational biology. This advanced module covers AI applications in genomics, protein structure prediction, and medical diagnostics using cutting-edge machine learning techniques.",
+    description: "Advanced bioinformatics: genomic analysis, protein folding prediction, and medical AI applications in modern healthcare...",
   },
 ];
 
@@ -290,7 +334,6 @@ const NuggetBuilderSection = () => (
 
 // Add this section component near the top of your file
 function ModuleBuilderPromo() {
-  const navigate = useNavigate();
 
   return (
     <section
@@ -359,6 +402,15 @@ const ExploreModulesSection = () => {
   const isTeacherDefault = role === "teacherDefault";
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupModule, setPopupModule] = useState(null);
+
+  // Responsive design state
+  const [screenSize, setScreenSize] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setScreenSize(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   // Filter state
   const [contentType, setContentType] = useState("All");
   const [category, setCategory] = useState("All");
@@ -644,260 +696,174 @@ const ExploreModulesSection = () => {
           Explore the latest modules available for your class.
         </p>
 
-        {/* Three square subsections */}
-        <div
+        {/* See All Modules CTA Button */}
+        <button
+          onClick={() => {
+            if (!user) {
+              setPopupOpen(true);
+              setPopupModule({ title: "All Modules", summary: "Sign in to explore our complete collection of educational modules across various subjects and difficulty levels." });
+            } else {
+              // Navigate to all modules page or trigger filter section
+              document.querySelector('[data-section="filter-search"]')?.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
           style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "40px",
-            marginTop: "60px",
-            width: "100%",
-            maxWidth: "1100px"
+            marginTop: "32px",
+            background: "#162040",
+            color: "#fff",
+            border: "2px solid #162040",
+            borderRadius: "6px",
+            padding: "12px 32px",
+            fontSize: "1.1rem",
+            fontWeight: "600",
+            cursor: "pointer",
+            transition: "all 0.2s",
+            boxShadow: "0 2px 8px rgba(22, 32, 64, 0.2)"
+          }}
+          onMouseOver={(e) => {
+            e.target.style.background = "#fff";
+            e.target.style.color = "#162040";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = "#162040";
+            e.target.style.color = "#fff";
           }}
         >
-          {/* First subsection */}
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-              width: "340px",
-              height: "340px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              overflow: "hidden",
-              padding: 0,
-              cursor: "pointer",
-              position: "relative"
-            }}
-            onClick={() => {
-              if (!user) {
-                setPopupModule(MODULE_POPUP_INFO[0]);
-                setPopupOpen(true);
-              } else if (["teacherDefault", "student", "admin"].includes(role)) {
-                navigate("/modules/ai-exploration");
-              }
-            }}
-            tabIndex={0}
-            role="button"
-            aria-label="Go to AI Exploration"
-            onKeyPress={e => {
-              if (e.key === "Enter" || e.key === " ") {
-                if (
-                  user &&
-                  ["teacherDefault", "student", "admin"].includes(role)
-                ) {
-                  navigate("/modules/ai-exploration");
+          See All Modules
+        </button>
+
+        {/* Six module grid (2 rows × 3 columns) */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: screenSize >= 1200 ? "repeat(3, 340px)" :
+                               screenSize >= 800 ? "repeat(2, 340px)" :
+                               "repeat(1, 340px)",
+            gap: screenSize >= 800 ? "40px" : "20px",
+            marginTop: "60px",
+            width: "100%",
+            maxWidth: screenSize >= 1200 ? "1200px" :
+                     screenSize >= 800 ? "800px" : "380px",
+            justifyContent: "center",
+            margin: "60px auto 0 auto"
+          }}
+        >
+          {MODULE_POPUP_INFO.map((module, index) => (
+            <div
+              key={module.key}
+              style={{
+                background: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                width: screenSize >= 800 ? "340px" : "100%",
+                maxWidth: "340px",
+                height: "420px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                overflow: "hidden",
+                cursor: "pointer",
+                position: "relative"
+              }}
+              onClick={() => {
+                if (!user) {
+                  setPopupModule(module);
+                  setPopupOpen(true);
+                } else if (["teacherDefault", "student", "admin"].includes(role)) {
+                  navigate(`/modules/${module.key}`);
                 }
-              }
-            }}
-          >
-            {/* Add the lock icon here */}
-            <LockIcon isLocked={false} />
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Go to ${module.title}`}
+              onKeyPress={e => {
+                if (e.key === "Enter" || e.key === " ") {
+                  if (!user) {
+                    setPopupModule(module);
+                    setPopupOpen(true);
+                  } else if (["teacherDefault", "student", "admin"].includes(role)) {
+                    navigate(`/modules/${module.key}`);
+                  }
+                }
+              }}
+            >
+              {/* Image section */}
+              <div style={{
+                width: "100%",
+                height: "240px",
+                display: "flex",
+                alignItems: "stretch",
+                justifyContent: "center"
+              }}>
+                <img
+                  src={getFeaturedModuleImage(module.key)}
+                  alt={module.title}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block"
+                  }}
+                />
+              </div>
 
-            <div style={{
-              width: "100%",
-              height: "calc(100% - 70px)",
-              display: "flex",
-              alignItems: "stretch",
-              justifyContent: "center"
-            }}>
-              <img
-                src={aiExploreImg}
-                alt="AI Exploration"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block"
-                }}
-              />
-            </div>
-            <div style={{
-              width: "100%",
-              height: "90px",
-              padding: "18px 0 0 0",
-              textAlign: "center",
-              background: "#fff"
-            }}>
-              <span
-                style={{
-                  display: "block",
-                  fontWeight: "600",
-                  fontSize: "1.15rem",
-                  color: "#162040",
-                  letterSpacing: "1px"
-                }}
-              >
-                Basics
-              </span>
-              <span
-                style={{
-                  display: "block",
+              {/* Content section */}
+              <div style={{
+                width: "100%",
+                height: "180px",
+                padding: "20px",
+                background: "#fff",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between"
+              }}>
+                {/* Title - Left aligned */}
+                <h3 style={{
+                  margin: 0,
                   fontWeight: "700",
-                  fontSize: "1.35rem",
+                  fontSize: "1.4rem",
                   color: "#222",
-                  marginTop: "8px",
-                  textAlign: "center"
-                }}
-              >
-                AI Exploration
-              </span>
-            </div>
-          </div>
-          {/* Second subsection */}
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-              width: "340px",
-              height: "340px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              overflow: "hidden",
-              cursor: "pointer",
-              position: "relative" // ADD THIS
-            }}
-            onClick={() => {
-              if (!user) {
-                setPopupModule(MODULE_POPUP_INFO[1]);
-                setPopupOpen(true);
-              } else if (["teacherDefault", "student", "admin"].includes(role)) {
-                navigate("/modules/ai-insights");
-              }
-            }}
+                  textAlign: "left",
+                  marginBottom: "8px"
+                }}>
+                  {module.title}
+                </h3>
 
-            tabIndex={0}
-            role="button"
-            aria-label="Go to AI Insights"
-            onKeyPress={e => { if (e.key === "Enter" || e.key === " ") { if (user) navigate("/modules/ai-insights"); else navigate("/login"); } }}
-          >
-            {/* ADD THIS LINE HERE */}
-            <LockIcon isLocked={true} />
-            <div style={{
-              width: "100%",
-              height: "calc(100% - 70px)",
-              display: "flex",
-              alignItems: "stretch",
-              justifyContent: "center"
-            }}>
-              <img
-                src={laptopImg} // <-- Always use laptop image
-                alt="Laptop"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block"
-                }}
-              />
-            </div>
-            <div style={{ width: "100%", height: "90px", padding: "18px 0 0 0", textAlign: "center", background: "#fff" }}>
-              <span
-                style={{
-                  display: "block",
+                {/* Description - Left aligned, 3 lines with ellipsis */}
+                <p style={{
+                  margin: 0,
+                  fontSize: "0.95rem",
+                  color: "#666",
+                  textAlign: "left",
+                  lineHeight: "1.4",
+                  height: "4.2rem", // 3 lines at 1.4 line-height
+                  overflow: "hidden",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: "vertical",
+                  marginBottom: "auto"
+                }}>
+                  {module.description}
+                </p>
+
+                {/* Difficulty level - Left aligned at bottom */}
+                <div style={{
+                  display: "inline-block",
+                  background: "#162040",
+                  color: "#fff",
+                  padding: "6px 12px",
+                  borderRadius: "4px",
+                  fontSize: "0.85rem",
                   fontWeight: "600",
-                  fontSize: "1.15rem",
-                  color: "#162040",
-                  letterSpacing: "1px"
-                }}
-              >
-                Intermediary
-              </span>
-              <span
-                style={{
-                  display: "block",
-                  fontWeight: "700",
-                  fontSize: "1.35rem",
-                  color: "#222",
-                  marginTop: "8px",
-                  textAlign: "center"
-                }}
-              >
-                AI Insights
-              </span>
+                  textAlign: "center",
+                  alignSelf: "flex-start"
+                }}>
+                  {module.level}
+                </div>
+              </div>
             </div>
-          </div>
-          {/* Third subsection */}
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-              width: "340px",
-              height: "340px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              overflow: "hidden",
-              cursor: "pointer",
-              position: "relative" // ADD THIS LINE
-            }}
-            onClick={() => {
-              if (!user) {
-                setPopupModule(MODULE_POPUP_INFO[2]);
-                setPopupOpen(true);
-              } else if (["teacherDefault", "student", "admin"].includes(role)) {
-                navigate("/modules/ai-physics");
-              }
-            }}
-            tabIndex={0}
-            role="button"
-            aria-label="Go to AI & Physics"
-            onKeyPress={e => { if (e.key === "Enter" || e.key === " ") { if (user) navigate("/modules/ai-physics"); else navigate("/login"); } }}
-          >
-            {/* ADD THIS LINE */}
-            <LockIcon isLocked={false} />
-            <div style={{
-              width: "100%",
-              height: "calc(100% - 70px)",
-              display: "flex",
-              alignItems: "stretch",
-              justifyContent: "center"
-            }}>
-              <img
-                src={physicsImg}
-                alt="AI & Physics"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block"
-                }}
-              />
-            </div>
-            <div style={{ width: "100%", height: "90px", padding: "10px 0 0 0", textAlign: "center", background: "#fff" }}>
-              <span
-                style={{
-                  display: "block",
-                  fontWeight: "600",
-                  fontSize: "1.15rem",
-                  color: "#162040",
-                  letterSpacing: "1px"
-                }}
-              >
-                Basic
-              </span>
-              <span
-                style={{
-                  display: "block",
-                  fontWeight: "700",
-                  fontSize: "1.35rem",
-                  color: "#222",
-                  marginTop: "8px",
-                  textAlign: "center"
-                }}
-              >
-                AI & Physics
-              </span>
-            </div>
-          </div>
+          ))}
           <ModuleLoginPrompt
             open={popupOpen}
             onClose={() => setPopupOpen(false)}
@@ -911,6 +877,7 @@ const ExploreModulesSection = () => {
           <>
             <div style={{ height: "100px" }} />
             <h2
+              data-section="filter-search"
               style={{
                 fontSize: "2.5rem",
                 fontWeight: "700",
