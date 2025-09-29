@@ -683,54 +683,6 @@ const ExploreModulesSection = () => {
         >
           Featured Modules
         </h2>
-        <p
-          style={{
-            marginTop: "18px",
-            fontSize: "1.15rem",
-            color: "#222",
-            textAlign: "center",
-            maxWidth: "600px",
-            fontWeight: 500,
-          }}
-        >
-          Explore the latest modules available for your class.
-        </p>
-
-        {/* See All Modules CTA Button */}
-        <button
-          onClick={() => {
-            if (!user) {
-              setPopupOpen(true);
-              setPopupModule({ title: "All Modules", summary: "Sign in to explore our complete collection of educational modules across various subjects and difficulty levels." });
-            } else {
-              // Navigate to all modules page or trigger filter section
-              document.querySelector('[data-section="filter-search"]')?.scrollIntoView({ behavior: 'smooth' });
-            }
-          }}
-          style={{
-            marginTop: "32px",
-            background: "#162040",
-            color: "#fff",
-            border: "2px solid #162040",
-            borderRadius: "6px",
-            padding: "12px 32px",
-            fontSize: "1.1rem",
-            fontWeight: "600",
-            cursor: "pointer",
-            transition: "all 0.2s",
-            boxShadow: "0 2px 8px rgba(22, 32, 64, 0.2)"
-          }}
-          onMouseOver={(e) => {
-            e.target.style.background = "#fff";
-            e.target.style.color = "#162040";
-          }}
-          onMouseOut={(e) => {
-            e.target.style.background = "#162040";
-            e.target.style.color = "#fff";
-          }}
-        >
-          See All Modules
-        </button>
 
         {/* Six module grid (2 rows × 3 columns) */}
         <div
@@ -864,13 +816,50 @@ const ExploreModulesSection = () => {
               </div>
             </div>
           ))}
-          <ModuleLoginPrompt
-            open={popupOpen}
-            onClose={() => setPopupOpen(false)}
-            moduleTitle={popupModule?.title}
-            summary={popupModule?.summary}
-          />
         </div>
+
+        {/* See All Modules CTA Button - positioned after the module grid */}
+        <button
+          onClick={() => {
+            if (!user) {
+              setPopupOpen(true);
+              setPopupModule({ title: "All Modules", summary: "Sign in to explore our complete collection of educational modules across various subjects and difficulty levels." });
+            } else {
+              // Navigate to all modules page or trigger filter section
+              document.querySelector('[data-section="filter-search"]')?.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+          style={{
+            marginTop: "40px",
+            background: "#162040",
+            color: "#fff",
+            border: "2px solid #162040",
+            borderRadius: "6px",
+            padding: "12px 32px",
+            fontSize: "1.1rem",
+            fontWeight: "600",
+            cursor: "pointer",
+            transition: "all 0.2s",
+            boxShadow: "0 2px 8px rgba(22, 32, 64, 0.2)"
+          }}
+          onMouseOver={(e) => {
+            e.target.style.background = "#fff";
+            e.target.style.color = "#162040";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = "#162040";
+            e.target.style.color = "#fff";
+          }}
+        >
+          See All Modules
+        </button>
+
+        <ModuleLoginPrompt
+          open={popupOpen}
+          onClose={() => setPopupOpen(false)}
+          moduleTitle={popupModule?.title}
+          summary={popupModule?.summary}
+        />
 
         {/* --- Filter and Search Section for teacherDefault --- */}
         {isTeacherDefault && (
