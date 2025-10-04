@@ -966,20 +966,23 @@ const TeacherPlusPage = () => {
                 >
                     Filter and Search
                 </h2>
-                <p
-                    style={{
-                        marginTop: "18px",
-                        fontSize: "1.15rem",
-                        color: "#222",
-                        textAlign: "center",
-                        maxWidth: "600px",
-                        fontWeight: 500,
-                        marginBottom: 24
-                    }}
-                >
-                    Select your preferences to filter available modules.
-                </p>
-
+                {/* Keyword Filter */}
+                <div style={{ marginBottom: "18px", width: "100%", maxWidth: 400 }}>
+                    <input
+                        type="text"
+                        value={keyword || ""}
+                        onChange={e => setKeyword(e.target.value)}
+                        placeholder="Type a keyword to search..."
+                        style={{
+                            width: "100%",
+                            padding: "8px 16px",
+                            borderRadius: 6,
+                            border: "1px solid #bbb",
+                            fontSize: "1rem",
+                            marginTop: 8
+                        }}
+                    />
+                </div>
                 <div style={{
                     display: "flex",
                     gap: "32px",
@@ -1043,27 +1046,6 @@ const TeacherPlusPage = () => {
                         </select>
                     </div>
 
-                </div>
-
-                {/* Keyword Filter */}
-                <div style={{ marginBottom: "18px", width: "100%", maxWidth: 400 }}>
-                    <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>
-                        Keyword
-                    </label>
-                    <input
-                        type="text"
-                        value={keyword || ""}
-                        onChange={e => setKeyword(e.target.value)}
-                        placeholder="Type a keyword to search..."
-                        style={{
-                            width: "100%",
-                            padding: "8px 16px",
-                            borderRadius: 6,
-                            border: "1px solid #bbb",
-                            fontSize: "1rem",
-                            marginTop: 8
-                        }}
-                    />
                 </div>
 
                 {/* Filter Actions */}
