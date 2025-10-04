@@ -416,7 +416,6 @@ const ExploreModulesSection = () => {
   const [category, setCategory] = useState("All");
   const [level, setLevel] = useState("All");
   const [keyword, setKeyword] = useState("");
-  const [lockStatus, setLockStatus] = useState("All");
 
   // Data state
   const [modules, setModules] = useState([]);
@@ -526,7 +525,8 @@ const ExploreModulesSection = () => {
     const publishedModules = modules.filter(m => !m.isDraft);
     const publishedLessons = lessons.filter(l => !l.isDraft);
 
-    if (contentType === "All") {
+    // Content Type filtering only applies if user can see the filter (TeacherPlus/Admin)
+    if (role === "teacherDefault" || contentType === "All") {
       items = [
         ...publishedModules,
         ...publishedLessons,
@@ -566,13 +566,6 @@ const ExploreModulesSection = () => {
       );
     }
 
-    // Filter by lock status if not "All" (only for teacherDefault)
-    if (isTeacherDefault && lockStatus !== "All") {
-      items = items.filter(item => {
-        const isLocked = (item.role || item.Role) === "teacherPlus";
-        return lockStatus === "Locked" ? isLocked : !isLocked;
-      });
-    }
 
     setFilteredItems(items);
     setFiltersApplied(true);
@@ -584,7 +577,6 @@ const ExploreModulesSection = () => {
     setCategory("All");
     setLevel("All");
     setKeyword("");
-    setLockStatus("All");
     setFilteredItems([]);
     setFiltersApplied(false);
   };
@@ -879,43 +871,49 @@ const ExploreModulesSection = () => {
             >
               Filter and Search
             </h2>
-            <p
-              style={{
-                marginTop: "18px",
-                fontSize: "1.15rem",
-                color: "#222",
-                textAlign: "center",
-                maxWidth: "600px",
-                fontWeight: 500,
-                marginBottom: "24px"
-              }}
-            >
-              Select your preferences to filter available modules.
-            </p>
+            {/* Keyword Filter */}
+            <div style={{ marginBottom: "18px", width: "100%", maxWidth: 400 }}>
+              <input
+                type="text"
+                value={keyword || ""}
+                onChange={e => setKeyword(e.target.value)}
+                placeholder="Type a keyword to search..."
+                style={{
+                  width: "100%",
+                  padding: "8px 16px",
+                  borderRadius: 6,
+                  border: "1px solid #bbb",
+                  fontSize: "1rem",
+                  marginTop: 8
+                }}
+              />
+            </div>
             <div style={{
               display: "flex",
               gap: "32px",
               flexWrap: "wrap",
               marginBottom: "18px"
             }}>
-              {/* Content Type Filter */}
-              <div>
-                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Content Type</label>
-                <select
-                  value={contentType}
-                  onChange={e => setContentType(e.target.value)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 6,
-                    border: "1px solid #bbb",
-                    fontSize: "1rem"
-                  }}
-                >
-                  {["All", ...MODULE_CONTENT_TYPES].map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
+              {/* Content Type Filter - Only for TeacherPlus and Admin */}
+              {(role === "teacherPlus" || role === "admin") && (
+                <div>
+                  <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Content Type</label>
+                  <select
+                    value={contentType}
+                    onChange={e => setContentType(e.target.value)}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: 6,
+                      border: "1px solid #bbb",
+                      fontSize: "1rem"
+                    }}
+                  >
+                    {["All", ...MODULE_CONTENT_TYPES].map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {/* Category Filter */}
               <div>
                 <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Category</label>
@@ -952,44 +950,6 @@ const ExploreModulesSection = () => {
                   ))}
                 </select>
               </div>
-              {/* Lock Status Filter */}
-              <div>
-                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Lock Status</label>
-                <select
-                  value={lockStatus}
-                  onChange={e => setLockStatus(e.target.value)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 6,
-                    border: "1px solid #bbb",
-                    fontSize: "1rem"
-                  }}
-                >
-                  <option value="All">All</option>
-                  <option value="Unlocked">Unlocked</option>
-                  <option value="Locked">Locked</option>
-                </select>
-              </div>
-            </div>
-            {/* Keyword Filter */}
-            <div style={{ marginBottom: "18px", width: "100%", maxWidth: 400 }}>
-              <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>
-                Keyword
-              </label>
-              <input
-                type="text"
-                value={keyword || ""}
-                onChange={e => setKeyword(e.target.value)}
-                placeholder="Type a keyword to search..."
-                style={{
-                  width: "100%",
-                  padding: "8px 16px",
-                  borderRadius: 6,
-                  border: "1px solid #bbb",
-                  fontSize: "1rem",
-                  marginTop: 8
-                }}
-              />
             </div>
             {/* Filter Actions */}
             <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
