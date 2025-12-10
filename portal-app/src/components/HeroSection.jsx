@@ -3,11 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
+import useUserData from "../hooks/useUserData";
+
 
 const HeroSection = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [role, setRole] = useState(null);
+    const { userData, logout } = useUserData();
+
 
     useEffect(() => {
         const auth = getAuth();
@@ -53,12 +57,12 @@ const HeroSection = () => {
             <section
                 style={{
                     width: "100%",
-                    minHeight: "520px",
+                    minHeight: "200px",
                     background: "#162040",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    padding: "100px 0"
+                    padding: "50px 0"
                 }}
             >
                 <div
@@ -128,12 +132,12 @@ const HeroSection = () => {
         <section
             style={{
                 width: "100%",
-                minHeight: "520px",
+                minHeight: "200px",
                 background: "#162040",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "100px 0"
+                padding: "20px 0"
             }}
         >
             <div

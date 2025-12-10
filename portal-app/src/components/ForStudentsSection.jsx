@@ -165,16 +165,17 @@ const StudentRectangles = () => {
 
   return (
     <div
-      style={{
-        display: "flex",
-        flexWrap: "nowrap",
-        justifyContent: "center",
-        gap: "40px",
-        marginTop: "48px",
-        marginBottom: "32px",
-        width: "100%",
-        maxWidth: "1100px"
-      }}
+    style={{
+      display: "flex",
+      flexDirection: "column",     // stack vertically
+      alignItems: "center",
+      gap: "32px",
+      marginTop: "48px",
+      marginBottom: "32px",
+      width: "100%",
+      maxWidth: "600px",
+      marginInline: "auto",
+    }}
     >
       {/* Rectangle 1 */}
       <a href="/learning-modules" style={{ textDecoration: "none" }} onClick={handleClick}>
