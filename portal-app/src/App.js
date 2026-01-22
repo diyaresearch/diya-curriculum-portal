@@ -59,6 +59,7 @@ function App() {
           <Route path="/student-signup" element={<StudentSignup />} />
           <Route path="/upgrade" element={<UpgradePage />} />
           <Route path="/nugget-builder" element={<NuggetBuilderPage />} />
+          <Route path="/nugget-details/:id" element={<NuggetDetails />} />
           <Route path="/lesson-plans/builder" element={<LessonPlanBuilder />} />
           <Route path="/view-content/:id" element={<NuggetDetails />} />
           <Route path="/lesson-plans/drafts" element={<LessonPlanDrafts />} />

@@ -5,21 +5,38 @@ import { getFirestore, doc, getDoc } from "firebase/firestore";
 const NuggetDetails = () => {
   const { id } = useParams();
   const [nugget, setNugget] = useState(null);
+  const [error, setError] = useState("");
+
 
   useEffect(() => {
     const fetchNugget = async () => {
-      const db = getFirestore();
-      const docRef = doc(db, "content", id);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
+      try {
+        setError("");
+        const db = getFirestore();
+        const docRef = doc(db, "content", id);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+          setError(`No nugget found for id: ${id}`);
+          setNugget(null);
+          return;
+        }
+
         setNugget({ id: docSnap.id, ...docSnap.data() });
+      } catch (e) {
+        console.error("NuggetDetails fetch error:", e);
+        setError(e?.message || "Failed to load nugget.");
       }
     };
+
     fetchNugget();
   }, [id]);
+  if (error) {
+    return <div style={{ padding: 24, color: "crimson" }}>{error}</div>;
+  }
 
-  if (!nugget) return <div>Loading...</div>;
-
+  if (!nugget) return <div style={{ padding: 24 }}>Loading...</div>;
+  
   // Custom styles for lists, links, and headings
   const customStyles = `
     .nugget-rich-html ul, .nugget-rich-html ol {
@@ -130,6 +147,43 @@ const NuggetDetails = () => {
           </div>
         </div>
       </div>
+      {/* Attachments */}
+      {Array.isArray(nugget.attachments) && nugget.attachments.length > 0 && (
+        <div style={{ marginTop: 18, marginBottom: 18 }}>
+          <div style={{ fontWeight: 700, color: "#111", marginBottom: 8 }}>
+            Attachments
+          </div>
+
+          <ul style={{ marginLeft: 18, color: "#444" }}>
+            {nugget.attachments
+              .filter((a) => a && a.kind === "link" && a.url)
+              .map((a, idx) => {
+                const label =
+                  a.title?.trim()
+                    ? a.title
+                    : a.linkType === "slides"
+                      ? "Google Slides"
+                      : a.linkType === "colab"
+                        ? "Google Colab Notebook"
+                        : "Link";
+
+                return (
+                  <li key={a.id || idx} style={{ marginBottom: 8 }}>
+                    <a
+                      href={a.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#1a73e8", textDecoration: "underline" }}
+                    >
+                      {label}
+                    </a>
+                  </li>
+                );
+              })}
+          </ul>
+        </div>
+      )}
+
       <div>
         <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Instructions</div>
         <div

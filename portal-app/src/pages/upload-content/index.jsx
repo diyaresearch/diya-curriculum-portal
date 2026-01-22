@@ -168,6 +168,10 @@ export const UploadContent = ({
   const [modalMessage, setModalMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+  const [attachmentTitle, setAttachmentTitle] = useState("");
+  const [attachmentUrl, setAttachmentUrl] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState([]); // local list before save
+
 
   const navigate = useNavigate();
 
@@ -209,6 +213,14 @@ export const UploadContent = ({
     return errors;
   };
 
+  const detectLinkType = (url) => {
+    const u = (url || "").toLowerCase();
+    if (u.includes("docs.google.com/presentation")) return "slides";
+    if (u.includes("colab.research.google.com")) return "colab";
+    return "other";
+  };
+  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const errors = validateFields();
@@ -234,6 +246,29 @@ export const UploadContent = ({
     try {
       const db = getFirestore();
       const htmlDescription = formData.Abstract; // This is the HTML from ReactQuill
+      const now = new Date();
+
+      const attachmentsToSave = [
+        ...pendingAttachments,
+        // If user typed a link but forgot to click "+ Add Link", include it automatically
+        ...(attachmentUrl.trim()
+          ? [{
+              kind: "link",
+              linkType: detectLinkType(attachmentUrl.trim()),
+              title: attachmentTitle.trim(),
+              url: attachmentUrl.trim(),
+              createdAt: now, // allowed inside arrays
+            }]
+          : []),
+      ].map((a, idx) => ({
+        ...a,
+        // ensure every item is unique even if title/url are similar
+        id: a.id || `${Date.now()}-${idx}-${Math.random().toString(16).slice(2)}`,
+        createdAt: a.createdAt || now,
+      }));
+      console.log("attachmentsToSave", attachmentsToSave);
+
+
 
       const docRef = await addDoc(collection(db, "content"), {
         Title: formData.Title,
@@ -246,7 +281,9 @@ export const UploadContent = ({
         Author: authorName,
         User: user.uid, // <-- Add this line to store the user ID
         createdAt: serverTimestamp(),
-        Role: "teacherPlus", // <-- Added static Role field
+        Role: "teacherPlus", // <-- Added static Role field,
+        attachmentsToSave,
+        
       });
       const savedDoc = await getDoc(docRef);
       const newNugget = { id: docRef.id, ...savedDoc.data() };
@@ -263,6 +300,10 @@ export const UploadContent = ({
         Instructions: "",
       });
       setFieldErrors({});
+      setPendingAttachments([]);
+      setAttachmentTitle("");
+      setAttachmentUrl("");
+
 
       setModalIsOpen(true);
       if (fromLesson) {
@@ -451,6 +492,110 @@ export const UploadContent = ({
               How long will the content take to consume?
             </div>
           </div>
+
+          {/* Attach Links */}
+          <div>
+            <label style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+              Attach Links (Google Slides / Colab)
+            </label>
+
+            <input
+              type="text"
+              placeholder="Optional title (e.g., Week 1 Slides)"
+              value={attachmentTitle}
+              onChange={(e) => setAttachmentTitle(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "6px",
+                border: "1.5px solid #bbb",
+                background: "#fafbfc",
+                marginBottom: 10,
+              }}
+            />
+
+            <input
+              type="text"
+              placeholder="Paste link (https://...)"
+              value={attachmentUrl}
+              onChange={(e) => setAttachmentUrl(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px 14px",
+                borderRadius: "6px",
+                border: "1.5px solid #bbb",
+                background: "#fafbfc",
+                marginBottom: 10,
+              }}
+            />
+
+            <button
+              type="button"
+              onClick={() => {
+                const url = attachmentUrl.trim();
+                if (!url) return;
+
+                setPendingAttachments((prev) => [
+                  ...prev,
+                  {
+                    kind: "link",
+                    linkType: detectLinkType(url),
+                    title: attachmentTitle.trim(),
+                    url,
+                  },
+                ]);
+
+                setAttachmentTitle("");
+                setAttachmentUrl("");
+              }}
+              style={{
+                background: "#fff",
+                color: "#111",
+                border: "1px solid #111",
+                borderRadius: "6px",
+                padding: "8px 14px",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              + Add Link
+            </button>
+
+            {pendingAttachments.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>Links added:</div>
+                <ul style={{ marginLeft: 18 }}>
+                  {pendingAttachments.map((a, idx) => (
+                    <li key={idx} style={{ marginBottom: 6 }}>
+                      <span style={{ fontWeight: 600 }}>
+                        {a.title || (a.linkType === "slides" ? "Google Slides" : a.linkType === "colab" ? "Colab Notebook" : "Link")}
+                      </span>
+                      {" — "}
+                      <a href={a.url} target="_blank" rel="noopener noreferrer">
+                        {a.url}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setPendingAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                        style={{
+                          marginLeft: 10,
+                          background: "none",
+                          border: "none",
+                          color: "#e74c3c",
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                        aria-label="Remove link"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
 
           {/* Instructions/Notes */}
           <div>
