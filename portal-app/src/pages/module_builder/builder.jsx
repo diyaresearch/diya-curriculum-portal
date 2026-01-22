@@ -10,134 +10,23 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import NuggetBuilderPage from "../nugget-builder";
 import LessonPlanBuilder from "../lesson-plans/builder";
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
+import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 
 Modal.setAppElement("#root");
-
-const CATEGORY_OPTIONS = [
-  "AI Principles",
-  "Data Science",
-  "Machine Learning",
-  "Statistics",
-  "Other"
-];
-const LEVEL_OPTIONS = [
-  "Basic",
-  "Intermediate",
-  "Advanced"
-];
-const TYPE_OPTIONS = [
-  "Lecture",
-  "Assignment",
-  "Dataset"
-];
-
-
-// --- MultiCheckboxDropdown component ---
-function MultiCheckboxDropdown({ label, options, selected, onChange, placeholder }) {
-
-  const [open, setOpen] = React.useState(false);
-  const dropdownRef = React.useRef(null);
-
-  React.useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    }
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [open]);
-
-  const handleCheckboxChange = (value) => {
-    if (selected.includes(value)) {
-      onChange(selected.filter((v) => v !== value));
-    } else {
-      onChange([...selected, value]);
-    }
-  };
-
-  return (
-    <div ref={dropdownRef} style={{ position: "relative", marginBottom: 0 }}>
-      <label style={{ fontWeight: 600, marginBottom: 6, display: "block", color: "#222" }}>
-        {label}
-      </label>
-      <div
-        style={{
-          border: "1.5px solid #bbb",
-          borderRadius: 6,
-          background: "#fafbfc",
-          padding: "10px 14px",
-          cursor: "pointer",
-          minHeight: 40,
-          fontFamily: "Open Sans, sans-serif",
-        }}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {selected.length === 0 ? (
-          <span style={{ color: "#888" }}>{placeholder}</span>
-        ) : (
-          selected.join(", ")
-        )}
-      </div>
-      {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0,
-            background: "#fff",
-            border: "1.5px solid #bbb",
-            borderRadius: 6,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            zIndex: 100,
-            maxHeight: 180,
-            overflowY: "auto",
-            marginTop: 2,
-          }}
-        >
-          {options.map((opt) => (
-            <label
-              key={opt}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "8px 12px",
-                cursor: "pointer",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selected.includes(opt)}
-                onChange={() => handleCheckboxChange(opt)}
-                style={{ marginRight: 8 }}
-              />
-              {opt}
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
   <span style={{ color: "red", marginLeft: 4 }}>*</span>
 );
 
-const ModuleBuilder = () => {
+const ModuleBuilder = ({ onCancel } = {}) => {
   const [formData, setFormData] = useState({
     title: "",
-    category: [],
-    type: [],
-    level: [],
-    duration: "",
+    Category: [],
+    Type: [],
+    Level: [],
+    Duration: "",
     description: "",
     requirements: "", // Add this
     learningObjectives: "", // Add this
@@ -156,6 +45,20 @@ const ModuleBuilder = () => {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const { userData } = useUserData();
 
+  const handleCancel = () => {
+    // If opened from another screen/modal, prefer closing that context.
+    if (typeof onCancel === "function") {
+      onCancel();
+      return;
+    }
+    // Otherwise go back (with safe fallback).
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/");
+  };
+
 
   // Load draft from localStorage if present
   useEffect(() => {
@@ -164,10 +67,10 @@ const ModuleBuilder = () => {
       const parsedDraft = JSON.parse(savedDraft);
       setFormData({
         title: parsedDraft.title || "",
-        category: parsedDraft.category || [],
-        type: parsedDraft.type || [],
-        level: parsedDraft.level || [],
-        duration: parsedDraft.duration || "",
+        Category: parsedDraft.Category || parsedDraft.category || [],
+        Type: parsedDraft.Type || parsedDraft.type || [],
+        Level: parsedDraft.Level || parsedDraft.level || [],
+        Duration: parsedDraft.Duration || parsedDraft.duration || "",
         description: parsedDraft.description || "",
         requirements: parsedDraft.requirements || "",
         learningObjectives: parsedDraft.learningObjectives || "",
@@ -235,7 +138,7 @@ const ModuleBuilder = () => {
     const { id, value } = e.target;
     setFormData({
       ...formData,
-      [id]: id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
+      [id]: id === "Duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
     });
   };
 
@@ -290,10 +193,10 @@ const ModuleBuilder = () => {
       !formData.learningObjectives ||
       formData.learningObjectives.trim() === "" ||
       formData.learningObjectives === "<p><br></p>" ||
-      formData.category.length === 0 ||
-      formData.type.length === 0 ||
-      formData.level.length === 0 ||
-      !formData.duration
+      formData.Category.length === 0 ||
+      formData.Type.length === 0 ||
+      formData.Level.length === 0 ||
+      !formData.Duration
     ) {
       alert("Please fill all required fields.");
       setIsSubmitting(false);
@@ -339,10 +242,10 @@ const ModuleBuilder = () => {
     setModalIsOpen(false);
     setFormData({
       title: "",
-      category: [],
-      type: [],
-      level: [],
-      duration: "",
+      Category: [],
+      Type: [],
+      Level: [],
+      Duration: "",
       description: "",
       requirements: "", // Add this
       learningObjectives: "", // Add this
@@ -559,8 +462,8 @@ const ModuleBuilder = () => {
             <MultiCheckboxDropdown
               label={<span>Category <RequiredAsterisk /></span>}
               options={CATEGORY_OPTIONS}
-              selected={formData.category || []}
-              onChange={(values) => setFormData({ ...formData, category: values })}
+              selected={formData.Category || []}
+              onChange={(values) => setFormData({ ...formData, Category: values })}
               placeholder="Select category..."
             />
           </div>
@@ -568,8 +471,9 @@ const ModuleBuilder = () => {
             <MultiCheckboxDropdown
               label={<span>Level <RequiredAsterisk /></span>}
               options={LEVEL_OPTIONS}
-              selected={formData.level || []}
-              onChange={(values) => setFormData({ ...formData, level: values })}
+              selected={formData.Level || []}
+              onChange={(values) => setFormData({ ...formData, Level: values })}
+              single={true}
               placeholder="Select level..."
             />
           </div>
@@ -577,8 +481,9 @@ const ModuleBuilder = () => {
             <MultiCheckboxDropdown
               label={<span>Type <RequiredAsterisk /></span>}
               options={TYPE_OPTIONS}
-              selected={formData.type || []}
-              onChange={(values) => setFormData({ ...formData, type: values })}
+              selected={formData.Type || []}
+              onChange={(values) => setFormData({ ...formData, Type: values })}
+              single={true}
               placeholder="Select type..."
             />
           </div>
@@ -596,10 +501,10 @@ const ModuleBuilder = () => {
                 color: "#111",
                 fontFamily: "Open Sans, sans-serif"
               }}
-              id="duration"
+              id="Duration"
               type="text"
               placeholder="Duration"
-              value={formData.duration}
+              value={formData.Duration}
               onChange={handleChange}
               required
             />
@@ -730,6 +635,23 @@ const ModuleBuilder = () => {
           <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
             <button
               type="button"
+              onClick={handleCancel}
+              style={{
+                background: "#fff",
+                color: "#111",
+                border: "1px solid #111",
+                borderRadius: "6px",
+                padding: "8px 18px",
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "Open Sans, sans-serif",
+                fontSize: "1.08rem"
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               onClick={handleSaveSession}
               style={{
                 background: "#fff",
@@ -800,9 +722,9 @@ const ModuleBuilder = () => {
           fromLesson={closeUploadModal}
           onNuggetCreated={handleNewNuggetAdded}
           isPublic={false}
-          type={formData.type}
-          category={formData.category}
-          level={formData.level}
+          type={formData.Type}
+          category={formData.Category}
+          level={formData.Level}
         />
       </Modal>
       <Modal

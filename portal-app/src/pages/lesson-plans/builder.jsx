@@ -9,132 +9,23 @@ import useUserData from "../../hooks/useUserData";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import NuggetBuilderPage from "../nugget-builder";
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
+import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 
 Modal.setAppElement("#root");
-
-const CATEGORY_OPTIONS = [
-  "AI Principles",
-  "Data Science",
-  "Machine Learning",
-  "Statistics",
-  "Other"
-];
-const LEVEL_OPTIONS = [
-  "Basic",
-  "Intermediate",
-  "Advanced"
-];
-const TYPE_OPTIONS = [
-  "Lecture",
-  "Assignment",
-  "Dataset"
-];
-
-// --- MultiCheckboxDropdown component ---
-function MultiCheckboxDropdown({ label, options, selected, onChange }) {
-  const [open, setOpen] = React.useState(false);
-  const dropdownRef = React.useRef(null);
-
-  React.useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    }
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [open]);
-
-  const handleCheckboxChange = (value) => {
-    if (selected.includes(value)) {
-      onChange(selected.filter((v) => v !== value));
-    } else {
-      onChange([...selected, value]);
-    }
-  };
-
-  return (
-    <div ref={dropdownRef} style={{ position: "relative", marginBottom: 0 }}>
-      <label style={{ fontWeight: 600, marginBottom: 6, display: "block", color: "#222" }}>
-        {label} <RequiredAsterisk />
-      </label>
-      <div
-        style={{
-          border: "1.5px solid #bbb",
-          borderRadius: 6,
-          background: "#fafbfc",
-          padding: "10px 14px",
-          cursor: "pointer",
-          minHeight: 40,
-          fontFamily: "Open Sans, sans-serif",
-        }}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {selected.length === 0 ? (
-          <span style={{ color: "#888" }}>Select {label.toLowerCase()}...</span>
-        ) : (
-          selected.join(", ")
-        )}
-      </div>
-      {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0,
-            background: "#fff",
-            border: "1.5px solid #bbb",
-            borderRadius: 6,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            zIndex: 100,
-            maxHeight: 180,
-            overflowY: "auto",
-            marginTop: 2,
-          }}
-        >
-          {options.map((opt) => (
-            <label
-              key={opt}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "8px 12px",
-                cursor: "pointer",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selected.includes(opt)}
-                onChange={() => handleCheckboxChange(opt)}
-                style={{ marginRight: 8 }}
-              />
-              {opt}
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
   <span style={{ color: "red", marginLeft: 4 }}>*</span>
 );
 
-const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave }) => {
+const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     title: "",
-    category: "",
-    type: "",
-    level: "",
-    duration: "",
+    Category: [],
+    Type: [],
+    Level: [],
+    Duration: "",
     sections: [],
     description: "",
     isPublic: false,
@@ -153,6 +44,20 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const { userData } = useUserData();
+
+  const handleCancel = () => {
+    // If opened from another screen/modal, prefer closing that context.
+    if (typeof onCancel === "function") {
+      onCancel();
+      return;
+    }
+    // Otherwise go back (with safe fallback).
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/");
+  };
 
   // Load user's nuggets for overlay
   useEffect(() => {
@@ -342,12 +247,12 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave }) => {
 
     // Require category, type, and level
     if (
-      !formData.category ||
-      (Array.isArray(formData.category) && formData.category.length === 0) ||
-      !formData.type ||
-      (Array.isArray(formData.type) && formData.type.length === 0) ||
-      !formData.level ||
-      (Array.isArray(formData.level) && formData.level.length === 0)
+      !formData.Category ||
+      (Array.isArray(formData.Category) && formData.Category.length === 0) ||
+      !formData.Type ||
+      (Array.isArray(formData.Type) && formData.Type.length === 0) ||
+      !formData.Level ||
+      (Array.isArray(formData.Level) && formData.Level.length === 0)
     ) {
       alert("Category, Type, and Level are required.");
       setIsSubmitting(false);
@@ -391,11 +296,11 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave }) => {
 
       const lessonData = {
         title: formData.title,
-        category: formData.category,
-        type: formData.type,
-        level: formData.level,
+        category: formData.Category,
+        type: formData.Type,
+        level: formData.Level,
         objectives: objectives,
-        duration: formData.duration,
+        duration: formData.Duration,
         description: formData.description,
         isPublic: formData.isPublic,
         sections: sections.map((section, index) => ({
@@ -661,24 +566,29 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave }) => {
             <MultiCheckboxDropdown
               label="Category"
               options={CATEGORY_OPTIONS}
-              selected={formData.category || []}
-              onChange={(values) => setFormData({ ...formData, category: values })}
+              selected={formData.Category || []}
+              onChange={(values) => setFormData({ ...formData, Category: values })}
+              showRequired={true}
             />
           </div>
           <div>
             <MultiCheckboxDropdown
               label="Level"
               options={LEVEL_OPTIONS}
-              selected={formData.level || []}
-              onChange={(values) => setFormData({ ...formData, level: values })}
+              selected={formData.Level || []}
+              onChange={(values) => setFormData({ ...formData, Level: values })}
+              single={true}
+              showRequired={true}
             />
           </div>
           <div>
             <MultiCheckboxDropdown
               label="Type"
               options={TYPE_OPTIONS}
-              selected={formData.type || []}
-              onChange={(values) => setFormData({ ...formData, type: values })}
+              selected={formData.Type || []}
+              onChange={(values) => setFormData({ ...formData, Type: values })}
+              single={true}
+              showRequired={true}
             />
           </div>
           <div>
@@ -695,10 +605,10 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave }) => {
                 color: "#111",
                 fontFamily: "Open Sans, sans-serif"
               }}
-              id="duration"
+              id="Duration"
               type="text"
               placeholder="Duration"
-              value={formData.duration}
+              value={formData.Duration}
               onChange={handleChange}
               required
             />
@@ -968,6 +878,23 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave }) => {
             </label>
           </div>
           <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
+            <button
+              type="button"
+              onClick={handleCancel}
+              style={{
+                background: "#fff",
+                color: "#111",
+                border: "1px solid #111",
+                borderRadius: "6px",
+                padding: "8px 18px",
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: "Open Sans, sans-serif",
+                fontSize: "1.08rem"
+              }}
+            >
+              Cancel
+            </button>
             {showSaveAsDraft !== false && (
               <button
                 type="button"
@@ -1038,9 +965,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave }) => {
           fromLesson={closeUploadModal}
           onNuggetCreated={handleNewNuggetAdded}
           isPublic={false}
-          type={formData.type}
-          category={formData.category}
-          level={formData.level}
+          type={formData.Type}
+          category={formData.Category}
+          level={formData.Level}
         />
       </Modal>
       {/* Nugget Builder Modal */}

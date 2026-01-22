@@ -5,121 +5,10 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, collection, addDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
+import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 
 Modal.setAppElement("#root");
-
-// Centralized options
-const CATEGORY_OPTIONS = [
-  "AI Principles",
-  "Data Science",
-  "Machine Learning",
-  "Statistics",
-  "Other"
-];
-const LEVEL_OPTIONS = [
-  "Basic",
-  "Intermediate",
-  "Advanced"
-];
-const TYPE_OPTIONS = [
-  "Lecture",
-  "Assignment",
-  "Dataset"
-];
-
-// --- Custom MultiCheckboxDropdown ---
-function MultiCheckboxDropdown({ label, options, selected, onChange }) {
-  const [open, setOpen] = React.useState(false);
-  const dropdownRef = React.useRef(null);
-
-  // Close dropdown when clicking outside
-  React.useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    }
-    if (open) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [open]);
-
-  const handleCheckboxChange = (value) => {
-    if (selected.includes(value)) {
-      onChange(selected.filter((v) => v !== value));
-    } else {
-      onChange([...selected, value]);
-    }
-  };
-
-  return (
-    <div ref={dropdownRef} style={{ position: "relative", marginBottom: 0 }}>
-      <label style={{ fontWeight: 600, marginBottom: 6, display: "block", color: "#222" }}>
-        {label}
-      </label>
-      <div
-        style={{
-          border: "1.5px solid #bbb",
-          borderRadius: 6,
-          background: "#fafbfc",
-          padding: "10px 14px",
-          cursor: "pointer",
-          minHeight: 40,
-          fontFamily: "Open Sans, sans-serif",
-        }}
-        onClick={() => setOpen((o) => !o)}
-      >
-        {selected.length === 0 ? (
-          <span style={{ color: "#888" }}>Select {label.toLowerCase()}...</span>
-        ) : (
-          selected.join(", ")
-        )}
-      </div>
-      {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0,
-            background: "#fff",
-            border: "1.5px solid #bbb",
-            borderRadius: 6,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            zIndex: 100,
-            maxHeight: 180,
-            overflowY: "auto",
-            marginTop: 2,
-          }}
-        >
-          {options.map((opt) => (
-            <label
-              key={opt}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "8px 12px",
-                cursor: "pointer",
-                fontFamily: "Open Sans, sans-serif",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selected.includes(opt)}
-                onChange={() => handleCheckboxChange(opt)}
-                style={{ marginRight: 8 }}
-              />
-              {opt}
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
 
 export const UploadContent = ({
@@ -366,6 +255,7 @@ export const UploadContent = ({
               options={LEVEL_OPTIONS}
               selected={formData.Level}
               onChange={(values) => setFormData((prev) => ({ ...prev, Level: values }))}
+              single={true}
             />
             {fieldErrors.Level && (
               <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
@@ -384,6 +274,7 @@ export const UploadContent = ({
               options={TYPE_OPTIONS}
               selected={formData.Type}
               onChange={(values) => setFormData((prev) => ({ ...prev, Type: values }))}
+              single={true}
             />
             {fieldErrors.Type && (
               <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
