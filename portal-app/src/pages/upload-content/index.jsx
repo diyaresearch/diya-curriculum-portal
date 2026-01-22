@@ -28,7 +28,8 @@ const TYPE_OPTIONS = [
 ];
 
 // --- Custom MultiCheckboxDropdown ---
-function MultiCheckboxDropdown({ label, options, selected, onChange }) {
+function MultiCheckboxDropdown({ label, options, selected, onChange, single = false }) {
+
   const [open, setOpen] = React.useState(false);
   const dropdownRef = React.useRef(null);
 
@@ -48,12 +49,29 @@ function MultiCheckboxDropdown({ label, options, selected, onChange }) {
   }, [open]);
 
   const handleCheckboxChange = (value) => {
-    if (selected.includes(value)) {
+    const isSelected = selected.includes(value);
+  
+    // SINGLE select (Level, Type)
+    if (single) {
+      if (isSelected) {
+        // Unselect: keep dropdown open
+        onChange(selected.filter((v) => v !== value));
+      } else {
+        // Select: replace and close
+        onChange([value]);
+        setOpen(false);
+      }
+      return;
+    }
+  
+    // MULTI select (Category)
+    if (isSelected) {
       onChange(selected.filter((v) => v !== value));
     } else {
       onChange([...selected, value]);
     }
   };
+  
 
   return (
     <div ref={dropdownRef} style={{ position: "relative", marginBottom: 0 }}>
@@ -365,12 +383,14 @@ export const UploadContent = ({
 
           {/* Level */}
           <div>
-            <MultiCheckboxDropdown
-              label="Level"
-              options={LEVEL_OPTIONS}
-              selected={formData.Level}
-              onChange={(values) => setFormData((prev) => ({ ...prev, Level: values }))}
-            />
+          <MultiCheckboxDropdown
+            label="Level"
+            options={LEVEL_OPTIONS}
+            selected={formData.Level}
+            onChange={(values) => setFormData((prev) => ({ ...prev, Level: values }))}
+            single={true}
+          />
+
             {fieldErrors.Level && (
               <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
                 Please fill out this field.
@@ -383,12 +403,14 @@ export const UploadContent = ({
 
           {/* Type */}
           <div>
-            <MultiCheckboxDropdown
-              label="Type"
-              options={TYPE_OPTIONS}
-              selected={formData.Type}
-              onChange={(values) => setFormData((prev) => ({ ...prev, Type: values }))}
-            />
+          <MultiCheckboxDropdown
+            label="Type"
+            options={TYPE_OPTIONS}
+            selected={formData.Type}
+            onChange={(values) => setFormData((prev) => ({ ...prev, Type: values }))}
+            single={true}
+          />
+
             {fieldErrors.Type && (
               <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
                 Please fill out this field.

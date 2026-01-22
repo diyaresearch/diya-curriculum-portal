@@ -117,11 +117,18 @@ export const EditLesson = () => {
 
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData({
-      ...formData,
+  
+    setFormData((prev) => ({
+      ...prev,
       [id]: id === "duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
-    });
+    }));
+  
+    // Force the dropdown to close immediately after selection
+    if (e.target.tagName === "SELECT") {
+      setTimeout(() => e.target.blur(), 0);
+    }
   };
+  
 
   const handleChange_objective = (value) => {
     setFormData({ ...formData, objectives: value });
