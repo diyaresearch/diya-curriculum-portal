@@ -3,12 +3,39 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app as firebaseApp } from '../firebase/firebaseConfig';
 
-// Using placeholder images
+import module1 from "../assets/modules/module1.png";
+import module2 from "../assets/modules/module2.png";
+import module3 from "../assets/modules/module3.png";
+import module4 from "../assets/modules/module4.png";
+import module5 from "../assets/modules/module5.png";
+
+// Using local images (avoid external placeholder failures)
 const moduleImages = {
-    aiExploration: "https://via.placeholder.com/360x240/4f46e5/ffffff?text=AI+Exploration",
-    aiInsights: "https://via.placeholder.com/360x240/059669/ffffff?text=AI+Insights",
-    aiPhysics: "https://via.placeholder.com/360x240/dc2626/ffffff?text=AI+%26+Physics",
-    fallback: "https://via.placeholder.com/360x240/6b7280/ffffff?text=Module+Image"
+    aiExploration: module1,
+    aiInsights: module2,
+    aiPhysics: module3,
+    fallback: module1
+};
+
+const moduleImageMap = {
+    module1,
+    module2,
+    module3,
+    module4,
+    module5,
+};
+
+const resolveModuleImage = (imageValue) => {
+    if (!imageValue) return moduleImages.fallback;
+    if (typeof imageValue !== "string") return moduleImages.fallback;
+
+    // If stored as a key like "module1", map to bundled asset.
+    if (moduleImageMap[imageValue]) return moduleImageMap[imageValue];
+
+    // If stored as a full URL, allow it.
+    if (/^https?:\/\//i.test(imageValue)) return imageValue;
+
+    return moduleImages.fallback;
 };
 
 // Hardcoded data for featured modules
@@ -195,7 +222,7 @@ const ModuleDetails = () => {
                         justifyContent: "center"
                     }}>
                         <img
-                            src={module.image || moduleImages.fallback}
+                            src={resolveModuleImage(module.image)}
                             alt={module.title}
                             style={{
                                 width: "100%",
@@ -204,7 +231,9 @@ const ModuleDetails = () => {
                                 borderRadius: 14
                             }}
                             onError={e => {
-                                e.target.src = moduleImages.fallback;
+                                // Prevent infinite error loops if fallback also fails.
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = moduleImages.fallback;
                             }}
                         />
                     </div>

@@ -34,6 +34,14 @@ export const LessonDetail = () => {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/");
+  };
+
   const handleDownload = async () => {
     try {
       const token = await user.getIdToken();
@@ -152,7 +160,8 @@ export const LessonDetail = () => {
 
         const contentData = await Promise.all(contentPromises);
         const contentDetailsMap = contentData.reduce((acc, content) => {
-          acc[content.id] = content;
+          // Key by the ID referenced in lesson.sections[].contentIds
+          acc[content.contentId] = content;
           return acc;
         }, {});
 
@@ -189,9 +198,26 @@ export const LessonDetail = () => {
 
   const { title, type, category, level, duration, description, objectives, sections, isPublic } = lesson;
 
+  // ReactQuill expects a string value; lesson fields may be arrays/undefined depending on source.
+  const descriptionHtml = typeof description === "string" ? description : "";
+  const objectivesHtml = Array.isArray(objectives)
+    ? objectives.filter(Boolean).join("")
+    : typeof objectives === "string"
+      ? objectives
+      : "";
+  const safeSections = Array.isArray(sections) ? sections : [];
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
+        <button
+          type="button"
+          onClick={handleBack}
+          className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors mb-4"
+        >
+          ← Back
+        </button>
+
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           {/* Lesson Header */}
           <div className="p-6 border-b">
@@ -290,67 +316,48 @@ export const LessonDetail = () => {
           </div>
 
           {/* Description Section */}
-          <div className="p-6 bg-gray-50 border-b">
+          <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-800 mb-3">Description</h2>
-            <ReactQuill
-              theme="snow"
-              value={description}
-              readOnly={true}
-              modules={{ toolbar: false }}
-              className="bg-gray-50"
+            <div
+              className="rich-text-content text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(descriptionHtml) }}
             />
           </div>
 
           {/* Objectives Section */}
           <div className="p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h2>
-            <ReactQuill
-              theme="snow"
-              value={objectives}
-              readOnly={true}
-              modules={{ toolbar: false }}
-              className="bg-white"
+            <div
+              className="rich-text-content text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(objectivesHtml) }}
             />
           </div>
 
           {/* Lesson Sections */}
           <div className="p-6">
             <h2 className="text-xl font-semibold text-gray-800 mb-6">Lesson Content</h2>
-            {sections.map((section, sectionIndex) => (
+            {safeSections.map((section, sectionIndex) => (
               <div key={sectionIndex} className="mb-8 last:mb-0">
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    Section {sectionIndex + 1}
-                  </h3>
-                  <ReactQuill
-                    theme="snow"
-                    value={section.intro}
-                    readOnly={true}
-                    modules={{ toolbar: false }}
-                    className="bg-gray-50"
-                  />
-                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Section {sectionIndex + 1}
+                </h3>
+                <div
+                  className="rich-text-content text-gray-700 leading-relaxed mb-4"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(typeof section?.intro === "string" ? section.intro : ""),
+                  }}
+                />
 
                 <div className="space-y-6">
-                  {section.contentIds.map((contentId, contentIndex) => {
+                  {(Array.isArray(section?.contentIds) ? section.contentIds : []).map((contentId, contentIndex) => {
                     const content = contentDetails[contentId];
                     if (!content) return null;
 
                     return (
                       <div key={contentIndex} className="border rounded-lg p-4">
                         <div className="flex items-center mb-3">
-                          {isVideoLink(content.fileUrl) && (
-                            <FaVideo className="mr-2 text-blue-600" />
-                          )}
-                          {content.fileUrl?.toLowerCase().includes(".pdf") && (
-                            <FaFilePdf className="mr-2 text-red-600" />
-                          )}
-                          {!isVideoLink(content.fileUrl) &&
-                            !content.fileUrl?.toLowerCase().includes(".pdf") && (
-                              <FaExternalLinkAlt className="mr-2 text-gray-600" />
-                            )}
                           <h4 className="text-lg font-medium">
-                            Content {contentIndex + 1} ({content.Duration}min)
+                            {content.Title || content.title || `Content ${contentIndex + 1}`}
                           </h4>
                         </div>
 
@@ -373,24 +380,14 @@ export const LessonDetail = () => {
                             />
                           </div>
                         ) : (
-                          <a
-                            href={content.fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/content/${contentId}`)}
                             className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                           >
-                            {content.fileUrl?.toLowerCase().includes(".pdf") ? (
-                              <>
-                                <FaFilePdf className="mr-2" />
-                                View PDF Document
-                              </>
-                            ) : (
-                              <>
-                                <FaExternalLinkAlt className="mr-2" />
-                                Access Content
-                              </>
-                            )}
-                          </a>
+                            <FaExternalLinkAlt className="mr-2" />
+                            View Details
+                          </button>
                         )}
                       </div>
                     );

@@ -163,9 +163,15 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       return;
     }
     const db = getFirestore();
+    const lessonIds = selectedMaterials.map((material) => material.id);
+    const lessonPlans = lessonIds.reduce((acc, id, idx) => {
+      acc[idx] = id;
+      return acc;
+    }, {});
     const draftData = {
       ...formData,
-      lessons: selectedMaterials.map((material) => material.id),
+      lessons: lessonIds,
+      lessonPlans,
       author: user.uid,
       isDraft: true,
       updatedAt: serverTimestamp(),
@@ -216,9 +222,15 @@ const ModuleBuilder = ({ onCancel } = {}) => {
 
     try {
       const db = getFirestore();
+      const lessonIds = selectedMaterials.map((material) => material.id);
+      const lessonPlans = lessonIds.reduce((acc, id, idx) => {
+        acc[idx] = id;
+        return acc;
+      }, {});
       const moduleData = {
         ...formData,
-        lessons: selectedMaterials.map((material) => material.id),
+        lessons: lessonIds,
+        lessonPlans,
         author: user.uid,
         isDraft: false,
         createdAt: serverTimestamp(),

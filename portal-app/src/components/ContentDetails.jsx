@@ -19,23 +19,6 @@ const toSlidesEmbedUrl = (url) => {
   }
 };
 
-const Badge = ({ children }) => (
-  <span
-    style={{
-      display: "inline-block",
-      backgroundColor: "#f0f0f0",
-      color: "#333",
-      padding: "4px 8px",
-      borderRadius: "4px",
-      fontSize: "0.875rem",
-      marginRight: "6px",
-      marginBottom: "4px",
-    }}
-  >
-    {children}
-  </span>
-);
-
 const ContentDetails = () => {
   const { id } = useParams(); // must be called unconditionally
   const navigate = useNavigate();
@@ -82,10 +65,8 @@ const ContentDetails = () => {
   if (!content) return <div style={{ padding: 40 }}>Content not found.</div>;
 
   return (
-    <div style={{ 
-        padding: 40, maxWidth: 900, margin: "0 auto",  
-        }}>
-      
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Back Button */}
       <button
         onClick={() => navigate(-1)}
@@ -116,120 +97,63 @@ const ContentDetails = () => {
         ← Back
       </button>
 
-      <h1 style={{ marginBottom: 8 }}>{content.Title}</h1>
+      <h1 className="text-3xl font-bold text-gray-900" style={{ marginBottom: 8 }}>
+        {content.Title}
+      </h1>
 
-      {/* Metadata in two-column format */}
+      {/* Metadata row (match Lesson Plan header style) */}
       <div
         style={{
-          backgroundColor: "#fafafa",
-          border: "1px solid #e5e7eb",
-          borderRadius: "8px",
-          padding: "20px",
           marginTop: "16px",
           marginBottom: "24px",
+          paddingBottom: "16px",
+          borderBottom: "1px solid #e5e7eb",
         }}
       >
-        <div
-          className="grid grid-cols-1 md:grid-cols-2"
-          style={{
-            gap: "16px",
-          }}
-        >
-          {/* Left Column */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
           <div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "auto 1fr",
-                gap: "8px 12px",
-                color: "#333",
-                lineHeight: "1.6",
-                fontSize: "0.95rem",
-              }}
-            >
-              <div><strong>Author:</strong></div>
-              <div>{content.Author || "—"}</div>
-
-              <div><strong>Category:</strong></div>
-              <div>
-                {Array.isArray(content.Category) && content.Category.length > 0 ? (
-                  content.Category.map((cat, idx) => (
-                    <Badge key={idx}>{cat}</Badge>
-                  ))
-                ) : (
-                  "—"
-                )}
-              </div>
-
-              <div><strong>Level:</strong></div>
-              <div>
-                {Array.isArray(content.Level) && content.Level.length > 0 ? (
-                  content.Level.map((level, idx) => (
-                    <Badge key={idx}>{level}</Badge>
-                  ))
-                ) : (
-                  "—"
-                )}
-              </div>
-            </div>
+            <span className="font-semibold text-gray-600">Author:</span>
+            <span className="ml-2 text-gray-800">{content.Author || "—"}</span>
           </div>
-
-          {/* Right Column */}
           <div>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "auto 1fr",
-                gap: "8px 12px",
-                color: "#333",
-                lineHeight: "1.6",
-                fontSize: "0.95rem",
-              }}
-            >
-              <div><strong>Type:</strong></div>
-              <div>
-                {Array.isArray(content.Type) && content.Type.length > 0 ? (
-                  content.Type.map((type, idx) => (
-                    <Badge key={idx}>{type}</Badge>
-                  ))
-                ) : (
-                  "—"
-                )}
-              </div>
-
-              <div><strong>Duration:</strong></div>
-              <div>{content.Duration || "—"} minutes</div>
-            </div>
+            <span className="font-semibold text-gray-600">Type:</span>
+            <span className="ml-2 text-gray-800">
+              {Array.isArray(content.Type) ? content.Type.join(", ") : content.Type || "—"}
+            </span>
+          </div>
+          <div>
+            <span className="font-semibold text-gray-600">Category:</span>
+            <span className="ml-2 text-gray-800">
+              {Array.isArray(content.Category) ? content.Category.join(", ") : content.Category || "—"}
+            </span>
+          </div>
+          <div>
+            <span className="font-semibold text-gray-600">Level:</span>
+            <span className="ml-2 text-gray-800">
+              {Array.isArray(content.Level) ? content.Level.join(", ") : content.Level || "—"}
+            </span>
+          </div>
+          <div>
+            <span className="font-semibold text-gray-600">Duration:</span>
+            <span className="ml-2 text-gray-800">{content.Duration || "—"} minutes</span>
           </div>
         </div>
       </div>
 
-      {/* Description and Instructions in grey box */}
-      <div
-        style={{
-          backgroundColor: "#fafafa",
-          border: "1px solid #e5e7eb",
-          borderRadius: "8px",
-          padding: "20px",
-          marginTop: "16px",
-          marginBottom: "24px",
-        }}
-      >
-        {/* Description */}
-        <h3 style={{ marginBottom: "8px", lineHeight: "1.5", fontSize: "1.1rem" }}>
-          <strong>Description</strong>
-        </h3>
+      {/* Description (match lesson page typography) */}
+      <div className="py-6 border-b border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-800 mb-3">Description</h2>
         <div
-          style={{ lineHeight: "1.6", marginBottom: "16px" }}
+          className="rich-text-content text-gray-700 leading-relaxed"
           dangerouslySetInnerHTML={{ __html: content.Description || "" }}
         />
+      </div>
 
-        {/* Instructions */}
-        <h3 style={{ marginTop: "16px", marginBottom: "8px", lineHeight: "1.5", fontSize: "1.1rem" }}>
-          <strong>Instructions / Notes</strong>
-        </h3>
+      {/* Instructions (match lesson page typography) */}
+      <div className="py-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-3">Instructions / Notes</h2>
         <div
-          style={{ lineHeight: "1.6" }}
+          className="rich-text-content text-gray-700 leading-relaxed"
           dangerouslySetInnerHTML={{ __html: content.Instructions || "" }}
         />
       </div>
@@ -313,6 +237,7 @@ const ContentDetails = () => {
           })}
         </div>
       )}
+      </div>
     </div>
   );
 };

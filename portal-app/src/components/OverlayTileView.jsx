@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import TileItem from "./TileItem";
 
 const categories = ["AI Principles", "Data Science", "Machine Learning", "Statistics", "Other"];
@@ -332,10 +333,8 @@ const OverlayTileView = ({
                         >
                           {isSelected ? "Selected" : "Select"}
                         </button>
-                        <a
-                          href={`/view-content/${item.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Link
+                          to={`/content/${item.id}`}
                           style={{
                             background: "#fff",
                             color: "#1a73e8",
@@ -350,7 +349,7 @@ const OverlayTileView = ({
                           }}
                         >
                           View
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   );

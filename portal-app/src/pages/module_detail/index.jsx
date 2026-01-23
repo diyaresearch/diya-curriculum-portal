@@ -32,6 +32,14 @@ const ModuleDetail = () => {
   const location = useLocation();
   const { userData } = useUserData();
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/");
+  };
+
   // Determine if this is for editing/creating or just viewing
   const [mode, setMode] = useState("view");
   const [isEditMode, setIsEditMode] = useState(false);
@@ -120,6 +128,29 @@ const ModuleDetail = () => {
       const data = moduleDoc.data();
       console.log("Fetched module data:", data); // Debug log
 
+      // Support both schemas:
+      // - legacy/other: { lessonPlans: {0: "<lessonId>", 1: "<lessonId>" ... } }
+      // - module builder: { lessons: ["<lessonId>", "<lessonId>", ...] }
+      const lessonIdsFromLessonPlans =
+        data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
+          ? Object.values(data.lessonPlans).filter(Boolean)
+          : [];
+      const lessonIdsFromLessons = Array.isArray(data.lessons) ? data.lessons.filter(Boolean) : [];
+      const lessonPlanIds = lessonIdsFromLessonPlans.length > 0 ? lessonIdsFromLessonPlans : lessonIdsFromLessons;
+
+      const resolvedLessonPlanMap =
+        data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
+          ? data.lessonPlans
+          : lessonPlanIds.reduce((acc, id, idx) => {
+              acc[idx] = id;
+              return acc;
+            }, {});
+
+      const categoryRaw = data.category ?? data.Category;
+      const levelRaw = data.level ?? data.Level;
+      const typeRaw = data.type ?? data.Type;
+      const durationRaw = data.duration ?? data.Duration;
+
       // Transform Firestore data to display format
       const transformedData = {
         title: data.title?.toUpperCase() || "UNTITLED MODULE",
@@ -129,10 +160,17 @@ const ModuleDetail = () => {
         requirements: data.requirements || "No specific requirements",
         learningObjectives: data.learningObjectives || "Objectives will be defined",
         details: [
-          { label: "Category", value: Array.isArray(data.category) ? data.category.join(", ") : data.category || "N/A" },
-          { label: "Level", value: Array.isArray(data.level) ? data.level.join(", ") : data.level || "N/A" },
-          { label: "Type", value: Array.isArray(data.type) ? data.type.join(", ") : data.type || "N/A" },
-          { label: "Duration", value: data.duration ? `${data.duration} minutes` : "N/A" },
+          { label: "Category", value: Array.isArray(categoryRaw) ? categoryRaw.join(", ") : categoryRaw || "N/A" },
+          { label: "Level", value: Array.isArray(levelRaw) ? levelRaw.join(", ") : levelRaw || "N/A" },
+          { label: "Type", value: Array.isArray(typeRaw) ? typeRaw.join(", ") : typeRaw || "N/A" },
+          {
+            label: "Duration",
+            value: durationRaw
+              ? typeof durationRaw === "string" && durationRaw.toLowerCase().includes("minute")
+                ? durationRaw
+                : `${durationRaw} minutes`
+              : "N/A",
+          },
         ],
         resources: []
       };
@@ -143,12 +181,11 @@ const ModuleDetail = () => {
       setRequirements(data.requirements || "");
       setLearningObjectives(data.learningObjectives || "");
       setTags(data.tags || []);
-      setLessonPlanMap(data.lessonPlans || {});
+      setLessonPlanMap(resolvedLessonPlanMap);
       setSelectedImage(data.image || "module1");
 
       // Fetch lesson plans if they exist
-      if (data.lessonPlans && Object.keys(data.lessonPlans).length > 0) {
-        const lessonPlanIds = Object.values(data.lessonPlans);
+      if (lessonPlanIds.length > 0) {
         await fetchLessonDetails(lessonPlanIds);
       }
 
@@ -171,6 +208,20 @@ const ModuleDetail = () => {
       }
 
       const token = await user.getIdToken();
+
+      const stripHtmlToText = (html) => {
+        if (!html || typeof html !== "string") return "";
+        return html
+          .replace(/<[^>]*>/g, " ")
+          .replace(/&nbsp;/g, " ")
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&quot;/g, '"')
+          .replace(/&#039;/g, "'")
+          .replace(/\s+/g, " ")
+          .trim();
+      };
 
       // Fetch lesson plans from backend API
       const lessonPlanRequests = ids.map(async (id) => {
@@ -197,8 +248,11 @@ const ModuleDetail = () => {
       // Transform lessons for display
       const resources = fetchedPlans.map(lesson => ({
         title: lesson.title || "Untitled Lesson",
-        desc: lesson.description || "No description",
+        desc: stripHtmlToText(lesson.description) || "No description",
         type: Array.isArray(lesson.type) ? lesson.type.join(", ") : lesson.type || "Lesson Plan",
+        level: Array.isArray(lesson.level) ? lesson.level.join(", ") : lesson.level || "—",
+        duration: lesson.duration || "—",
+        sectionsCount: Array.isArray(lesson.sections) ? lesson.sections.length : 0,
         locked: false,
         id: lesson.id
       }));
@@ -402,9 +456,35 @@ const ModuleDetail = () => {
     }
   };
 
-  const handleDownloadPDF = (resource, index, e) => {
+  const handleDownloadPDF = async (resource, index, e) => {
     e.stopPropagation();
-    console.log("Download PDF for:", resource.title);
+    try {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const token = await user.getIdToken();
+      const resp = await fetch(
+        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons/${resource.id}/download`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!resp.ok) throw new Error(`Download failed (${resp.status})`);
+
+      const blob = await resp.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${(resource.title || "lesson").replace(/[^\w\s-]/g, "").slice(0, 80)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error downloading lesson PDF:", err);
+      alert("Failed to download the lesson plan PDF.");
+    }
   };
 
   if (loading) {
@@ -527,6 +607,44 @@ const ModuleDetail = () => {
         }
         `}
       </style>
+
+      {/* Back Button */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "24px 20px 0 20px",
+        }}
+      >
+        <button
+          type="button"
+          onClick={handleBack}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "10px 16px",
+            backgroundColor: "#fff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "0.95rem",
+            fontWeight: 600,
+            color: "#111",
+            transition: "background 0.2s ease, border-color 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#f9fafb";
+            e.currentTarget.style.borderColor = "#cbd5e1";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#fff";
+            e.currentTarget.style.borderColor = "#e5e7eb";
+          }}
+        >
+          ← Back
+        </button>
+      </div>
 
       {/* Header Section */}
       <div style={{
@@ -786,42 +904,83 @@ const ModuleDetail = () => {
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: "1.25rem", marginBottom: 4 }}>{res.title}</div>
-                  <div style={{ color: "#888", fontSize: 16, marginBottom: 8 }}>{res.desc}</div>
-                  <div style={{ fontSize: 15, color: "#444", marginBottom: 8 }}>{res.type}</div>
-                  <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: 12
-                  }}>
-                    <span style={{
-                      fontSize: 13,
-                      color: "#222",
-                      background: "#f5f5f5",
-                      borderRadius: 3,
-                      padding: "3px 10px"
-                    }}>
+                  <div style={{ fontWeight: 700, fontSize: "1.25rem", marginBottom: 6 }}>{res.title}</div>
+                  <div
+                    style={{
+                      color: "#666",
+                      fontSize: 16,
+                      marginBottom: 10,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      lineHeight: "1.35",
+                    }}
+                    title={res.desc}
+                  >
+                    {res.desc}
+                  </div>
+
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 14, color: "#444" }}>
+                    <div><span style={{ fontWeight: 600, color: "#666" }}>Type:</span> <span style={{ color: "#222" }}>{res.type}</span></div>
+                    <div><span style={{ fontWeight: 600, color: "#666" }}>Level:</span> <span style={{ color: "#222" }}>{res.level ?? "—"}</span></div>
+                    <div><span style={{ fontWeight: 600, color: "#666" }}>Duration:</span> <span style={{ color: "#222" }}>{res.duration ?? "—"}{res.duration !== "—" ? " minutes" : ""}</span></div>
+                    <div><span style={{ fontWeight: 600, color: "#666" }}>Sections:</span> <span style={{ color: "#222" }}>{res.sectionsCount ?? 0}</span></div>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
+                    <span
+                      style={{
+                        fontSize: 13,
+                        color: "#222",
+                        background: "#f5f5f5",
+                        borderRadius: 3,
+                        padding: "3px 10px",
+                      }}
+                    >
                       {res.locked ? "Locked" : "Unlocked"}
                     </span>
-                    <button
-                      onClick={(e) => handleDownloadPDF(res, idx, e)}
-                      style={{
-                        background: "#162040",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 4,
-                        padding: "6px 12px",
-                        fontSize: "12px",
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        transition: "background 0.2s ease"
-                      }}
-                      onMouseEnter={(e) => e.target.style.background = "#0f1530"}
-                      onMouseLeave={(e) => e.target.style.background = "#162040"}
-                    >
-                      Download PDF
-                    </button>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLessonClick(res, idx);
+                        }}
+                        style={{
+                          background: "#fff",
+                          color: "#111",
+                          border: "1px solid #111",
+                          borderRadius: 4,
+                          padding: "6px 12px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "background 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => (e.target.style.background = "#f5f5f5")}
+                        onMouseLeave={(e) => (e.target.style.background = "#fff")}
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={(e) => handleDownloadPDF(res, idx, e)}
+                        style={{
+                          background: "#162040",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: 4,
+                          padding: "6px 12px",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "background 0.2s ease",
+                        }}
+                        onMouseEnter={(e) => (e.target.style.background = "#0f1530")}
+                        onMouseLeave={(e) => (e.target.style.background = "#162040")}
+                      >
+                        Download PDF
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

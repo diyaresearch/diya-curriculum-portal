@@ -1,0 +1,1260 @@
+Installing dependencies for React application...
+npm warn deprecated npmlog@5.0.1: This package is no longer supported.
+npm warn deprecated are-we-there-yet@2.0.0: This package is no longer supported.
+npm warn deprecated gauge@3.0.2: This package is no longer supported.
+
+up to date, audited 1739 packages in 3s
+
+296 packages are looking for funding
+  run `npm fund` for details
+
+35 vulnerabilities (3 low, 18 moderate, 12 high, 2 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+Starting React application...
+Installing dependencies for Express server...
+
+> portal-app@0.1.0 start
+> react-scripts start
+
+
+up to date, audited 300 packages in 435ms
+
+58 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (5 high, 1 critical)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+up to date, audited 300 packages in 439ms
+
+58 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (5 high, 1 critical)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+Starting Express server...
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+> server@1.0.0 start
+> node index.js
+
+(node:66191) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:66191) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+Loaded environment: development
+
+🔧 Environment Validation for: DEVELOPMENT
+==================================================
+❌ Missing required environment variables:
+   - DATABASE_SCHEMA_QUALIFIER
+
+⚠️  Warnings:
+   - STRIPE_SECRET_KEY is not set. Payment features will not work.
+
+💡 Suggestions:
+   - Set DATABASE_SCHEMA_QUALIFIER in .env.development. Example: development_
+==================================================
+unitsController tables are content lesson
+Firebase initialized with service account key
+content_submission tables are content counters
+update_submission tables are content
+lessonsController tables are content lesson sections
+moduleController tables are module lesson
+⚠️  STRIPE_SECRET_KEY is not defined. Payment features will be disabled.
+   Set STRIPE_SECRET_KEY in your environment file to enable payment functionality.
+(node:66223) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Server is running on port 3001
+Starting the development server...
+
+Compiled successfully!
+
+You can now view portal-app in the browser.
+
+  Local:            http://localhost:3000
+  On Your Network:  http://10.0.0.151:3000
+
+Note that the development build is not optimized.
+To create a production build, use yarn build.
+
+webpack compiled successfully
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+🔥 Initializing Firebase in REAL mode
+Compiling...
+Compiled successfully!
+webpack compiled successfully
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 281:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 288:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 292:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 318:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 298:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 305:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 309:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 335:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 298:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 305:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 309:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 335:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 298:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 305:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 309:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 335:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 53:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 54:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 54:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 56:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 91:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 298:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 305:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 309:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 335:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/OverlayTileView.jsx
+  Line 2:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 34:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 44:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/OverlayTileView.jsx
+  Line 2:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 34:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 44:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/lesson_detail/index.jsx
+  Line 14:8:  'ReactQuill' is defined but never used  no-unused-vars
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/lesson_detail/index.jsx
+  Line 14:8:  'ReactQuill' is defined but never used  no-unused-vars
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/lesson_detail/index.jsx
+  Line 14:8:  'ReactQuill' is defined but never used  no-unused-vars
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/lesson_detail/index.jsx
+  Line 14:8:  'ReactQuill' is defined but never used  no-unused-vars
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/lesson_detail/index.jsx
+  Line 14:8:  'ReactQuill' is defined but never used  no-unused-vars
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/lesson_detail/index.jsx
+  Line 14:8:  'ReactQuill' is defined but never used  no-unused-vars
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/lesson_detail/index.jsx
+  Line 6:3:   'FaFilePdf' is defined but never used   no-unused-vars
+  Line 7:3:   'FaVideo' is defined but never used     no-unused-vars
+  Line 14:8:  'ReactQuill' is defined but never used  no-unused-vars
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/OverlayTileView.jsx
+  Line 3:8:   'TileItem' is defined but never used                                                                                no-unused-vars
+  Line 35:6:  React Hook useEffect has a missing dependency: 'filteredContent'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 45:6:  React Hook useEffect has a missing dependency: 'filterContent'. Either include it or remove the dependency array    react-hooks/exhaustive-deps
+
+src/pages/lesson_detail/index.jsx
+  Line 6:3:   'FaFilePdf' is defined but never used   no-unused-vars
+  Line 7:3:   'FaVideo' is defined but never used     no-unused-vars
+  Line 14:8:  'ReactQuill' is defined but never used  no-unused-vars
+
+src/pages/module_builder/builder.jsx
+  Line 42:10:   'createdLessonPlans' is assigned a value but never used     no-unused-vars
+  Line 46:11:   'userData' is assigned a value but never used               no-unused-vars
+  Line 123:11:  'db' is assigned a value but never used                     no-unused-vars
+  Line 286:9:   'overlayTileViewStyles' is assigned a value but never used  no-unused-vars
+
+src/pages/module_detail/index.jsx
+  Line 5:8:    'ReactQuill' is defined but never used                                                                                                          no-unused-vars
+  Line 18:7:   'aiInsightsImg' is assigned a value but never used                                                                                              no-unused-vars
+  Line 19:7:   'aiPhysicsImg' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:10:  'draggedIndex' is assigned a value but never used                                                                                               no-unused-vars
+  Line 61:24:  'setDraggedIndex' is assigned a value but never used                                                                                            no-unused-vars
+  Line 62:10:  'selectedLessonIds' is assigned a value but never used                                                                                          no-unused-vars
+  Line 62:29:  'setSelectedLessonIds' is assigned a value but never used                                                                                       no-unused-vars
+  Line 64:25:  'setPortalContent' is assigned a value but never used                                                                                           no-unused-vars
+  Line 99:6:   React Hook useEffect has missing dependencies: 'fetchLessonPlans' and 'fetchModuleDetails'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 306:9:  'addTag' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 313:9:  'removeTag' is assigned a value but never used                                                                                                  no-unused-vars
+  Line 317:9:  'handleSubmit' is assigned a value but never used                                                                                               no-unused-vars
+  Line 343:9:  'handleUpdate' is assigned a value but never used                                                                                               no-unused-vars
+
+webpack compiled with 1 warning
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
+CORS allowed (dev): http://localhost:3000
