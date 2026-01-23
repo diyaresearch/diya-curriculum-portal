@@ -34,6 +34,11 @@ export const LessonDetail = () => {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
+  // Ensure we start at top when navigating here
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [lessonId]);
+
   const handleBack = () => {
     if (window.history.length > 1) {
       navigate(-1);

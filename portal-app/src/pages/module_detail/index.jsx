@@ -32,6 +32,11 @@ const ModuleDetail = () => {
   const location = useLocation();
   const { userData } = useUserData();
 
+  // Ensure we start at top when navigating here
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [moduleId]);
+
   const handleBack = () => {
     if (window.history.length > 1) {
       navigate(-1);
@@ -456,36 +461,7 @@ const ModuleDetail = () => {
     }
   };
 
-  const handleDownloadPDF = async (resource, index, e) => {
-    e.stopPropagation();
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const token = await user.getIdToken();
-      const resp = await fetch(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons/${resource.id}/download`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (!resp.ok) throw new Error(`Download failed (${resp.status})`);
-
-      const blob = await resp.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `${(resource.title || "lesson").replace(/[^\w\s-]/g, "").slice(0, 80)}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Error downloading lesson PDF:", err);
-      alert("Failed to download the lesson plan PDF.");
-    }
-  };
+  // Download removed from module lesson cards (per UX request)
 
   if (loading) {
     return (
@@ -928,60 +904,7 @@ const ModuleDetail = () => {
                     <div><span style={{ fontWeight: 600, color: "#666" }}>Sections:</span> <span style={{ color: "#222" }}>{res.sectionsCount ?? 0}</span></div>
                   </div>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
-                    <span
-                      style={{
-                        fontSize: 13,
-                        color: "#222",
-                        background: "#f5f5f5",
-                        borderRadius: 3,
-                        padding: "3px 10px",
-                      }}
-                    >
-                      {res.locked ? "Locked" : "Unlocked"}
-                    </span>
-                    <div style={{ display: "flex", gap: 10 }}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLessonClick(res, idx);
-                        }}
-                        style={{
-                          background: "#fff",
-                          color: "#111",
-                          border: "1px solid #111",
-                          borderRadius: 4,
-                          padding: "6px 12px",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          transition: "background 0.2s ease",
-                        }}
-                        onMouseEnter={(e) => (e.target.style.background = "#f5f5f5")}
-                        onMouseLeave={(e) => (e.target.style.background = "#fff")}
-                      >
-                        View
-                      </button>
-                      <button
-                        onClick={(e) => handleDownloadPDF(res, idx, e)}
-                        style={{
-                          background: "#162040",
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: 4,
-                          padding: "6px 12px",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          transition: "background 0.2s ease",
-                        }}
-                        onMouseEnter={(e) => (e.target.style.background = "#0f1530")}
-                        onMouseLeave={(e) => (e.target.style.background = "#162040")}
-                      >
-                        Download PDF
-                      </button>
-                    </div>
-                  </div>
+                  {/* Lock/Unlock badge removed per UX request */}
                 </div>
               </div>
             ))
