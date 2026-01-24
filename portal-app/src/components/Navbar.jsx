@@ -4,7 +4,7 @@ import logo from "../assets/DIYA_Logo.png";
 import axios from "axios";
 import {
   getAuth,
-  signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   signOut,
 } from "firebase/auth";
@@ -61,7 +61,7 @@ const Navbar = () => {
     try {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithRedirect(auth, provider);
       const user = result.user;
       const token = await user.getIdToken();
       const response = await axios.post(
@@ -158,7 +158,7 @@ const Navbar = () => {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithRedirect(auth, provider);
       const user = result.user;
       const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
 

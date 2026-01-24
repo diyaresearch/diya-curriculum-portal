@@ -9,7 +9,7 @@ import softwareEngImg from "../assets/software_engineering.png";
 import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
 // This function is used in the filter section for dynamic module display
@@ -161,13 +161,12 @@ function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-      // After login, go to homepage ("/") so the dashboard logic runs
-      window.location.href = "/";
+      await signInWithRedirect(auth, provider);
     } catch (error) {
       alert("Login failed. Please try again.");
     }
   };
+  
 
   return (
     <div style={{

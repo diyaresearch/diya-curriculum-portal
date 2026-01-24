@@ -3,7 +3,7 @@
 const { db } = require("../config/firebaseConfig");
 
 // Define the collections
-const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const SCHEMA_QUALIFIER = process.env.DATABASE_SCHEMA_QUALIFIER || "";
 const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
 
 console.log('update_submission tables are', TABLE_CONTENT)

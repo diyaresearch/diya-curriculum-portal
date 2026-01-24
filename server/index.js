@@ -27,25 +27,33 @@ app.use(express.json());
 const allowedOrigins = process.env.SERVER_ALLOW_ORIGIN
   ? process.env.SERVER_ALLOW_ORIGIN.split(',').map(url => url.trim())
   : [];
+  const ALLOWED_ORIGINS = new Set([
+    "https://diyaresearch.org",
+    "https://curriculum-portal-1ce8f.web.app",
+    "https://curriculum-portal-1ce8f.firebaseapp.com",
+  ]);
 
 // Use whitelist-based CORS in production, secure localhost-only in development
 if (env === 'production') {
-  app.use(cors({
-    origin: function(origin, callback) {
-      // Security fix: Only allow explicitly whitelisted origins
-      // Remove !origin condition that allowed requests without origin headers
-      if (origin && allowedOrigins.indexOf(origin) !== -1) {
-        console.log("CORS allowed:", origin);
-        callback(null, true);
-      } else {
-        console.log("CORS blocked:", origin || 'no-origin');
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-  }));
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        // Allow server-to-server or same-origin requests (origin may be undefined)
+        if (!origin) return callback(null, true);
+  
+        if (ALLOWED_ORIGINS.has(origin)) return callback(null, true);
+  
+        return callback(new Error("Not allowed by CORS"));
+      },
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
+  
+  // Ensure preflight always succeeds
+  app.options("*", cors());
+  
 } else {
   // Development: allow only localhost origins for security
   const devAllowedOrigins = [

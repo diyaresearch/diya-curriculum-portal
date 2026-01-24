@@ -206,13 +206,9 @@ const ModuleDetail = () => {
     try {
       const auth = getAuth();
       const user = auth.currentUser;
-
-      if (!user) {
-        console.log("No authenticated user");
-        return;
-      }
-
-      const token = await user.getIdToken();
+      // Use same-origin by default in production; allow override via env for dev/proxies.
+      const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+      const token = user ? await user.getIdToken() : null;
 
       const stripHtmlToText = (html) => {
         if (!html || typeof html !== "string") return "";
@@ -231,8 +227,8 @@ const ModuleDetail = () => {
       // Fetch lesson plans from backend API
       const lessonPlanRequests = ids.map(async (id) => {
         try {
-          const response = await fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
+          const response = await fetch(`${baseUrl}/api/lesson/${id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
           });
 
           if (!response.ok) {

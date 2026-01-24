@@ -2,7 +2,7 @@ const { db, storage } = require("../config/firebaseConfig");
 const PDFDocument = require("pdfkit");
 
 // Define the collections
-const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const SCHEMA_QUALIFIER = process.env.DATABASE_SCHEMA_QUALIFIER || "";
 const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
 const TABLE_LESSON =  SCHEMA_QUALIFIER + "lesson"; 
 const TABLE_SECTIONS = SCHEMA_QUALIFIER + "sections";

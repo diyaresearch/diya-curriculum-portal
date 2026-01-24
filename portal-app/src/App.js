@@ -35,7 +35,7 @@ import ModuleBuilder from "./pages/module_builder/builder";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/diya-ed">
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />

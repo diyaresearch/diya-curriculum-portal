@@ -3,7 +3,7 @@ const multer = require("multer");
 const { storage } = require("../config/firebaseConfig");
 
 // Define the collections
-const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const SCHEMA_QUALIFIER = process.env.DATABASE_SCHEMA_QUALIFIER || "";
 const TABLE_COUNTERS =  SCHEMA_QUALIFIER + "counters"; 
 const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
 

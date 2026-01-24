@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { collection, setDoc, doc, query, where, getDocs } from "firebase/firestore";
 import { db } from '../../firebase/firebaseConfig';
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+import { getAuth, signInWithRedirect, GoogleAuthProvider, signOut } from "firebase/auth";
 import { MultiSelectDropdown, SingleSelectDropdown } from "../../components/Dropdowns";
 import SignupSuccess from "../../components/SignupSuccess";
 
@@ -23,7 +23,7 @@ async function handleGoogleLogin(setError, setShowNoAccountPopup) {
   const auth = getAuth();
   const provider = new GoogleAuthProvider();
   try {
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithRedirect(auth, provider);
     const user = result.user;
     // Check both collections for this email
     const teacherDoc = await getDocs(query(collection(db, "teachers"), where("email", "==", user.email)));
@@ -62,7 +62,7 @@ export function TeacherSignup() {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithRedirect(auth, provider);
       setGoogleUser(result.user);
       setEmail(result.user.email); // Pre-fill email
     } catch (err) {
@@ -400,7 +400,7 @@ export function StudentSignup() {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithRedirect(auth, provider);
       setGoogleUser(result.user);
       setEmail(result.user.email);
     } catch (err) {
