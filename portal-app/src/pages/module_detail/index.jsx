@@ -11,6 +11,7 @@ import module3 from "../../assets/modules/module3.png";
 import module4 from "../../assets/modules/module4.png";
 import module5 from "../../assets/modules/module5.png";
 import OverlayTileView from "../../components/OverlayTileView";
+import { getLevelChipStyles } from "../../constants/uiTokens";
 
 // Import default images for fallback - using module images instead since AI images don't exist
 // If you have these AI images in a different location, update the paths accordingly
@@ -24,12 +25,57 @@ const imageMap = {
   module5,
 };
 
-const resolveModuleImage = (imageValue) => {
-  if (!imageValue) return module1;
-  if (typeof imageValue !== "string") return module1;
-  if (imageMap[imageValue]) return imageMap[imageValue];
-  if (/^https?:\/\//i.test(imageValue)) return imageValue;
-  return module1;
+const getDetailValue = (details, label) => {
+  const target = String(label || "").trim().toLowerCase();
+  const item = (details || []).find((d) => String(d?.label || "").trim().toLowerCase() === target);
+  return item?.value ?? "";
+};
+
+const formatDurationShort = (durationValue) => {
+  const raw = String(durationValue || "").trim();
+  if (!raw) return "—";
+  const match = raw.match(/(\d+)/);
+  if (match) return `${match[1]} min`;
+  return raw;
+};
+
+const normalizeLessonDuration = (durationValue) => {
+  if (durationValue === null || durationValue === undefined || durationValue === "") return "";
+  if (typeof durationValue === "number") return `${durationValue} minutes`;
+  const s = String(durationValue).trim();
+  if (!s) return "";
+  if (/\bmin\b|\bminute\b/i.test(s)) return s;
+  const match = s.match(/^\d+$/);
+  if (match) return `${s} minutes`;
+  return s;
+};
+
+const extractBulletsFromObjectives = (value) => {
+  const html = String(value || "");
+  if (!html.trim()) return [];
+
+  // If it's HTML with list items, don't try to parse; we'll render sanitized HTML.
+  if (/<\s*li\b/i.test(html)) return null;
+
+  const text = html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return [];
+
+  // Prefer newline/semicolon splits
+  const newlineParts = text.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+  if (newlineParts.length > 1) return newlineParts;
+
+  const semiParts = text.split(/\s*;\s*/).map((s) => s.trim()).filter(Boolean);
+  if (semiParts.length > 1) return semiParts;
+
+  // Fallback: split into sentences if there are multiple.
+  const sentenceParts = text
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  return sentenceParts.length > 1 ? sentenceParts : [text];
 };
 
 // Hardcoded modules for fallback (kept outside component for stable hooks deps)
@@ -67,9 +113,9 @@ const HARDCODED_MODULES = {
       { label: "Duration", value: "180 minutes" },
     ],
     resources: [
-      { title: "Deep Learning Concepts", desc: "Understand neural networks, training, and evaluation at a high level.", type: "Lesson Plan", locked: false },
-      { title: "AI Ethics Discussion", desc: "Explore bias, fairness, and responsible AI design with examples.", type: "Assignment", locked: false },
-      { title: "AI Healthcare Project", desc: "Apply AI reasoning to a healthcare-style scenario and present findings.", type: "Project", locked: false },
+      { title: "Deep Learning Concepts", desc: "Understand neural networks, training, and evaluation at a high level.", type: "Lecture", duration: 60, locked: false },
+      { title: "AI Ethics Discussion", desc: "Explore bias, fairness, and responsible AI design with examples.", type: "Discussion", duration: 30, locked: false },
+      { title: "AI Healthcare Project Plan", desc: "Apply AI reasoning to a healthcare-style scenario and present findings.", type: "Project", duration: 90, locked: false },
     ],
   },
   "ai-physics": {
@@ -97,7 +143,7 @@ const ModuleDetail = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData } = useUserData();
+  useUserData();
 
   // Ensure we start at top when navigating here
   useEffect(() => {
@@ -454,308 +500,256 @@ const ModuleDetail = () => {
         `}
       </style>
 
-      {/* Back Button */}
-      <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "24px 20px 0 20px",
-        }}
-      >
+      {/* Back Button (match screenshot) */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "18px 20px 0 20px" }}>
         <button
           type="button"
           onClick={handleBack}
           style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "10px 16px",
-            backgroundColor: "#fff",
-            border: "1px solid #e5e7eb",
-            borderRadius: "8px",
+            background: "none",
+            border: "none",
+            padding: 0,
             cursor: "pointer",
-            fontSize: "0.95rem",
+            color: "#162040",
             fontWeight: 600,
-            color: "#111",
-            transition: "background 0.2s ease, border-color 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#f9fafb";
-            e.currentTarget.style.borderColor = "#cbd5e1";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#fff";
-            e.currentTarget.style.borderColor = "#e5e7eb";
+            fontSize: "1rem",
           }}
         >
-          ← Back
+          {"< Back"}
         </button>
       </div>
 
-      {/* Header Section */}
-      <div style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "64px 20px 0 20px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 48,
-        textAlign: "center"
-      }}>
-        {/* Title Section - Full Width Centered */}
-        <div style={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          marginBottom: 20
-        }}>
-          <div style={{
+      {/* Header (match screenshot) */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "10px 20px 0 20px",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
             fontWeight: 800,
             fontSize: "3.2rem",
-            marginBottom: 28,
+            marginTop: 8,
+            marginBottom: 10,
             color: "#111",
             letterSpacing: "-1px",
-            textAlign: "center",
-            width: "100%",
-            lineHeight: "1.1"
-          }}>
-            {module.title}
-          </div>
-          <div style={{
-            color: "#444",
-            fontSize: "1.5rem",
-            fontWeight: 500,
-            textAlign: "center",
-            maxWidth: "800px",
-            lineHeight: "1.4"
-          }}>
-            {/* Remove HTML tags from subtitle */}
-            {module.subtitle?.replace(/<[^>]*>/g, '') || 'No description available'}
-          </div>
+            lineHeight: "1.1",
+          }}
+        >
+          {module.title}
+        </div>
+        <div style={{ color: "#444", fontSize: "1.25rem", fontWeight: 500, lineHeight: "1.4" }}>
+          {module.subtitle?.replace(/<[^>]*>/g, "") || "No description available"}
         </div>
 
-        {/* Image Section - Centered */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}>
-          <div style={{
-            width: 360,
-            height: 240,
-            background: "#eaeaea",
-            borderRadius: 14,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-            display: "flex",
+        {/* Metadata chips row */}
+        {(() => {
+          const category = getDetailValue(module.details, "Category") || "—";
+          const level = getDetailValue(module.details, "Level") || "—";
+          const type = getDetailValue(module.details, "Type") || "—";
+          const duration = formatDurationShort(getDetailValue(module.details, "Duration"));
+
+          const chipBase = {
+            display: "inline-flex",
             alignItems: "center",
-            justifyContent: "center"
-          }}>
-            <img
-              src={resolveModuleImage(module.image)}
-              alt={module.title}
+            gap: 6,
+            padding: "8px 14px",
+            borderRadius: 999,
+            border: "1px solid #e5e7eb",
+            background: "#fff",
+            color: "#111",
+            fontWeight: 600,
+            fontSize: "0.95rem",
+            lineHeight: 1,
+            whiteSpace: "nowrap",
+          };
+
+          const levelStyle = getLevelChipStyles(level);
+
+          const Chip = ({ label, value, style }) => (
+            <span style={{ ...chipBase, ...style }}>
+              <span style={{ opacity: 0.85 }}>{label}:</span> <span>{value}</span>
+            </span>
+          );
+
+          return (
+            <div
               style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: 14
+                marginTop: 18,
+                display: "flex",
+                justifyContent: "center",
+                flexWrap: "wrap",
+                gap: 12,
               }}
-              onError={e => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = module1;
-              }}
-            />
-          </div>
-        </div>
+            >
+              <Chip label="Category" value={category} />
+              <Chip label="Level" value={level} style={levelStyle} />
+              <Chip label="Type" value={type} />
+              <Chip label="Duration" value={duration} />
+            </div>
+          );
+        })()}
       </div>
 
 
-      {/* Module Details (Screenshot 2 style) */}
-      <div style={{ maxWidth: 1100, margin: "96px auto 0 auto", padding: "0 20px" }}>
-        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
-          Module Details
+      {/* Main content cards */}
+      <div style={{ maxWidth: 1100, margin: "28px auto 0 auto", padding: "0 20px" }}>
+        {(() => {
+          const cardStyle = {
+            border: "1px solid #e5e7eb",
+            borderRadius: 14,
+            padding: "22px 24px",
+            background: "#fff",
+            marginTop: 22,
+          };
+
+          const cardTitleStyle = {
+            fontSize: "1.9rem",
+            fontWeight: 800,
+            color: "#222",
+            marginBottom: 10,
+          };
+
+          const bodyStyle = { color: "#222", fontSize: "1.05rem", lineHeight: 1.6 };
+
+          const objectivesBullets = extractBulletsFromObjectives(module.learningObjectives);
+
+          return (
+            <>
+              {/* What you will learn */}
+              <div style={cardStyle}>
+                <div style={cardTitleStyle}>What you will learn</div>
+                {objectivesBullets === null ? (
+                  <div
+                    style={bodyStyle}
+                    className="rich-text-content"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(module.learningObjectives || "") }}
+                  />
+                ) : (
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none", ...bodyStyle }}>
+                    {(objectivesBullets || []).map((b, i) => (
+                      <li key={i} style={{ display: "flex", gap: 10, marginTop: i === 0 ? 0 : 10 }}>
+                        <span
+                          style={{
+                            width: 8,
+                            height: 8,
+                            marginTop: 9,
+                            borderRadius: 999,
+                            background: "#1d4ed8",
+                            flex: "0 0 8px",
+                          }}
+                        />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Requirements */}
+              <div style={cardStyle}>
+                <div style={cardTitleStyle}>Requirements</div>
+                <div
+                  style={bodyStyle}
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(module.requirements || "No specific requirements."),
+                  }}
+                />
+              </div>
+
+              {/* Module description */}
+              <div style={cardStyle}>
+                <div style={cardTitleStyle}>Module description</div>
+                <div
+                  style={bodyStyle}
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(module.description || "No description available."),
+                  }}
+                />
+              </div>
+            </>
+          );
+        })()}
+      </div>
+
+      {/* Lesson plans section (match screenshot) */}
+      <div style={{ maxWidth: 1100, margin: "26px auto 0 auto", padding: "0 20px 80px 20px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+          <div style={{ fontSize: "1.9rem", fontWeight: 800, color: "#222" }}>
+            Lesson plans ({module.resources?.length || 0})
+          </div>
+          <div style={{ color: "#666", fontSize: "0.95rem" }}>
+            Pick a lesson to view details and materials.
+          </div>
         </div>
-        <div style={{ background: "#fff", border: "1px solid #ececec", borderRadius: 8, overflow: "hidden" }}>
-          {module.details?.map((item, idx) => (
-            <div
-              key={item.label}
-              style={{
-                display: "flex",
-                borderBottom: idx < (module.details?.length || 0) - 1 ? "1px solid #ececec" : "none",
-              }}
-            >
+
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+          {(module.resources || []).map((res, idx) => {
+            const durationText = normalizeLessonDuration(res.duration);
+            const subtitle = `${res.type || "Lesson"}${durationText ? ` • ${durationText}` : ""}`;
+
+            return (
               <div
+                key={res.id || idx}
                 style={{
-                  padding: "20px 24px",
-                  width: 200,
-                  fontWeight: 600,
-                  color: "#444",
-                  borderRight: "1px solid #ececec",
-                  background: "#f8f9fa",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 14,
+                  padding: "14px 16px",
+                  background: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 16,
                 }}
               >
-                {item.label}
-              </div>
-              <div style={{ flex: 1, padding: "20px 24px", color: "#111", fontWeight: 600 }}>
-                {item.value}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 10,
+                      border: "1px solid #d1d5db",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 700,
+                      color: "#111",
+                      background: "#f9fafb",
+                      flex: "0 0 34px",
+                    }}
+                  >
+                    {idx + 1}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, fontSize: "1.15rem", color: "#222", lineHeight: 1.2 }}>
+                      {`Lesson ${idx + 1}. ${res.title || "Untitled Lesson"}`}
+                    </div>
+                    <div style={{ color: "#666", fontSize: "0.95rem", marginTop: 4 }}>{subtitle}</div>
+                  </div>
+                </div>
 
-      {/* Requirements (Screenshot 2 style) */}
-      <div style={{ maxWidth: 1100, margin: "80px auto 0 auto", padding: "0 20px" }}>
-        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
-          Requirements
-        </div>
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #ececec",
-            borderRadius: 8,
-            padding: "24px",
-            color: "#007bff",
-            lineHeight: "1.6",
-          }}
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(module.requirements || "No specific requirements"),
-          }}
-        />
-      </div>
-
-      {/* Module Description (Screenshot 2 style) */}
-      <div style={{ maxWidth: 1100, margin: "80px auto 0 auto", padding: "0 20px" }}>
-        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
-          Module Description
-        </div>
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #ececec",
-            borderRadius: 8,
-            padding: "24px",
-            color: "#007bff",
-            lineHeight: "1.6",
-          }}
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(module.description || "No description available"),
-          }}
-        />
-      </div>
-
-      {/* Learning Objectives (Screenshot 2 style) */}
-      <div style={{ maxWidth: 1100, margin: "80px auto 0 auto", padding: "0 20px" }}>
-        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
-          Learning Objectives
-        </div>
-        <div
-          style={{
-            background: "#fff",
-            border: "1px solid #ececec",
-            borderRadius: 8,
-            padding: "24px",
-            color: "#007bff",
-            lineHeight: "1.6",
-          }}
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify.sanitize(module.learningObjectives || "Learning objectives will be defined"),
-          }}
-        />
-      </div>
-
-      {/* Lesson Plans (Screenshot 2 style) */}
-      <div style={{ maxWidth: 1100, margin: "80px auto 0 auto", padding: "0 20px 80px 20px" }}>
-        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
-          Lesson Plans
-        </div>
-
-        <div style={{ marginBottom: 24, display: "flex", gap: 12, alignItems: "center" }}>
-          <button
-            type="button"
-            onClick={() => navigate(`/all-lesson-plans/${moduleId}`)}
-            style={{
-              background: "#162040",
-              color: "#fff",
-              border: "none",
-              borderRadius: 8,
-              padding: "14px 20px",
-              fontSize: "1rem",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "background 0.2s ease",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#0f1530")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "#162040")}
-          >
-            All Lesson Plans
-          </button>
-
-          {userData?.role === "admin" && (
-            <button
-              type="button"
-              onClick={() => setIsEditMode(true)}
-              style={{
-                background: "#f8f9fa",
-                color: "#162040",
-                border: "1px solid #dee2e6",
-                borderRadius: 8,
-                padding: "14px 20px",
-                fontSize: "1rem",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              Edit Module
-            </button>
-          )}
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {module.resources && module.resources.length > 0 ? (
-            module.resources.map((res, idx) => {
-              const durationPart =
-                res.duration && res.duration !== "—"
-                  ? ` • ${String(res.duration).includes("min") ? res.duration : `${res.duration} min`}`
-                  : "";
-
-              return (
-                <div
-                  key={res.id || idx}
-                  className="resource-card"
+                <button
+                  type="button"
                   onClick={() => handleLessonClick(res, idx)}
                   style={{
+                    border: "2px solid #162040",
                     background: "#fff",
-                    border: "1px solid #ececec",
-                    borderRadius: 8,
-                    padding: "20px 24px",
+                    color: "#162040",
+                    fontWeight: 700,
+                    borderRadius: 10,
+                    padding: "10px 16px",
                     cursor: "pointer",
-                    transition: "all 0.2s",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <div>
-                    <div style={{ fontWeight: 600, color: "#222", fontSize: "1.1rem", marginBottom: 4 }}>
-                      {res.title}
-                    </div>
-                    <div style={{ color: "#666", fontSize: "0.9rem" }}>
-                      {(res.type || "Lesson Plan") + durationPart}
-                    </div>
-                  </div>
-                  <div style={{ color: "#162040", fontSize: "1.2rem" }}>→</div>
-                </div>
-              );
-            })
-          ) : (
-            <div style={{ padding: "40px", textAlign: "center", color: "#666", fontSize: "1.1rem", fontStyle: "italic" }}>
-              No lesson plans available for this module.
-            </div>
-          )}
+                  View Lesson
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
