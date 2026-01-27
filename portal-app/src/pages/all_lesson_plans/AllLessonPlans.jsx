@@ -419,7 +419,7 @@ const AllLessonPlans = () => {
                             </p>
                         </div>
                         <button
-                            onClick={() => navigate(`/modules/${moduleId}`)}
+                            onClick={() => navigate(`/module/${moduleId}`)}
                             style={{
                                 background: "#162040",
                                 color: "#fff",

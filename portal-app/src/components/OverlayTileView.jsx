@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import TileItem from "./TileItem";
 
 const categories = ["AI Principles", "Data Science", "Machine Learning", "Statistics", "Other"];
 const types = ["Lecture", "Assignment","Dataset"];
@@ -27,22 +26,6 @@ const OverlayTileView = ({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const [selectedTiles, setSelectedTiles] = useState(initialSelectedTiles || []);
-
-  useEffect(() => {
-    if (content !== filteredContent) {
-      setFilteredContent(content);
-    }
-  }, [content]);
-
-  useEffect(() => {
-    setSelectedCategory(category || "");
-    setSelectedType(type || "");
-    setSelectedLevel(level || "");
-  }, [category, type, level]);
-
-  useEffect(() => {
-    filterContent();
-  }, [selectedCategory, selectedType, selectedLevel, searchTerm]);
 
   const filterContent = useCallback(() => {
     let filtered = [...content];
@@ -110,6 +93,20 @@ const OverlayTileView = ({
 
     setFilteredContent(filtered);
   }, [selectedCategory, selectedType, selectedLevel, searchTerm, content, contentType]);
+
+  useEffect(() => {
+    setFilteredContent(content);
+  }, [content]);
+
+  useEffect(() => {
+    setSelectedCategory(category || "");
+    setSelectedType(type || "");
+    setSelectedLevel(level || "");
+  }, [category, type, level]);
+
+  useEffect(() => {
+    filterContent();
+  }, [filterContent]);
 
   const handlePageChange = (direction) => {
     if (direction === "prev" && currentPage > 1) {

@@ -8,9 +8,12 @@ import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import Quill CSS
-import { FaExternalLinkAlt } from "react-icons/fa";
 
-Modal.setAppElement("#root");
+// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+if (typeof document !== "undefined") {
+  const appRoot = document.getElementById("root");
+  if (appRoot) Modal.setAppElement(appRoot);
+}
 
 export const LessonGenerator = () => {
   const [formData, setFormData] = useState({

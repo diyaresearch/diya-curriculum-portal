@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import aiExploreImg from "../assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png";
-import aiExploreImg2 from "../assets/ChatGPT Image Jun 13, 2025, 02_17_05 PM.png";
 import aiExploreImg3 from "../assets/ChatGPT Image Jun 13, 2025, 02_25_51 PM.png";
 import laptopImg from "../assets/laptop.png";
 import physicsImg from "../assets/finphysics.png";
@@ -9,33 +8,9 @@ import softwareEngImg from "../assets/software_engineering.png";
 import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
-
-// This function is used in the filter section for dynamic module display
-const getItemImage = (item) => {
-  const itemType = item._type;
-  const category = (item.category || item.Category || "").toLowerCase();
-  const level = (item.level || item.Level || "").toLowerCase();
-
-  // Return images based on type and category
-  if (itemType === "Module") {
-    if (category.includes("ai") || category.includes("python")) {
-      return level === "basic" ? aiExploreImg : aiExploreImg2;
-    } else if (category.includes("physics")) {
-      return physicsImg;
-    } else {
-      return aiExploreImg3; // Default for modules
-    }
-  } else if (itemType === "Lesson Plan") {
-    return laptopImg; // Use laptop image for lesson plans
-  } else if (itemType === "Nuggets") {
-    return textbooksImg; // Use textbooks image for nuggets
-  }
-
-  // Fallback image
-  return aiExploreImg;
-};
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useLocation, useNavigate } from "react-router-dom";
+import { startGoogleRedirect } from "../auth/googleAuth";
 
 // Map module keys to appropriate images for featured modules
 const getFeaturedModuleImage = (moduleKey) => {
@@ -140,9 +115,9 @@ function useUserRole() {
     });
 
     return () => {
-      unsubscribe();
-      if (unsubTeacher) unsubTeacher();
-      if (unsubStudent) unsubStudent();
+      if (typeof unsubscribe === "function") unsubscribe();
+      if (typeof unsubTeacher === "function") unsubTeacher();
+      if (typeof unsubStudent === "function") unsubStudent();
     };
   }, []);
 
@@ -155,13 +130,14 @@ function useUserRole() {
 
 
 function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
+  const location = useLocation();
   if (!open) return null;
 
   const handleGoogleLogin = async () => {
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithRedirect(auth, provider);
+      await startGoogleRedirect({
+        returnTo: `${location.pathname}${location.search || ""}`,
+      });
     } catch (error) {
       alert("Login failed. Please try again.");
     }
@@ -714,7 +690,7 @@ const ExploreModulesSection = () => {
                   setPopupModule(module);
                   setPopupOpen(true);
                 } else if (["teacherDefault", "student", "admin"].includes(role)) {
-                  navigate(`/modules/${module.key}`);
+                  navigate(`/module/${module.key}`);
                 }
               }}
               tabIndex={0}
@@ -726,7 +702,7 @@ const ExploreModulesSection = () => {
                     setPopupModule(module);
                     setPopupOpen(true);
                   } else if (["teacherDefault", "student", "admin"].includes(role)) {
-                    navigate(`/modules/${module.key}`);
+                    navigate(`/module/${module.key}`);
                   }
                 }
               }}
@@ -1043,7 +1019,7 @@ const ExploreModulesSection = () => {
                       } else {
                         // Navigate to appropriate page based on item type
                         if (item._type === "Module") {
-                          navigate(`/modules/${item.id}`);
+                          navigate(`/module/${item.id}`);
                         } else if (item._type === "Lesson Plan") {
                           navigate(`/lesson-plans/${item.id}`);
                         } else if (item._type === "Nuggets") {

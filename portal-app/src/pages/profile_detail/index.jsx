@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import useUserData from "../../hooks/useUserData";
 import { useNavigate } from "react-router-dom";
@@ -19,10 +19,8 @@ const UserProfile = () => {
   });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [profileLoading, setProfileLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("Users");
   const [users, setUsers] = useState([]);
-  const [content, setContent] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
@@ -47,8 +45,6 @@ const UserProfile = () => {
           setFormData(response.data);
         } catch (error) {
           console.error("Failed to fetch user profile:", error);
-        } finally {
-          setProfileLoading(false);
         }
       }
     };
@@ -56,13 +52,8 @@ const UserProfile = () => {
     fetchUserProfile();
   }, [user]);
 
-  useEffect(() => {
-    if (formData.role === "admin") {
-      fetchAdminData();
-    }
-  }, [formData.role]);
-
-  const fetchAdminData = async () => {
+  const fetchAdminData = useCallback(async () => {
+    if (!user) return;
     try {
       const token = await user.getIdToken();
       const usersRes = await axios.get(
@@ -72,11 +63,6 @@ const UserProfile = () => {
         }
       );
       setUsers(usersRes.data);
-
-      const contentRes = await axios.get(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setContent(contentRes.data);
 
       const notificationsRes = await axios.get(
         `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/admin/notifications`,
@@ -88,7 +74,13 @@ const UserProfile = () => {
     } catch (error) {
       console.error("Failed to fetch admin data:", error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (formData.role === "admin") {
+      fetchAdminData();
+    }
+  }, [formData.role, fetchAdminData]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

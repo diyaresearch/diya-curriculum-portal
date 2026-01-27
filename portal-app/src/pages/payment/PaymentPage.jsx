@@ -4,7 +4,7 @@ import useUserData from '../../hooks/useUserData';
 
 const PaymentPage = () => {
     const navigate = useNavigate();
-    const { user, userData, loading } = useUserData();
+    const { user, loading } = useUserData();
     const [cardInfo, setCardInfo] = useState({
         cardNumber: '',
         expiryDate: '',

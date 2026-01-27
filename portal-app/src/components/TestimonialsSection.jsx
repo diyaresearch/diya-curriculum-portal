@@ -38,9 +38,9 @@ function useUserRole() {
     });
 
     return () => {
-      unsubscribe();
-      if (unsubTeacher) unsubTeacher();
-      if (unsubStudent) unsubStudent();
+      if (typeof unsubscribe === "function") unsubscribe();
+      if (typeof unsubTeacher === "function") unsubTeacher();
+      if (typeof unsubStudent === "function") unsubStudent();
     };
   }, []);
 
@@ -564,7 +564,6 @@ const TestimonialsCarousel = () => {
 
   // Show 1 testimonial at a time
   const testimonialsPerPage = 1;
-  const maxIndex = Math.max(0, testimonials.length - testimonialsPerPage);
 
   const handlePrev = () => {
     if (isTransitioning) return;

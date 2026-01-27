@@ -4,7 +4,7 @@ import useUserData from '../../hooks/useUserData';
 
 const UpgradePage = () => {
     const navigate = useNavigate();
-    const { user, userData, loading } = useUserData();
+    const { user, userData } = useUserData();
     const [showContactModal, setShowContactModal] = useState(false);
 
     // Determine current plan based on user data

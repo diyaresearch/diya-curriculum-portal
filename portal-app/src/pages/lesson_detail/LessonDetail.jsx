@@ -155,7 +155,7 @@ const LessonDetail = () => {
         if (fromAllLessonPlans) {
             navigate(`/all-lesson-plans/${moduleId}`);
         } else {
-            navigate(`/modules/${moduleId}`);
+            navigate(`/module/${moduleId}`);
         }
     };
 

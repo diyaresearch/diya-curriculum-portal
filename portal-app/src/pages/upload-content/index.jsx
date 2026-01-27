@@ -8,7 +8,11 @@ import "react-quill/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 
-Modal.setAppElement("#root");
+// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+if (typeof document !== "undefined") {
+  const appRoot = document.getElementById("root");
+  if (appRoot) Modal.setAppElement(appRoot);
+}
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -37,7 +41,6 @@ export const UploadContent = ({
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [uploading, setUploading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [attachmentTitle, setAttachmentTitle] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");

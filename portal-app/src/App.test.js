@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders app shell', () => {
+  // App uses basename="/diya-ed"; set a matching URL for BrowserRouter.
+  window.history.pushState({}, "Test", "/diya-ed/");
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByText("DIYA Ed Portal")).toBeInTheDocument();
 });

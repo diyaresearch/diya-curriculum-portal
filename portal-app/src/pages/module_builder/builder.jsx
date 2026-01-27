@@ -13,7 +13,11 @@ import LessonPlanBuilder from "../lesson-plans/builder";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 
-Modal.setAppElement("#root");
+// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+if (typeof document !== "undefined") {
+  const appRoot = document.getElementById("root");
+  if (appRoot) Modal.setAppElement(appRoot);
+}
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -39,11 +43,10 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const [selectedMaterials, setSelectedMaterials] = useState([]);
   const [showNuggetBuilderModal, setShowNuggetBuilderModal] = useState(false);
   const [showLessonPlanBuilderModal, setShowLessonPlanBuilderModal] = useState(false);
-  const [createdLessonPlans, setCreatedLessonPlans] = useState([]);
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const { userData } = useUserData();
+  useUserData();
 
   const handleCancel = () => {
     // If opened from another screen/modal, prefer closing that context.
@@ -120,7 +123,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   };
 
   useEffect(() => {
-    const db = getFirestore();
     const auth = getAuth();
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -280,31 +282,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
 
   const removeMaterial = (materialId) => {
     setSelectedMaterials(selectedMaterials.filter((m) => m.id !== materialId));
-  };
-
-  // --- Overlay modal styles for "Add Existing Lesson Plans" ---
-  const overlayTileViewStyles = {
-    content: {
-      top: "50%",
-      left: "50%",
-      right: "auto",
-      bottom: "auto",
-      marginRight: "-50%",
-      transform: "translate(-50%, -50%)",
-      width: "98vw",
-      maxWidth: "1100px",
-      maxHeight: "95vh",
-      minHeight: "600px",
-      overflowY: "auto",
-      padding: "32px",
-      textAlign: "center",
-      borderRadius: "16px",
-      boxSizing: "border-box",
-    },
-    overlay: {
-      backgroundColor: "rgba(0,0,0,0.75)",
-      zIndex: 1000,
-    },
   };
 
   const customStyles = {
@@ -806,7 +783,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
           onSave={async (newLesson) => {
             setShowLessonPlanBuilderModal(false);
             if (newLesson && newLesson.id) {
-              setCreatedLessonPlans(prev => [...prev, newLesson]);
               setSelectedMaterials(prev => [...prev, newLesson]);
             }
             const auth = getAuth();

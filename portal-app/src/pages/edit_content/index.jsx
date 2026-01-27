@@ -4,7 +4,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
-Modal.setAppElement("#root");
+// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+if (typeof document !== "undefined") {
+  const appRoot = document.getElementById("root");
+  if (appRoot) Modal.setAppElement(appRoot);
+}
 
 export const EditContent = () => {
   const [formData, setFormData] = useState({

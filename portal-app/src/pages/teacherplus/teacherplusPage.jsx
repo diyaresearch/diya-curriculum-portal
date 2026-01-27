@@ -751,7 +751,7 @@ const TeacherPlusPage = () => {
                             cursor: "pointer",
                             position: "relative"
                         }}
-                        onClick={() => navigate("/modules/ai-exploration")}
+                        onClick={() => navigate("/module/ai-exploration")}
                     >
 
                         <div style={{
@@ -820,7 +820,7 @@ const TeacherPlusPage = () => {
                             cursor: "pointer",
                             position: "relative"
                         }}
-                        onClick={() => navigate("/modules/ai-insights")}
+                        onClick={() => navigate("/module/ai-insights")}
                     >
 
                         <div style={{
@@ -889,7 +889,7 @@ const TeacherPlusPage = () => {
                             cursor: "pointer",
                             position: "relative"
                         }}
-                        onClick={() => navigate("/modules/ai-physics")}
+                        onClick={() => navigate("/module/ai-physics")}
                     >
 
                         <div style={{

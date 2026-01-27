@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getFirestore, doc, getDoc, addDoc, collection, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import useUserData from "../../hooks/useUserData";
+import DOMPurify from "dompurify";
 import module1 from "../../assets/modules/module1.png";
 import module2 from "../../assets/modules/module2.png";
 import module3 from "../../assets/modules/module3.png";
@@ -15,8 +15,6 @@ import OverlayTileView from "../../components/OverlayTileView";
 // Import default images for fallback - using module images instead since AI images don't exist
 // If you have these AI images in a different location, update the paths accordingly
 const aiExplorationImg = module1; // Fallback to module1 image
-const aiInsightsImg = module2;    // Fallback to module2 image  
-const aiPhysicsImg = module3;     // Fallback to module3 image
 
 const imageMap = {
   module1,
@@ -24,6 +22,75 @@ const imageMap = {
   module3,
   module4,
   module5,
+};
+
+const resolveModuleImage = (imageValue) => {
+  if (!imageValue) return module1;
+  if (typeof imageValue !== "string") return module1;
+  if (imageMap[imageValue]) return imageMap[imageValue];
+  if (/^https?:\/\//i.test(imageValue)) return imageValue;
+  return module1;
+};
+
+// Hardcoded modules for fallback (kept outside component for stable hooks deps)
+const HARDCODED_MODULES = {
+  "ai-exploration": {
+    title: "AI EXPLORATION",
+    subtitle: "Explore the fundamentals of artificial intelligence and discover how AI is transforming our world.",
+    image: aiExplorationImg,
+    description: "This comprehensive module introduces students to the exciting world of artificial intelligence. Learn about machine learning, neural networks, and real-world AI applications.",
+    requirements: "Basic computer literacy and curiosity about technology.",
+    learningObjectives: "By the end of this module, students will understand core AI concepts, be able to identify AI applications in daily life, and have hands-on experience with simple AI tools.",
+    details: [
+      { label: "Category", value: "Artificial Intelligence" },
+      { label: "Level", value: "Beginner" },
+      { label: "Type", value: "Interactive Course" },
+      { label: "Duration", value: "120 minutes" },
+    ],
+    resources: [
+      { title: "Introduction to AI Fundamentals", desc: "Learn the core ideas behind AI and where it shows up in everyday life.", type: "Lesson Plan", locked: false },
+      { title: "AI Applications Quiz", desc: "Test your understanding of real-world AI applications.", type: "Assignment", locked: false },
+      { title: "Build Your First AI Tool", desc: "A hands-on project to explore simple AI tooling and workflows.", type: "Project", locked: false }
+    ]
+  },
+  "ai-insights": {
+    title: "AI INSIGHTS",
+    subtitle: "Dive deeper into advanced AI concepts and their practical applications in various industries.",
+    image: module2,
+    description: "Building on foundational knowledge, this module explores advanced AI techniques, ethical considerations, and industry applications.",
+    requirements: "Completion of AI Exploration module or equivalent background knowledge.",
+    learningObjectives: "Students will master intermediate AI concepts, understand ethical implications of AI, and be able to evaluate AI solutions for real-world problems.",
+    details: [
+      { label: "Category", value: "Artificial Intelligence" },
+      { label: "Level", value: "Intermediate" },
+      { label: "Type", value: "Advanced Course" },
+      { label: "Duration", value: "180 minutes" },
+    ],
+    resources: [
+      { title: "Deep Learning Concepts", desc: "Understand neural networks, training, and evaluation at a high level.", type: "Lesson Plan", locked: false },
+      { title: "AI Ethics Discussion", desc: "Explore bias, fairness, and responsible AI design with examples.", type: "Assignment", locked: false },
+      { title: "AI Healthcare Project", desc: "Apply AI reasoning to a healthcare-style scenario and present findings.", type: "Project", locked: false },
+    ],
+  },
+  "ai-physics": {
+    title: "AI & PHYSICS",
+    subtitle: "Discover how artificial intelligence is revolutionizing physics research and scientific discovery.",
+    image: module3,
+    description: "Explore the fascinating intersection of AI and physics, from particle physics simulations to astronomical data analysis.",
+    requirements: "Basic understanding of physics concepts and familiarity with AI fundamentals.",
+    learningObjectives: "Learn how AI accelerates physics research, understand machine learning applications in scientific discovery, and explore career opportunities at the intersection of AI and physics.",
+    details: [
+      { label: "Category", value: "Physics, AI" },
+      { label: "Level", value: "Intermediate" },
+      { label: "Type", value: "Specialized Course" },
+      { label: "Duration", value: "150 minutes" },
+    ],
+    resources: [
+      { title: "AI in Physics Research", desc: "Survey where AI is used in modern physics workflows.", type: "Lesson Plan", locked: false },
+      { title: "Physics Simulation Lab", desc: "Hands-on activity exploring simulations and interpretation.", type: "Assignment", locked: false },
+      { title: "Quantum Computing & AI", desc: "Project: compare how AI can help analyze complex physics data.", type: "Project", locked: false },
+    ],
+  }
 };
 
 const ModuleDetail = () => {
@@ -54,155 +121,10 @@ const ModuleDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Form states for editing
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [requirements, setRequirements] = useState("");
-  const [learningObjectives, setLearningObjectives] = useState("");
-  const [tags, setTags] = useState([]);
-  const [newTag, setNewTag] = useState("");
-  const [lessonPlanMap, setLessonPlanMap] = useState({});
   const [lessonPlans, setLessonPlans] = useState([]);
-  const [draggedIndex, setDraggedIndex] = useState(null);
-  const [selectedLessonIds, setSelectedLessonIds] = useState(new Set());
-  const [selectedImage, setSelectedImage] = useState("module1");
-  const [portalContent, setPortalContent] = useState("");
   const [showOverlay, setShowOverlay] = useState(false);
 
-  // Hardcoded modules for fallback
-  const HARDCODED_MODULES = {
-    "ai-exploration": {
-      title: "AI EXPLORATION",
-      subtitle: "Explore the basics of AI and its applications.",
-      image: aiExplorationImg,
-      description: "Explore various AI applications and their impact.",
-      requirements: "Familiarity with computers and Internet",
-      learningObjectives: "Learn the foundational concepts of AI",
-      details: [
-        { label: "Category", value: "AI" },
-        { label: "Level", value: "Beginner" },
-        { label: "Time Estimate", value: "2 hours" },
-      ],
-      resources: [
-        { title: "Introduction to Java Arrays", desc: "Introductory lesson discussing the fundamentals of arrays in Java programming.", type: "Lesson Plan", locked: false },
-        { title: "Quiz on Array Basics", desc: "Test your knowledge on what you've learned about arrays.", type: "Lesson Plan", locked: true },
-        { title: "Assignment: Array Operations", desc: "Practice implementing common array operations in Java.", type: "Lesson Plan", locked: false }
-      ]
-    }
-  };
-
-  useEffect(() => {
-    if (moduleId === "create") {
-      setMode("create");
-      setIsEditMode(true);
-      fetchLessonPlans();
-    } else if (moduleId) {
-      setMode("view");
-      setIsEditMode(false);
-      fetchModuleDetails();
-    }
-  }, [moduleId]);
-
-  const fetchModuleDetails = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Check if it's a hardcoded module first
-      if (HARDCODED_MODULES[moduleId]) {
-        const hardcodedData = HARDCODED_MODULES[moduleId];
-        setModuleData(hardcodedData);
-        setTitle(hardcodedData.title);
-        setDescription(hardcodedData.description);
-        setRequirements(hardcodedData.requirements);
-        setLearningObjectives(hardcodedData.learningObjectives);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch from Firestore
-      const db = getFirestore();
-      const moduleDoc = await getDoc(doc(db, "module", moduleId));
-
-      if (!moduleDoc.exists()) {
-        setError("Module not found");
-        setLoading(false);
-        return;
-      }
-
-      const data = moduleDoc.data();
-      console.log("Fetched module data:", data); // Debug log
-
-      // Support both schemas:
-      // - legacy/other: { lessonPlans: {0: "<lessonId>", 1: "<lessonId>" ... } }
-      // - module builder: { lessons: ["<lessonId>", "<lessonId>", ...] }
-      const lessonIdsFromLessonPlans =
-        data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
-          ? Object.values(data.lessonPlans).filter(Boolean)
-          : [];
-      const lessonIdsFromLessons = Array.isArray(data.lessons) ? data.lessons.filter(Boolean) : [];
-      const lessonPlanIds = lessonIdsFromLessonPlans.length > 0 ? lessonIdsFromLessonPlans : lessonIdsFromLessons;
-
-      const resolvedLessonPlanMap =
-        data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
-          ? data.lessonPlans
-          : lessonPlanIds.reduce((acc, id, idx) => {
-              acc[idx] = id;
-              return acc;
-            }, {});
-
-      const categoryRaw = data.category ?? data.Category;
-      const levelRaw = data.level ?? data.Level;
-      const typeRaw = data.type ?? data.Type;
-      const durationRaw = data.duration ?? data.Duration;
-
-      // Transform Firestore data to display format
-      const transformedData = {
-        title: data.title?.toUpperCase() || "UNTITLED MODULE",
-        subtitle: data.description || "No description available",
-        image: imageMap[data.image] || module1,
-        description: data.description || "No description available",
-        requirements: data.requirements || "No specific requirements",
-        learningObjectives: data.learningObjectives || "Objectives will be defined",
-        details: [
-          { label: "Category", value: Array.isArray(categoryRaw) ? categoryRaw.join(", ") : categoryRaw || "N/A" },
-          { label: "Level", value: Array.isArray(levelRaw) ? levelRaw.join(", ") : levelRaw || "N/A" },
-          { label: "Type", value: Array.isArray(typeRaw) ? typeRaw.join(", ") : typeRaw || "N/A" },
-          {
-            label: "Duration",
-            value: durationRaw
-              ? typeof durationRaw === "string" && durationRaw.toLowerCase().includes("minute")
-                ? durationRaw
-                : `${durationRaw} minutes`
-              : "N/A",
-          },
-        ],
-        resources: []
-      };
-
-      setModuleData(transformedData);
-      setTitle(data.title || "");
-      setDescription(data.description || "");
-      setRequirements(data.requirements || "");
-      setLearningObjectives(data.learningObjectives || "");
-      setTags(data.tags || []);
-      setLessonPlanMap(resolvedLessonPlanMap);
-      setSelectedImage(data.image || "module1");
-
-      // Fetch lesson plans if they exist
-      if (lessonPlanIds.length > 0) {
-        await fetchLessonDetails(lessonPlanIds);
-      }
-
-    } catch (error) {
-      console.error("Error fetching module:", error);
-      setError("Error loading module data: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchLessonDetails = async (ids) => {
+  const fetchLessonDetails = useCallback(async (ids) => {
     try {
       const auth = getAuth();
       const user = auth.currentUser;
@@ -269,10 +191,88 @@ const ModuleDetail = () => {
     } catch (error) {
       console.error("Error fetching lesson details:", error);
     }
-  };
+  }, []);
 
-  // Keep all your existing functions (fetchLessonPlans, etc.)
-  const fetchLessonPlans = async () => {
+  const fetchModuleDetails = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Check if it's a hardcoded module first
+      if (HARDCODED_MODULES[moduleId]) {
+        const hardcodedData = HARDCODED_MODULES[moduleId];
+        setModuleData(hardcodedData);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch from Firestore
+      const db = getFirestore();
+      const moduleDoc = await getDoc(doc(db, "module", moduleId));
+
+      if (!moduleDoc.exists()) {
+        setError("Module not found");
+        setLoading(false);
+        return;
+      }
+
+      const data = moduleDoc.data();
+      console.log("Fetched module data:", data); // Debug log
+
+      // Support both schemas:
+      // - legacy/other: { lessonPlans: {0: "<lessonId>", 1: "<lessonId>" ... } }
+      // - module builder: { lessons: ["<lessonId>", "<lessonId>", ...] }
+      const lessonIdsFromLessonPlans =
+        data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
+          ? Object.values(data.lessonPlans).filter(Boolean)
+          : [];
+      const lessonIdsFromLessons = Array.isArray(data.lessons) ? data.lessons.filter(Boolean) : [];
+      const lessonPlanIds = lessonIdsFromLessonPlans.length > 0 ? lessonIdsFromLessonPlans : lessonIdsFromLessons;
+
+      const categoryRaw = data.category ?? data.Category;
+      const levelRaw = data.level ?? data.Level;
+      const typeRaw = data.type ?? data.Type;
+      const durationRaw = data.duration ?? data.Duration;
+
+      // Transform Firestore data to display format
+      const transformedData = {
+        title: data.title?.toUpperCase() || "UNTITLED MODULE",
+        subtitle: data.description || "No description available",
+        image: imageMap[data.image] || module1,
+        description: data.description || "No description available",
+        requirements: data.requirements || "No specific requirements",
+        learningObjectives: data.learningObjectives || "Objectives will be defined",
+        details: [
+          { label: "Category", value: Array.isArray(categoryRaw) ? categoryRaw.join(", ") : categoryRaw || "N/A" },
+          { label: "Level", value: Array.isArray(levelRaw) ? levelRaw.join(", ") : levelRaw || "N/A" },
+          { label: "Type", value: Array.isArray(typeRaw) ? typeRaw.join(", ") : typeRaw || "N/A" },
+          {
+            label: "Duration",
+            value: durationRaw
+              ? typeof durationRaw === "string" && durationRaw.toLowerCase().includes("minute")
+                ? durationRaw
+                : `${durationRaw} minutes`
+              : "N/A",
+          },
+        ],
+        resources: [],
+      };
+
+      setModuleData(transformedData);
+
+      // Fetch lesson plans if they exist
+      if (lessonPlanIds.length > 0) {
+        await fetchLessonDetails(lessonPlanIds);
+      }
+    } catch (error) {
+      console.error("Error fetching module:", error);
+      setError("Error loading module data: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [moduleId, fetchLessonDetails]);
+
+  const fetchLessonPlans = useCallback(async () => {
     try {
       const auth = getAuth();
       const user = auth.currentUser;
@@ -291,170 +291,44 @@ const ModuleDetail = () => {
       const responses = await Promise.all(lessonPlanRequests);
       const fetchedPlans = responses;
 
-      const plansMap = fetchedPlans.reduce((acc, plan, index) => {
-        acc[index] = plan.id;
-        return acc;
-      }, {});
-
       setLessonPlans(fetchedPlans);
-      setLessonPlanMap(plansMap);
     } catch (error) {
       console.error("Error fetching lesson plans:", error);
     }
-  };
+  }, [location.state?.selectedPlans]);
 
-  // Your existing handler functions remain the same
-  const addTag = () => {
-    if (newTag.trim()) {
-      setTags([...tags, newTag.trim()]);
-      setNewTag("");
-    }
-  };
-
-  const removeTag = (index) => {
-    setTags(tags.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const db = getFirestore();
-      const newModule = {
-        title,
-        description,
-        requirements,
-        learningObjectives,
-        tags,
-        lessonPlans: lessonPlanMap,
-        image: selectedImage,
-        category: [], // Add default values
-        level: [],
-        type: [],
-        duration: "",
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-
-      const moduleRef = await addDoc(collection(db, "module"), newModule);
-      navigate(`/module/${moduleRef.id}`);
-    } catch (error) {
-      console.error("Error creating module:", error);
-    }
-  };
-
-  const handleUpdate = async () => {
-    try {
-      const db = getFirestore();
-      const updated = {
-        title,
-        description,
-        requirements,
-        learningObjectives,
-        tags,
-        lessonPlans: lessonPlanMap,
-        image: selectedImage,
-        updatedAt: new Date()
-      };
-
-      await updateDoc(doc(db, "module", moduleId), updated);
+  useEffect(() => {
+    if (moduleId === "create") {
+      setMode("create");
+      setIsEditMode(true);
+      fetchLessonPlans();
+    } else if (moduleId) {
+      setMode("view");
       setIsEditMode(false);
-      fetchModuleDetails(); // Refresh data
-    } catch (error) {
-      console.error("Error updating module:", error);
+      fetchModuleDetails();
     }
-  };
+  }, [moduleId, fetchLessonPlans, fetchModuleDetails]);
 
-  // Rest of your existing code remains exactly the same...
-  const sectionRowStyle = {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 80
-  };
-
-  const sectionLeftStyle = {
-    flex: "0 0 280px",
-    fontWeight: 800,
-    fontSize: "1.8rem",
-    color: "#111",
-    textAlign: "left"
-  };
-
-  const tableStyle = {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    marginLeft: 0,
-    width: "100%"
-  };
-
-  const tableRowStyle = {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "16px 0",
-    width: "100%"
-  };
-
-  const tableLabelStyle = {
-    flex: "0 0 140px",
-    fontWeight: 600,
-    fontSize: "1.1rem",
-    color: "#666",
-    textAlign: "left"
-  };
-
-  const tableValueStyle = {
-    flex: 1,
-    fontSize: "1.1rem",
-    color: "#111",
-    fontWeight: 600,
-    textAlign: "right"
-  };
-
-  const doubleColRowStyle = {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    padding: "12px 0",
-    width: "100%"
-  };
-
-  const doubleColRightStyle = {
-    flex: 1,
-    fontSize: "1.1rem",
-    color: "#111",
-    fontWeight: 500,
-    textAlign: "right",
-    paddingLeft: 20
-  };
-
-  const resourceCardStyle = {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    background: "#fff",
-    border: "1px solid #e9ecef",
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    width: "100%",
-    cursor: "pointer",
-    transition: "all 0.2s ease"
-  };
-
-  const getResourceIcon = (type) => {
-    return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBzdHJva2U9IiMxMTEiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=";
-  };
+  // (legacy layout style helpers removed; Screenshot 2 style is inlined below)
 
   const handleLessonClick = (resource, index) => {
     if (resource.id) {
       navigate(`/lesson/${resource.id}`);
+      return;
     }
+    // Featured/hardcoded modules don't have Firestore lesson IDs; use the legacy lesson route.
+    navigate(`/lesson/${moduleId}/${index}`, {
+      state: {
+        lesson: {
+          title: resource.title,
+          desc: resource.desc,
+          type: resource.type,
+          locked: false,
+        },
+        moduleTitle: moduleData?.title,
+        moduleId,
+      },
+    });
   };
 
   // Download removed from module lesson cards (per UX request)
@@ -680,7 +554,7 @@ const ModuleDetail = () => {
             justifyContent: "center"
           }}>
             <img
-              src={module.image}
+              src={resolveModuleImage(module.image)}
               alt={module.title}
               style={{
                 width: "100%",
@@ -689,7 +563,8 @@ const ModuleDetail = () => {
                 borderRadius: 14
               }}
               onError={e => {
-                e.target.src = module1;
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = module1;
               }}
             />
           </div>
@@ -697,221 +572,187 @@ const ModuleDetail = () => {
       </div>
 
 
-      {/* Module Details */}
-      <div style={{
-        maxWidth: 1100,
-        margin: "96px auto 0 auto",
-        padding: "0 20px",
-        ...sectionRowStyle
-      }}>
-        <div style={sectionLeftStyle}>
+      {/* Module Details (Screenshot 2 style) */}
+      <div style={{ maxWidth: 1100, margin: "96px auto 0 auto", padding: "0 20px" }}>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
           Module Details
         </div>
-        <div style={tableStyle}>
+        <div style={{ background: "#fff", border: "1px solid #ececec", borderRadius: 8, overflow: "hidden" }}>
           {module.details?.map((item, idx) => (
             <div
               key={item.label}
               style={{
-                ...tableRowStyle,
-                borderBottom: idx < module.details.length - 1 ? "1px solid #ececec" : "none"
+                display: "flex",
+                borderBottom: idx < (module.details?.length || 0) - 1 ? "1px solid #ececec" : "none",
               }}
             >
-              <div style={tableLabelStyle}>{item.label}</div>
-              <div style={tableValueStyle}>{item.value}</div>
+              <div
+                style={{
+                  padding: "20px 24px",
+                  width: 200,
+                  fontWeight: 600,
+                  color: "#444",
+                  borderRight: "1px solid #ececec",
+                  background: "#f8f9fa",
+                }}
+              >
+                {item.label}
+              </div>
+              <div style={{ flex: 1, padding: "20px 24px", color: "#111", fontWeight: 600 }}>
+                {item.value}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Requirements */}
-      <div style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "0 20px",
-        ...sectionRowStyle,
-        paddingTop: 80
-      }}>
-        <div style={sectionLeftStyle}>Requirements</div>
-        <div style={tableStyle}>
-          <div style={{
-            ...doubleColRowStyle,
-            borderBottom: "none"
-          }}>
-            <div style={{
-              ...doubleColRightStyle,
-              paddingLeft: 0,
-              textAlign: "left"
-            }}
-              dangerouslySetInnerHTML={{ __html: module.requirements }}
-            >
-            </div>
-          </div>
+      {/* Requirements (Screenshot 2 style) */}
+      <div style={{ maxWidth: 1100, margin: "80px auto 0 auto", padding: "0 20px" }}>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
+          Requirements
         </div>
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #ececec",
+            borderRadius: 8,
+            padding: "24px",
+            color: "#007bff",
+            lineHeight: "1.6",
+          }}
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(module.requirements || "No specific requirements"),
+          }}
+        />
       </div>
 
-      {/* Module Description */}
-      <div style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "0 20px",
-        ...sectionRowStyle,
-        paddingTop: 80
-      }}>
-        <div style={sectionLeftStyle}>Module Description</div>
-        <div style={tableStyle}>
-          <div style={{
-            ...doubleColRowStyle,
-            borderBottom: "none"
-          }}>
-            <div style={{
-              ...doubleColRightStyle,
-              paddingLeft: 0,
-              textAlign: "left"
-            }}
-              dangerouslySetInnerHTML={{ __html: module.description }}
-            >
-            </div>
-          </div>
+      {/* Module Description (Screenshot 2 style) */}
+      <div style={{ maxWidth: 1100, margin: "80px auto 0 auto", padding: "0 20px" }}>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
+          Module Description
         </div>
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #ececec",
+            borderRadius: 8,
+            padding: "24px",
+            color: "#007bff",
+            lineHeight: "1.6",
+          }}
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(module.description || "No description available"),
+          }}
+        />
       </div>
 
-      {/* Learning Objectives */}
-      <div style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "0 20px",
-        ...sectionRowStyle,
-        paddingTop: 80
-      }}>
-        <div style={sectionLeftStyle}>Learning Objectives</div>
-        <div style={tableStyle}>
-          <div style={{
-            ...doubleColRowStyle,
-            borderBottom: "none"
-          }}>
-            <div style={{
-              ...doubleColRightStyle,
-              paddingLeft: 0,
-              textAlign: "left"
-            }}
-              dangerouslySetInnerHTML={{ __html: module.learningObjectives }}
-            >
-            </div>
-          </div>
+      {/* Learning Objectives (Screenshot 2 style) */}
+      <div style={{ maxWidth: 1100, margin: "80px auto 0 auto", padding: "0 20px" }}>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
+          Learning Objectives
         </div>
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #ececec",
+            borderRadius: 8,
+            padding: "24px",
+            color: "#007bff",
+            lineHeight: "1.6",
+          }}
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(module.learningObjectives || "Learning objectives will be defined"),
+          }}
+        />
       </div>
 
-      {/* Lesson Plans */}
-      <div style={{
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "0 20px",
-        ...sectionRowStyle,
-        alignItems: "flex-start",
-        paddingTop: 80,
-        paddingBottom: 80
-      }}>
-        <div style={sectionLeftStyle}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 16 }}>
-            <span>Lesson Plans</span>
-            {userData?.role === "admin" && (
-              <button
-                onClick={() => setIsEditMode(true)}
-                style={{
-                  background: "#162040",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 4,
-                  padding: "8px 16px",
-                  fontSize: "0.9rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "background 0.2s ease",
-                  whiteSpace: "nowrap"
-                }}
-                onMouseEnter={(e) => e.target.style.background = "#0f1530"}
-                onMouseLeave={(e) => e.target.style.background = "#162040"}
-              >
-                Edit Module
-              </button>
-            )}
-          </div>
+      {/* Lesson Plans (Screenshot 2 style) */}
+      <div style={{ maxWidth: 1100, margin: "80px auto 0 auto", padding: "0 20px 80px 20px" }}>
+        <div style={{ fontSize: "2rem", fontWeight: 700, color: "#111", marginBottom: 24, textAlign: "left" }}>
+          Lesson Plans
         </div>
-        <div style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          marginLeft: 0,
-          width: "100%"
-        }}>
+
+        <div style={{ marginBottom: 24, display: "flex", gap: 12, alignItems: "center" }}>
+          <button
+            type="button"
+            onClick={() => navigate(`/all-lesson-plans/${moduleId}`)}
+            style={{
+              background: "#162040",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "14px 20px",
+              fontSize: "1rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "background 0.2s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#0f1530")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#162040")}
+          >
+            All Lesson Plans
+          </button>
+
+          {userData?.role === "admin" && (
+            <button
+              type="button"
+              onClick={() => setIsEditMode(true)}
+              style={{
+                background: "#f8f9fa",
+                color: "#162040",
+                border: "1px solid #dee2e6",
+                borderRadius: 8,
+                padding: "14px 20px",
+                fontSize: "1rem",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Edit Module
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {module.resources && module.resources.length > 0 ? (
-            module.resources.map((res, idx) => (
-              <div
-                key={res.id || idx}
-                className="resource-card"
-                style={resourceCardStyle}
-                onClick={() => handleLessonClick(res, idx)}
-              >
-                <div style={{
-                  width: 56,
-                  height: 56,
-                  background: "#f8f9fa",
-                  borderRadius: 8,
-                  marginRight: 16,
-                  flexShrink: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "1px solid #e9ecef"
-                }}>
-                  <img
-                    src={getResourceIcon(res.type)}
-                    alt={res.type}
-                    style={{
-                      width: 32,
-                      height: 32,
-                      objectFit: "contain"
-                    }}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: "1.25rem", marginBottom: 6 }}>{res.title}</div>
-                  <div
-                    style={{
-                      color: "#666",
-                      fontSize: 16,
-                      marginBottom: 10,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                      lineHeight: "1.35",
-                    }}
-                    title={res.desc}
-                  >
-                    {res.desc}
-                  </div>
+            module.resources.map((res, idx) => {
+              const durationPart =
+                res.duration && res.duration !== "—"
+                  ? ` • ${String(res.duration).includes("min") ? res.duration : `${res.duration} min`}`
+                  : "";
 
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 14, color: "#444" }}>
-                    <div><span style={{ fontWeight: 600, color: "#666" }}>Type:</span> <span style={{ color: "#222" }}>{res.type}</span></div>
-                    <div><span style={{ fontWeight: 600, color: "#666" }}>Level:</span> <span style={{ color: "#222" }}>{res.level ?? "—"}</span></div>
-                    <div><span style={{ fontWeight: 600, color: "#666" }}>Duration:</span> <span style={{ color: "#222" }}>{res.duration ?? "—"}{res.duration !== "—" ? " minutes" : ""}</span></div>
-                    <div><span style={{ fontWeight: 600, color: "#666" }}>Sections:</span> <span style={{ color: "#222" }}>{res.sectionsCount ?? 0}</span></div>
+              return (
+                <div
+                  key={res.id || idx}
+                  className="resource-card"
+                  onClick={() => handleLessonClick(res, idx)}
+                  style={{
+                    background: "#fff",
+                    border: "1px solid #ececec",
+                    borderRadius: 8,
+                    padding: "20px 24px",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, color: "#222", fontSize: "1.1rem", marginBottom: 4 }}>
+                      {res.title}
+                    </div>
+                    <div style={{ color: "#666", fontSize: "0.9rem" }}>
+                      {(res.type || "Lesson Plan") + durationPart}
+                    </div>
                   </div>
-
-                  {/* Lock/Unlock badge removed per UX request */}
+                  <div style={{ color: "#162040", fontSize: "1.2rem" }}>→</div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
-            <div style={{
-              padding: "40px",
-              textAlign: "center",
-              color: "#666",
-              fontSize: "1.1rem",
-              fontStyle: "italic"
-            }}>
+            <div style={{ padding: "40px", textAlign: "center", color: "#666", fontSize: "1.1rem", fontStyle: "italic" }}>
               No lesson plans available for this module.
             </div>
           )}
@@ -921,7 +762,7 @@ const ModuleDetail = () => {
       {/* Show Overlay if showOverlay is true */}
       {showOverlay && (
         <OverlayTileView
-          content={portalContent}
+          content={lessonPlans}
           onClose={() => setShowOverlay(false)}
           onSelectMaterial={() => { }}
           initialSelectedTiles={lessonPlans.map((lesson) => lesson.id)}

@@ -1,21 +1,10 @@
 import React, { useState, useEffect } from "react";
 import useUserData from "../hooks/useUserData";
 import logo from "../assets/DIYA_Logo.png";
-import axios from "axios";
-import {
-  getAuth,
-  signInWithRedirect,
-  GoogleAuthProvider,
-  signOut,
-} from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-import { useNavigate, useLocation } from "react-router-dom";
+import { getAuth } from "firebase/auth";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import defaultUserIcon from "../assets/default_user_icon.png";
-
-// Define the users collection
-const SCHEMA_QUALIFIER = `${process.env.REACT_APP_DATABASE_SCHEMA_QUALIFIER}`;
-const TABLE_USERS = SCHEMA_QUALIFIER + "users";
+import { startGoogleRedirect } from "../auth/googleAuth";
 
 const Navbar = () => {
   const { userData, logout } = useUserData();
@@ -57,39 +46,24 @@ const Navbar = () => {
 
   const handleSignUpSubmit = async (e) => {
     e.preventDefault();
-    const auth = getAuth();
     try {
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: "select_account" });
-      const result = await signInWithRedirect(auth, provider);
-      const user = result.user;
-      const token = await user.getIdToken();
-      const response = await axios.post(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/register`,
-        {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          institution: formData.institution,
-          userType: formData.userType,
-          jobTitle: formData.jobTitle,
-          subjects: formData.subjects,
-          email: user.email,
-          fullName: user.displayName,
+      await startGoogleRedirect({
+        returnTo: `${location.pathname}${location.search || ""}`,
+        promptSelectAccount: true,
+        action: {
+          type: "registerUser",
+          payload: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            institution: formData.institution,
+            userType: formData.userType,
+            jobTitle: formData.jobTitle,
+            subjects: formData.subjects,
+          },
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (response.status === 201) {
-        setIsSignUpModalOpen(false);
-        setTimeout(() => {
-          window.close();
-        }, 1000);
-      } else {
-        throw new Error("Signup failed. Please try again.");
-      }
+      });
     } catch (error) {
-      console.error("Signup error:", error.response?.data?.message || error.message);
+      console.error("Signup error:", error?.message || error);
       alert("Signup failed. Please check your information and try again.");
     }
   };
@@ -148,46 +122,15 @@ const Navbar = () => {
     navigate({ search: params.toString() }, { replace: true });
   };
 
-  const handleProfileClick = () => {
-    navigate("/user-profile");
-  };
-
   // Google login handler with Firestore check
   const handleGoogleLogin = async () => {
     setErrorMsg("");
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithRedirect(auth, provider);
-      const user = result.user;
-      const teacherDoc = await getDoc(doc(db, "teachers", user.uid));
-
-      if (teacherDoc.exists()) {
-        const userData = teacherDoc.data();
-        console.log("User role:", userData.role); // Debug log
-
-        // Redirect based on user role
-        if (userData.role === "teacherPlus") {
-          navigate("/teacher-plus");
-        } else if (userData.role === "admin") {
-          navigate("/"); // or wherever admins should go
-        } else {
-          navigate("/"); // teacherDefault goes to home
-        }
-      } else {
-        // Check if it's a student
-        const studentDoc = await getDoc(doc(db, "students", user.uid));
-        if (!teacherDoc.exists() && !studentDoc.exists()) {
-          await signOut(auth);
-          navigate("?showSignUpPopup=1", { replace: false });
-          setErrorMsg(renderSignUpError());
-          return;
-        }
-        // Student login - redirect to home or student dashboard
-        navigate("/");
-      }
+      await startGoogleRedirect({
+        returnTo: `${location.pathname}${location.search || ""}`,
+      });
     } catch (error) {
-      setErrorMsg(error.message);
+      setErrorMsg(error?.message || "Login failed. Please try again.");
     }
   };
 
@@ -237,9 +180,8 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center space-x-0 ml-auto">
-          <a
-            href={process.env.REACT_APP_HOME_PAGE}
-            rel="noopener noreferrer"
+          <Link
+            to="/"
             className="hover:underline"
             style={{
               fontSize: "15px",
@@ -259,7 +201,7 @@ const Navbar = () => {
             }}
           >
             Home
-          </a>
+          </Link>
 
           {/* Conditional nav links based on user role */}
           {isTeacherDefault && (

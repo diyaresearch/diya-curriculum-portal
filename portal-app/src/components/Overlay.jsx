@@ -7,7 +7,7 @@ import useUserData from "../hooks/useUserData";
 const Overlay = ({ content, onClose }) => {
   const navigate = useNavigate();
   const [showOptions, setShowOptions] = useState(false);
-  const { user, userData } = useUserData();
+  const { userData } = useUserData();
 
   if (!content) return null;
 

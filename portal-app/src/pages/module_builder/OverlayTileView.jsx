@@ -25,20 +25,6 @@ const OverlayTileView = ({
   const itemsPerPage = 6;
   const [selectedTiles, setSelectedTiles] = useState(initialSelectedTiles || []);
 
-  useEffect(() => {
-    setFilteredContent(content);
-  }, [content]);
-
-  useEffect(() => {
-    setSelectedCategory(category || "");
-    setSelectedType(type || "");
-    setSelectedLevel(level || "");
-  }, [category, type, level]);
-
-  useEffect(() => {
-    filterContent();
-  }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
-
   const filterContent = useCallback(() => {
     let filtered = [...content];
 
@@ -70,6 +56,20 @@ const OverlayTileView = ({
     }
     setFilteredContent(filtered);
   }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
+
+  useEffect(() => {
+    setFilteredContent(content);
+  }, [content]);
+
+  useEffect(() => {
+    setSelectedCategory(category || "");
+    setSelectedType(type || "");
+    setSelectedLevel(level || "");
+  }, [category, type, level]);
+
+  useEffect(() => {
+    filterContent();
+  }, [filterContent]);
 
   const handlePageChange = (direction) => {
     if (direction === "prev" && currentPage > 1) {

@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { collection, setDoc, doc, query, where, getDocs } from "firebase/firestore";
 import { db } from '../../firebase/firebaseConfig';
-import { getAuth, signInWithRedirect, GoogleAuthProvider, signOut } from "firebase/auth";
+import { getAuth, signOut } from "firebase/auth";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MultiSelectDropdown, SingleSelectDropdown } from "../../components/Dropdowns";
 import SignupSuccess from "../../components/SignupSuccess";
+import { startGoogleRedirect } from "../../auth/googleAuth";
 
 const SUBJECT_OPTIONS = [
   "CS",
@@ -17,32 +19,18 @@ const SUBJECT_OPTIONS = [
 
 const GRADE_OPTIONS = ["5 or lower", "6–8", "9–12"];
 
-// Shared login handler for both forms, now returns a boolean for account existence
-async function handleGoogleLogin(setError, setShowNoAccountPopup) {
+async function handleGoogleLogin({ setError, returnTo }) {
   setError("");
-  const auth = getAuth();
-  const provider = new GoogleAuthProvider();
   try {
-    const result = await signInWithRedirect(auth, provider);
-    const user = result.user;
-    // Check both collections for this email
-    const teacherDoc = await getDocs(query(collection(db, "teachers"), where("email", "==", user.email)));
-    const studentDoc = await getDocs(query(collection(db, "students"), where("email", "==", user.email)));
-    if (teacherDoc.empty && studentDoc.empty) {
-      await signOut(auth);
-      setShowNoAccountPopup(true);
-      return false;
-    }
-    // else: proceed as normal (user is in Firestore)
-    window.location.href = "/"; // or use navigate if using react-router
-    return true;
+    await startGoogleRedirect({ returnTo });
   } catch (error) {
-    setError(error.message || "Login failed. Please try again.");
-    return false;
+    setError(error?.message || "Login failed. Please try again.");
   }
 }
 
 export function TeacherSignup() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [subjects, setSubjects] = useState([]);
   const [grades, setGrades] = useState([]);
   const [fullName, setFullName] = useState("");
@@ -56,15 +44,40 @@ export function TeacherSignup() {
   const [googleUser, setGoogleUser] = useState(null);
   const [showNoAccountPopup, setShowNoAccountPopup] = useState(false);
 
+  const returnTo = `${location.pathname}${location.search || ""}`;
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setGoogleUser(user);
+      if (user?.email) setEmail(user.email);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setShowNoAccountPopup(params.get("showSignUpPopup") === "1");
+  }, [location.search]);
+
+  const closeNoAccountPopup = () => {
+    setShowNoAccountPopup(false);
+    const params = new URLSearchParams(location.search);
+    params.delete("showSignUpPopup");
+    navigate(
+      { pathname: location.pathname, search: params.toString() ? `?${params.toString()}` : "" },
+      { replace: true }
+    );
+  };
+
   // Require Google sign-in before registration
   const handleGoogleSignup = async () => {
     setError("");
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithRedirect(auth, provider);
-      setGoogleUser(result.user);
-      setEmail(result.user.email); // Pre-fill email
+      await startGoogleRedirect({
+        returnTo,
+        promptSelectAccount: true,
+      });
     } catch (err) {
       setError("Google sign-in failed. Please try again.");
     }
@@ -125,7 +138,7 @@ export function TeacherSignup() {
           name={registeredName}
           type="Teacher"
           onLogin={async () => {
-            await handleGoogleLogin(setError, setShowNoAccountPopup);
+            await handleGoogleLogin({ setError, returnTo });
           }}
         />
         {showNoAccountPopup && (
@@ -153,7 +166,7 @@ export function TeacherSignup() {
               }}
             >
               <button
-                onClick={() => setShowNoAccountPopup(false)}
+                onClick={closeNoAccountPopup}
                 style={{
                   position: "absolute",
                   top: 12,
@@ -227,7 +240,7 @@ export function TeacherSignup() {
         </p>
         <button
           type="button"
-          onClick={() => handleGoogleLogin(setError)}
+          onClick={() => handleGoogleLogin({ setError, returnTo })}
           style={{
             marginTop: 16,
             background: "#FFC940",
@@ -384,6 +397,8 @@ export function TeacherSignup() {
 }
 
 export function StudentSignup() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [grade, setGrade] = useState("");
@@ -395,14 +410,39 @@ export function StudentSignup() {
   const [googleUser, setGoogleUser] = useState(null);
   const [showNoAccountPopup, setShowNoAccountPopup] = useState(false);
 
+  const returnTo = `${location.pathname}${location.search || ""}`;
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setGoogleUser(user);
+      if (user?.email) setEmail(user.email);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    setShowNoAccountPopup(params.get("showSignUpPopup") === "1");
+  }, [location.search]);
+
+  const closeNoAccountPopup = () => {
+    setShowNoAccountPopup(false);
+    const params = new URLSearchParams(location.search);
+    params.delete("showSignUpPopup");
+    navigate(
+      { pathname: location.pathname, search: params.toString() ? `?${params.toString()}` : "" },
+      { replace: true }
+    );
+  };
+
   const handleGoogleSignup = async () => {
     setError("");
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithRedirect(auth, provider);
-      setGoogleUser(result.user);
-      setEmail(result.user.email);
+      await startGoogleRedirect({
+        returnTo,
+        promptSelectAccount: true,
+      });
     } catch (err) {
       setError("Google sign-in failed. Please try again.");
     }
@@ -460,7 +500,7 @@ export function StudentSignup() {
           name={registeredName}
           type="Student"
           onLogin={async () => {
-            await handleGoogleLogin(setError, setShowNoAccountPopup);
+            await handleGoogleLogin({ setError, returnTo });
           }}
         />
         {showNoAccountPopup && (
@@ -488,7 +528,7 @@ export function StudentSignup() {
               }}
             >
               <button
-                onClick={() => setShowNoAccountPopup(false)}
+                onClick={closeNoAccountPopup}
                 style={{
                   position: "absolute",
                   top: 12,
@@ -563,7 +603,7 @@ export function StudentSignup() {
         </p>
         <button
           type="button"
-          onClick={() => handleGoogleLogin(setError)}
+          onClick={() => handleGoogleLogin({ setError, returnTo })}
           style={{
             marginTop: 16,
             background: "#FFC940",

@@ -4,7 +4,6 @@ import "./index.css";
 import { EditContent } from "./pages/edit_content";
 import Home from "./pages/home";
 import { UploadContent } from "./pages/upload-content";
-import ViewContent from "./pages/view-content";
 import LessonGenerator from "./pages/lesson_generator";
 import EditLesson from "./pages/edit_lesson";
 import MyPlans from "./pages/my_plan";
@@ -12,8 +11,6 @@ import LessonDetail from "./pages/lesson_detail";
 import LessonDetailNew from "./pages/lesson_detail/LessonDetail";
 import Layout from "./components/Layout";
 import UserProfile from "./pages/profile_detail";
-// Import the CORRECT component that has the hardcoded modules
-// import ModuleDetail from "./pages/modules/ModuleDetail";
 import ModuleDetail from "./pages/module_detail"; // This one fetches from Firestore
 // Import the editing component with a different name
 import AllLessonPlans from "./pages/all_lesson_plans";
@@ -25,8 +22,6 @@ import NuggetDetails from "./pages/nugget-details";
 import LessonPlanDrafts from "./pages/lesson-plans/drafts";
 import NuggetBuilderPage from "./pages/nugget-builder";
 import TeacherPlusPage from "./pages/teacherplus/teacherplusPage";
-import ProtectedRoute from './components/ProtectedRoute';
-import ModuleDetails from './components/ModuleDetails';
 import LessonDetails from './components/LessonDetails';
 import ContentDetails from './components/ContentDetails';
 import CancelSubscriptionPage from './pages/cancel-subscription/CancelSubscriptionPage';
@@ -51,9 +46,7 @@ function App() {
           <Route path="/lesson/:moduleId/:lessonIndex" element={<LessonDetailNew />} />
           <Route path="/user-profile" element={<UserProfile />} />
           {/* Use the correct component for viewing modules */}
-          {/* <Route path="/modules/:moduleId" element={<ModuleDetail />} /> */}
           <Route path="/module/:moduleId" element={<ModuleDetail />} />
-          <Route path="/modules/:moduleId" element={<ModuleDetails />} />
           <Route path="/all-lesson-plans/:moduleId" element={<AllLessonPlans />} />
           <Route path="/teacher-signup" element={<TeacherSignup />} />
           <Route path="/student-signup" element={<StudentSignup />} />

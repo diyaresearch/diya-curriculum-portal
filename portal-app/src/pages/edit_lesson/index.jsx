@@ -8,7 +8,11 @@ import UploadContent from "../upload-content/index";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
-Modal.setAppElement("#root");
+// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+if (typeof document !== "undefined") {
+  const appRoot = document.getElementById("root");
+  if (appRoot) Modal.setAppElement(appRoot);
+}
 
 export const EditLesson = () => {
   const [formData, setFormData] = useState({
@@ -28,18 +32,16 @@ export const EditLesson = () => {
   const [portalContent, setPortalContent] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [objectives, setObjectives] = useState([""]);
   const [sections, setSections] = useState([{ intro: "", contentIds: [] }]);
   const [selectedMaterials, setSelectedMaterials] = useState({});
   const navigate = useNavigate();
   const { lessonId } = useParams();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
   const { user, userData, loading } = useUserData();
   const [authorId, setAuthorId] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  const closeModal = () => setIsModalOpen(false);
+  const closeModal = () => setModalIsOpen(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,7 +81,6 @@ export const EditLesson = () => {
           description: lessonData.description || "",
           isPublic: lessonData.isPublic || false,
         });
-        setObjectives(lessonData.objectives || "");
         setSections(lessonData.sections || [{ intro: "", contentIds: [] }]);
         setAuthorId(lessonData.authorId || "");
       } catch (error) {

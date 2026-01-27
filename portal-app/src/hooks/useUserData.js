@@ -38,7 +38,9 @@ const useUserData = () => {
                 setLoading(false);
             }
         });
-        return () => unsubscribe();
+        return () => {
+            if (typeof unsubscribe === "function") unsubscribe();
+        };
     }, []);
 
     const logout = async () => {

@@ -12,7 +12,11 @@ import NuggetBuilderPage from "../nugget-builder";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 
-Modal.setAppElement("#root");
+// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+if (typeof document !== "undefined") {
+  const appRoot = document.getElementById("root");
+  if (appRoot) Modal.setAppElement(appRoot);
+}
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -43,7 +47,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const { userData } = useUserData();
+  useUserData();
 
   const handleCancel = () => {
     // If opened from another screen/modal, prefer closing that context.
@@ -120,30 +124,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     setFormData({ ...formData, description: value });
   };
 
-  const handleObjectiveChange = (index, value) => {
-    const updated = [...objectives];
-    updated[index] = value;
-    setObjectives(updated);
-  };
-
-  const addObjective = () => {
-    setObjectives([...objectives, ""]);
-  };
-
-  const removeObjective = (index) => {
-    if (objectives.length === 1) return;
-    setObjectives(objectives.filter((_, i) => i !== index));
-  };
-
-  const handleSectionChange = (index, value) => {
-    const updatedSections = [...sections];
-    if (!updatedSections[index]) {
-      updatedSections[index] = { intro: "", contentIds: [] };
-    }
-    updatedSections[index].intro = value;
-    setSections(updatedSections);
-    setFormData({ ...formData, sections: updatedSections });
-  };
+  // (Objective/section field change handlers removed; editing is done inline where used)
 
   const deleteSection = (index) => {
     const updatedSections = sections.filter((_, i) => i !== index);
@@ -742,11 +723,10 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                         color: "#e74c3c",
                         border: "none",
                         fontWeight: 700,
-                        fontSize: "1.5rem",
                         marginLeft: "auto",
                         cursor: "pointer",
                         fontFamily: "Open Sans, sans-serif",
-                        fontSize: "1.08rem"
+                        fontSize: "1.08rem",
                       }}
                       onClick={() => deleteSection(index)}
                       title="Delete Section"
