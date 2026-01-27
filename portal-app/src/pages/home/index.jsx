@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
+import { Navigate } from "react-router-dom";
 
 import HomePage from "../../components/HomePage";
 import useUserData from "../../hooks/useUserData";
 
 const Home = () => {
-  const { user } = useUserData();
+  const { user, userData, loading } = useUserData();
+  const role = userData?.role;
 
   useEffect(() => {
     if (user) {
@@ -23,6 +25,12 @@ const Home = () => {
       })();
     }
   }, [user]);
+
+  // TeacherPlus users should land on their dashboard (Screenshot 1).
+  if (!loading && role === "teacherPlus") {
+    return <Navigate to="/teacherplus" replace />;
+  }
+
   return (
     <div>
       <HomePage user={user} />

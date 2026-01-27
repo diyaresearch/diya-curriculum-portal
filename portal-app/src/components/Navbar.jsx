@@ -145,6 +145,7 @@ const Navbar = () => {
   const role = userData?.role;
   const isTeacherDefault = role === "teacherDefault";
   const isTeacherPlus = role === "teacherPlus";
+  const homeTo = isTeacherPlus ? "/teacherplus" : "/";
 
   return (
     <>
@@ -181,7 +182,7 @@ const Navbar = () => {
 
         <div className="flex items-center space-x-0 ml-auto">
           <Link
-            to="/"
+            to={homeTo}
             className="hover:underline"
             style={{
               fontSize: "15px",
