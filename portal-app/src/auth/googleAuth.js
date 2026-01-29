@@ -1,6 +1,7 @@
 import { getAuth, GoogleAuthProvider, getRedirectResult, signInWithRedirect, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
+import { signInWithPopup } from "firebase/auth";
  
 const RETURN_TO_KEY = "diya_auth:returnTo";
 const ACTION_KEY = "diya_auth:action";
@@ -50,7 +51,11 @@ export async function startGoogleRedirect({
     const provider = new GoogleAuthProvider();
     if (promptSelectAccount) provider.setCustomParameters({ prompt: "select_account" });
  
-    await signInWithRedirect(auth, provider);
+    if (window.location.hostname === "localhost") {
+      await signInWithPopup(auth, provider);
+    } else {
+      await signInWithRedirect(auth, provider);
+    }
   } catch (err) {
     console.error("googleAuth: startGoogleRedirect failed", err);
     throw err;
