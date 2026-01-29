@@ -33,6 +33,14 @@ function normalizeBoolean(value) {
   return false;
 }
 
+function stripHtmlToText(value) {
+  const text = String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text;
+}
+
 // Map module keys to appropriate images for featured modules
 const getFeaturedModuleImage = (moduleKey) => {
   const imageMap = {
@@ -396,6 +404,7 @@ const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
   const navigate = useNavigate();
   const isTeacherDefault = role === "teacherDefault";
+  const isAdmin = role === "admin";
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupModule, setPopupModule] = useState(null);
 
@@ -423,6 +432,11 @@ const ExploreModulesSection = () => {
   // Pagination state - dynamic based on window size
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9); // Will be calculated dynamically
+
+  // Admin-only: paginated view of all published modules (created by anyone)
+  const [adminAllModulesOpen, setAdminAllModulesOpen] = useState(false);
+  const [adminModulesPage, setAdminModulesPage] = useState(1);
+  const ADMIN_PAGE_SIZE = 6;
 
   // Update items per page based on screen size - ALWAYS 2 rows
   useEffect(() => {
@@ -816,7 +830,15 @@ const ExploreModulesSection = () => {
               setPopupOpen(true);
               setPopupModule({ title: "All Modules", summary: "Sign in to explore our complete collection of educational modules across various subjects and difficulty levels." });
             } else {
-              // Navigate to all modules page or trigger filter section
+              if (isAdmin) {
+                setAdminAllModulesOpen(true);
+                setAdminModulesPage(1);
+                setTimeout(() => {
+                  document.querySelector('[data-section="admin-all-modules"]')?.scrollIntoView({ behavior: "smooth" });
+                }, 0);
+                return;
+              }
+              // Non-admin: trigger filter section scroll
               document.querySelector('[data-section="filter-search"]')?.scrollIntoView({ behavior: 'smooth' });
             }
           }}
@@ -844,6 +866,179 @@ const ExploreModulesSection = () => {
         >
           See All Modules
         </button>
+
+        {/* Admin-only: paginated All Modules view */}
+        {isAdmin && adminAllModulesOpen && (
+          <div
+            data-section="admin-all-modules"
+            style={{
+              width: "100%",
+              maxWidth: 1200,
+              marginTop: 36,
+              background: "#fff",
+              border: "1px solid #e5e7eb",
+              borderRadius: 12,
+              padding: "28px 24px",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "#111" }}>All Modules</div>
+                <div style={{ color: "#666", marginTop: 6 }}>
+                  Showing published modules created by everyone.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdminAllModulesOpen(false)}
+                style={{
+                  background: "#f8fafc",
+                  color: "#111",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                }}
+              >
+                Close
+              </button>
+            </div>
+
+            {(() => {
+              const allPublishedModules = (modules || [])
+                .filter((m) => m?._type === "Module")
+                .filter((m) => m?.isDraft !== true);
+
+              const totalPagesAdmin = Math.max(1, Math.ceil(allPublishedModules.length / ADMIN_PAGE_SIZE));
+              const page = Math.min(Math.max(1, adminModulesPage), totalPagesAdmin);
+              const start = (page - 1) * ADMIN_PAGE_SIZE;
+              const pageItems = allPublishedModules.slice(start, start + ADMIN_PAGE_SIZE);
+
+              const canPrev = page > 1;
+              const canNext = page < totalPagesAdmin;
+
+              return (
+                <>
+                  <div
+                    className="admin-grid"
+                    style={{
+                      marginTop: 18,
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                      gap: 18,
+                    }}
+                  >
+                    {pageItems.map((m) => (
+                      <div
+                        key={m.id}
+                        onClick={() => navigate(`/module/${m.id}`)}
+                        style={{
+                          border: "2px solid #9ca3af",
+                          borderRadius: 12,
+                          padding: 16,
+                          cursor: "pointer",
+                          background: "#f8fafc",
+                          display: "flex",
+                          flexDirection: "column",
+                          minHeight: 170,
+                        }}
+                      >
+                        <div style={{ fontWeight: 800, color: "#111", fontSize: "1.1rem", marginBottom: 8 }}>
+                          {m.title || "Untitled Module"}
+                        </div>
+                        <div
+                          style={{
+                            color: "#555",
+                            fontSize: "0.95rem",
+                            lineHeight: 1.45,
+                            overflow: "hidden",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                            marginBottom: 12,
+                          }}
+                        >
+                          {stripHtmlToText(m.description) || "—"}
+                        </div>
+                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: "auto" }}>
+                          {m.category && (
+                            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a", background: "#cbd5e1", border: "2px solid #000", borderRadius: 999, padding: "6px 10px" }}>
+                              {Array.isArray(m.category) ? m.category.join(", ") : m.category}
+                            </span>
+                          )}
+                          {m.level && (
+                            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a", background: "#cbd5e1", border: "2px solid #000", borderRadius: 999, padding: "6px 10px" }}>
+                              {m.level}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18, gap: 12, flexWrap: "wrap" }}>
+                    <div style={{ color: "#666", fontWeight: 600 }}>
+                      Page {page} of {totalPagesAdmin} • {allPublishedModules.length} modules
+                    </div>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button
+                        type="button"
+                        disabled={!canPrev}
+                        onClick={() => setAdminModulesPage((p) => Math.max(1, p - 1))}
+                        style={{
+                          background: canPrev ? "#fff" : "#f8fafc",
+                          color: "#111",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 8,
+                          padding: "10px 14px",
+                          cursor: canPrev ? "pointer" : "not-allowed",
+                          fontWeight: 700,
+                          opacity: canPrev ? 1 : 0.6,
+                        }}
+                      >
+                        Previous
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!canNext}
+                        onClick={() => setAdminModulesPage((p) => Math.min(totalPagesAdmin, p + 1))}
+                        style={{
+                          background: canNext ? "#162040" : "#162040",
+                          color: "#fff",
+                          border: "2px solid #162040",
+                          borderRadius: 8,
+                          padding: "10px 14px",
+                          cursor: canNext ? "pointer" : "not-allowed",
+                          fontWeight: 800,
+                          opacity: canNext ? 1 : 0.6,
+                        }}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+
+                  <style>
+                    {`
+                      @media (max-width: 1100px) {
+                        [data-section="admin-all-modules"] .admin-grid {
+                          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                        }
+                      }
+                      @media (max-width: 720px) {
+                        [data-section="admin-all-modules"] .admin-grid {
+                          grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+                        }
+                      }
+                    `}
+                  </style>
+                </>
+              );
+            })()}
+          </div>
+        )}
 
         <ModuleLoginPrompt
           open={popupOpen}
