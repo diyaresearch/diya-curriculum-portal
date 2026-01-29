@@ -143,7 +143,7 @@ const ModuleDetail = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  useUserData();
+  const { userData } = useUserData();
 
   // Ensure we start at top when navigating here
   useEffect(() => {
@@ -264,6 +264,7 @@ const ModuleDetail = () => {
 
       const data = moduleDoc.data();
       console.log("Fetched module data:", data); // Debug log
+      const authorUid = data.author || data.authorId || "";
 
       // Support both schemas:
       // - legacy/other: { lessonPlans: {0: "<lessonId>", 1: "<lessonId>" ... } }
@@ -288,6 +289,7 @@ const ModuleDetail = () => {
         description: data.description || "No description available",
         requirements: data.requirements || "No specific requirements",
         learningObjectives: data.learningObjectives || "Objectives will be defined",
+        _meta: { id: moduleId, authorUid },
         details: [
           { label: "Category", value: Array.isArray(categoryRaw) ? categoryRaw.join(", ") : categoryRaw || "N/A" },
           { label: "Level", value: Array.isArray(levelRaw) ? levelRaw.join(", ") : levelRaw || "N/A" },
@@ -479,6 +481,11 @@ const ModuleDetail = () => {
 
   // New beautiful layout for view mode
   const module = moduleData;
+  const authUser = getAuth().currentUser;
+  const isAdmin = userData?.role === "admin";
+  const isAuthor =
+    !!authUser && !!moduleData?._meta?.authorUid && authUser.uid === moduleData._meta.authorUid;
+  const canEdit = !HARDCODED_MODULES[moduleId] && (isAdmin || isAuthor);
 
   return (
     <div style={{
@@ -500,8 +507,18 @@ const ModuleDetail = () => {
         `}
       </style>
 
-      {/* Back Button (match screenshot) */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "18px 20px 0 20px" }}>
+      {/* Back + Edit controls */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "18px 20px 0 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
         <button
           type="button"
           onClick={handleBack}
@@ -517,6 +534,31 @@ const ModuleDetail = () => {
         >
           {"< Back"}
         </button>
+
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/module-builder", {
+                state: {
+                  editModuleId: moduleId,
+                  returnTo: `${location.pathname}${location.search || ""}`,
+                },
+              })
+            }
+            style={{
+              background: "#162040",
+              color: "#fff",
+              border: "2px solid #162040",
+              borderRadius: 10,
+              padding: "10px 14px",
+              cursor: "pointer",
+              fontWeight: 800,
+            }}
+          >
+            Edit Module
+          </button>
+        )}
       </div>
 
       {/* Header (match screenshot) */}

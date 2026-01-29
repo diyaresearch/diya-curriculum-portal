@@ -1,8 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, getDocs, query, where, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import OverlayTileView from "../../pages/module_builder/OverlayTileView";
 import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
@@ -24,6 +35,17 @@ const RequiredAsterisk = () => (
   <span style={{ color: "red", marginLeft: 4 }}>*</span>
 );
 
+function normalizeBoolean(value) {
+  if (value === true) return true;
+  if (value === false) return false;
+  if (value === 1) return true;
+  if (value === 0) return false;
+  const s = String(value || "").trim().toLowerCase();
+  if (s === "true") return true;
+  if (s === "false") return false;
+  return false;
+}
+
 const ModuleBuilder = ({ onCancel } = {}) => {
   const [formData, setFormData] = useState({
     title: "",
@@ -43,15 +65,26 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const [selectedMaterials, setSelectedMaterials] = useState([]);
   const [showNuggetBuilderModal, setShowNuggetBuilderModal] = useState(false);
   const [showLessonPlanBuilderModal, setShowLessonPlanBuilderModal] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   useUserData();
 
+  const editModuleId = location.state?.editModuleId || null;
+  const returnTo = location.state?.returnTo || null;
+  const [editModuleAuthorUid, setEditModuleAuthorUid] = useState("");
+  const [prefillLessonIds, setPrefillLessonIds] = useState([]);
+  const didPrefillLessonsRef = useRef(false);
+
   const handleCancel = () => {
     // If opened from another screen/modal, prefer closing that context.
     if (typeof onCancel === "function") {
       onCancel();
+      return;
+    }
+    if (returnTo) {
+      navigate(returnTo);
       return;
     }
     // Otherwise go back (with safe fallback).
@@ -66,6 +99,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   // Load draft from localStorage if present
   useEffect(() => {
     const savedDraft = localStorage.getItem("moduleDraft");
+    if (editModuleId) return;
     if (savedDraft && portalContent.length > 0) {
       const parsedDraft = JSON.parse(savedDraft);
       setFormData({
@@ -88,7 +122,76 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       }
       localStorage.removeItem("moduleDraft");
     }
-  }, [portalContent]);
+  }, [portalContent, editModuleId]);
+
+  // Edit mode: fetch and prefill existing module
+  useEffect(() => {
+    if (!editModuleId) return;
+    (async () => {
+      try {
+        const db = getFirestore();
+        const snap = await getDoc(doc(db, "module", editModuleId));
+        if (!snap.exists()) {
+          setModalMessage("Module not found for editing");
+          setModalIsOpen(true);
+          return;
+        }
+        const data = snap.data() || {};
+
+        const authorUid = data.author || data.authorId || "";
+        setEditModuleAuthorUid(authorUid);
+
+        const categoryRaw = data.Category ?? data.category ?? [];
+        const typeRaw = data.Type ?? data.type ?? [];
+        const levelRaw = data.Level ?? data.level ?? [];
+        const durationRaw = data.Duration ?? data.duration ?? "";
+
+        const lessonIdsFromLessonPlans =
+          data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
+            ? Object.values(data.lessonPlans).filter(Boolean)
+            : [];
+        const lessonIdsFromLessons = Array.isArray(data.lessons) ? data.lessons.filter(Boolean) : [];
+        const lessonIds =
+          lessonIdsFromLessonPlans.length > 0 ? lessonIdsFromLessonPlans : lessonIdsFromLessons;
+
+        setFormData({
+          title: data.title || "",
+          Category: Array.isArray(categoryRaw) ? categoryRaw : categoryRaw ? [categoryRaw] : [],
+          Type: Array.isArray(typeRaw) ? typeRaw : typeRaw ? [typeRaw] : [],
+          Level: Array.isArray(levelRaw) ? levelRaw : levelRaw ? [levelRaw] : [],
+          Duration: durationRaw ?? "",
+          description: data.description || "",
+          requirements: data.requirements || "",
+          learningObjectives: data.learningObjectives || "",
+          isPublic: normalizeBoolean(data.isPublic),
+        });
+
+        setPrefillLessonIds(lessonIds);
+        didPrefillLessonsRef.current = false;
+      } catch (err) {
+        console.error("ModuleBuilder: failed to load module for edit", err);
+        setModalMessage("Error loading module for editing");
+        setModalIsOpen(true);
+      }
+    })();
+  }, [editModuleId]);
+
+  // Once we have portalContent (lessons) and module lesson ids, prefill selection.
+  useEffect(() => {
+    if (!editModuleId) return;
+    if (didPrefillLessonsRef.current) return;
+    if (!prefillLessonIds || prefillLessonIds.length === 0) {
+      didPrefillLessonsRef.current = true;
+      setSelectedMaterials([]);
+      return;
+    }
+    if (portalContent.length === 0) return;
+
+    didPrefillLessonsRef.current = true;
+    setSelectedMaterials(
+      prefillLessonIds.map((id) => portalContent.find((item) => item.id === id) || { id })
+    );
+  }, [editModuleId, portalContent, prefillLessonIds]);
 
   // --- Fetch lesson plans for overlay ---
   const fetchLessonPlans = async (userId) => {
@@ -233,15 +336,18 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         ...formData,
         lessons: lessonIds,
         lessonPlans,
-        author: user.uid,
+        author: editModuleId ? (editModuleAuthorUid || user.uid) : user.uid,
         isDraft: false,
-        createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
 
-      await addDoc(collection(db, "module"), moduleData);
+      if (editModuleId) {
+        await updateDoc(doc(db, "module", editModuleId), moduleData);
+      } else {
+        await addDoc(collection(db, "module"), { ...moduleData, createdAt: serverTimestamp() });
+      }
 
-      setModalMessage("Module generated successfully");
+      setModalMessage(editModuleId ? "Module updated successfully" : "Module generated successfully");
       setModalIsOpen(true);
       setIsSubmitting(false);
       localStorage.removeItem("moduleDraft");
@@ -254,6 +360,10 @@ const ModuleBuilder = ({ onCancel } = {}) => {
 
   const closeModal = () => {
     setModalIsOpen(false);
+    if (editModuleId) {
+      navigate(returnTo || `/module/${editModuleId}`);
+      return;
+    }
     setFormData({
       title: "",
       Category: [],
