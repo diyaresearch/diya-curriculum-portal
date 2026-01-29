@@ -14,6 +14,26 @@ import aiExploreImg from '../../assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.p
 import laptopImg from '../../assets/laptop.png';
 import physicsImg from '../../assets/finphysics.png';
 
+function normalizeBoolean(value) {
+    if (value === true) return true;
+    if (value === false) return false;
+    if (value === 1) return true;
+    if (value === 0) return false;
+    const s = String(value || "").trim().toLowerCase();
+    if (s === "true") return true;
+    if (s === "false") return false;
+    return false;
+}
+
+function isModuleVisibleToViewer(moduleItem, viewerUser) {
+    if (!moduleItem || moduleItem._type !== "Module") return true;
+    if (moduleItem.isDraft === true) return false;
+    const viewerUid = viewerUser?.uid || "";
+    const authorUid = moduleItem.author || "";
+    if (viewerUid && authorUid && viewerUid === authorUid) return true;
+    return moduleItem.isPublic === true;
+}
+
 function capitalizeWords(str) {
     if (str === null || str === undefined) return 'N/A';
     const stringValue = String(str);
@@ -27,6 +47,10 @@ const TeacherPlusPage = () => {
     const navigate = useNavigate();
     const { user, userData, loading } = useUserData();
     const role = userData?.role;
+    const displayName =
+        userData?.fullName ||
+        user?.displayName ||
+        (user?.email ? user.email.split("@")[0] : "TeacherPlus User");
 
     useEffect(() => {
         if (!loading && (!user || role !== 'teacherPlus')) {
@@ -86,7 +110,8 @@ const TeacherPlusPage = () => {
                     category: data.category || "General",
                     lessonPlans: data.lessonPlans || {},
                     isDraft: data.isDraft || false,
-                    author: data.author || "", // Add author field
+                    isPublic: normalizeBoolean(data.isPublic),
+                    author: data.author || data.authorId || "", // Add author field
                     _type: "Module"
                 });
             });
@@ -122,11 +147,14 @@ const TeacherPlusPage = () => {
 
     useEffect(() => {
         if (!filtersApplied && (modules.length > 0 || lessons.length > 0 || nuggets.length > 0)) {
-            const publishedModules = modules.filter(m => !m.isDraft);
+            const publishedModules = modules.filter(m => isModuleVisibleToViewer(m, user));
             const publishedLessons = lessons.filter(l => !l.isDraft);
-            setFilteredItems([...publishedModules, ...publishedLessons, ...nuggets]);
+            const combined = [...publishedModules, ...publishedLessons, ...nuggets].filter(
+                (item) => item?._type !== "Module" || isModuleVisibleToViewer(item, user)
+            );
+            setFilteredItems(combined);
         }
-    }, [modules, lessons, nuggets, filtersApplied]);
+    }, [modules, lessons, nuggets, filtersApplied, user]);
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -138,7 +166,7 @@ const TeacherPlusPage = () => {
 
     const handleApplyFilters = () => {
         let items = [];
-        const publishedModules = modules.filter(m => !m.isDraft);
+        const publishedModules = modules.filter(m => isModuleVisibleToViewer(m, user));
         const publishedLessons = lessons.filter(l => !l.isDraft);
 
         if (contentType === "All") {
@@ -173,6 +201,9 @@ const TeacherPlusPage = () => {
                 (item.title || item.Title || "").toLowerCase().includes(kw)
             );
         }
+
+        // Final safety: never leak private modules in any combined list (e.g. contentType "All").
+        items = items.filter((item) => item?._type !== "Module" || isModuleVisibleToViewer(item, user));
 
 
 
@@ -229,7 +260,7 @@ const TeacherPlusPage = () => {
                         marginBottom: "16px",
                         color: "white"
                     }}>
-                        Welcome Back, TeacherPlus User!
+                        Welcome Back, {displayName}!
                     </h1>
                     <p style={{
                         fontSize: "1.1rem",

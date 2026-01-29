@@ -12,6 +12,27 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { startGoogleRedirect } from "../auth/googleAuth";
 
+function isModuleVisibleToViewer(moduleItem, viewerUser) {
+  if (!moduleItem || moduleItem._type !== "Module") return true;
+  if (moduleItem.isDraft === true) return false;
+  const viewerUid = viewerUser?.uid || "";
+  const authorUid = moduleItem.author || "";
+  if (viewerUid && authorUid && viewerUid === authorUid) return true;
+  
+  return moduleItem.isPublic === true;
+}
+
+function normalizeBoolean(value) {
+  if (value === true) return true;
+  if (value === false) return false;
+  if (value === 1) return true;
+  if (value === 0) return false;
+  const s = String(value || "").trim().toLowerCase();
+  if (s === "true") return true;
+  if (s === "false") return false;
+  return false;
+}
+
 // Map module keys to appropriate images for featured modules
 const getFeaturedModuleImage = (moduleKey) => {
   const imageMap = {
@@ -459,6 +480,8 @@ const ExploreModulesSection = () => {
           category: data.category || "General",
           lessonPlans: data.lessonPlans || {},
           isDraft: data.isDraft || false, // <-- Add this line
+          isPublic: normalizeBoolean(data.isPublic),
+          author: data.author || data.authorId || "",
           _type: "Module"
         });
       });
@@ -487,17 +510,18 @@ const ExploreModulesSection = () => {
   // Initial display should exclude drafts
   useEffect(() => {
     if (!filtersApplied && (modules.length > 0 || lessons.length > 0 || nuggets.length > 0)) {
-      const publishedModules = modules.filter(m => !m.isDraft);
+      const publishedModules = modules.filter(m => isModuleVisibleToViewer(m, user));
+
       const publishedLessons = lessons.filter(l => !l.isDraft);
       setFilteredItems([...publishedModules, ...publishedLessons, ...nuggets]);
     }
-  }, [modules, lessons, nuggets, filtersApplied]);
+  }, [modules, lessons, nuggets, filtersApplied, user]);
 
   // Filtering logic, only runs when Apply Filters is clicked
   const handleApplyFilters = () => {
     let items = [];
     // Filter out drafts before applying other filters
-    const publishedModules = modules.filter(m => !m.isDraft);
+    const publishedModules = modules.filter(m => isModuleVisibleToViewer(m, user));
     const publishedLessons = lessons.filter(l => !l.isDraft);
 
     // Content Type filtering only applies if user can see the filter (TeacherPlus/Admin)
