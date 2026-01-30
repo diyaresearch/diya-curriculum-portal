@@ -270,9 +270,6 @@ export const LessonDetail = () => {
         <SectionCard title="Lesson Content">
           {safeSections.map((section, sectionIndex) => (
             <div key={sectionIndex} style={{ marginTop: sectionIndex === 0 ? 0 : 18 }}>
-              <h3 style={{ ...TYPO.sectionTitle, fontSize: "1.1rem", marginBottom: 8 }}>
-                Section {sectionIndex + 1}
-              </h3>
               <div
                 className="rich-text-content text-gray-700"
                 style={{ ...TYPO.body, marginBottom: 14 }}

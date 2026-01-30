@@ -1,11 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import BackButton from "./BackButton";
 import MetaChipsRow from "./MetaChipsRow";
 import { TYPO } from "../constants/typography";
 import SectionCard from "./SectionCard";
+import EditButton from "./EditButton";
+import DeleteButton from "./DeleteButton";
+import useUserData from "../hooks/useUserData";
 
 const toSlidesEmbedUrl = (url) => {
   // Example input: https://docs.google.com/presentation/d/<ID>/edit#slide=id....
@@ -26,10 +30,14 @@ const toSlidesEmbedUrl = (url) => {
 const ContentDetails = () => {
   const { id } = useParams(); // must be called unconditionally
   const navigate = useNavigate();
+  const location = useLocation();
+  const { userData } = useUserData();
 
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -64,15 +72,74 @@ const ContentDetails = () => {
     return Array.isArray(arr) ? arr : [];
   }, [content]);
 
+  const hasMeaningfulHtml = (html) => {
+    if (!html) return false;
+    const s = String(html)
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return s.length > 0;
+  };
+
   if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
   if (error) return <div style={{ padding: 40, color: "crimson" }}>{error}</div>;
   if (!content) return <div style={{ padding: 40 }}>Content not found.</div>;
 
+  const authUser = getAuth().currentUser;
+  const isAdmin = userData?.role === "admin";
+  const isAuthor = !!authUser && !!content?.User && authUser.uid === content.User;
+  const canManage = isAdmin || isAuthor;
+
+  const handleDelete = async () => {
+    try {
+      if (!id) return;
+      setIsDeleting(true);
+      const db = getFirestore(firebaseApp);
+      await deleteDoc(doc(db, "content", id));
+      setIsDeleteModalOpen(false);
+
+      if (window.history.length > 1) {
+        navigate(-1);
+        return;
+      }
+      navigate("/");
+    } catch (e) {
+      console.error("Failed to delete content:", e);
+      alert("Failed to delete the nugget. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div style={{ background: "#fff", minHeight: "100vh" }}>
       {/* Back control (match module page spacing) */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "18px 20px 0 20px" }}>
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "18px 20px 0 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
         <BackButton onClick={() => navigate(-1)} />
+        {canManage && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <EditButton
+              label="Edit"
+              onClick={() =>
+                navigate("/nugget-builder", {
+                  state: { editContentId: id, returnTo: `${location.pathname}${location.search || ""}` },
+                })
+              }
+            />
+            <DeleteButton onClick={() => setIsDeleteModalOpen(true)} />
+          </div>
+        )}
       </div>
 
       {/* Header (match module page) */}
@@ -110,13 +177,15 @@ const ContentDetails = () => {
           />
         </SectionCard>
 
-        <SectionCard title="Instructions / Notes">
-          <div
-            className="rich-text-content text-gray-700"
-            style={TYPO.body}
-            dangerouslySetInnerHTML={{ __html: content.Instructions || "" }}
-          />
-        </SectionCard>
+        {hasMeaningfulHtml(content.Instructions) && (
+          <SectionCard title="Instructions / Notes">
+            <div
+              className="rich-text-content text-gray-700"
+              style={TYPO.body}
+              dangerouslySetInnerHTML={{ __html: content.Instructions || "" }}
+            />
+          </SectionCard>
+        )}
 
         <SectionCard title="Attachments">
           {attachments.length === 0 ? (
@@ -197,6 +266,83 @@ const ContentDetails = () => {
           )}
         </SectionCard>
       </div>
+
+      {canManage && isDeleteModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.45)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) setIsDeleteModalOpen(false);
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 520,
+              background: "#fff",
+              borderRadius: 16,
+              padding: "24px 22px",
+              boxShadow: "0 18px 60px rgba(0,0,0,0.2)",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <div style={{ ...TYPO.sectionTitle, fontSize: "1.2rem", fontWeight: 900, color: "#111" }}>
+              Are you sure you want to delete this nugget?
+            </div>
+            <div style={{ marginTop: 10, color: "#444", lineHeight: 1.5 }}>
+              This action cannot be undone.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setIsDeleteModalOpen(false)}
+                style={{
+                  background: "#fff",
+                  color: "#111",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 10,
+                  padding: "10px 14px",
+                  cursor: isDeleting ? "not-allowed" : "pointer",
+                  fontWeight: 800,
+                  opacity: isDeleting ? 0.6 : 1,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDelete}
+                style={{
+                  background: "#b91c1c",
+                  color: "#fff",
+                  border: "2px solid #b91c1c",
+                  borderRadius: 10,
+                  padding: "10px 14px",
+                  cursor: isDeleting ? "not-allowed" : "pointer",
+                  fontWeight: 900,
+                  opacity: isDeleting ? 0.7 : 1,
+                }}
+              >
+                {isDeleting ? "Deleting..." : "OK"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -853,10 +853,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                           textOverflow: "ellipsis",
                           maxWidth: 120
                         }}>
-                          <a
-                            href={`/view-content/${material.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/content/${material.id}`)}
                             style={{
                               overflow: "hidden",
                               textOverflow: "ellipsis",
@@ -871,11 +870,12 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                               border: "none",
                               padding: 0,
                               margin: 0,
+                              cursor: "pointer",
                             }}
                             title="View Nugget"
                           >
                             {fullNugget.Title || "Untitled Nugget"}
-                          </a>
+                          </button>
                         </span>
                         <button
                           onClick={() => removeMaterial(material.id, index)}

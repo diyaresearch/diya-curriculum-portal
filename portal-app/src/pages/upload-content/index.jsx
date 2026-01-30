@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from "firebase/firestore";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
@@ -28,6 +28,7 @@ export const UploadContent = ({
   level,
   title,
 }) => {
+  const location = useLocation();
   const [formData, setFormData] = useState({
     Title: "",
     Category: [],
@@ -48,11 +49,50 @@ export const UploadContent = ({
 
 
   const navigate = useNavigate();
+  const editContentId = location.state?.editContentId || null;
+  const returnTo = location.state?.returnTo || null;
+
+  // Prefill when editing an existing nugget
+  useEffect(() => {
+    const loadForEdit = async () => {
+      try {
+        if (!editContentId) return;
+        const db = getFirestore();
+        const snap = await getDoc(doc(db, "content", editContentId));
+        if (!snap.exists()) return;
+        const data = snap.data() || {};
+
+        setFormData((prev) => ({
+          ...prev,
+          Title: data.Title || "",
+          Category: Array.isArray(data.Category) ? data.Category : data.Category ? [data.Category] : [],
+          Type: Array.isArray(data.Type) ? data.Type : data.Type ? [data.Type] : [],
+          Level: Array.isArray(data.Level) ? data.Level : data.Level ? [data.Level] : [],
+          Duration: data.Duration ?? "",
+          isPublic: !!data.isPublic,
+          // Stored field is Description (HTML) in newer schema
+          Abstract: typeof data.Description === "string" ? data.Description : (data.Abstract || ""),
+          Instructions: data.Instructions || "",
+        }));
+
+        setPendingAttachments(Array.isArray(data.attachmentsToSave) ? data.attachmentsToSave : []);
+        setAttachmentTitle("");
+        setAttachmentUrl("");
+      } catch (e) {
+        console.error("Failed to prefill nugget for edit:", e);
+      }
+    };
+    loadForEdit();
+  }, [editContentId]);
 
   const handleCancel = () => {
     // If opened in a modal/embedded flow, close that context.
     if (typeof fromLesson === "function") {
       fromLesson();
+      return;
+    }
+    if (returnTo) {
+      navigate(returnTo);
       return;
     }
     // Otherwise, return to previous page (with safe fallback).
@@ -97,7 +137,6 @@ export const UploadContent = ({
     if (!formData.Level.length) errors.Level = "Level is required.";
     if (!formData.Duration.trim()) errors.Duration = "Duration is required.";
     if (!formData.Type.length) errors.Type = "Type is required.";
-    if (!formData.Instructions.trim()) errors.Instructions = "Instructions/Notes are required.";
     return errors;
   };
 
@@ -156,7 +195,22 @@ export const UploadContent = ({
       }));
       console.log("attachmentsToSave", attachmentsToSave);
 
-
+      if (editContentId) {
+        await updateDoc(doc(db, "content", editContentId), {
+          Title: formData.Title,
+          Description: htmlDescription,
+          Category: formData.Category,
+          Level: formData.Level,
+          Duration: formData.Duration,
+          Type: formData.Type,
+          Instructions: formData.Instructions,
+          attachmentsToSave,
+          LastModified: new Date().toISOString(),
+        });
+        setModalMessage("Content updated successfully");
+        setModalIsOpen(true);
+        return;
+      }
 
       const docRef = await addDoc(collection(db, "content"), {
         Title: formData.Title,
@@ -171,7 +225,6 @@ export const UploadContent = ({
         createdAt: serverTimestamp(),
         Role: "teacherPlus", // <-- Added static Role field,
         attachmentsToSave,
-        
       });
       const savedDoc = await getDoc(docRef);
       const newNugget = { id: docRef.id, ...savedDoc.data() };
@@ -210,6 +263,30 @@ export const UploadContent = ({
 
   const closeModal = () => {
     setModalIsOpen(false);
+
+    const wasSuccess = /successfully/i.test(modalMessage || "");
+
+    if (editContentId) {
+      if (returnTo) {
+        navigate(returnTo);
+        return;
+      }
+      navigate(`/content/${editContentId}`);
+      return;
+    }
+
+    // For create flow: after a successful submit, return to where we came from.
+    if (wasSuccess && typeof fromLesson !== "function") {
+      if (returnTo) {
+        navigate(returnTo);
+        return;
+      }
+      if (window.history.length > 1) {
+        navigate(-1);
+        return;
+      }
+      navigate("/");
+    }
   };
 
   const customStyles = {
@@ -491,7 +568,7 @@ export const UploadContent = ({
           {/* Instructions/Notes */}
           <div>
             <label htmlFor="Instructions" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
-              Instructions/Notes <RequiredAsterisk />
+              Instructions/Notes
             </label>
             <ReactQuill
               theme="snow"
@@ -505,11 +582,6 @@ export const UploadContent = ({
                 fontFamily: "Open Sans, sans-serif",
               }}
             />
-            {fieldErrors.Instructions && (
-              <div style={{ color: "red", fontSize: "0.95rem" }}>
-                Please fill out this field.
-              </div>
-            )}
             <div style={{ fontSize: "0.92rem", color: "#888" }}>
               Use this area for each content's detailed instructions. You can add links, formatting, etc.
             </div>
@@ -573,9 +645,7 @@ export const UploadContent = ({
       >
         <h2>{modalMessage}</h2>
         <button
-          onClick={() => {
-            window.location.href = "/nugget-builder";
-          }}
+          onClick={closeModal}
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
           Close
