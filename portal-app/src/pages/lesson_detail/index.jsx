@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import useUserData from "../../hooks/useUserData";
-import {
-  FaExternalLinkAlt,
-  FaTrash,
-  FaEdit,
-} from "react-icons/fa";
+import BackButton from "../../components/BackButton";
+import EditButton from "../../components/EditButton";
+import DeleteButton from "../../components/DeleteButton";
+import { FaExternalLinkAlt } from "react-icons/fa";
 import "react-quill/dist/quill.snow.css";
 import DOMPurify from "dompurify";
 
@@ -183,36 +182,18 @@ export const LessonDetail = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-4">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors"
-          >
-            ← Back
-          </button>
+          <BackButton onClick={handleBack} />
 
           {canManage && (
             <div className="flex gap-2">
-              <button
-                type="button"
+              <EditButton
                 onClick={() =>
                   navigate("/lesson-plans/builder", {
                     state: { editLessonId: lessonId, returnTo: location.pathname },
                   })
                 }
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors"
-              >
-                <FaEdit />
-                Edit
-              </button>
-              <button
-                type="button"
-                onClick={openModal}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-red-300 rounded bg-white text-red-700 hover:bg-red-50 transition-colors"
-              >
-                <FaTrash />
-                Delete
-              </button>
+              />
+              <DeleteButton onClick={openModal} />
             </div>
           )}
         </div>

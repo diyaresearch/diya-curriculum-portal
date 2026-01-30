@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useUserData from '../../hooks/useUserData';
+import BackButton from '../../components/BackButton';
 
 const PaymentPage = () => {
     const navigate = useNavigate();
@@ -139,30 +140,7 @@ const PaymentPage = () => {
                         Join our premium platform to access enhanced AI and Data Science resources for your classrooms.
                     </p>
 
-                    <button
-                        onClick={() => navigate('/upgrade')}
-                        style={{
-                            background: 'transparent',
-                            color: '#F9C74F',
-                            border: '2px solid #F9C74F',
-                            borderRadius: '6px',
-                            padding: '10px 20px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            marginBottom: '30px',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseOver={(e) => {
-                            e.target.style.background = '#F9C74F';
-                            e.target.style.color = '#242B42';
-                        }}
-                        onMouseOut={(e) => {
-                            e.target.style.background = 'transparent';
-                            e.target.style.color = '#F9C74F';
-                        }}
-                    >
-                        ← Back to Plans
-                    </button>
+                    <BackButton to="/upgrade" label="Back to Plans" className="mb-6" />
 
                     <div style={{
                         background: 'rgba(255,255,255,0.1)',

@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import jsPDF from 'jspdf';
+import BackButton from '../../components/BackButton';
 
 // Import assets
 import lessonPlansIcon from '../../assets/lesson_plans.png';
@@ -418,24 +419,7 @@ const AllLessonPlans = () => {
                                 {currentModule.subtitle}
                             </p>
                         </div>
-                        <button
-                            onClick={() => navigate(`/module/${moduleId}`)}
-                            style={{
-                                background: "#162040",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: 6,
-                                padding: "12px 24px",
-                                fontSize: "1rem",
-                                fontWeight: 600,
-                                cursor: "pointer",
-                                transition: "background 0.2s ease"
-                            }}
-                            onMouseEnter={(e) => e.target.style.background = "#0f1530"}
-                            onMouseLeave={(e) => e.target.style.background = "#162040"}
-                        >
-                            ← Back
-                        </button>
+                        <BackButton to={`/module/${moduleId}`} label="Back" />
                     </div>
                 </div>
             </div>

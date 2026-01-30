@@ -23,6 +23,7 @@ import NuggetBuilderPage from "../nugget-builder";
 import LessonPlanBuilder from "../lesson-plans/builder";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
+import BackButton from "../../components/BackButton";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
 if (typeof document !== "undefined") {
@@ -491,21 +492,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     >
       {/* Back button (match module page behavior) */}
       <div style={{ width: "100%", maxWidth: 700, marginBottom: 8, padding: "0 8px" }}>
-        <button
-          type="button"
-          onClick={handleBack}
-          style={{
-            background: "none",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            color: "#162040",
-            fontWeight: 600,
-            fontSize: "1rem",
-          }}
-        >
-          {"< Back"}
-        </button>
+        <BackButton onClick={handleBack} />
       </div>
       <div style={{ width: "100%", maxWidth: 700, marginBottom: 32, textAlign: "center" }}>
         <h2

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
+import BackButton from "./BackButton";
 
 const toSlidesEmbedUrl = (url) => {
   // Example input: https://docs.google.com/presentation/d/<ID>/edit#slide=id....
@@ -68,34 +69,7 @@ const ContentDetails = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Back Button */}
-      <button
-        onClick={() => navigate(-1)}
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "8px",
-          padding: "10px 20px",
-          backgroundColor: "#fff",
-          border: "1px solid #e5e7eb",
-          borderRadius: "6px",
-          cursor: "pointer",
-          fontSize: "0.95rem",
-          fontWeight: 500,
-          color: "#333",
-          marginBottom: "16px",
-          transition: "all 0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.backgroundColor = "#f9fafb";
-          e.target.style.borderColor = "#1a73e8";
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.backgroundColor = "#fff";
-          e.target.style.borderColor = "#e5e7eb";
-        }}
-      >
-        ← Back
-      </button>
+      <BackButton onClick={() => navigate(-1)} className="mb-4" />
 
       <h1 className="text-3xl font-bold text-gray-900" style={{ marginBottom: 8 }}>
         {content.Title}

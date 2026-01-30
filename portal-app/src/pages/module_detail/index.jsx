@@ -5,6 +5,9 @@ import { getAuth } from "firebase/auth";
 import "react-quill/dist/quill.snow.css";
 import useUserData from "../../hooks/useUserData";
 import DOMPurify from "dompurify";
+import BackButton from "../../components/BackButton";
+import EditButton from "../../components/EditButton";
+import DeleteButton from "../../components/DeleteButton";
 import module1 from "../../assets/modules/module1.png";
 import module2 from "../../assets/modules/module2.png";
 import module3 from "../../assets/modules/module3.png";
@@ -573,26 +576,12 @@ const ModuleDetail = () => {
           gap: 12,
         }}
       >
-        <button
-          type="button"
-          onClick={handleBack}
-          style={{
-            background: "none",
-            border: "none",
-            padding: 0,
-            cursor: "pointer",
-            color: "#162040",
-            fontWeight: 600,
-            fontSize: "1rem",
-          }}
-        >
-          {"< Back"}
-        </button>
+        <BackButton onClick={handleBack} />
 
         {canEdit && (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <button
-              type="button"
+            <EditButton
+              label="Edit Module"
               onClick={() =>
                 navigate("/module-builder", {
                   state: {
@@ -601,34 +590,9 @@ const ModuleDetail = () => {
                   },
                 })
               }
-              style={{
-                background: "#162040",
-                color: "#fff",
-                border: "2px solid #162040",
-                borderRadius: 10,
-                padding: "10px 14px",
-                cursor: "pointer",
-                fontWeight: 800,
-              }}
-            >
-              Edit Module
-            </button>
+            />
 
-            <button
-              type="button"
-              onClick={() => setIsDeleteModalOpen(true)}
-              style={{
-                background: "#fff",
-                color: "#b91c1c",
-                border: "2px solid #b91c1c",
-                borderRadius: 10,
-                padding: "10px 14px",
-                cursor: "pointer",
-                fontWeight: 900,
-              }}
-            >
-              Delete
-            </button>
+            <DeleteButton onClick={() => setIsDeleteModalOpen(true)} />
           </div>
         )}
       </div>

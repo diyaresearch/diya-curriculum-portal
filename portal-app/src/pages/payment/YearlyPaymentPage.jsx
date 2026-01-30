@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import useUserData from '../../hooks/useUserData';
+import BackButton from '../../components/BackButton';
 
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51PYERERqWgqDVRD3kSuQgmgKNIWup77t7Rxsh2mqIsnDDRbCtjuiYh8DCvSO84i5R9FTOgBEzvvr21qHjMGTjvWn00Dwdt2QDv');
@@ -224,30 +225,7 @@ const PaymentForm = () => {
                         Join our premium platform to access enhanced AI and Data Science resources for your classrooms. Save $20 per year!
                     </p>
 
-                    <button
-                        onClick={() => navigate('/upgrade')}
-                        style={{
-                            background: 'transparent',
-                            color: '#F9C74F',
-                            border: '2px solid #F9C74F',
-                            borderRadius: '6px',
-                            padding: '10px 20px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            marginBottom: '30px',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseOver={(e) => {
-                            e.target.style.background = '#F9C74F';
-                            e.target.style.color = '#242B42';
-                        }}
-                        onMouseOut={(e) => {
-                            e.target.style.background = 'transparent';
-                            e.target.style.color = '#F9C74F';
-                        }}
-                    >
-                        ← Back to Plans
-                    </button>
+                    <BackButton to="/upgrade" label="Back to Plans" className="mb-6" />
 
                     <div style={{
                         background: 'rgba(255,255,255,0.1)',
