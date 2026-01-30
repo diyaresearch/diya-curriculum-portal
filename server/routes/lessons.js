@@ -19,7 +19,7 @@ router.get("/lesson/myLessons", authenticateUser, getUserLessons);
 router.get("/lesson/:lessonId", getLessonById);
 router.get("/lessons/:lessonId/download", downloadPDF);
 router.post("/lesson", authenticateUser, postLesson);
-router.put("/lesson/:lessonId", updateLesson);
-router.delete("/lesson/:lessonId", deleteLessonById);
+router.put("/lesson/:lessonId", authenticateUser, updateLesson);
+router.delete("/lesson/:lessonId", authenticateUser, deleteLessonById);
 
 module.exports = router;

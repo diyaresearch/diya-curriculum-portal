@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, getDocs, query, where, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
@@ -24,6 +24,7 @@ const RequiredAsterisk = () => (
 );
 
 const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) => {
+  const location = useLocation();
   const [formData, setFormData] = useState({
     title: "",
     Category: [],
@@ -49,10 +50,18 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
   const [showUploadModal, setShowUploadModal] = useState(false);
   useUserData();
 
+  const editLessonId = useMemo(() => location?.state?.editLessonId || null, [location?.state?.editLessonId]);
+  const returnTo = useMemo(() => location?.state?.returnTo || null, [location?.state?.returnTo]);
+
   const handleCancel = () => {
     // If opened from another screen/modal, prefer closing that context.
     if (typeof onCancel === "function") {
       onCancel();
+      return;
+    }
+    // If opened for editing with an explicit return path, go there.
+    if (returnTo) {
+      navigate(returnTo);
       return;
     }
     // Otherwise go back (with safe fallback).
@@ -89,8 +98,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     return () => unsubscribe();
   }, []);
 
-  // Load draft from localStorage if present
+  // Load draft from localStorage if present (skip when editing an existing lesson)
   useEffect(() => {
+    if (editLessonId) return;
     const savedDraft = localStorage.getItem("lessonPlanDraft");
     if (savedDraft) {
       const parsedDraft = JSON.parse(savedDraft);
@@ -110,7 +120,67 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       setSelectedMaterials(restoredMaterials);
       localStorage.removeItem("lessonPlanDraft");
     }
-  }, [portalContent]);
+  }, [portalContent, editLessonId]);
+
+  // Prefill from an existing lesson when editing
+  useEffect(() => {
+    const loadForEdit = async () => {
+      try {
+        if (!editLessonId) return;
+
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user) {
+          alert("You must be logged in to edit a lesson plan.");
+          return;
+        }
+        const token = await user.getIdToken();
+        const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+
+        const res = await fetch(`${baseUrl}/api/lesson/${editLessonId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          throw new Error(`Failed to load lesson (${res.status})`);
+        }
+        const lesson = await res.json();
+
+        const nextSections = Array.isArray(lesson.sections)
+          ? lesson.sections.map((s) => ({
+              title: s?.title || "",
+              intro: s?.intro || "",
+              contentIds: Array.isArray(s?.contentIds) ? s.contentIds : [],
+            }))
+          : [{ title: "", intro: "", contentIds: [] }];
+
+        setFormData((prev) => ({
+          ...prev,
+          id: editLessonId,
+          title: lesson.title || "",
+          Category: Array.isArray(lesson.category) ? lesson.category : lesson.category ? [lesson.category] : [],
+          Type: Array.isArray(lesson.type) ? lesson.type : lesson.type ? [lesson.type] : [],
+          Level: Array.isArray(lesson.level) ? lesson.level : lesson.level ? [lesson.level] : [],
+          Duration: lesson.duration ?? "",
+          description: typeof lesson.description === "string" ? lesson.description : "",
+          isPublic: !!lesson.isPublic,
+        }));
+
+        setObjectives(Array.isArray(lesson.objectives) ? lesson.objectives : lesson.objectives ? [lesson.objectives] : [""]);
+        setSections(nextSections);
+
+        // Prefill selectedMaterials from contentIds
+        const initialMaterials = {};
+        nextSections.forEach((s, idx) => {
+          initialMaterials[idx] = (s.contentIds || []).map((id) => ({ id }));
+        });
+        setSelectedMaterials(initialMaterials);
+      } catch (e) {
+        console.error("Error prefilling lesson builder:", e);
+        alert("Failed to load lesson plan for editing.");
+      }
+    };
+    loadForEdit();
+  }, [editLessonId]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -252,7 +322,10 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
 
     const userId = user.uid;
     const token = await user.getIdToken();
-    const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/`;
+    const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+    const url = editLessonId
+      ? `${baseUrl}/api/lesson/${editLessonId}`
+      : `${baseUrl}/api/lesson/`;
 
     try {
       if (formData.isPublic) {
@@ -294,7 +367,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       };
 
       const response = await fetch(url, {
-        method: "POST",
+        method: editLessonId ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -308,19 +381,19 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       const result = await response.json();
       if (onSave) {
         onSave({
-          id: result.id,
+          id: editLessonId || result.id,
           title: lessonData.title,
           // add other fields if needed
         });
       }
 
       // Remove the draft from Firestore if it exists
-      if (formData.id) {
+      if (!editLessonId && formData.id) {
         const db = getFirestore();
         await deleteDoc(doc(db, "lesson", formData.id));
       }
 
-      setModalMessage("Lesson plan generated successfully");
+      setModalMessage(editLessonId ? "Lesson plan updated successfully" : "Lesson plan generated successfully");
       setModalIsOpen(true);
       setIsSubmitting(false);
       localStorage.removeItem("lessonPlanDraft");
@@ -333,6 +406,15 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
 
   const closeModal = () => {
     setModalIsOpen(false);
+    if (editLessonId) {
+      // Return to the lesson detail page after editing.
+      if (returnTo) {
+        navigate(returnTo);
+        return;
+      }
+      navigate(`/lesson/${editLessonId}`);
+      return;
+    }
     setFormData({
       title: "",
       category: "",

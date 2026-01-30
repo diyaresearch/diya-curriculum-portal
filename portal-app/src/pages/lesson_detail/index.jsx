@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import useUserData from "../../hooks/useUserData";
 import {
   FaExternalLinkAlt,
-  FaDownload,
   FaTrash,
   FaEdit,
-  FaChevronDown,
 } from "react-icons/fa";
 import "react-quill/dist/quill.snow.css";
 import DOMPurify from "dompurify";
@@ -16,17 +14,12 @@ export const LessonDetail = () => {
   const { user, userData, loading } = useUserData();
   const [lesson, setLesson] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { lessonId } = useParams();
   const [contentDetails, setContentDetails] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [author, setAuthor] = useState(null);
   const [authorId, setAuthorId] = useState(null);
-
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -42,30 +35,6 @@ export const LessonDetail = () => {
       return;
     }
     navigate("/");
-  };
-
-  const handleDownload = async () => {
-    try {
-      const token = await user.getIdToken();
-      const response = await axios.get(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons/${lessonId}/download`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: "blob",
-        }
-      );
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", "lesson.pdf");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      alert("Failed to download the lesson plan.");
-    }
   };
 
   const handleConfirmDelete = async () => {
@@ -199,6 +168,7 @@ export const LessonDetail = () => {
   }
 
   const { title, type, category, level, duration, description, objectives, sections, isPublic } = lesson;
+  const canManage = !!user && (userData?.role === "admin" || (!!authorId && user.uid === authorId));
 
   // ReactQuill expects a string value; lesson fields may be arrays/undefined depending on source.
   const descriptionHtml = typeof description === "string" ? description : "";
@@ -212,65 +182,46 @@ export const LessonDetail = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors mb-4"
-        >
-          ← Back
-        </button>
+        <div className="flex items-center justify-between mb-4">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors"
+          >
+            ← Back
+          </button>
+
+          {canManage && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/lesson-plans/builder", {
+                    state: { editLessonId: lessonId, returnTo: location.pathname },
+                  })
+                }
+                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded bg-white hover:bg-gray-100 transition-colors"
+              >
+                <FaEdit />
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={openModal}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-red-300 rounded bg-white text-red-700 hover:bg-red-50 transition-colors"
+              >
+                <FaTrash />
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           {/* Lesson Header */}
           <div className="p-6 border-b">
             <div className="flex justify-between items-start mb-4">
               <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
-              <div className="flex space-x-2">
-                <div className="relative">
-                  <button
-                    onClick={toggleDropdown}
-                    className="p-2 border border-gray-300 rounded inline-flex items-center px-4 py-2 bg-white-600 text-black rounded-lg hover:bg-white-700 transition-colors"
-                  >
-                    Select an action
-                    <FaChevronDown className="ml-2" />
-                  </button>
-
-                  {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
-                      <button
-                        onClick={handleDownload}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      >
-                        <FaDownload className="inline-block mr-2" />
-                        Download Plan
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (userData.role === "admin" || user.uid === authorId) {
-                            navigate(`/edit-lesson/${lessonId}`);
-                          } else {
-                            console.error("No permissions to update lesson");
-                            alert(
-                              "You do not have permission to edit this lesson plan. Contact the Admin to update the lesson plan."
-                            );
-                          }
-                        }}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                      >
-                        <FaEdit className="inline-block mr-2" />
-                        Edit Plan
-                      </button>
-                      <button
-                        onClick={openModal}
-                        className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-100"
-                      >
-                        <FaTrash className="inline-block mr-2" />
-                        Delete Plan
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">

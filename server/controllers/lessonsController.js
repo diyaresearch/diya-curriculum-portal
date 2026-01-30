@@ -138,9 +138,9 @@ const updateLesson = async (req, res) => {
   try {
     const lessonId = req.params.lessonId;
     const formData = req.body;
-    const authorId = req.body.author ? req.body.author : null;
+    const requesterId = req.user ? req.user.uid : null;
 
-    if (!authorId) {
+    if (!requesterId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
@@ -153,22 +153,40 @@ const updateLesson = async (req, res) => {
 
     const lessonData = lessonSnapshot.data();
 
+    const isAdmin = async (uid) => {
+      try {
+        const teacherDoc = await db.collection("teachers").doc(uid).get();
+        if (!teacherDoc.exists) return false;
+        const data = teacherDoc.data() || {};
+        return data.role === "admin";
+      } catch (e) {
+        console.error("Error checking admin role:", e);
+        return false;
+      }
+    };
+
+    const canEdit = lessonData.authorId === requesterId || (await isAdmin(requesterId));
+    if (!canEdit) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
     const updateData = {
       title: formData.title || lessonData.title,
-      categoty: formData.category || lessonData.category,
+      category: formData.category || lessonData.category,
       type: formData.type || lessonData.type,
       level: formData.level || lessonData.level,
       objectives: formData.objectives || lessonData.objectives,
       duration: formData.duration || lessonData.duration,
       sections: formData.sections || lessonData.sections,
       description: formData.description || lessonData.description,
-      isPublic: formData.isPublic,
+      isPublic: typeof formData.isPublic === "boolean" ? formData.isPublic : lessonData.isPublic,
+      updatedAt: new Date().toISOString(),
     };
     
     await lessonRef.update(updateData);
 
     res
-      .status(201)
+      .status(200)
       .json({ message: "Lesson updated successfully", id: lessonRef.id });
   } catch (error) {
     console.error("Error updating lesson:", error);
@@ -180,11 +198,35 @@ const deleteLessonById = async (req, res) => {
   const lessonId = req.params.lessonId;
 
   try {
+    const requesterId = req.user ? req.user.uid : null;
+    if (!requesterId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
     const lessonRef = db.collection(TABLE_LESSON).doc(lessonId);
     const doc = await lessonRef.get();
 
     if (!doc.exists) {
       return res.status(404).json({ message: "Lesson not found." });
+    }
+
+    const lessonData = doc.data() || {};
+
+    const isAdmin = async (uid) => {
+      try {
+        const teacherDoc = await db.collection("teachers").doc(uid).get();
+        if (!teacherDoc.exists) return false;
+        const data = teacherDoc.data() || {};
+        return data.role === "admin";
+      } catch (e) {
+        console.error("Error checking admin role:", e);
+        return false;
+      }
+    };
+
+    const canDelete = lessonData.authorId === requesterId || (await isAdmin(requesterId));
+    if (!canDelete) {
+      return res.status(403).json({ error: "Forbidden" });
     }
 
     await lessonRef.delete();

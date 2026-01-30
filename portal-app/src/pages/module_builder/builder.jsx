@@ -744,10 +744,9 @@ const ModuleBuilder = ({ onCancel } = {}) => {
                       margin: "4px",
                     }}
                   >
-                    <a
-                      href={`/lesson-details/${material.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/lesson/${material.id}`)}
                       style={{
                         color: "#1a73e8",
                         textDecoration: "underline",
@@ -767,7 +766,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
                       title="View Lesson Details"
                     >
                       {material.title || material.Title || "Untitled Lesson"}
-                    </a>
+                    </button>
                     <button
                       onClick={() => removeMaterial(material.id)}
                       style={{
