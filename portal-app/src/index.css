@@ -1,11 +1,32 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --font-sans: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+
+  /* Module Builder baseline */
+  --text-page-title: 2.8rem;
+  --text-page-subtitle: 1.18rem;
+  --text-section-title: 1.25rem;
+  --text-body: 1.05rem;
+  --text-meta: 0.95rem;
+  --text-label: 1.08rem;
+  --text-helper: 0.92rem;
+
+  /* Rich-text heading scale */
+  --text-rich-h1: 2rem;
+  --text-rich-h2: 1.5rem;
+  --text-rich-h3: 1.25rem;
+  --text-rich-h4: 1.1rem;
+  --text-rich-h5: 1rem;
+  --text-rich-h6: 0.95rem;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -27,37 +48,37 @@ code {
 }
 
 .rich-text-content h1 {
-  font-size: 2rem;
+  font-size: var(--text-rich-h1);
   font-weight: bold;
   margin: 0.7em 0 0.4em 0;
 }
 
 .rich-text-content h2 {
-  font-size: 1.5rem;
+  font-size: var(--text-rich-h2);
   font-weight: bold;
   margin: 0.6em 0 0.3em 0;
 }
 
 .rich-text-content h3 {
-  font-size: 1.25rem;
+  font-size: var(--text-rich-h3);
   font-weight: bold;
   margin: 0.5em 0 0.2em 0;
 }
 
 .rich-text-content h4 {
-  font-size: 1.1rem;
+  font-size: var(--text-rich-h4);
   font-weight: bold;
   margin: 0.4em 0 0.2em 0;
 }
 
 .rich-text-content h5 {
-  font-size: 1rem;
+  font-size: var(--text-rich-h5);
   font-weight: bold;
   margin: 0.3em 0 0.1em 0;
 }
 
 .rich-text-content h6 {
-  font-size: 0.95rem;
+  font-size: var(--text-rich-h6);
   font-weight: bold;
   margin: 0.2em 0 0.1em 0;
 }

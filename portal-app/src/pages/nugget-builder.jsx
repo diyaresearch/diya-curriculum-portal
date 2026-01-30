@@ -1,5 +1,6 @@
 import React from "react";
 import UploadContent from "./upload-content"; // adjust path if needed
+import { TYPO } from "../constants/typography";
 
 const NuggetBuilderPage = (props) => (
   <div
@@ -11,7 +12,6 @@ const NuggetBuilderPage = (props) => (
       alignItems: "center",
       paddingTop: "40px",
       paddingBottom: "64px",
-      fontFamily: "Open Sans, sans-serif",
       position: "relative"
     }}
   >
@@ -42,12 +42,9 @@ const NuggetBuilderPage = (props) => (
     <div style={{ width: "100%", maxWidth: 1100, margin: "0 auto" }}>
       <h1
         style={{
-          fontSize: "2.8rem",
-          fontWeight: 700,
-          color: "#111",
+          ...TYPO.pageTitle,
           textAlign: "center",
           margin: 0,
-          letterSpacing: "1px"
         }}
       >
         Nugget Builder
@@ -55,11 +52,10 @@ const NuggetBuilderPage = (props) => (
       <p
         style={{
           marginTop: "12px",
-          fontSize: "1.18rem",
+          ...TYPO.pageSubtitle,
           color: "#222",
           textAlign: "center",
           maxWidth: "600px",
-          fontWeight: 500,
           marginLeft: "auto",
           marginRight: "auto"
         }}

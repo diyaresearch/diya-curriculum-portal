@@ -8,6 +8,7 @@ import DeleteButton from "../../components/DeleteButton";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import "react-quill/dist/quill.snow.css";
 import DOMPurify from "dompurify";
+import { TYPO } from "../../constants/typography";
 
 export const LessonDetail = () => {
   const { user, userData, loading } = useUserData();
@@ -202,7 +203,9 @@ export const LessonDetail = () => {
           {/* Lesson Header */}
           <div className="p-6 border-b">
             <div className="flex justify-between items-start mb-4">
-              <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+              <h1 className="text-gray-900" style={TYPO.pageTitle}>
+                {title}
+              </h1>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
@@ -231,16 +234,18 @@ export const LessonDetail = () => {
 
           {/* Author Section */}
           <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">Author Details</h2>
+            <h2 className="mb-3" style={TYPO.sectionTitle}>
+              Author Details
+            </h2>
             {author ? (
               <div>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700" style={TYPO.body}>
                   <strong>Name:</strong>{" "}
                   {author.firstName && author.lastName
                     ? `${author.firstName} ${author.lastName}`
                     : author.fullName}
                 </p>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700" style={TYPO.body}>
                   <strong>Email:</strong> {author.email}
                 </p>
               </div>
@@ -251,32 +256,41 @@ export const LessonDetail = () => {
 
           {/* Description Section */}
           <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">Description</h2>
+            <h2 className="mb-3" style={TYPO.sectionTitle}>
+              Description
+            </h2>
             <div
-              className="rich-text-content text-gray-700 leading-relaxed"
+              className="rich-text-content text-gray-700"
+              style={TYPO.body}
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(descriptionHtml) }}
             />
           </div>
 
           {/* Objectives Section */}
           <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold text-gray-800 mb-3">Learning Objectives</h2>
+            <h2 className="mb-3" style={TYPO.sectionTitle}>
+              Learning Objectives
+            </h2>
             <div
-              className="rich-text-content text-gray-700 leading-relaxed"
+              className="rich-text-content text-gray-700"
+              style={TYPO.body}
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(objectivesHtml) }}
             />
           </div>
 
           {/* Lesson Sections */}
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-800 mb-6">Lesson Content</h2>
+            <h2 className="mb-6" style={TYPO.sectionTitle}>
+              Lesson Content
+            </h2>
             {safeSections.map((section, sectionIndex) => (
               <div key={sectionIndex} className="mb-8 last:mb-0">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                <h3 className="mb-2" style={{ ...TYPO.sectionTitle, fontSize: "1.1rem" }}>
                   Section {sectionIndex + 1}
                 </h3>
                 <div
-                  className="rich-text-content text-gray-700 leading-relaxed mb-4"
+                  className="rich-text-content text-gray-700 mb-4"
+                  style={TYPO.body}
                   dangerouslySetInnerHTML={{
                     __html: DOMPurify.sanitize(typeof section?.intro === "string" ? section.intro : ""),
                   }}
@@ -290,7 +304,7 @@ export const LessonDetail = () => {
                     return (
                       <div key={contentIndex} className="border rounded-lg p-4">
                         <div className="flex items-center mb-3">
-                          <h4 className="text-lg font-medium">
+                          <h4 style={{ ...TYPO.sectionTitle, fontSize: "1.05rem", fontWeight: 600 }}>
                             {content.Title || content.title || `Content ${contentIndex + 1}`}
                           </h4>
                         </div>

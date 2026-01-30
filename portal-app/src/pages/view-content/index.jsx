@@ -5,6 +5,7 @@ import { ref, getDownloadURL } from "firebase/storage";
 import { Document, Page, pdfjs } from "react-pdf";
 import { FaFilePdf, FaVideo, FaExternalLinkAlt } from "react-icons/fa";
 import DOMPurify from "dompurify";
+import { TYPO } from "../../constants/typography";
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -110,7 +111,9 @@ const ViewContent = () => {
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           {/* Content Header */}
           <div className="p-6 border-b">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{content.Title}</h1>
+            <h1 className="text-gray-900 mb-2" style={TYPO.pageTitle}>
+              {content.Title}
+            </h1>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <span className="font-semibold text-gray-600">Category:</span>

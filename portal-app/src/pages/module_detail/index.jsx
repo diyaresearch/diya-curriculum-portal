@@ -5,6 +5,7 @@ import { getAuth } from "firebase/auth";
 import "react-quill/dist/quill.snow.css";
 import useUserData from "../../hooks/useUserData";
 import DOMPurify from "dompurify";
+import { TYPO } from "../../constants/typography";
 import BackButton from "../../components/BackButton";
 import EditButton from "../../components/EditButton";
 import DeleteButton from "../../components/DeleteButton";
@@ -546,7 +547,6 @@ const ModuleDetail = () => {
 
   return (
     <div style={{
-      fontFamily: "Open Sans, Arial, sans-serif",
       background: "#fff",
       minHeight: "100vh",
       padding: 0
@@ -685,13 +685,11 @@ const ModuleDetail = () => {
       >
         <div
           style={{
-            fontWeight: 800,
-            fontSize: "2.6rem",
+            ...TYPO.pageTitle,
+            fontWeight: 700,
             marginTop: 8,
             marginBottom: 10,
-            color: "#111",
-            letterSpacing: "-1px",
-            lineHeight: "1.1",
+            letterSpacing: TYPO.pageTitle.letterSpacing,
           }}
         >
           {module.title}
@@ -700,10 +698,8 @@ const ModuleDetail = () => {
           <div
             ref={descRef}
             style={{
+              ...TYPO.pageSubtitle,
               color: "#222",
-              fontSize: "1.05rem",
-              fontWeight: 500,
-              lineHeight: "1.6",
               ...(isDescExpanded
                 ? {}
                 : {
@@ -801,7 +797,7 @@ const ModuleDetail = () => {
             marginBottom: 10,
           };
 
-          const bodyStyle = { color: "#222", fontSize: "1.05rem", lineHeight: 1.6 };
+          const bodyStyle = { ...TYPO.body };
 
           const objectivesBullets = extractBulletsFromObjectives(module.learningObjectives);
 

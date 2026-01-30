@@ -24,6 +24,7 @@ import LessonPlanBuilder from "../lesson-plans/builder";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 import BackButton from "../../components/BackButton";
+import { TYPO } from "../../constants/typography";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
 if (typeof document !== "undefined") {
@@ -487,7 +488,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         width: "100%",
         paddingTop: "60px",
         color: "#111",
-        fontFamily: "Open Sans, sans-serif"
       }}
     >
       {/* Back button (match module page behavior) */}
@@ -497,12 +497,8 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       <div style={{ width: "100%", maxWidth: 700, marginBottom: 32, textAlign: "center" }}>
         <h2
           style={{
-            fontSize: "2.8rem",
-            fontWeight: "700",
-            color: "#111",
+            ...TYPO.pageTitle,
             margin: 0,
-            letterSpacing: "1px",
-            fontFamily: "Open Sans, sans-serif"
           }}
         >
           {editModuleId ? "Edit Module" : "Module Builder"}
@@ -510,10 +506,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         <p
           style={{
             marginTop: 16,
-            fontSize: "1.18rem",
-            color: "#111",
-            fontWeight: 500,
-            fontFamily: "Open Sans, sans-serif"
+            ...TYPO.pageSubtitle,
           }}
         >
           Design your modules and share them with your students and the borader community.

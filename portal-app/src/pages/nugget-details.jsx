@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { TYPO } from "../constants/typography";
 
 const NuggetDetails = () => {
   const { id } = useParams();
@@ -58,7 +59,7 @@ const NuggetDetails = () => {
       word-break: break-all;
     }
     .nugget-rich-html h1 {
-      font-size: 2.2rem;
+      font-size: var(--text-rich-h1);
       color: #111C44;
       font-weight: 700;
       margin-top: 1.2em;
@@ -66,7 +67,7 @@ const NuggetDetails = () => {
       line-height: 1.2;
     }
     .nugget-rich-html h2 {
-      font-size: 1.7rem;
+      font-size: var(--text-rich-h2);
       color: #111C44;
       font-weight: 700;
       margin-top: 1.1em;
@@ -74,7 +75,7 @@ const NuggetDetails = () => {
       line-height: 1.2;
     }
     .nugget-rich-html h3 {
-      font-size: 1.3rem;
+      font-size: var(--text-rich-h3);
       color: #111C44;
       font-weight: 700;
       margin-top: 1em;
@@ -84,7 +85,7 @@ const NuggetDetails = () => {
     .nugget-rich-html h4, 
     .nugget-rich-html h5, 
     .nugget-rich-html h6 {
-      font-size: 1.08rem;
+      font-size: var(--text-label);
       color: #111C44;
       font-weight: 700;
       margin-top: 0.8em;
@@ -94,20 +95,20 @@ const NuggetDetails = () => {
   `;
 
   return (
-    <div style={{ maxWidth: 900, margin: "40px auto", fontFamily: "Open Sans, sans-serif" }}>
+    <div style={{ maxWidth: 900, margin: "40px auto" }}>
       <style>{customStyles}</style>
-      <h1 style={{ fontWeight: 700, fontSize: "2.4rem", color: "#111C44", marginBottom: 10 }}>
+      <h1 style={{ ...TYPO.pageTitle, color: "#111", marginBottom: 10 }}>
         {nugget.Title}
       </h1>
       <div
         className="nugget-rich-html"
-        style={{ color: "#444", marginBottom: 16 }}
+        style={{ ...TYPO.body, color: "#444", marginBottom: 16 }}
         dangerouslySetInnerHTML={{ __html: nugget.Description || "" }}
       />
-      <div style={{ fontSize: "1rem", color: "#222", marginBottom: 8 }}>
+      <div style={{ ...TYPO.body, marginBottom: 8 }}>
         <strong>Author:</strong> {nugget.Author}
       </div>
-      <div style={{ fontSize: "1rem", color: "#222", marginBottom: 8 }}>
+      <div style={{ ...TYPO.body, marginBottom: 8 }}>
         <strong>Created:</strong>{" "}
         {nugget.createdAt
           ? typeof nugget.createdAt.toDate === "function"
