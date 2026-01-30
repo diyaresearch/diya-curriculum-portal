@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import "react-quill/dist/quill.snow.css";
 import useUserData from "../../hooks/useUserData";
@@ -169,6 +169,8 @@ const ModuleDetail = () => {
 
   const [lessonPlans, setLessonPlans] = useState([]);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchLessonDetails = useCallback(async (ids) => {
     try {
@@ -486,6 +488,25 @@ const ModuleDetail = () => {
   const isAuthor =
     !!authUser && !!moduleData?._meta?.authorUid && authUser.uid === moduleData._meta.authorUid;
   const canEdit = !HARDCODED_MODULES[moduleId] && (isAdmin || isAuthor);
+  const handleDeleteModule = async () => {
+    try {
+      setIsDeleting(true);
+      const db = getFirestore();
+      await deleteDoc(doc(db, "module", moduleId));
+      setIsDeleteModalOpen(false);
+
+      if (window.history.length > 1) {
+        navigate(-1);
+        return;
+      }
+      navigate("/");
+    } catch (err) {
+      console.error("Failed to delete module:", err);
+      alert("Failed to delete module. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div style={{
@@ -536,30 +557,125 @@ const ModuleDetail = () => {
         </button>
 
         {canEdit && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate("/module-builder", {
-                state: {
-                  editModuleId: moduleId,
-                  returnTo: `${location.pathname}${location.search || ""}`,
-                },
-              })
-            }
-            style={{
-              background: "#162040",
-              color: "#fff",
-              border: "2px solid #162040",
-              borderRadius: 10,
-              padding: "10px 14px",
-              cursor: "pointer",
-              fontWeight: 800,
-            }}
-          >
-            Edit Module
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/module-builder", {
+                  state: {
+                    editModuleId: moduleId,
+                    returnTo: `${location.pathname}${location.search || ""}`,
+                  },
+                })
+              }
+              style={{
+                background: "#162040",
+                color: "#fff",
+                border: "2px solid #162040",
+                borderRadius: 10,
+                padding: "10px 14px",
+                cursor: "pointer",
+                fontWeight: 800,
+              }}
+            >
+              Edit Module
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsDeleteModalOpen(true)}
+              style={{
+                background: "#fff",
+                color: "#b91c1c",
+                border: "2px solid #b91c1c",
+                borderRadius: 10,
+                padding: "10px 14px",
+                cursor: "pointer",
+                fontWeight: 900,
+              }}
+            >
+              Delete
+            </button>
+          </div>
         )}
       </div>
+
+      {canEdit && isDeleteModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.45)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) setIsDeleteModalOpen(false);
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 520,
+              background: "#fff",
+              borderRadius: 16,
+              padding: "24px 22px",
+              boxShadow: "0 18px 60px rgba(0,0,0,0.2)",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#111" }}>
+              Are you sure you want to delete the module?
+            </div>
+            <div style={{ marginTop: 10, color: "#444", lineHeight: 1.5 }}>
+              This action cannot be undone.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setIsDeleteModalOpen(false)}
+                style={{
+                  background: "#fff",
+                  color: "#111",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 10,
+                  padding: "10px 14px",
+                  cursor: isDeleting ? "not-allowed" : "pointer",
+                  fontWeight: 800,
+                  opacity: isDeleting ? 0.6 : 1,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeleteModule}
+                style={{
+                  background: "#b91c1c",
+                  color: "#fff",
+                  border: "2px solid #b91c1c",
+                  borderRadius: 10,
+                  padding: "10px 14px",
+                  cursor: isDeleting ? "not-allowed" : "pointer",
+                  fontWeight: 900,
+                  opacity: isDeleting ? 0.7 : 1,
+                }}
+              >
+                {isDeleting ? "Deleting..." : "OK"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header (match screenshot) */}
       <div
