@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
@@ -11,7 +11,7 @@ import module3 from "../../assets/modules/module3.png";
 import module4 from "../../assets/modules/module4.png";
 import module5 from "../../assets/modules/module5.png";
 import OverlayTileView from "../../components/OverlayTileView";
-import { getLevelChipStyles } from "../../constants/uiTokens";
+// Level chip coloring intentionally not used on module page
 
 // Import default images for fallback - using module images instead since AI images don't exist
 // If you have these AI images in a different location, update the paths accordingly
@@ -172,6 +172,16 @@ const ModuleDetail = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const descRef = useRef(null);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [showDescMore, setShowDescMore] = useState(false);
+
+  // Reset description expansion when module changes
+  useEffect(() => {
+    setIsDescExpanded(false);
+    setShowDescMore(false);
+  }, [moduleId]);
+
   const fetchLessonDetails = useCallback(async (ids) => {
     try {
       const auth = getAuth();
@@ -240,6 +250,28 @@ const ModuleDetail = () => {
       console.error("Error fetching lesson details:", error);
     }
   }, []);
+
+  // Determine if the header description exceeds 3 lines (only when collapsed).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isEditMode || mode === "create") return;
+    if (!moduleData) return;
+    if (isDescExpanded) {
+      setShowDescMore(false);
+      return;
+    }
+    if (!descRef.current) return;
+
+    const el = descRef.current;
+    const raf = window.requestAnimationFrame(() => {
+      try {
+        setShowDescMore(el.scrollHeight > el.clientHeight + 1);
+      } catch {
+        setShowDescMore(false);
+      }
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [moduleId, moduleData, moduleData?.subtitle, isDescExpanded, isEditMode, mode]);
 
   const fetchModuleDetails = useCallback(async () => {
     try {
@@ -508,6 +540,7 @@ const ModuleDetail = () => {
     }
   };
 
+
   return (
     <div style={{
       fontFamily: "Open Sans, Arial, sans-serif",
@@ -689,7 +722,7 @@ const ModuleDetail = () => {
         <div
           style={{
             fontWeight: 800,
-            fontSize: "3.2rem",
+            fontSize: "2.6rem",
             marginTop: 8,
             marginBottom: 10,
             color: "#111",
@@ -699,8 +732,43 @@ const ModuleDetail = () => {
         >
           {module.title}
         </div>
-        <div style={{ color: "#444", fontSize: "1.25rem", fontWeight: 500, lineHeight: "1.4" }}>
-          {module.subtitle?.replace(/<[^>]*>/g, "") || "No description available"}
+        <div style={{ maxWidth: 820, margin: "0 auto", textAlign: "left" }}>
+          <div
+            ref={descRef}
+            style={{
+              color: "#222",
+              fontSize: "1.05rem",
+              fontWeight: 500,
+              lineHeight: "1.6",
+              ...(isDescExpanded
+                ? {}
+                : {
+                    overflow: "hidden",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                  }),
+            }}
+          >
+            {module.subtitle?.replace(/<[^>]*>/g, "") || "No description available"}
+          </div>
+          {!isDescExpanded && showDescMore && (
+            <button
+              type="button"
+              onClick={() => setIsDescExpanded(true)}
+              style={{
+                marginTop: 6,
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                color: "#162040",
+                fontWeight: 800,
+              }}
+            >
+              Show More
+            </button>
+          )}
         </div>
 
         {/* Metadata chips row */}
@@ -716,16 +784,14 @@ const ModuleDetail = () => {
             gap: 6,
             padding: "8px 14px",
             borderRadius: 999,
-            border: "1px solid #e5e7eb",
-            background: "#fff",
+            border: "1px solid #cbd5e1",
+            background: "#e2e8f0",
             color: "#111",
             fontWeight: 600,
             fontSize: "0.95rem",
             lineHeight: 1,
             whiteSpace: "nowrap",
           };
-
-          const levelStyle = getLevelChipStyles(level);
 
           const Chip = ({ label, value, style }) => (
             <span style={{ ...chipBase, ...style }}>
@@ -744,7 +810,7 @@ const ModuleDetail = () => {
               }}
             >
               <Chip label="Category" value={category} />
-              <Chip label="Level" value={level} style={levelStyle} />
+              <Chip label="Level" value={level} />
               <Chip label="Type" value={type} />
               <Chip label="Duration" value={duration} />
             </div>
@@ -818,16 +884,6 @@ const ModuleDetail = () => {
                 />
               </div>
 
-              {/* Module description */}
-              <div style={cardStyle}>
-                <div style={cardTitleStyle}>Module description</div>
-                <div
-                  style={bodyStyle}
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(module.description || "No description available."),
-                  }}
-                />
-              </div>
             </>
           );
         })()}
@@ -852,6 +908,15 @@ const ModuleDetail = () => {
             return (
               <div
                 key={res.id || idx}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleLessonClick(res, idx)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleLessonClick(res, idx);
+                  }
+                }}
                 style={{
                   border: "1px solid #e5e7eb",
                   borderRadius: 14,
@@ -861,6 +926,18 @@ const ModuleDetail = () => {
                   alignItems: "center",
                   justifyContent: "space-between",
                   gap: 16,
+                  cursor: "pointer",
+                  transition: "transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.08)";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.borderColor = "#e5e7eb";
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
@@ -888,23 +965,7 @@ const ModuleDetail = () => {
                     <div style={{ color: "#666", fontSize: "0.95rem", marginTop: 4 }}>{subtitle}</div>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleLessonClick(res, idx)}
-                  style={{
-                    border: "2px solid #162040",
-                    background: "#fff",
-                    color: "#162040",
-                    fontWeight: 700,
-                    borderRadius: 10,
-                    padding: "10px 16px",
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  View Lesson
-                </button>
+                <div style={{ width: 12 }} />
               </div>
             );
           })}

@@ -46,6 +46,22 @@ function normalizeBoolean(value) {
   return false;
 }
 
+function getDetailValue(details, label) {
+  const target = String(label || "").trim().toLowerCase();
+  const item = (details || []).find((d) => String(d?.label || "").trim().toLowerCase() === target);
+  return item?.value ?? "";
+}
+
+function normalizeToArray(value) {
+  if (Array.isArray(value)) return value;
+  if (value === null || value === undefined) return [];
+  const s = String(value).trim();
+  if (!s) return [];
+  // Split comma-separated values from older schemas
+  if (s.includes(",")) return s.split(",").map((v) => v.trim()).filter(Boolean);
+  return [s];
+}
+
 const ModuleBuilder = ({ onCancel } = {}) => {
   const [formData, setFormData] = useState({
     title: "",
@@ -76,6 +92,25 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const [editModuleAuthorUid, setEditModuleAuthorUid] = useState("");
   const [prefillLessonIds, setPrefillLessonIds] = useState([]);
   const didPrefillLessonsRef = useRef(false);
+
+  const handleBack = () => {
+    // Prefer explicit return path when editing from module detail.
+    if (returnTo) {
+      navigate(returnTo);
+      return;
+    }
+    // If opened from another screen/modal, prefer closing that context.
+    if (typeof onCancel === "function") {
+      onCancel();
+      return;
+    }
+    // Otherwise go back (with safe fallback).
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/");
+  };
 
   const handleCancel = () => {
     // If opened from another screen/modal, prefer closing that context.
@@ -137,15 +172,33 @@ const ModuleBuilder = ({ onCancel } = {}) => {
           return;
         }
         const data = snap.data() || {};
-
+        const details = Array.isArray(data.details) ? data.details : [];
+        console.log("PPARTHAS ",data);
+        console.log("PPARTHAS details ", details);
         const authorUid = data.author || data.authorId || "";
         setEditModuleAuthorUid(authorUid);
 
-        const categoryRaw = data.Category ?? data.category ?? [];
-        const typeRaw = data.Type ?? data.type ?? [];
-        const levelRaw = data.Level ?? data.level ?? [];
-        const durationRaw = data.Duration ?? data.duration ?? "";
+        const titleRaw = data.title ?? data.Title ?? data.name ?? data.Name ?? "";
+        const descriptionRaw = data.description ?? data.Description ?? data.subtitle ?? data.Subtitle ?? "";
+        const requirementsRaw = data.requirements ?? data.Requirements ?? "";
+        const learningObjectivesRaw =
+          data.learningObjectives ?? data.LearningObjectives ?? data.objectives ?? data.Objectives ?? "";
 
+        const categoryRaw =
+          data.Category ?? data.category ?? data.categories ?? data.Categories ?? getDetailValue(details, "Category");
+        const typeRaw = data.Type ?? data.type ?? data.types ?? data.Types ?? getDetailValue(details, "Type");
+        const levelRaw = data.Level ?? data.level ?? data.levels ?? data.Levels ?? getDetailValue(details, "Level");
+        const durationRaw =
+          data.Duration ?? data.duration ?? data.minutes ?? data.Minutes ?? getDetailValue(details, "Duration") ?? "";
+
+          console.log("PPARTHAS titleRaw ", titleRaw);
+          console.log("PPARTHAS descriptionRaw ", descriptionRaw);
+          console.log("PPARTHAS requirementsRaw ", requirementsRaw);
+          console.log("PPARTHAS learningObjectivesRaw ", learningObjectivesRaw);
+          console.log("PPARTHAS categoryRaw ", categoryRaw);
+          console.log("PPARTHAS typeRaw ", typeRaw);
+          console.log("PPARTHAS levelRaw ", levelRaw);
+          console.log("PPARTHAS durationRaw ", durationRaw);
         const lessonIdsFromLessonPlans =
           data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
             ? Object.values(data.lessonPlans).filter(Boolean)
@@ -155,15 +208,15 @@ const ModuleBuilder = ({ onCancel } = {}) => {
           lessonIdsFromLessonPlans.length > 0 ? lessonIdsFromLessonPlans : lessonIdsFromLessons;
 
         setFormData({
-          title: data.title || "",
-          Category: Array.isArray(categoryRaw) ? categoryRaw : categoryRaw ? [categoryRaw] : [],
-          Type: Array.isArray(typeRaw) ? typeRaw : typeRaw ? [typeRaw] : [],
-          Level: Array.isArray(levelRaw) ? levelRaw : levelRaw ? [levelRaw] : [],
+          title: titleRaw || "",
+          Category: normalizeToArray(categoryRaw),
+          Type: normalizeToArray(typeRaw),
+          Level: normalizeToArray(levelRaw),
           Duration: durationRaw ?? "",
-          description: data.description || "",
-          requirements: data.requirements || "",
-          learningObjectives: data.learningObjectives || "",
-          isPublic: normalizeBoolean(data.isPublic),
+          description: descriptionRaw || "",
+          requirements: requirementsRaw || "",
+          learningObjectives: learningObjectivesRaw || "",
+          isPublic: normalizeBoolean(data.isPublic ?? data.IsPublic),
         });
 
         setPrefillLessonIds(lessonIds);
@@ -241,22 +294,22 @@ const ModuleBuilder = ({ onCancel } = {}) => {
 
   const handleChange = (e) => {
     const { id, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [id]: id === "Duration" ? (value === "" ? "" : parseInt(value, 10)) : value,
-    });
+    }));
   };
 
   const handleDescriptionChange = (value) => {
-    setFormData({ ...formData, description: value });
+    setFormData((prev) => ({ ...prev, description: value }));
   };
 
   const handleRequirementsChange = (value) => {
-    setFormData({ ...formData, requirements: value });
+    setFormData((prev) => ({ ...prev, requirements: value }));
   };
 
   const handleLearningObjectivesChange = (value) => {
-    setFormData({ ...formData, learningObjectives: value });
+    setFormData((prev) => ({ ...prev, learningObjectives: value }));
   };
 
   // --- Save as Draft ---
@@ -436,6 +489,24 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         fontFamily: "Open Sans, sans-serif"
       }}
     >
+      {/* Back button (match module page behavior) */}
+      <div style={{ width: "100%", maxWidth: 700, marginBottom: 8, padding: "0 8px" }}>
+        <button
+          type="button"
+          onClick={handleBack}
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+            color: "#162040",
+            fontWeight: 600,
+            fontSize: "1rem",
+          }}
+        >
+          {"< Back"}
+        </button>
+      </div>
       <div style={{ width: "100%", maxWidth: 700, marginBottom: 32, textAlign: "center" }}>
         <h2
           style={{
@@ -447,7 +518,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
             fontFamily: "Open Sans, sans-serif"
           }}
         >
-          Module Builder
+          {editModuleId ? "Edit Module" : "Module Builder"}
         </h2>
         <p
           style={{
@@ -562,7 +633,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               label={<span>Category <RequiredAsterisk /></span>}
               options={CATEGORY_OPTIONS}
               selected={formData.Category || []}
-              onChange={(values) => setFormData({ ...formData, Category: values })}
+              onChange={(values) => setFormData((prev) => ({ ...prev, Category: values }))}
               placeholder="Select category..."
             />
           </div>
@@ -571,7 +642,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               label={<span>Level <RequiredAsterisk /></span>}
               options={LEVEL_OPTIONS}
               selected={formData.Level || []}
-              onChange={(values) => setFormData({ ...formData, Level: values })}
+              onChange={(values) => setFormData((prev) => ({ ...prev, Level: values }))}
               single={true}
               placeholder="Select level..."
             />
@@ -581,7 +652,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               label={<span>Type <RequiredAsterisk /></span>}
               options={TYPE_OPTIONS}
               selected={formData.Type || []}
-              onChange={(values) => setFormData({ ...formData, Type: values })}
+              onChange={(values) => setFormData((prev) => ({ ...prev, Type: values }))}
               single={true}
               placeholder="Select type..."
             />
@@ -724,7 +795,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               type="checkbox"
               id="isPublic"
               checked={formData.isPublic}
-              onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+              onChange={(e) => setFormData((prev) => ({ ...prev, isPublic: e.target.checked }))}
               style={{ width: 18, height: 18 }}
             />
             <label htmlFor="isPublic" style={{ color: "#111", fontWeight: 600, fontSize: "1.08rem" }}>
