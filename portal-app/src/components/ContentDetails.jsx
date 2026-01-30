@@ -37,7 +37,10 @@ const ContentDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCheckingUsage, setIsCheckingUsage] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [infoModalMessage, setInfoModalMessage] = useState("");
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -106,9 +109,72 @@ const ContentDetails = () => {
       navigate("/");
     } catch (e) {
       console.error("Failed to delete content:", e);
-      alert("Failed to delete the nugget. Please try again.");
+      setInfoModalMessage("Failed to delete the nugget. Please try again.");
+      setIsInfoModalOpen(true);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const lessonUsesContent = (lesson, contentId) => {
+    try {
+      const sections = Array.isArray(lesson?.sections) ? lesson.sections : [];
+      return sections.some((s) => (Array.isArray(s?.contentIds) ? s.contentIds : []).includes(contentId));
+    } catch {
+      return false;
+    }
+  };
+
+  const checkUsedInAnyLesson = async (contentId) => {
+    const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+    const auth = getAuth();
+    const user = auth.currentUser;
+    const token = user ? await user.getIdToken() : null;
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+    // Prefer server APIs (more likely to have permission than direct Firestore reads).
+    const fetchJsonSafe = async (url) => {
+      try {
+        const res = await fetch(url, { headers });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const lessonLists = isAdmin
+      ? [await fetchJsonSafe(`${baseUrl}/api/lessons/admin`)]
+      : await Promise.all([
+          fetchJsonSafe(`${baseUrl}/api/lessons`), // public lessons
+          fetchJsonSafe(`${baseUrl}/api/lesson/myLessons`), // viewer's private lessons
+        ]);
+
+    const lessons = lessonLists.flat();
+    return lessons.some((l) => lessonUsesContent(l, contentId));
+  };
+
+  const handleDeleteClick = async () => {
+    try {
+      if (!id) return;
+      setIsCheckingUsage(true);
+
+      const used = await checkUsedInAnyLesson(id);
+      if (used) {
+        setInfoModalMessage("This nugget cannot be deleted because it is already used in a lesson plan.");
+        setIsInfoModalOpen(true);
+        return;
+      }
+
+      setIsDeleteModalOpen(true);
+    } catch (e) {
+      console.error("Failed to check nugget usage:", e);
+      // Fail-safe: don't allow delete if we can't verify usage
+      setInfoModalMessage("Unable to verify if this nugget is used in a lesson plan. Please try again.");
+      setIsInfoModalOpen(true);
+    } finally {
+      setIsCheckingUsage(false);
     }
   };
 
@@ -137,7 +203,7 @@ const ContentDetails = () => {
                 })
               }
             />
-            <DeleteButton onClick={() => setIsDeleteModalOpen(true)} />
+            <DeleteButton onClick={handleDeleteClick} disabled={isCheckingUsage || isDeleting} />
           </div>
         )}
       </div>
@@ -338,6 +404,60 @@ const ContentDetails = () => {
                 }}
               >
                 {isDeleting ? "Deleting..." : "OK"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isInfoModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.45)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+          }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setIsInfoModalOpen(false);
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 520,
+              background: "#fff",
+              borderRadius: 16,
+              padding: "24px 22px",
+              boxShadow: "0 18px 60px rgba(0,0,0,0.2)",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <div style={{ marginTop: 10, color: "#444", lineHeight: 1.5 }}>
+              {infoModalMessage || "This action cannot be completed."}
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+              <button
+                type="button"
+                onClick={() => setIsInfoModalOpen(false)}
+                style={{
+                  background: "#162040",
+                  color: "#fff",
+                  border: "2px solid #162040",
+                  borderRadius: 10,
+                  padding: "10px 14px",
+                  cursor: "pointer",
+                  fontWeight: 900,
+                }}
+              >
+                OK
               </button>
             </div>
           </div>

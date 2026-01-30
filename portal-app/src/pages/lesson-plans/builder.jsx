@@ -1,8 +1,8 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, getDocs, query, where, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import OverlayTileView from "../../components/OverlayTileView";
 import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
@@ -23,6 +23,15 @@ if (typeof document !== "undefined") {
 const RequiredAsterisk = () => (
   <span style={{ color: "red", marginLeft: 4 }}>*</span>
 );
+
+const normalizeBoolean = (value) => {
+  if (value === true) return true;
+  if (value === false) return false;
+  const s = String(value ?? "").trim().toLowerCase();
+  if (s === "true") return true;
+  if (s === "false") return false;
+  return false;
+};
 
 const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) => {
   const location = useLocation();
@@ -49,7 +58,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  useUserData();
+  const { userData } = useUserData();
 
   const editLessonId = useMemo(() => location?.state?.editLessonId || null, [location?.state?.editLessonId]);
   const returnTo = useMemo(() => location?.state?.returnTo || null, [location?.state?.returnTo]);
@@ -73,31 +82,38 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     navigate("/");
   };
 
-  // Load user's nuggets for overlay
+  const loadNuggetsForOverlay = useCallback(async (db, user, role) => {
+    if (!user) {
+      setPortalContent([]);
+      return;
+    }
+    try {
+      const snap = await getDocs(collection(db, "content"));
+      const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      if (role === "admin") {
+        setPortalContent(all);
+        return;
+      }
+      const uid = user.uid;
+      const filtered = all.filter((n) => normalizeBoolean(n?.isPublic) || n?.User === uid);
+      setPortalContent(filtered);
+    } catch (e) {
+      console.error("Failed to load nuggets for overlay:", e);
+      setPortalContent([]);
+    }
+  }, []);
+
+  // Load nuggets for overlay (role-based)
   useEffect(() => {
     const db = getFirestore();
     const auth = getAuth();
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        setPortalContent([]);
-        return;
-      }
-      const nuggetsQuery = query(
-        collection(db, "content"),
-        where("User", "==", user.uid)
-      );
-      getDocs(nuggetsQuery).then(snapshot => {
-        const userNuggets = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setPortalContent(userNuggets);
-      });
+      loadNuggetsForOverlay(db, user, userData?.role);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [loadNuggetsForOverlay, userData?.role]);
 
   // Load draft from localStorage if present (skip when editing an existing lesson)
   useEffect(() => {
@@ -502,17 +518,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     const db = getFirestore();
     const auth = getAuth();
     const user = auth.currentUser;
-    if (!user) return;
-    const nuggetsQuery = query(
-      collection(db, "content"),
-      where("User", "==", user.uid)
-    );
-    const snapshot = await getDocs(nuggetsQuery);
-    const userNuggets = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setPortalContent(userNuggets);
+    await loadNuggetsForOverlay(db, user, userData?.role);
   };
 
   return (
