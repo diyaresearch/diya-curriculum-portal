@@ -9,6 +9,7 @@ import { TYPO } from "../../constants/typography";
 import BackButton from "../../components/BackButton";
 import EditButton from "../../components/EditButton";
 import DeleteButton from "../../components/DeleteButton";
+import MetaChipsRow from "../../components/MetaChipsRow";
 import module1 from "../../assets/modules/module1.png";
 import module2 from "../../assets/modules/module2.png";
 import module3 from "../../assets/modules/module3.png";
@@ -738,42 +739,16 @@ const ModuleDetail = () => {
           const type = getDetailValue(module.details, "Type") || "—";
           const duration = formatDurationShort(getDetailValue(module.details, "Duration"));
 
-          const chipBase = {
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "8px 14px",
-            borderRadius: 999,
-            border: "1px solid #cbd5e1",
-            background: "#e2e8f0",
-            color: "#111",
-            fontWeight: 600,
-            fontSize: "0.95rem",
-            lineHeight: 1,
-            whiteSpace: "nowrap",
-          };
-
-          const Chip = ({ label, value, style }) => (
-            <span style={{ ...chipBase, ...style }}>
-              <span style={{ opacity: 0.85 }}>{label}:</span> <span>{value}</span>
-            </span>
-          );
-
           return (
-            <div
-              style={{
-                marginTop: 18,
-                display: "flex",
-                justifyContent: "center",
-                flexWrap: "wrap",
-                gap: 12,
-              }}
-            >
-              <Chip label="Category" value={category} />
-              <Chip label="Level" value={level} />
-              <Chip label="Type" value={type} />
-              <Chip label="Duration" value={duration} />
-            </div>
+            <MetaChipsRow
+              style={{ marginTop: 18 }}
+              items={[
+                { label: "Category", value: category },
+                { label: "Level", value: level },
+                { label: "Type", value: type },
+                { label: "Duration", value: duration },
+              ]}
+            />
           );
         })()}
       </div>

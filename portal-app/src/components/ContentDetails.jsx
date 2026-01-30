@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import BackButton from "./BackButton";
+import MetaChipsRow from "./MetaChipsRow";
+import { TYPO } from "../constants/typography";
 
 const toSlidesEmbedUrl = (url) => {
   // Example input: https://docs.google.com/presentation/d/<ID>/edit#slide=id....
@@ -84,50 +86,40 @@ const ContentDetails = () => {
           borderBottom: "1px solid #e5e7eb",
         }}
       >
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-          <div>
-            <span className="font-semibold text-gray-600">Author:</span>
-            <span className="ml-2 text-gray-800">{content.Author || "—"}</span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-600">Type:</span>
-            <span className="ml-2 text-gray-800">
-              {Array.isArray(content.Type) ? content.Type.join(", ") : content.Type || "—"}
-            </span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-600">Category:</span>
-            <span className="ml-2 text-gray-800">
-              {Array.isArray(content.Category) ? content.Category.join(", ") : content.Category || "—"}
-            </span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-600">Level:</span>
-            <span className="ml-2 text-gray-800">
-              {Array.isArray(content.Level) ? content.Level.join(", ") : content.Level || "—"}
-            </span>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-600">Duration:</span>
-            <span className="ml-2 text-gray-800">{content.Duration || "—"} minutes</span>
-          </div>
-        </div>
+        <MetaChipsRow
+          items={[
+            { label: "Author", value: content.Author || "—" },
+            { label: "Category", value: content.Category },
+            { label: "Level", value: content.Level },
+            { label: "Type", value: content.Type },
+            {
+              label: "Duration",
+              value: content.Duration !== undefined && content.Duration !== null ? `${content.Duration} min` : "—",
+            },
+          ]}
+        />
       </div>
 
       {/* Description (match lesson page typography) */}
       <div className="py-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-800 mb-3">Description</h2>
+        <h2 className="mb-3" style={TYPO.sectionTitle}>
+          Description
+        </h2>
         <div
-          className="rich-text-content text-gray-700 leading-relaxed"
+          className="rich-text-content text-gray-700"
+          style={TYPO.body}
           dangerouslySetInnerHTML={{ __html: content.Description || "" }}
         />
       </div>
 
       {/* Instructions (match lesson page typography) */}
       <div className="py-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-3">Instructions / Notes</h2>
+        <h2 className="mb-3" style={TYPO.sectionTitle}>
+          Instructions / Notes
+        </h2>
         <div
-          className="rich-text-content text-gray-700 leading-relaxed"
+          className="rich-text-content text-gray-700"
+          style={TYPO.body}
           dangerouslySetInnerHTML={{ __html: content.Instructions || "" }}
         />
       </div>

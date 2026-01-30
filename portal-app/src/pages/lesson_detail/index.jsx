@@ -5,6 +5,7 @@ import useUserData from "../../hooks/useUserData";
 import BackButton from "../../components/BackButton";
 import EditButton from "../../components/EditButton";
 import DeleteButton from "../../components/DeleteButton";
+import MetaChipsRow from "../../components/MetaChipsRow";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import "react-quill/dist/quill.snow.css";
 import DOMPurify from "dompurify";
@@ -167,8 +168,21 @@ export const LessonDetail = () => {
     );
   }
 
-  const { title, type, category, level, duration, description, objectives, sections, isPublic } = lesson;
+  const { title, type, category, level, duration, description, objectives, sections } = lesson;
   const canManage = !!user && (userData?.role === "admin" || (!!authorId && user.uid === authorId));
+
+  const formatDurationShort = (value) => {
+    if (value === null || value === undefined) return "—";
+    if (typeof value === "number" && Number.isFinite(value)) return `${value} min`;
+    const s = String(value).trim();
+    if (!s) return "—";
+    // If already contains min/hr, keep as-is.
+    if (/min|hour|hr/i.test(s)) return s;
+    // If it's numeric string, add min.
+    const n = Number(s);
+    if (!Number.isNaN(n) && Number.isFinite(n)) return `${n} min`;
+    return s;
+  };
 
   // ReactQuill expects a string value; lesson fields may be arrays/undefined depending on source.
   const descriptionHtml = typeof description === "string" ? description : "";
@@ -178,6 +192,10 @@ export const LessonDetail = () => {
       ? objectives
       : "";
   const safeSections = Array.isArray(sections) ? sections : [];
+  const authorName =
+    author?.firstName && author?.lastName
+      ? `${author.firstName} ${author.lastName}`
+      : author?.fullName || author?.email || "—";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -208,28 +226,16 @@ export const LessonDetail = () => {
               </h1>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-              <div>
-                <span className="font-semibold text-gray-600">Type:</span>
-                <span className="ml-2 text-gray-800">{type}</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">Category:</span>
-                <span className="ml-2 text-gray-800">{category}</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">Level:</span>
-                <span className="ml-2 text-gray-800">{level}</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">Duration:</span>
-                <span className="ml-2 text-gray-800">{duration} minutes</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-600">Is Public:</span>
-                <span className="ml-2 text-gray-800">{isPublic ? "Yes" : "No"}</span>
-              </div>
-            </div>
+            <MetaChipsRow
+              style={{ marginTop: 6 }}
+              items={[
+                { label: "Author", value: authorName },
+                { label: "Category", value: category },
+                { label: "Level", value: level },
+                { label: "Type", value: type },
+                { label: "Duration", value: formatDurationShort(duration) },
+              ]}
+            />
           </div>
 
           {/* Author Section */}

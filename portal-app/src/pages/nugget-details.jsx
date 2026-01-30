@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { TYPO } from "../constants/typography";
+import MetaChipsRow from "../components/MetaChipsRow";
 
 const NuggetDetails = () => {
   const { id } = useParams();
@@ -106,9 +107,6 @@ const NuggetDetails = () => {
         dangerouslySetInnerHTML={{ __html: nugget.Description || "" }}
       />
       <div style={{ ...TYPO.body, marginBottom: 8 }}>
-        <strong>Author:</strong> {nugget.Author}
-      </div>
-      <div style={{ ...TYPO.body, marginBottom: 8 }}>
         <strong>Created:</strong>{" "}
         {nugget.createdAt
           ? typeof nugget.createdAt.toDate === "function"
@@ -118,36 +116,16 @@ const NuggetDetails = () => {
               : ""
           : ""}
       </div>
-      <div style={{ display: "flex", gap: 32, marginBottom: 24 }}>
-        <div>
-          <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Category</div>
-          <div style={{ fontSize: "1.08rem", color: "#444" }}>
-            {Array.isArray(nugget.Category)
-              ? nugget.Category.join(", ")
-              : nugget.Category}
-          </div>
-        </div>
-        <div>
-          <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Level</div>
-          <div style={{ fontSize: "1.08rem", color: "#444" }}>
-            {Array.isArray(nugget.Level)
-              ? nugget.Level.join(", ")
-              : nugget.Level}
-          </div>
-        </div>
-        <div>
-          <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Duration</div>
-          <div style={{ fontSize: "1.08rem", color: "#444" }}>{nugget.Duration}</div>
-        </div>
-        <div>
-          <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Type</div>
-          <div style={{ fontSize: "1.08rem", color: "#444" }}>
-            {Array.isArray(nugget.Type)
-              ? nugget.Type.join(", ")
-              : nugget.Type}
-          </div>
-        </div>
-      </div>
+      <MetaChipsRow
+        style={{ marginBottom: 24 }}
+        items={[
+          { label: "Author", value: nugget.Author || "—" },
+          { label: "Category", value: nugget.Category },
+          { label: "Level", value: nugget.Level },
+          { label: "Type", value: nugget.Type },
+          { label: "Duration", value: nugget.Duration },
+        ]}
+      />
       {/* Attachments */}
       {Array.isArray(nugget.attachments) && nugget.attachments.length > 0 && (
         <div style={{ marginTop: 18, marginBottom: 18 }}>
