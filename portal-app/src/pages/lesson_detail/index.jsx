@@ -6,6 +6,7 @@ import BackButton from "../../components/BackButton";
 import EditButton from "../../components/EditButton";
 import DeleteButton from "../../components/DeleteButton";
 import MetaChipsRow from "../../components/MetaChipsRow";
+import SectionCard from "../../components/SectionCard";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import "react-quill/dist/quill.snow.css";
 import DOMPurify from "dompurify";
@@ -198,159 +199,141 @@ export const LessonDetail = () => {
       : author?.fullName || author?.email || "—";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-4">
-          <BackButton onClick={handleBack} />
+    <div style={{ background: "#fff", minHeight: "100vh" }}>
+      {/* Back + Edit controls (match module page) */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "18px 20px 0 20px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
+        <BackButton onClick={handleBack} />
+        {canManage && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <EditButton
+              onClick={() =>
+                navigate("/lesson-plans/builder", {
+                  state: { editLessonId: lessonId, returnTo: location.pathname },
+                })
+              }
+            />
+            <DeleteButton onClick={openModal} />
+          </div>
+        )}
+      </div>
 
-          {canManage && (
-            <div className="flex gap-2">
-              <EditButton
-                onClick={() =>
-                  navigate("/lesson-plans/builder", {
-                    state: { editLessonId: lessonId, returnTo: location.pathname },
-                  })
-                }
+      {/* Header (match module page) */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "10px 20px 0 20px",
+          textAlign: "center",
+        }}
+      >
+        <h1 style={TYPO.pageTitle}>{title}</h1>
+        <MetaChipsRow
+          style={{ marginTop: 18 }}
+          items={[
+            { label: "Author", value: authorName },
+            { label: "Category", value: category },
+            { label: "Level", value: level },
+            { label: "Type", value: type },
+            { label: "Duration", value: formatDurationShort(duration) },
+          ]}
+        />
+      </div>
+
+      {/* Main content cards */}
+      <div style={{ maxWidth: 1100, margin: "28px auto 0 auto", padding: "0 20px 80px 20px" }}>
+        <SectionCard title="Description" style={{ marginTop: 0 }}>
+          <div
+            className="rich-text-content text-gray-700"
+            style={TYPO.body}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(descriptionHtml) }}
+          />
+        </SectionCard>
+
+        <SectionCard title="Learning Objectives">
+          <div
+            className="rich-text-content text-gray-700"
+            style={TYPO.body}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(objectivesHtml) }}
+          />
+        </SectionCard>
+
+        <SectionCard title="Lesson Content">
+          {safeSections.map((section, sectionIndex) => (
+            <div key={sectionIndex} style={{ marginTop: sectionIndex === 0 ? 0 : 18 }}>
+              <h3 style={{ ...TYPO.sectionTitle, fontSize: "1.1rem", marginBottom: 8 }}>
+                Section {sectionIndex + 1}
+              </h3>
+              <div
+                className="rich-text-content text-gray-700"
+                style={{ ...TYPO.body, marginBottom: 14 }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(typeof section?.intro === "string" ? section.intro : ""),
+                }}
               />
-              <DeleteButton onClick={openModal} />
-            </div>
-          )}
-        </div>
 
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-          {/* Lesson Header */}
-          <div className="p-6 border-b">
-            <div className="flex justify-between items-start mb-4">
-              <h1 className="text-gray-900" style={TYPO.pageTitle}>
-                {title}
-              </h1>
-            </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                {(Array.isArray(section?.contentIds) ? section.contentIds : []).map((contentId, contentIndex) => {
+                  const content = contentDetails[contentId];
+                  if (!content) return null;
 
-            <MetaChipsRow
-              style={{ marginTop: 6 }}
-              items={[
-                { label: "Author", value: authorName },
-                { label: "Category", value: category },
-                { label: "Level", value: level },
-                { label: "Type", value: type },
-                { label: "Duration", value: formatDurationShort(duration) },
-              ]}
-            />
-          </div>
-
-          {/* Author Section */}
-          <div className="p-6 border-b">
-            <h2 className="mb-3" style={TYPO.sectionTitle}>
-              Author Details
-            </h2>
-            {author ? (
-              <div>
-                <p className="text-gray-700" style={TYPO.body}>
-                  <strong>Name:</strong>{" "}
-                  {author.firstName && author.lastName
-                    ? `${author.firstName} ${author.lastName}`
-                    : author.fullName}
-                </p>
-                <p className="text-gray-700" style={TYPO.body}>
-                  <strong>Email:</strong> {author.email}
-                </p>
-              </div>
-            ) : (
-              <p>No author information available</p>
-            )}
-          </div>
-
-          {/* Description Section */}
-          <div className="p-6 border-b">
-            <h2 className="mb-3" style={TYPO.sectionTitle}>
-              Description
-            </h2>
-            <div
-              className="rich-text-content text-gray-700"
-              style={TYPO.body}
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(descriptionHtml) }}
-            />
-          </div>
-
-          {/* Objectives Section */}
-          <div className="p-6 border-b">
-            <h2 className="mb-3" style={TYPO.sectionTitle}>
-              Learning Objectives
-            </h2>
-            <div
-              className="rich-text-content text-gray-700"
-              style={TYPO.body}
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(objectivesHtml) }}
-            />
-          </div>
-
-          {/* Lesson Sections */}
-          <div className="p-6">
-            <h2 className="mb-6" style={TYPO.sectionTitle}>
-              Lesson Content
-            </h2>
-            {safeSections.map((section, sectionIndex) => (
-              <div key={sectionIndex} className="mb-8 last:mb-0">
-                <h3 className="mb-2" style={{ ...TYPO.sectionTitle, fontSize: "1.1rem" }}>
-                  Section {sectionIndex + 1}
-                </h3>
-                <div
-                  className="rich-text-content text-gray-700 mb-4"
-                  style={TYPO.body}
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(typeof section?.intro === "string" ? section.intro : ""),
-                  }}
-                />
-
-                <div className="space-y-6">
-                  {(Array.isArray(section?.contentIds) ? section.contentIds : []).map((contentId, contentIndex) => {
-                    const content = contentDetails[contentId];
-                    if (!content) return null;
-
-                    return (
-                      <div key={contentIndex} className="border rounded-lg p-4">
-                        <div className="flex items-center mb-3">
-                          <h4 style={{ ...TYPO.sectionTitle, fontSize: "1.05rem", fontWeight: 600 }}>
-                            {content.Title || content.title || `Content ${contentIndex + 1}`}
-                          </h4>
-                        </div>
-
-                        {/* <p className="text-gray-600 mb-4">{content.Abstract}</p> */}
-                        <div
-                          className="text-gray-600 mb-4"
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.Abstract) }}
-                        />
-
-                        {/* Content Display */}
-                        {isVideoLink(content.fileUrl) ? (
-                          <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-lg">
-                            <iframe
-                              src={getEmbedUrl(content.fileUrl)}
-                              frameBorder="0"
-                              allow="autoplay; fullscreen"
-                              allowFullScreen
-                              title={`Content Video ${contentIndex + 1}`}
-                              className="absolute top-0 left-0 w-full h-full"
-                            />
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/content/${contentId}`)}
-                            className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                          >
-                            <FaExternalLinkAlt className="mr-2" />
-                            View Details
-                          </button>
-                        )}
+                  return (
+                    <div
+                      key={contentIndex}
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 14,
+                        padding: "14px 16px",
+                        background: "#fff",
+                      }}
+                    >
+                      <div style={{ ...TYPO.sectionTitle, fontSize: "1.05rem", fontWeight: 600 }}>
+                        {content.Title || content.title || `Content ${contentIndex + 1}`}
                       </div>
-                    );
-                  })}
-                </div>
+
+                      <div
+                        style={{ ...TYPO.body, color: "#666", marginTop: 8, marginBottom: 12 }}
+                        className="rich-text-content"
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.Abstract || "") }}
+                      />
+
+                      {isVideoLink(content.fileUrl) ? (
+                        <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-lg">
+                          <iframe
+                            src={getEmbedUrl(content.fileUrl)}
+                            frameBorder="0"
+                            allow="autoplay; fullscreen"
+                            allowFullScreen
+                            title={`Content Video ${contentIndex + 1}`}
+                            className="absolute top-0 left-0 w-full h-full"
+                          />
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/content/${contentId}`)}
+                          className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                        >
+                          <FaExternalLinkAlt className="mr-2" />
+                          View Details
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          ))}
+        </SectionCard>
       </div>
 
       {/* Delete Confirmation Modal */}

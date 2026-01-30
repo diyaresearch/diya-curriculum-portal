@@ -12,6 +12,7 @@ export const TYPO = {
     letterSpacing: "1px",
     color: "#111",
     lineHeight: 1.15,
+    textAlign: "center",
   },
   pageSubtitle: {
     fontFamily: FONT_FAMILY,

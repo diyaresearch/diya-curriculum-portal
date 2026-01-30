@@ -5,6 +5,7 @@ import { app as firebaseApp } from "../firebase/firebaseConfig";
 import BackButton from "./BackButton";
 import MetaChipsRow from "./MetaChipsRow";
 import { TYPO } from "../constants/typography";
+import SectionCard from "./SectionCard";
 
 const toSlidesEmbedUrl = (url) => {
   // Example input: https://docs.google.com/presentation/d/<ID>/edit#slide=id....
@@ -68,25 +69,24 @@ const ContentDetails = () => {
   if (!content) return <div style={{ padding: 40 }}>Content not found.</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-      {/* Back Button */}
-      <BackButton onClick={() => navigate(-1)} className="mb-4" />
+    <div style={{ background: "#fff", minHeight: "100vh" }}>
+      {/* Back control (match module page spacing) */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "18px 20px 0 20px" }}>
+        <BackButton onClick={() => navigate(-1)} />
+      </div>
 
-      <h1 className="text-3xl font-bold text-gray-900" style={{ marginBottom: 8 }}>
-        {content.Title}
-      </h1>
-
-      {/* Metadata row (match Lesson Plan header style) */}
+      {/* Header (match module page) */}
       <div
         style={{
-          marginTop: "16px",
-          marginBottom: "24px",
-          paddingBottom: "16px",
-          borderBottom: "1px solid #e5e7eb",
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "10px 20px 0 20px",
+          textAlign: "center",
         }}
       >
+        <h1 style={TYPO.pageTitle}>{content.Title}</h1>
         <MetaChipsRow
+          style={{ marginTop: 18 }}
           items={[
             { label: "Author", value: content.Author || "—" },
             { label: "Category", value: content.Category },
@@ -100,38 +100,30 @@ const ContentDetails = () => {
         />
       </div>
 
-      {/* Description (match lesson page typography) */}
-      <div className="py-6 border-b border-gray-200">
-        <h2 className="mb-3" style={TYPO.sectionTitle}>
-          Description
-        </h2>
-        <div
-          className="rich-text-content text-gray-700"
-          style={TYPO.body}
-          dangerouslySetInnerHTML={{ __html: content.Description || "" }}
-        />
-      </div>
+      {/* Main content cards */}
+      <div style={{ maxWidth: 1100, margin: "28px auto 0 auto", padding: "0 20px 80px 20px" }}>
+        <SectionCard title="Description" style={{ marginTop: 0 }}>
+          <div
+            className="rich-text-content text-gray-700"
+            style={TYPO.body}
+            dangerouslySetInnerHTML={{ __html: content.Description || "" }}
+          />
+        </SectionCard>
 
-      {/* Instructions (match lesson page typography) */}
-      <div className="py-6">
-        <h2 className="mb-3" style={TYPO.sectionTitle}>
-          Instructions / Notes
-        </h2>
-        <div
-          className="rich-text-content text-gray-700"
-          style={TYPO.body}
-          dangerouslySetInnerHTML={{ __html: content.Instructions || "" }}
-        />
-      </div>
+        <SectionCard title="Instructions / Notes">
+          <div
+            className="rich-text-content text-gray-700"
+            style={TYPO.body}
+            dangerouslySetInnerHTML={{ __html: content.Instructions || "" }}
+          />
+        </SectionCard>
 
-      {/* Attachments */}
-      {attachments.length === 0 ? (
-        <div style={{ color: "#666", fontStyle: "italic", marginTop: "18px" }}>
-          No links attached.
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "18px" }}>
-          {attachments.map((a) => {
+        <SectionCard title="Attachments">
+          {attachments.length === 0 ? (
+            <div style={{ ...TYPO.body, color: "#666", fontStyle: "italic" }}>No links attached.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {attachments.map((a) => {
             const title = a.title || (a.linkType === "slides" ? "Google Slides" : "Link");
             const url = a.url || "";
             const slidesEmbed = a.linkType === "slides" ? toSlidesEmbedUrl(url) : null;
@@ -200,9 +192,10 @@ const ContentDetails = () => {
                 )}
               </div>
             );
-          })}
-        </div>
-      )}
+              })}
+            </div>
+          )}
+        </SectionCard>
       </div>
     </div>
   );

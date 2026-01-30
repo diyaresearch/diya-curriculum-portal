@@ -766,8 +766,7 @@ const ModuleDetail = () => {
           };
 
           const cardTitleStyle = {
-            fontSize: "1.9rem",
-            fontWeight: 800,
+            ...TYPO.sectionTitle,
             color: "#222",
             marginBottom: 10,
           };
@@ -827,10 +826,10 @@ const ModuleDetail = () => {
       {/* Lesson plans section (match screenshot) */}
       <div style={{ maxWidth: 1100, margin: "26px auto 0 auto", padding: "0 20px 80px 20px" }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <div style={{ fontSize: "1.9rem", fontWeight: 800, color: "#222" }}>
+          <div style={{ ...TYPO.sectionTitle, color: "#222" }}>
             Lesson plans ({module.resources?.length || 0})
           </div>
-          <div style={{ color: "#666", fontSize: "0.95rem" }}>
+          <div style={{ ...TYPO.meta, color: "#666" }}>
             Pick a lesson to view details and materials.
           </div>
         </div>
@@ -894,10 +893,10 @@ const ModuleDetail = () => {
                     {idx + 1}
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800, fontSize: "1.15rem", color: "#222", lineHeight: 1.2 }}>
+                    <div style={{ ...TYPO.body, fontWeight: 800, color: "#222", lineHeight: 1.2 }}>
                       {`Lesson ${idx + 1}. ${res.title || "Untitled Lesson"}`}
                     </div>
-                    <div style={{ color: "#666", fontSize: "0.95rem", marginTop: 4 }}>{subtitle}</div>
+                    <div style={{ ...TYPO.meta, color: "#666", marginTop: 4 }}>{subtitle}</div>
                   </div>
                 </div>
                 <div style={{ width: 12 }} />

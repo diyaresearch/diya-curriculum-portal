@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { TYPO } from "../constants/typography";
 import MetaChipsRow from "../components/MetaChipsRow";
+import SectionCard from "../components/SectionCard";
+import BackButton from "../components/BackButton";
 
 const NuggetDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [nugget, setNugget] = useState(null);
   const [error, setError] = useState("");
 
@@ -96,43 +99,58 @@ const NuggetDetails = () => {
   `;
 
   return (
-    <div style={{ maxWidth: 900, margin: "40px auto" }}>
-      <style>{customStyles}</style>
-      <h1 style={{ ...TYPO.pageTitle, color: "#111", marginBottom: 10 }}>
-        {nugget.Title}
-      </h1>
-      <div
-        className="nugget-rich-html"
-        style={{ ...TYPO.body, color: "#444", marginBottom: 16 }}
-        dangerouslySetInnerHTML={{ __html: nugget.Description || "" }}
-      />
-      <div style={{ ...TYPO.body, marginBottom: 8 }}>
-        <strong>Created:</strong>{" "}
-        {nugget.createdAt
-          ? typeof nugget.createdAt.toDate === "function"
-            ? nugget.createdAt.toDate().toLocaleDateString()
-            : !isNaN(Date.parse(nugget.createdAt))
-              ? new Date(nugget.createdAt).toLocaleDateString()
-              : ""
-          : ""}
+    <div style={{ background: "#fff", minHeight: "100vh" }}>
+      {/* Back control (match module page spacing) */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "18px 20px 0 20px" }}>
+        <BackButton
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+              return;
+            }
+            navigate("/");
+          }}
+        />
       </div>
-      <MetaChipsRow
-        style={{ marginBottom: 24 }}
-        items={[
-          { label: "Author", value: nugget.Author || "—" },
-          { label: "Category", value: nugget.Category },
-          { label: "Level", value: nugget.Level },
-          { label: "Type", value: nugget.Type },
-          { label: "Duration", value: nugget.Duration },
-        ]}
-      />
-      {/* Attachments */}
-      {Array.isArray(nugget.attachments) && nugget.attachments.length > 0 && (
-        <div style={{ marginTop: 18, marginBottom: 18 }}>
-          <div style={{ fontWeight: 700, color: "#111", marginBottom: 8 }}>
-            Attachments
-          </div>
 
+      <style>{customStyles}</style>
+
+      {/* Header (match module page) */}
+      <div
+        style={{
+          maxWidth: 1100,
+          margin: "0 auto",
+          padding: "10px 20px 0 20px",
+          textAlign: "center",
+        }}
+      >
+        <h1 style={{ ...TYPO.pageTitle, color: "#111" }}>{nugget.Title}</h1>
+
+        <div style={{ maxWidth: 820, margin: "10px auto 0 auto", textAlign: "left" }}>
+          <div
+            className="nugget-rich-html"
+            style={{ ...TYPO.pageSubtitle, color: "#222" }}
+            dangerouslySetInnerHTML={{ __html: nugget.Description || "" }}
+          />
+        </div>
+
+        <MetaChipsRow
+          style={{ marginTop: 18 }}
+          items={[
+            { label: "Author", value: nugget.Author || "—" },
+            { label: "Category", value: nugget.Category },
+            { label: "Level", value: nugget.Level },
+            { label: "Type", value: nugget.Type },
+            { label: "Duration", value: nugget.Duration },
+          ]}
+        />
+      </div>
+
+      {/* Main content cards */}
+      <div style={{ maxWidth: 1100, margin: "28px auto 0 auto", padding: "0 20px 80px 20px" }}>
+
+      {Array.isArray(nugget.attachments) && nugget.attachments.length > 0 && (
+        <SectionCard title="Attachments">
           <ul style={{ marginLeft: 18, color: "#444" }}>
             {nugget.attachments
               .filter((a) => a && a.kind === "link" && a.url)
@@ -160,16 +178,16 @@ const NuggetDetails = () => {
                 );
               })}
           </ul>
-        </div>
+        </SectionCard>
       )}
 
-      <div>
-        <div style={{ fontWeight: 600, color: "#111", marginBottom: 6 }}>Instructions</div>
+      <SectionCard title="Instructions">
         <div
           className="nugget-rich-html"
-          style={{ color: "#444" }}
+          style={{ ...TYPO.body, color: "#444" }}
           dangerouslySetInnerHTML={{ __html: nugget.Instructions || "" }}
         />
+      </SectionCard>
       </div>
     </div>
   );
