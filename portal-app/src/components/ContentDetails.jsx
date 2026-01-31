@@ -204,6 +204,7 @@ const ContentDetails = () => {
                     returnTo:
                       (location.state && location.state.returnTo) || `${location.pathname}${location.search || ""}`,
                     lessonReturnTo: (location.state && location.state.lessonReturnTo) || null,
+                    moduleReturnTo: (location.state && location.state.moduleReturnTo) || null,
                   },
                 })
               }

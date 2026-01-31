@@ -66,6 +66,10 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     () => location?.state?.lessonReturnTo || null,
     [location?.state?.lessonReturnTo]
   );
+  const moduleReturnTo = useMemo(
+    () => location?.state?.moduleReturnTo || null,
+    [location?.state?.moduleReturnTo]
+  );
 
   const handleCancel = () => {
     // If opened from another screen/modal, prefer closing that context.
@@ -76,7 +80,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     // If opened for editing with an explicit return path, go there.
     if (returnTo) {
       if (lessonReturnTo) {
-        navigate(returnTo, { state: { returnTo: lessonReturnTo } });
+        navigate(returnTo, {
+          state: { returnTo: lessonReturnTo, moduleReturnTo: moduleReturnTo || null },
+        });
       } else {
         navigate(returnTo);
       }
@@ -435,7 +441,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       // Return to the lesson detail page after editing.
       if (returnTo) {
         if (lessonReturnTo) {
-          navigate(returnTo, { state: { returnTo: lessonReturnTo } });
+          navigate(returnTo, {
+            state: { returnTo: lessonReturnTo, moduleReturnTo: moduleReturnTo || null },
+          });
         } else {
           navigate(returnTo);
         }

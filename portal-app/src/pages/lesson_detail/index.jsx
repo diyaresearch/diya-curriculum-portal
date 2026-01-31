@@ -32,6 +32,7 @@ export const LessonDetail = () => {
   }, [lessonId]);
 
   const returnTo = (location.state && location.state.returnTo) || null;
+  const moduleReturnTo = (location.state && location.state.moduleReturnTo) || null;
 
   const isAdmin = userData?.role === "admin";
   const isAuthor = !!user && !!authorId && user.uid === authorId;
@@ -218,7 +219,11 @@ export const LessonDetail = () => {
           gap: 12,
         }}
       >
-        <BackButton to={returnTo || undefined} fallbackTo="/" />
+        <BackButton
+          to={returnTo || undefined}
+          state={moduleReturnTo ? { returnTo: moduleReturnTo } : undefined}
+          fallbackTo="/"
+        />
         {canManage && (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <EditButton
@@ -228,6 +233,7 @@ export const LessonDetail = () => {
                     editLessonId: lessonId,
                     returnTo: `${location.pathname}${location.search || ""}`,
                     lessonReturnTo: returnTo || null,
+                    moduleReturnTo: moduleReturnTo || null,
                   },
                 })
               }
@@ -334,6 +340,8 @@ export const LessonDetail = () => {
                                 returnTo: `${location.pathname}${location.search || ""}`,
                                 // preserve where the lesson page itself should go "Back" to (e.g. module builder)
                                 lessonReturnTo: (location.state && location.state.returnTo) || null,
+                                // preserve where the module page should go "Back" to (e.g. home page)
+                                moduleReturnTo: (location.state && location.state.moduleReturnTo) || null,
                               },
                             })
                           }

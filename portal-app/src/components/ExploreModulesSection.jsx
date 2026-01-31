@@ -403,6 +403,8 @@ function ModuleBuilderPromo() {
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = `${location.pathname}${location.search || ""}`;
   const isTeacherDefault = role === "teacherDefault";
   const isAdmin = role === "admin";
   const [popupOpen, setPopupOpen] = useState(false);
@@ -728,7 +730,7 @@ const ExploreModulesSection = () => {
                   setPopupModule(module);
                   setPopupOpen(true);
                 } else if (["teacherDefault", "student", "admin"].includes(role)) {
-                  navigate(`/module/${module.key}`);
+                  navigate(`/module/${module.key}`, { state: { returnTo: currentPath } });
                 }
               }}
               tabIndex={0}
@@ -740,7 +742,7 @@ const ExploreModulesSection = () => {
                     setPopupModule(module);
                     setPopupOpen(true);
                   } else if (["teacherDefault", "student", "admin"].includes(role)) {
-                    navigate(`/module/${module.key}`);
+                    navigate(`/module/${module.key}`, { state: { returnTo: currentPath } });
                   }
                 }
               }}
@@ -933,7 +935,7 @@ const ExploreModulesSection = () => {
                     {pageItems.map((m) => (
                       <div
                         key={m.id}
-                        onClick={() => navigate(`/module/${m.id}`)}
+                        onClick={() => navigate(`/module/${m.id}`, { state: { returnTo: currentPath } })}
                         style={{
                           border: "2px solid #9ca3af",
                           borderRadius: 12,
@@ -1238,11 +1240,11 @@ const ExploreModulesSection = () => {
                       } else {
                         // Navigate to appropriate page based on item type
                         if (item._type === "Module") {
-                          navigate(`/module/${item.id}`);
+                          navigate(`/module/${item.id}`, { state: { returnTo: currentPath } });
                         } else if (item._type === "Lesson Plan") {
-                          navigate(`/lesson-plans/${item.id}`);
+                          navigate(`/lesson/${item.id}`, { state: { returnTo: currentPath } });
                         } else if (item._type === "Nuggets") {
-                          navigate(`/nuggets/${item.id}`);
+                          navigate(`/content/${item.id}`, { state: { returnTo: currentPath } });
                         }
                       }
                     }}

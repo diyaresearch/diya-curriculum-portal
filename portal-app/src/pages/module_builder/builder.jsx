@@ -91,6 +91,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
 
   const editModuleId = location.state?.editModuleId || null;
   const returnTo = location.state?.returnTo || null;
+  const moduleReturnTo = location.state?.moduleReturnTo || null;
   const [editModuleAuthorUid, setEditModuleAuthorUid] = useState("");
   const [prefillLessonIds, setPrefillLessonIds] = useState([]);
   const didPrefillLessonsRef = useRef(false);
@@ -98,7 +99,11 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const handleBack = () => {
     // Prefer explicit return path when editing from module detail.
     if (returnTo) {
-      navigate(returnTo);
+      if (moduleReturnTo) {
+        navigate(returnTo, { state: { returnTo: moduleReturnTo } });
+      } else {
+        navigate(returnTo);
+      }
       return;
     }
     // If opened from another screen/modal, prefer closing that context.
@@ -121,7 +126,11 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       return;
     }
     if (returnTo) {
-      navigate(returnTo);
+      if (moduleReturnTo) {
+        navigate(returnTo, { state: { returnTo: moduleReturnTo } });
+      } else {
+        navigate(returnTo);
+      }
       return;
     }
     // Otherwise go back (with safe fallback).
@@ -416,7 +425,12 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const closeModal = () => {
     setModalIsOpen(false);
     if (editModuleId) {
-      navigate(returnTo || `/module/${editModuleId}`);
+      const target = returnTo || `/module/${editModuleId}`;
+      if (moduleReturnTo) {
+        navigate(target, { state: { returnTo: moduleReturnTo } });
+      } else {
+        navigate(target);
+      }
       return;
     }
     setFormData({

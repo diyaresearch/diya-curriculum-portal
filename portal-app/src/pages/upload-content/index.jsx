@@ -52,6 +52,7 @@ export const UploadContent = ({
   const editContentId = location.state?.editContentId || null;
   const returnTo = location.state?.returnTo || null;
   const lessonReturnTo = location.state?.lessonReturnTo || null;
+  const moduleReturnTo = location.state?.moduleReturnTo || null;
 
   // Prefill when editing an existing nugget
   useEffect(() => {
@@ -94,7 +95,7 @@ export const UploadContent = ({
     }
     if (returnTo) {
       if (lessonReturnTo) {
-        navigate(returnTo, { state: { returnTo: lessonReturnTo } });
+        navigate(returnTo, { state: { returnTo: lessonReturnTo, moduleReturnTo: moduleReturnTo || null } });
       } else {
         navigate(returnTo);
       }
@@ -274,7 +275,7 @@ export const UploadContent = ({
     if (editContentId) {
       if (returnTo) {
         if (lessonReturnTo) {
-          navigate(returnTo, { state: { returnTo: lessonReturnTo } });
+          navigate(returnTo, { state: { returnTo: lessonReturnTo, moduleReturnTo: moduleReturnTo || null } });
         } else {
           navigate(returnTo);
         }
@@ -288,7 +289,7 @@ export const UploadContent = ({
     if (wasSuccess && typeof fromLesson !== "function") {
       if (returnTo) {
         if (lessonReturnTo) {
-          navigate(returnTo, { state: { returnTo: lessonReturnTo } });
+          navigate(returnTo, { state: { returnTo: lessonReturnTo, moduleReturnTo: moduleReturnTo || null } });
         } else {
           navigate(returnTo);
         }

@@ -150,18 +150,12 @@ const ModuleDetail = () => {
   const location = useLocation();
   const { userData } = useUserData();
 
+  const returnTo = (location.state && location.state.returnTo) || null;
+
   // Ensure we start at top when navigating here
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [moduleId]);
-
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-    navigate("/");
-  };
 
   // Determine if this is for editing/creating or just viewing
   const [mode, setMode] = useState("view");
@@ -401,7 +395,10 @@ const ModuleDetail = () => {
   const handleLessonClick = (resource, index) => {
     if (resource.id) {
       navigate(`/lesson/${resource.id}`, {
-        state: { returnTo: `${location.pathname}${location.search || ""}` },
+        state: {
+          returnTo: `${location.pathname}${location.search || ""}`,
+          moduleReturnTo: returnTo || null,
+        },
       });
       return;
     }
@@ -416,6 +413,7 @@ const ModuleDetail = () => {
         },
         moduleTitle: moduleData?.title,
         moduleId,
+        moduleReturnTo: returnTo || null,
       },
     });
   };
@@ -579,7 +577,7 @@ const ModuleDetail = () => {
           gap: 12,
         }}
       >
-        <BackButton onClick={handleBack} />
+        <BackButton to={returnTo || undefined} fallbackTo="/" />
 
         {canEdit && (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -590,6 +588,7 @@ const ModuleDetail = () => {
                   state: {
                     editModuleId: moduleId,
                     returnTo: `${location.pathname}${location.search || ""}`,
+                    moduleReturnTo: returnTo || null,
                   },
                 })
               }
