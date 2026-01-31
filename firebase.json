@@ -1,4 +1,8 @@
 {
+  "firestore": {
+    "rules": "portal-app/firestore.rules",
+    "indexes": "portal-app/firestore.indexes.json"
+  },
   "hosting": {
     "public": "portal-app/build",
     "ignore": [

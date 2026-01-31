@@ -1,9 +1,10 @@
 const { db } = require("../config/firebaseConfig");
 const multer = require("multer");
 const { storage } = require("../config/firebaseConfig");
+const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
 // Define the collections
-const SCHEMA_QUALIFIER = process.env.DATABASE_SCHEMA_QUALIFIER || "";
+const SCHEMA_QUALIFIER = resolveSchemaQualifier();
 const TABLE_COUNTERS =  SCHEMA_QUALIFIER + "counters"; 
 const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
 

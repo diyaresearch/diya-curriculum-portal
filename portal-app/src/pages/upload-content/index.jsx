@@ -7,6 +7,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
+import { COLLECTIONS } from "../../firebase/collectionNames";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
 if (typeof document !== "undefined") {
@@ -60,7 +61,7 @@ export const UploadContent = ({
       try {
         if (!editContentId) return;
         const db = getFirestore();
-        const snap = await getDoc(doc(db, "content", editContentId));
+        const snap = await getDoc(doc(db, COLLECTIONS.content, editContentId));
         if (!snap.exists()) return;
         const data = snap.data() || {};
 
@@ -202,7 +203,7 @@ export const UploadContent = ({
       console.log("attachmentsToSave", attachmentsToSave);
 
       if (editContentId) {
-        await updateDoc(doc(db, "content", editContentId), {
+        await updateDoc(doc(db, COLLECTIONS.content, editContentId), {
           Title: formData.Title,
           Description: htmlDescription,
           Category: formData.Category,
@@ -218,7 +219,7 @@ export const UploadContent = ({
         return;
       }
 
-      const docRef = await addDoc(collection(db, "content"), {
+      const docRef = await addDoc(collection(db, COLLECTIONS.content), {
         Title: formData.Title,
         Description: htmlDescription, // <-- Save HTML!
         Category: formData.Category,

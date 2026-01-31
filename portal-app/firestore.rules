@@ -2,17 +2,64 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  	match /users/{userId} {
-      allow write: if request.auth != null;
-      allow read: if true;
-    }    
-    match /prod.users/{userId} {
-      allow read: if true;  // Allow read access to prod.users
-      allow write: if request.auth != null;  // Allow authenticated users to write
+    function isSignedIn() {
+      return request.auth != null;
     }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // User profile documents (legacy)
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Prefixed user docs
+    match /prod.users/{userId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Authenticated user role/profile docs used by the app
+    match /teachers/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /students/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Public content collections (dev + prod)
     match /content/{contentId} {
-      allow read: if true; // Allow anyone to read content documents
-      allow write: if request.auth != null; // Allow authenticated users to write to content documents
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /prod.content/{contentId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /module/{moduleId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /prod.module/{moduleId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /lesson/{lessonId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    match /prod.lesson/{lessonId} {
+      allow read: if true;
+      allow write: if isSignedIn();
     }
   }
 }

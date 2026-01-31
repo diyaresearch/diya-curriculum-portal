@@ -25,6 +25,7 @@ import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/f
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 import BackButton from "../../components/BackButton";
 import { TYPO } from "../../constants/typography";
+import { COLLECTIONS } from "../../firebase/collectionNames";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
 if (typeof document !== "undefined") {
@@ -176,7 +177,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     (async () => {
       try {
         const db = getFirestore();
-        const snap = await getDoc(doc(db, "module", editModuleId));
+        const snap = await getDoc(doc(db, COLLECTIONS.module, editModuleId));
         if (!snap.exists()) {
           setModalMessage("Module not found for editing");
           setModalIsOpen(true);
@@ -261,7 +262,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const fetchLessonPlans = async (userId) => {
     const db = getFirestore();
     const lessonsQuery = query(
-      collection(db, "lesson"),
+      collection(db, COLLECTIONS.lesson),
       where("authorId", "==", userId)
     );
     const snapshot = await getDocs(lessonsQuery);
@@ -345,7 +346,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       isDraft: true,
       updatedAt: serverTimestamp(),
     };
-    await addDoc(collection(db, "module"), draftData);
+    await addDoc(collection(db, COLLECTIONS.module), draftData);
     localStorage.removeItem("moduleDraft");
     alert("Module draft saved successfully!");
     window.location.reload();
@@ -406,9 +407,9 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       };
 
       if (editModuleId) {
-        await updateDoc(doc(db, "module", editModuleId), moduleData);
+        await updateDoc(doc(db, COLLECTIONS.module, editModuleId), moduleData);
       } else {
-        await addDoc(collection(db, "module"), { ...moduleData, createdAt: serverTimestamp() });
+        await addDoc(collection(db, COLLECTIONS.module), { ...moduleData, createdAt: serverTimestamp() });
       }
 
       setModalMessage(editModuleId ? "Module updated successfully" : "Module generated successfully");

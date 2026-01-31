@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { COLLECTIONS } from "../../firebase/collectionNames";
 
 const LessonPlanDrafts = () => {
   const [drafts, setDrafts] = useState([]);
@@ -16,7 +17,7 @@ const LessonPlanDrafts = () => {
       }
       const db = getFirestore();
       const q = query(
-        collection(db, "lesson"),
+        collection(db, COLLECTIONS.lesson),
         where("author", "==", user.uid),
         where("isDraft", "==", true)
       );
@@ -54,7 +55,7 @@ const LessonPlanDrafts = () => {
   const handleDeleteDraft = async (draftId) => {
     if (!window.confirm("Are you sure you want to delete this draft?")) return;
     const db = getFirestore();
-    await deleteDoc(doc(db, "lesson", draftId));
+    await deleteDoc(doc(db, COLLECTIONS.lesson, draftId));
     setDrafts((prev) => prev.filter((d) => d.id !== draftId));
   };
 

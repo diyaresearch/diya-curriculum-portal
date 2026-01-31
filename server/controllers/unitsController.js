@@ -1,7 +1,8 @@
 const { databaseService } = require('../services/databaseService');
+const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
 // Define the collections
-const SCHEMA_QUALIFIER = process.env.DATABASE_SCHEMA_QUALIFIER || "";
+const SCHEMA_QUALIFIER = resolveSchemaQualifier();
 const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
 const TABLE_LESSON =  SCHEMA_QUALIFIER + "lesson"; 
 

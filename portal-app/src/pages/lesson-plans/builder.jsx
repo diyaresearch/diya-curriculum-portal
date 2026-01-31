@@ -12,6 +12,7 @@ import NuggetBuilderPage from "../nugget-builder";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 import { TYPO } from "../../constants/typography";
+import { COLLECTIONS } from "../../firebase/collectionNames";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
 if (typeof document !== "undefined") {
@@ -102,7 +103,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       return;
     }
     try {
-      const snap = await getDocs(collection(db, "content"));
+      const snap = await getDocs(collection(db, COLLECTIONS.content));
       const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       if (role === "admin") {
         setPortalContent(all);
@@ -294,9 +295,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       updatedAt: serverTimestamp(),
     };
     if (formData.id) {
-      await setDoc(doc(db, "lesson", formData.id), draftData);
+      await setDoc(doc(db, COLLECTIONS.lesson, formData.id), draftData);
     } else {
-      await addDoc(collection(db, "lesson"), draftData);
+      await addDoc(collection(db, COLLECTIONS.lesson), draftData);
     }
     localStorage.removeItem("lessonPlanDraft");
     alert("Lesson plan draft saved successfully!");
@@ -421,7 +422,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       // Remove the draft from Firestore if it exists
       if (!editLessonId && formData.id) {
         const db = getFirestore();
-        await deleteDoc(doc(db, "lesson", formData.id));
+        await deleteDoc(doc(db, COLLECTIONS.lesson, formData.id));
       }
 
       setModalMessage(editLessonId ? "Lesson plan updated successfully" : "Lesson plan generated successfully");

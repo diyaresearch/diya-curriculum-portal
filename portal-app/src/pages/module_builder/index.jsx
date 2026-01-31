@@ -7,6 +7,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
+import { COLLECTIONS } from "../../firebase/collectionNames";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
 if (typeof document !== "undefined") {
@@ -106,7 +107,7 @@ export const UploadContent = ({
       const db = getFirestore();
       const htmlDescription = formData.Abstract; // This is the HTML from ReactQuill
 
-      const docRef = await addDoc(collection(db, "content"), {
+      const docRef = await addDoc(collection(db, COLLECTIONS.content), {
         Title: formData.Title,
         Description: htmlDescription, // <-- Save HTML!
         Category: formData.Category,

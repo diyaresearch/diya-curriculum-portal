@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import useUserData from '../../hooks/useUserData';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { app as firebaseApp } from '../../firebase/firebaseConfig';
+import { COLLECTIONS } from '../../firebase/collectionNames';
 
 import {
     MODULE_CONTENT_TYPES,
@@ -97,7 +98,7 @@ const TeacherPlusPage = () => {
         const db = getFirestore(firebaseApp);
 
         // Fetch all modules for the filter section
-        getDocs(collection(db, "module")).then(snapshot => {
+        getDocs(collection(db, COLLECTIONS.module)).then(snapshot => {
             const moduleData = [];
             snapshot.forEach(doc => {
                 const data = doc.data();
@@ -128,7 +129,7 @@ const TeacherPlusPage = () => {
         });
 
         // Fetch lessons and nuggets (keep existing code)
-        getDocs(collection(db, "lesson")).then(snapshot => {
+        getDocs(collection(db, COLLECTIONS.lesson)).then(snapshot => {
             setLessons(snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
@@ -137,7 +138,7 @@ const TeacherPlusPage = () => {
             })));
         });
 
-        getDocs(collection(db, "content")).then(snapshot => {
+        getDocs(collection(db, COLLECTIONS.content)).then(snapshot => {
             setNuggets(snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),

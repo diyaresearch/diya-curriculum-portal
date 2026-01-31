@@ -8,6 +8,7 @@ import softwareEngImg from "../assets/software_engineering.png";
 import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
+import { COLLECTIONS } from "../firebase/collectionNames";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { startGoogleRedirect } from "../auth/googleAuth";
@@ -482,7 +483,7 @@ const ExploreModulesSection = () => {
     const db = getFirestore(firebaseApp);
 
     // Fetch modules - FIXED VERSION
-    getDocs(collection(db, "module")).then(snapshot => {
+    getDocs(collection(db, COLLECTIONS.module)).then(snapshot => {
       const moduleData = [];
       snapshot.forEach(doc => {
         const data = doc.data();
@@ -508,7 +509,7 @@ const ExploreModulesSection = () => {
     });
 
     // Fetch lessons
-    getDocs(collection(db, "lesson")).then(snapshot => {
+    getDocs(collection(db, COLLECTIONS.lesson)).then(snapshot => {
       setLessons(snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -518,7 +519,7 @@ const ExploreModulesSection = () => {
     });
 
     // Fetch nuggets/content
-    getDocs(collection(db, "content")).then(snapshot => {
+    getDocs(collection(db, COLLECTIONS.content)).then(snapshot => {
       setNuggets(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: "Nuggets" })));
     });
   }, []);
