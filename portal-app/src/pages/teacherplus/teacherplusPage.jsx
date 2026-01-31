@@ -11,9 +11,7 @@ import {
     MODULE_LEVELS,
 } from '../../constants/moduleConstants';
 
-import aiExploreImg from '../../assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png';
 import laptopImg from '../../assets/laptop.png';
-import physicsImg from '../../assets/finphysics.png';
 
 function normalizeBoolean(value) {
     if (value === true) return true;
@@ -55,7 +53,7 @@ const TeacherPlusPage = () => {
         (user?.email ? user.email.split("@")[0] : "TeacherPlus User");
 
     useEffect(() => {
-        if (!loading && (!user || role !== 'teacherPlus')) {
+        if (!loading && (!user || (role !== 'teacherPlus' && role !== 'admin'))) {
             navigate('/');
         }
     }, [user, role, loading, navigate]);
@@ -74,6 +72,9 @@ const TeacherPlusPage = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(6);
+
+    const [featuredPage, setFeaturedPage] = useState(1);
+    const FEATURED_PAGE_SIZE = 3;
 
     useEffect(() => {
         const updateItemsPerPage = () => {
@@ -107,11 +108,14 @@ const TeacherPlusPage = () => {
                     title: data.title || "Untitled Module",
                     description: data.description || "",
                     image: data.image || "module1",
+                    featuredImageUrl: data.featuredImageUrl || data.featuredImageURL || data.imageUrl || data.imageURL || "",
                     tags: data.tags || [],
                     level: data.level || "Basic",
                     category: data.category || "General",
                     lessonPlans: data.lessonPlans || {},
                     isDraft: data.isDraft || false,
+                    isFeatured: data.isFeatured === true,
+                    featuredOrder: Number.isFinite(Number(data.featuredOrder)) ? Number(data.featuredOrder) : 999,
                     isPublic: normalizeBoolean(data.isPublic),
                     author: data.author || data.authorId || "", // Add author field
                     _type: "Module"
@@ -157,6 +161,22 @@ const TeacherPlusPage = () => {
             setFilteredItems(combined);
         }
     }, [modules, lessons, nuggets, filtersApplied, user]);
+
+    const featuredModules = (modules || [])
+        .filter((m) => m?._type === "Module")
+        .filter((m) => m?.isFeatured === true)
+        .filter((m) => m?.isDraft !== true)
+        .filter((m) => isModuleVisibleToViewer(m, user))
+        .sort((a, b) => (a.featuredOrder || 999) - (b.featuredOrder || 999));
+
+    const featuredTotalPages = Math.max(1, Math.ceil(featuredModules.length / FEATURED_PAGE_SIZE));
+    const safeFeaturedPage = Math.min(Math.max(1, featuredPage), featuredTotalPages);
+    const featuredStart = (safeFeaturedPage - 1) * FEATURED_PAGE_SIZE;
+    const featuredItems = featuredModules.slice(featuredStart, featuredStart + FEATURED_PAGE_SIZE);
+
+    useEffect(() => {
+        setFeaturedPage(1);
+    }, [modules]);
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -571,6 +591,177 @@ const TeacherPlusPage = () => {
             </section>
 
 
+            {/* Featured Modules Section */}
+            <section
+                style={{
+                    width: "100%",
+                    padding: "80px 0 0 0",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center"
+                }}
+            >
+                <h2
+                    style={{
+                        fontSize: "2.5rem",
+                        fontWeight: "700",
+                        color: "#111",
+                        textAlign: "center",
+                        margin: 0,
+                        letterSpacing: "1px"
+                    }}
+                >
+                    Featured Modules
+                </h2>
+                <p
+                    style={{
+                        marginTop: "18px",
+                        fontSize: "1.15rem",
+                        color: "#222",
+                        textAlign: "center",
+                        maxWidth: "600px",
+                        fontWeight: 500,
+                    }}
+                >
+                    Explore the latest modules available for your class.
+                </p>
+
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: "40px",
+                        marginTop: "60px",
+                        width: "100%",
+                        maxWidth: "1100px",
+                        padding: "0 16px",
+                        boxSizing: "border-box",
+                        flexWrap: "wrap",
+                    }}
+                >
+                    {featuredModules.length === 0 ? (
+                        <div style={{ padding: "40px", textAlign: "center", color: "#666", fontSize: "1.1rem", fontStyle: "italic" }}>
+                            No featured modules yet.
+                        </div>
+                    ) : (
+                        featuredItems.map((m) => (
+                            <div
+                                key={m.id}
+                                style={{
+                                    background: "#fff",
+                                    borderRadius: "12px",
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                                    width: "340px",
+                                    height: "340px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "flex-end",
+                                    overflow: "hidden",
+                                    cursor: "pointer",
+                                    position: "relative",
+                                }}
+                                onClick={() => navigate(`/module/${m.id}`)}
+                            >
+                                <div style={{
+                                    width: "100%",
+                                    height: "calc(100% - 70px)",
+                                    display: "flex",
+                                    alignItems: "stretch",
+                                    justifyContent: "center"
+                                }}>
+                                    <img
+                                        src={String(m.featuredImageUrl || "").trim() ? m.featuredImageUrl : laptopImg}
+                                        alt={m.title || "Module"}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            display: "block"
+                                        }}
+                                    />
+                                </div>
+                                <div style={{
+                                    width: "100%",
+                                    height: "90px",
+                                    padding: "18px 0 0 0",
+                                    textAlign: "center",
+                                    background: "#fff"
+                                }}>
+                                    <span
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "600",
+                                            fontSize: "1.15rem",
+                                            color: "#162040",
+                                            letterSpacing: "1px"
+                                        }}
+                                    >
+                                        {capitalizeWords(Array.isArray(m.level) ? m.level.join(", ") : m.level)}
+                                    </span>
+                                    <span
+                                        style={{
+                                            display: "block",
+                                            fontWeight: "700",
+                                            fontSize: "1.35rem",
+                                            color: "#222",
+                                            marginTop: "8px",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            padding: "0 10px"
+                                        }}
+                                    >
+                                        {m.title || "Untitled Module"}
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {featuredModules.length > FEATURED_PAGE_SIZE && (
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "18px", marginTop: "28px" }}>
+                        <button
+                            type="button"
+                            onClick={() => setFeaturedPage((p) => Math.max(1, p - 1))}
+                            disabled={safeFeaturedPage === 1}
+                            style={{
+                                padding: "10px 18px",
+                                borderRadius: 8,
+                                border: "1px solid #bbb",
+                                background: safeFeaturedPage === 1 ? "#eee" : "#fff",
+                                color: "#222",
+                                fontWeight: 700,
+                                cursor: safeFeaturedPage === 1 ? "not-allowed" : "pointer",
+                            }}
+                        >
+                            Prev
+                        </button>
+                        <div style={{ fontWeight: 700, color: "#162040" }}>
+                            Page {safeFeaturedPage} of {featuredTotalPages}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setFeaturedPage((p) => Math.min(featuredTotalPages, p + 1))}
+                            disabled={safeFeaturedPage === featuredTotalPages}
+                            style={{
+                                padding: "10px 18px",
+                                borderRadius: 8,
+                                border: "2px solid #162040",
+                                background: "#162040",
+                                color: "#fff",
+                                fontWeight: 800,
+                                cursor: safeFeaturedPage === featuredTotalPages ? "not-allowed" : "pointer",
+                                opacity: safeFeaturedPage === featuredTotalPages ? 0.6 : 1,
+                            }}
+                        >
+                            Next
+                        </button>
+                    </div>
+                )}
+            </section>
+
             {/* My Modules Section */}
             <section
                 style={{
@@ -719,261 +910,6 @@ const TeacherPlusPage = () => {
                             </div>
                         ))
                     )}
-                </div>
-            </section>
-
-            {/* Featured Modules Section */}
-            <section
-                style={{
-                    width: "100%",
-                    padding: "80px 0 0 0",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center"
-                }}
-            >
-                <h2
-                    style={{
-                        fontSize: "2.5rem",
-                        fontWeight: "700",
-                        color: "#111",
-                        textAlign: "center",
-                        margin: 0,
-                        letterSpacing: "1px"
-                    }}
-                >
-                    Featured Modules
-                </h2>
-                <p
-                    style={{
-                        marginTop: "18px",
-                        fontSize: "1.15rem",
-                        color: "#222",
-                        textAlign: "center",
-                        maxWidth: "600px",
-                        fontWeight: 500,
-                    }}
-                >
-                    Explore the latest modules available for your class.
-                </p>
-
-                {/* Three featured modules */}
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "40px",
-                        marginTop: "60px",
-                        width: "100%",
-                        maxWidth: "1100px"
-                    }}
-                >
-                    {/* Featured Module 1 */}
-                    <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                            width: "340px",
-                            height: "340px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            position: "relative"
-                        }}
-                        onClick={() => navigate("/module/ai-exploration")}
-                    >
-
-                        <div style={{
-                            width: "100%",
-                            height: "calc(100% - 70px)",
-                            display: "flex",
-                            alignItems: "stretch",
-                            justifyContent: "center"
-                        }}>
-                            <img
-                                src={aiExploreImg}
-                                alt="AI Exploration"
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    display: "block"
-                                }}
-                            />
-                        </div>
-                        <div style={{
-                            width: "100%",
-                            height: "90px",
-                            padding: "18px 0 0 0",
-                            textAlign: "center",
-                            background: "#fff"
-                        }}>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "600",
-                                    fontSize: "1.15rem",
-                                    color: "#162040",
-                                    letterSpacing: "1px"
-                                }}
-                            >
-                                Basics
-                            </span>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "700",
-                                    fontSize: "1.35rem",
-                                    color: "#222",
-                                    marginTop: "8px"
-                                }}
-                            >
-                                AI Exploration
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Featured Module 2 */}
-                    <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                            width: "340px",
-                            height: "340px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            position: "relative"
-                        }}
-                        onClick={() => navigate("/module/ai-insights")}
-                    >
-
-                        <div style={{
-                            width: "100%",
-                            height: "calc(100% - 70px)",
-                            display: "flex",
-                            alignItems: "stretch",
-                            justifyContent: "center"
-                        }}>
-                            <img
-                                src={laptopImg}
-                                alt="AI Insights"
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    display: "block"
-                                }}
-                            />
-                        </div>
-                        <div style={{
-                            width: "100%",
-                            height: "90px",
-                            padding: "18px 0 0 0",
-                            textAlign: "center",
-                            background: "#fff"
-                        }}>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "600",
-                                    fontSize: "1.15rem",
-                                    color: "#162040",
-                                    letterSpacing: "1px"
-                                }}
-                            >
-                                Intermediary
-                            </span>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "700",
-                                    fontSize: "1.35rem",
-                                    color: "#222",
-                                    marginTop: "8px"
-                                }}
-                            >
-                                AI Insights
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Featured Module 3 */}
-                    <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                            width: "340px",
-                            height: "340px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            position: "relative"
-                        }}
-                        onClick={() => navigate("/module/ai-physics")}
-                    >
-
-                        <div style={{
-                            width: "100%",
-                            height: "calc(100% - 70px)",
-                            display: "flex",
-                            alignItems: "stretch",
-                            justifyContent: "center"
-                        }}>
-                            <img
-                                src={physicsImg}
-                                alt="AI & Physics"
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    display: "block"
-                                }}
-                            />
-                        </div>
-                        <div style={{
-                            width: "100%",
-                            height: "90px",
-                            padding: "10px 0 0 0",
-                            textAlign: "center",
-                            background: "#fff"
-                        }}>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "600",
-                                    fontSize: "1.15rem",
-                                    color: "#162040",
-                                    letterSpacing: "1px"
-                                }}
-                            >
-                                Basic
-                            </span>
-                            <span
-                                style={{
-                                    display: "block",
-                                    fontWeight: "700",
-                                    fontSize: "1.35rem",
-                                    color: "#222",
-                                    marginTop: "8px"
-                                }}
-                            >
-                                AI & Physics
-                            </span>
-                        </div>
-                    </div>
                 </div>
             </section>
 

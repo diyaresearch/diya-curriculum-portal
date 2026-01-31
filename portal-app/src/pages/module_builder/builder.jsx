@@ -76,6 +76,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     requirements: "", // Add this
     learningObjectives: "", // Add this
     isPublic: false,
+    isFeatured: false, // Admin-only flag
   });
   const [showOverlay, setShowOverlay] = useState(false);
   const [portalContent, setPortalContent] = useState([]);
@@ -88,7 +89,8 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  useUserData();
+  const { userData } = useUserData();
+  const didInitFeaturedDefaultRef = useRef(false);
 
   const editModuleId = location.state?.editModuleId || null;
   const returnTo = location.state?.returnTo || null;
@@ -96,6 +98,15 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const [editModuleAuthorUid, setEditModuleAuthorUid] = useState("");
   const [prefillLessonIds, setPrefillLessonIds] = useState([]);
   const didPrefillLessonsRef = useRef(false);
+
+  // For admins creating a new module, default Featured to ON (so it shows for all users on homepage).
+  useEffect(() => {
+    if (didInitFeaturedDefaultRef.current) return;
+    if (editModuleId) return;
+    if (userData?.role !== "admin") return;
+    didInitFeaturedDefaultRef.current = true;
+    setFormData((prev) => ({ ...prev, isFeatured: true }));
+  }, [editModuleId, userData?.role]);
 
   const handleBack = () => {
     // Prefer explicit return path when editing from module detail.
@@ -159,6 +170,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         requirements: parsedDraft.requirements || "",
         learningObjectives: parsedDraft.learningObjectives || "",
         isPublic: parsedDraft.isPublic || false,
+        isFeatured: parsedDraft.isFeatured === true,
       });
       // Restore selected lesson plans/materials if present
       if (parsedDraft.lessons && Array.isArray(parsedDraft.lessons)) {
@@ -229,6 +241,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
           requirements: requirementsRaw || "",
           learningObjectives: learningObjectivesRaw || "",
           isPublic: normalizeBoolean(data.isPublic ?? data.IsPublic),
+          isFeatured: data.isFeatured === true,
         });
 
         setPrefillLessonIds(lessonIds);
@@ -346,6 +359,10 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       isDraft: true,
       updatedAt: serverTimestamp(),
     };
+    // Only admins should be able to set featured flag.
+    if (userData?.role !== "admin") {
+      delete draftData.isFeatured;
+    }
     await addDoc(collection(db, COLLECTIONS.module), draftData);
     localStorage.removeItem("moduleDraft");
     alert("Module draft saved successfully!");
@@ -405,11 +422,26 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         isDraft: false,
         updatedAt: serverTimestamp(),
       };
+      // Only admins should be able to set featured flag.
+      if (userData?.role !== "admin") {
+        delete moduleData.isFeatured;
+      } else {
+        moduleData.isFeatured = moduleData.isFeatured === true;
+        // Featured modules created/published by admin should be visible to everyone.
+        if (moduleData.isFeatured === true) {
+          moduleData.isPublic = true;
+        }
+      }
 
       if (editModuleId) {
         await updateDoc(doc(db, COLLECTIONS.module, editModuleId), moduleData);
       } else {
-        await addDoc(collection(db, COLLECTIONS.module), { ...moduleData, createdAt: serverTimestamp() });
+        const isAdminAuthor = userData?.role === "admin";
+        await addDoc(collection(db, COLLECTIONS.module), {
+          ...moduleData,
+          ...(isAdminAuthor ? { isFeatured: moduleData.isFeatured === true } : {}),
+          createdAt: serverTimestamp(),
+        });
       }
 
       setModalMessage(editModuleId ? "Module updated successfully" : "Module generated successfully");
@@ -444,6 +476,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       requirements: "", // Add this
       learningObjectives: "", // Add this
       isPublic: false,
+      isFeatured: false,
     });
     setSelectedMaterials([]);
     localStorage.removeItem("moduleDraft");
@@ -800,6 +833,20 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               Make Public
             </label>
           </div>
+          {userData?.role === "admin" && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                type="checkbox"
+                id="isFeatured"
+                checked={formData.isFeatured === true}
+                onChange={(e) => setFormData((prev) => ({ ...prev, isFeatured: e.target.checked }))}
+                style={{ width: 18, height: 18 }}
+              />
+              <label htmlFor="isFeatured" style={{ color: "#111", fontWeight: 600, fontSize: "1.08rem" }}>
+                Featured (shows on homepage)
+              </label>
+            </div>
+          )}
           <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
             <button
               type="button"

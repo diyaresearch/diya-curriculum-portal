@@ -5,7 +5,7 @@ import laptopImg from "../assets/laptop.png";
 import physicsImg from "../assets/finphysics.png";
 import textbooksImg from "../assets/textbooks.png";
 import softwareEngImg from "../assets/software_engineering.png";
-import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, getDocs, doc, onSnapshot, query, where, limit } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { COLLECTIONS } from "../firebase/collectionNames";
@@ -278,6 +278,63 @@ const MODULE_POPUP_INFO = [
   },
 ];
 
+function buildFeaturedTileFromDoc(docSnap) {
+  const data = docSnap.data() || {};
+
+  const title = data.title ?? data.Title ?? data.name ?? data.Name ?? "Untitled Module";
+  const descriptionRaw = data.description ?? data.Description ?? data.subtitle ?? data.Subtitle ?? "";
+  const description = stripHtmlToText(descriptionRaw);
+
+  const moduleKey = data.moduleKey ?? data.key ?? data.slug ?? "";
+  const levelRaw = data.level ?? data.Level ?? "Basic";
+  const level = Array.isArray(levelRaw) ? (levelRaw[0] || "Basic") : String(levelRaw || "Basic");
+
+  const isDraft = data.isDraft === true;
+
+  const featuredOrderRaw = data.featuredOrder ?? data.FeaturedOrder;
+  const featuredOrder = Number.isFinite(Number(featuredOrderRaw)) ? Number(featuredOrderRaw) : 999;
+
+  const featuredImageUrl =
+    data.featuredImageUrl ?? data.featuredImageURL ?? data.imageUrl ?? data.imageURL ?? "";
+
+  return {
+    _source: "firestore",
+    id: docSnap.id,
+    routeParam: docSnap.id,
+    moduleKey: String(moduleKey || ""),
+    title: String(title || "Untitled Module"),
+    description: String(description || ""),
+    summary: String(description || ""),
+    level,
+    featuredImageUrl: String(featuredImageUrl || ""),
+    featuredOrder,
+    isDraft,
+  };
+}
+
+function buildFeaturedTileFromStatic(moduleInfo) {
+  return {
+    _source: "static",
+    id: moduleInfo.key,
+    routeParam: moduleInfo.key,
+    moduleKey: moduleInfo.key,
+    title: moduleInfo.title,
+    description: moduleInfo.description,
+    summary: moduleInfo.summary,
+    level: moduleInfo.level,
+    featuredImageUrl: "",
+    featuredOrder: 999,
+  };
+}
+
+function resolveFeaturedTileImage(tile) {
+  const url = String(tile?.featuredImageUrl || "").trim();
+  if (url) return url;
+  const key = String(tile?.moduleKey || tile?.id || "").trim();
+  if (key) return getFeaturedModuleImage(key);
+  return laptopImg;
+}
+
 
 const NuggetBuilderSection = () => (
   <section
@@ -436,6 +493,9 @@ const ExploreModulesSection = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(9); // Will be calculated dynamically
 
+  // Featured modules (prefer admin-curated `isFeatured == true` from Firestore)
+  const [featuredTiles, setFeaturedTiles] = useState([]);
+
   // Admin-only: paginated view of all published modules (created by anyone)
   const [adminAllModulesOpen, setAdminAllModulesOpen] = useState(false);
   const [adminModulesPage, setAdminModulesPage] = useState(1);
@@ -522,6 +582,44 @@ const ExploreModulesSection = () => {
     getDocs(collection(db, COLLECTIONS.content)).then(snapshot => {
       setNuggets(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _type: "Nuggets" })));
     });
+  }, []);
+
+  // Featured modules: load modules explicitly marked `isFeatured == true`.
+  useEffect(() => {
+    const db = getFirestore(firebaseApp);
+    (async () => {
+      try {
+        const q = query(
+          collection(db, COLLECTIONS.module),
+          where("isFeatured", "==", true),
+          limit(6)
+        );
+        const snap = await getDocs(q);
+        const tiles = snap.docs
+          .map(buildFeaturedTileFromDoc)
+          .filter(Boolean)
+          .filter((t) => t?.isDraft !== true)
+          .sort((a, b) => (a.featuredOrder || 999) - (b.featuredOrder || 999));
+
+        if (tiles.length > 0) {
+          // If fewer than 6 are flagged, fill remaining slots with legacy static tiles.
+          const staticTiles = MODULE_POPUP_INFO.map(buildFeaturedTileFromStatic);
+          const seen = new Set(tiles.map((t) => t.id));
+          const filled = [
+            ...tiles,
+            ...staticTiles.filter((t) => !seen.has(t.id)).slice(0, Math.max(0, 6 - tiles.length)),
+          ];
+
+          setFeaturedTiles(filled);
+          return;
+        }
+      } catch (e) {
+        console.error("Failed to load featured modules:", e);
+      }
+
+      // Fallback to legacy hardcoded list
+      setFeaturedTiles(MODULE_POPUP_INFO.map(buildFeaturedTileFromStatic));
+    })();
   }, []);
 
   // Initial display should exclude drafts
@@ -667,6 +765,273 @@ const ExploreModulesSection = () => {
         gap: "40px"
       }}
     >
+      {role === "admin" && (
+        <section
+          style={{
+            width: "100%",
+            padding: "80px 0 20px 0",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "2.5rem",
+              fontWeight: "700",
+              color: "#111",
+              textAlign: "center",
+              margin: 0,
+              letterSpacing: "1px",
+              fontFamily: "Open Sans, sans-serif",
+            }}
+          >
+            Create New
+          </h2>
+          <p
+            style={{
+              marginTop: "18px",
+              fontSize: "1.15rem",
+              color: "#222",
+              textAlign: "center",
+              maxWidth: "600px",
+              fontWeight: 500,
+              marginBottom: "60px",
+              fontFamily: "Open Sans, sans-serif",
+            }}
+          >
+            Start creating your content now!
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "40px",
+              width: "100%",
+              maxWidth: "1100px",
+              flexWrap: "nowrap",
+              overflowX: "auto",
+              padding: "0 16px",
+              boxSizing: "border-box",
+            }}
+          >
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                width: "340px",
+                height: "320px",
+                flex: "0 0 340px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "transform 0.2s, box-shadow 0.2s",
+                border: "2px solid transparent",
+              }}
+              onClick={() => navigate("/module-builder")}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)";
+              }}
+              role="button"
+              tabIndex={0}
+            >
+              <div
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  background: "#000",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "24px",
+                }}
+              >
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="18" height="18" rx="2" stroke="white" strokeWidth="2" />
+                  <path d="M9 9h6v6H9z" fill="white" />
+                  <path d="M9 3v6M15 3v6M3 9h6M3 15h6" stroke="white" strokeWidth="2" />
+                </svg>
+              </div>
+              <h3
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "700",
+                  color: "#222",
+                  marginBottom: "12px",
+                  textAlign: "center",
+                }}
+              >
+                Create Module
+              </h3>
+              <p
+                style={{
+                  fontSize: "1rem",
+                  color: "#666",
+                  textAlign: "center",
+                  maxWidth: "280px",
+                  lineHeight: "1.5",
+                  margin: 0,
+                }}
+              >
+                Build a new module to teach.
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                width: "340px",
+                height: "320px",
+                flex: "0 0 340px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "transform 0.2s, box-shadow 0.2s",
+                border: "2px solid transparent",
+              }}
+              onClick={() => navigate("/lesson-plans/builder")}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)";
+              }}
+              role="button"
+              tabIndex={0}
+            >
+              <div
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  background: "#162040",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "24px",
+                }}
+              >
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="white" strokeWidth="2" />
+                  <polyline points="14,2 14,8 20,8" stroke="white" strokeWidth="2" />
+                  <line x1="16" y1="13" x2="8" y2="13" stroke="white" strokeWidth="2" />
+                  <line x1="16" y1="17" x2="8" y2="17" stroke="white" strokeWidth="2" />
+                  <polyline points="10,9 9,9 8,9" stroke="white" strokeWidth="2" />
+                </svg>
+              </div>
+              <h3
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "700",
+                  color: "#222",
+                  marginBottom: "12px",
+                  textAlign: "center",
+                }}
+              >
+                Create Lesson Plan
+              </h3>
+              <p
+                style={{
+                  fontSize: "1rem",
+                  color: "#666",
+                  textAlign: "center",
+                  maxWidth: "280px",
+                  lineHeight: "1.5",
+                  margin: 0,
+                }}
+              >
+                Design a lesson plan for your classes.
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                width: "340px",
+                height: "320px",
+                flex: "0 0 340px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "transform 0.2s, box-shadow 0.2s",
+                border: "2px solid transparent",
+              }}
+              onClick={() => navigate("/nugget-builder")}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)";
+              }}
+              role="button"
+              tabIndex={0}
+            >
+              <div
+                style={{
+                  width: "80px",
+                  height: "80px",
+                  background: "#fbbf24",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: "24px",
+                }}
+              >
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="3" stroke="white" strokeWidth="2" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="white" strokeWidth="2" />
+                </svg>
+              </div>
+              <h3
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "700",
+                  color: "#222",
+                  marginBottom: "12px",
+                  textAlign: "center",
+                }}
+              >
+                Create Nugget
+              </h3>
+              <p
+                style={{
+                  fontSize: "1rem",
+                  color: "#666",
+                  textAlign: "center",
+                  maxWidth: "280px",
+                  lineHeight: "1.5",
+                  margin: 0,
+                }}
+              >
+                Share concise learning nuggets.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
       <section
         style={{
           width: "100%",
@@ -708,9 +1073,9 @@ const ExploreModulesSection = () => {
             margin: "60px auto 0 auto"
           }}
         >
-          {MODULE_POPUP_INFO.map((module, index) => (
+          {(featuredTiles.length ? featuredTiles : MODULE_POPUP_INFO.map(buildFeaturedTileFromStatic)).map((module) => (
             <div
-              key={module.key}
+              key={`${module._source}-${module.id}`}
               style={{
                 background: "#fff",
                 borderRadius: "12px",
@@ -731,7 +1096,7 @@ const ExploreModulesSection = () => {
                   setPopupModule(module);
                   setPopupOpen(true);
                 } else if (["teacherDefault", "student", "admin"].includes(role)) {
-                  navigate(`/module/${module.key}`, { state: { returnTo: currentPath } });
+                  navigate(`/module/${module.routeParam}`, { state: { returnTo: currentPath } });
                 }
               }}
               tabIndex={0}
@@ -743,7 +1108,7 @@ const ExploreModulesSection = () => {
                     setPopupModule(module);
                     setPopupOpen(true);
                   } else if (["teacherDefault", "student", "admin"].includes(role)) {
-                    navigate(`/module/${module.key}`, { state: { returnTo: currentPath } });
+                    navigate(`/module/${module.routeParam}`, { state: { returnTo: currentPath } });
                   }
                 }
               }}
@@ -757,7 +1122,7 @@ const ExploreModulesSection = () => {
                 justifyContent: "center"
               }}>
                 <img
-                  src={getFeaturedModuleImage(module.key)}
+                  src={resolveFeaturedTileImage(module)}
                   alt={module.title}
                   style={{
                     width: "100%",
