@@ -199,7 +199,12 @@ const ContentDetails = () => {
               label="Edit"
               onClick={() =>
                 navigate("/nugget-builder", {
-                  state: { editContentId: id, returnTo: `${location.pathname}${location.search || ""}` },
+                  state: {
+                    editContentId: id,
+                    returnTo:
+                      (location.state && location.state.returnTo) || `${location.pathname}${location.search || ""}`,
+                    lessonReturnTo: (location.state && location.state.lessonReturnTo) || null,
+                  },
                 })
               }
             />

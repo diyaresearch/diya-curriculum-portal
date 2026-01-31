@@ -31,17 +31,15 @@ export const LessonDetail = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [lessonId]);
 
-  const handleBack = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-    navigate("/");
-  };
+  const returnTo = (location.state && location.state.returnTo) || null;
+
+  const isAdmin = userData?.role === "admin";
+  const isAuthor = !!user && !!authorId && user.uid === authorId;
+  const canManage = isAdmin || isAuthor;
 
   const handleConfirmDelete = async () => {
     try {
-      if (userData.role !== "admin" && user.uid !== authorId) {
+      if (!user || !canManage) {
         console.error("No permissions to delete lesson");
         alert("Contact Admin to delete the lesson plan.");
         return;
@@ -140,12 +138,21 @@ export const LessonDetail = () => {
 
         setContentDetails(contentDetailsMap);
 
-        if (lessonData.authorId) {
+        // Author ID can be stored under different keys depending on schema/version.
+        const authorUid =
+          lessonData.authorId ||
+          lessonData.author ||
+          lessonData.userId ||
+          lessonData.User ||
+          lessonData.user ||
+          null;
+        setAuthorId(authorUid || null);
+
+        if (authorUid) {
           const authorResponse = await axios.get(
-            `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/${lessonData.authorId}`
+            `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/${authorUid}`
           );
           setAuthor(authorResponse.data);
-          setAuthorId(lessonData.authorId);
         }
       } catch (error) {
         console.error("Error fetching lesson:", error);
@@ -170,7 +177,6 @@ export const LessonDetail = () => {
   }
 
   const { title, type, category, level, duration, description, objectives, sections } = lesson;
-  const canManage = !!user && (userData?.role === "admin" || (!!authorId && user.uid === authorId));
 
   const formatDurationShort = (value) => {
     if (value === null || value === undefined) return "—";
@@ -212,13 +218,17 @@ export const LessonDetail = () => {
           gap: 12,
         }}
       >
-        <BackButton onClick={handleBack} />
+        <BackButton to={returnTo || undefined} fallbackTo="/" />
         {canManage && (
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <EditButton
               onClick={() =>
                 navigate("/lesson-plans/builder", {
-                  state: { editLessonId: lessonId, returnTo: location.pathname },
+                  state: {
+                    editLessonId: lessonId,
+                    returnTo: `${location.pathname}${location.search || ""}`,
+                    lessonReturnTo: returnTo || null,
+                  },
                 })
               }
             />
@@ -317,7 +327,16 @@ export const LessonDetail = () => {
                       ) : (
                         <button
                           type="button"
-                          onClick={() => navigate(`/content/${contentId}`)}
+                          onClick={() =>
+                            navigate(`/content/${contentId}`, {
+                              state: {
+                                // back to this lesson page
+                                returnTo: `${location.pathname}${location.search || ""}`,
+                                // preserve where the lesson page itself should go "Back" to (e.g. module builder)
+                                lessonReturnTo: (location.state && location.state.returnTo) || null,
+                              },
+                            })
+                          }
                           className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                         >
                           <FaExternalLinkAlt className="mr-2" />

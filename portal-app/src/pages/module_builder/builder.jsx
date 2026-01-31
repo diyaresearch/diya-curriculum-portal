@@ -726,7 +726,11 @@ const ModuleBuilder = ({ onCancel } = {}) => {
                   >
                     <button
                       type="button"
-                      onClick={() => navigate(`/lesson/${material.id}`)}
+                      onClick={() =>
+                        navigate(`/lesson/${material.id}`, {
+                          state: { returnTo: `${location.pathname}${location.search || ""}` },
+                        })
+                      }
                       style={{
                         color: "#1a73e8",
                         textDecoration: "underline",

@@ -400,7 +400,9 @@ const ModuleDetail = () => {
 
   const handleLessonClick = (resource, index) => {
     if (resource.id) {
-      navigate(`/lesson/${resource.id}`);
+      navigate(`/lesson/${resource.id}`, {
+        state: { returnTo: `${location.pathname}${location.search || ""}` },
+      });
       return;
     }
     // Featured/hardcoded modules don't have Firestore lesson IDs; use the legacy lesson route.

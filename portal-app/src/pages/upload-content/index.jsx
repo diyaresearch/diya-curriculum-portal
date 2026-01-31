@@ -51,6 +51,7 @@ export const UploadContent = ({
   const navigate = useNavigate();
   const editContentId = location.state?.editContentId || null;
   const returnTo = location.state?.returnTo || null;
+  const lessonReturnTo = location.state?.lessonReturnTo || null;
 
   // Prefill when editing an existing nugget
   useEffect(() => {
@@ -92,7 +93,11 @@ export const UploadContent = ({
       return;
     }
     if (returnTo) {
-      navigate(returnTo);
+      if (lessonReturnTo) {
+        navigate(returnTo, { state: { returnTo: lessonReturnTo } });
+      } else {
+        navigate(returnTo);
+      }
       return;
     }
     // Otherwise, return to previous page (with safe fallback).
@@ -268,7 +273,11 @@ export const UploadContent = ({
 
     if (editContentId) {
       if (returnTo) {
-        navigate(returnTo);
+        if (lessonReturnTo) {
+          navigate(returnTo, { state: { returnTo: lessonReturnTo } });
+        } else {
+          navigate(returnTo);
+        }
         return;
       }
       navigate(`/content/${editContentId}`);
@@ -278,7 +287,11 @@ export const UploadContent = ({
     // For create flow: after a successful submit, return to where we came from.
     if (wasSuccess && typeof fromLesson !== "function") {
       if (returnTo) {
-        navigate(returnTo);
+        if (lessonReturnTo) {
+          navigate(returnTo, { state: { returnTo: lessonReturnTo } });
+        } else {
+          navigate(returnTo);
+        }
         return;
       }
       if (window.history.length > 1) {

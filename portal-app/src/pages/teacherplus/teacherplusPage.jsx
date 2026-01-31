@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import useUserData from '../../hooks/useUserData';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 import { app as firebaseApp } from '../../firebase/firebaseConfig';
@@ -45,6 +45,7 @@ function capitalizeWords(str) {
 
 const TeacherPlusPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, userData, loading } = useUserData();
     const role = userData?.role;
     const displayName =
@@ -1167,12 +1168,13 @@ const TeacherPlusPage = () => {
                                     transition: "box-shadow 0.2s"
                                 }}
                                 onClick={() => {
+                                    const returnTo = `${location.pathname}${location.search || ""}`;
                                     if (item._type === "Module") {
-                                        navigate(`/module/${item.id}`);  // Changed from /modules/ to /module/
+                                        navigate(`/module/${item.id}`, { state: { returnTo } });  // Changed from /modules/ to /module/
                                     } else if (item._type === "Lesson Plan") {
-                                        navigate(`/lesson/${item.id}`);   // Changed from /lesson-plans/ to /lesson/
+                                        navigate(`/lesson/${item.id}`, { state: { returnTo } });   // Changed from /lesson-plans/ to /lesson/
                                     } else if (item._type === "Nuggets") {
-                                        navigate(`/content/${item.id}`);  // Changed from /nuggets/ to /content/
+                                        navigate(`/content/${item.id}`, { state: { returnTo } });  // Changed from /nuggets/ to /content/
                                     }
                                 }}
                             >
