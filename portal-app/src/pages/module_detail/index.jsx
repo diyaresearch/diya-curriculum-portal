@@ -10,6 +10,7 @@ import BackButton from "../../components/BackButton";
 import EditButton from "../../components/EditButton";
 import DeleteButton from "../../components/DeleteButton";
 import MetaChipsRow from "../../components/MetaChipsRow";
+import { COLLECTIONS } from "../../firebase/collectionNames";
 import module1 from "../../assets/modules/module1.png";
 import module2 from "../../assets/modules/module2.png";
 import module3 from "../../assets/modules/module3.png";
@@ -287,7 +288,7 @@ const ModuleDetail = () => {
 
       // Fetch from Firestore
       const db = getFirestore();
-      const moduleDoc = await getDoc(doc(db, "module", moduleId));
+      const moduleDoc = await getDoc(doc(db, COLLECTIONS.module, moduleId));
 
       if (!moduleDoc.exists()) {
         setError("Module not found");
@@ -298,6 +299,9 @@ const ModuleDetail = () => {
       const data = moduleDoc.data();
       console.log("Fetched module data:", data); // Debug log
       const authorUid = data.author || data.authorId || "";
+      const isFeatured = data.isFeatured === true;
+      const priceRaw = data.price ?? data.Price ?? 0;
+      const price = Number.isFinite(Number(priceRaw)) ? Number(priceRaw) : 0;
 
       // Support both schemas:
       // - legacy/other: { lessonPlans: {0: "<lessonId>", 1: "<lessonId>" ... } }
@@ -322,7 +326,7 @@ const ModuleDetail = () => {
         description: data.description || "No description available",
         requirements: data.requirements || "No specific requirements",
         learningObjectives: data.learningObjectives || "Objectives will be defined",
-        _meta: { id: moduleId, authorUid },
+        _meta: { id: moduleId, authorUid, isFeatured, price },
         details: [
           { label: "Category", value: Array.isArray(categoryRaw) ? categoryRaw.join(", ") : categoryRaw || "N/A" },
           { label: "Level", value: Array.isArray(levelRaw) ? levelRaw.join(", ") : levelRaw || "N/A" },
@@ -529,7 +533,7 @@ const ModuleDetail = () => {
     try {
       setIsDeleting(true);
       const db = getFirestore();
-      await deleteDoc(doc(db, "module", moduleId));
+      await deleteDoc(doc(db, COLLECTIONS.module, moduleId));
       setIsDeleteModalOpen(false);
 
       if (window.history.length > 1) {
@@ -752,6 +756,83 @@ const ModuleDetail = () => {
             />
           );
         })()}
+
+        {/* Featured purchase block (only when Featured is on) */}
+        {moduleData?._meta?.isFeatured === true && (
+          <div
+            style={{
+              maxWidth: 820,
+              margin: "16px auto 0 auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 14,
+              padding: "14px 16px",
+              borderRadius: 12,
+              border: "1px solid #e5e7eb",
+              background: "#f8fafc",
+            }}
+          >
+            {(() => {
+              const priceNum = Number(moduleData?._meta?.price);
+              const hasPrice = Number.isFinite(priceNum) && priceNum > 0;
+              const priceLabel = hasPrice ? `$${priceNum.toFixed(2)}` : "Free";
+
+              return (
+                <>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontWeight: 900, color: "#111" }}>Price</div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 4 }}>
+                      <div style={{ color: "#111", fontWeight: 900, fontSize: "2rem", lineHeight: 1 }}>
+                        {priceLabel}
+                      </div>
+                      {hasPrice && (
+                        <div style={{ color: "#6b7280", fontWeight: 800, fontSize: "0.95rem" }}>
+                          one-time
+                        </div>
+                      )}
+                    </div>
+                    {hasPrice && (
+                      <div style={{ marginTop: 8, color: "#6b7280", fontWeight: 700, fontSize: "0.95rem" }}>
+                        Secure checkout
+                      </div>
+                    )}
+                  </div>
+
+                  {hasPrice && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try {
+                            alert("Buy flow not wired yet.");
+                          } catch (e) {
+                            console.error("Buy click failed:", e);
+                          }
+                        }}
+                        style={{
+                          background: "#162040",
+                          color: "#fff",
+                          border: "2px solid #162040",
+                          borderRadius: 10,
+                          padding: "10px 16px",
+                          cursor: "pointer",
+                          fontWeight: 900,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        Buy for {priceLabel}
+                      </button>
+                      <div style={{ color: "#6b7280", fontWeight: 700, fontSize: "0.95rem" }}>
+                        Instant access
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
 

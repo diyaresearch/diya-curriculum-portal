@@ -77,6 +77,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     learningObjectives: "", // Add this
     isPublic: false,
     isFeatured: false, // Admin-only flag
+    price: "", // Admin-only, only when Featured is on
   });
   const [showOverlay, setShowOverlay] = useState(false);
   const [portalContent, setPortalContent] = useState([]);
@@ -171,6 +172,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         learningObjectives: parsedDraft.learningObjectives || "",
         isPublic: parsedDraft.isPublic || false,
         isFeatured: parsedDraft.isFeatured === true,
+        price: parsedDraft.price ?? "",
       });
       // Restore selected lesson plans/materials if present
       if (parsedDraft.lessons && Array.isArray(parsedDraft.lessons)) {
@@ -242,6 +244,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
           learningObjectives: learningObjectivesRaw || "",
           isPublic: normalizeBoolean(data.isPublic ?? data.IsPublic),
           isFeatured: data.isFeatured === true,
+          price: data.price ?? data.Price ?? "",
         });
 
         setPrefillLessonIds(lessonIds);
@@ -362,6 +365,15 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     // Only admins should be able to set featured flag.
     if (userData?.role !== "admin") {
       delete draftData.isFeatured;
+      delete draftData.price;
+    } else {
+      // Only featured modules can have a price.
+      if (draftData.isFeatured !== true) {
+        delete draftData.price;
+      } else {
+        const priceNum = Number(draftData.price);
+        draftData.price = Number.isFinite(priceNum) ? priceNum : 0;
+      }
     }
     await addDoc(collection(db, COLLECTIONS.module), draftData);
     localStorage.removeItem("moduleDraft");
@@ -425,11 +437,19 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       // Only admins should be able to set featured flag.
       if (userData?.role !== "admin") {
         delete moduleData.isFeatured;
+        delete moduleData.price;
       } else {
         moduleData.isFeatured = moduleData.isFeatured === true;
         // Featured modules created/published by admin should be visible to everyone.
         if (moduleData.isFeatured === true) {
           moduleData.isPublic = true;
+        }
+        // Only featured modules can have a price.
+        if (moduleData.isFeatured !== true) {
+          delete moduleData.price;
+        } else {
+          const priceNum = Number(moduleData.price);
+          moduleData.price = Number.isFinite(priceNum) ? priceNum : 0;
         }
       }
 
@@ -477,6 +497,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       learningObjectives: "", // Add this
       isPublic: false,
       isFeatured: false,
+      price: "",
     });
     setSelectedMaterials([]);
     localStorage.removeItem("moduleDraft");
@@ -834,18 +855,70 @@ const ModuleBuilder = ({ onCancel } = {}) => {
             </label>
           </div>
           {userData?.role === "admin" && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <input
-                type="checkbox"
-                id="isFeatured"
-                checked={formData.isFeatured === true}
-                onChange={(e) => setFormData((prev) => ({ ...prev, isFeatured: e.target.checked }))}
-                style={{ width: 18, height: 18 }}
-              />
-              <label htmlFor="isFeatured" style={{ color: "#111", fontWeight: 600, fontSize: "1.08rem" }}>
-                Featured (shows on homepage)
-              </label>
-            </div>
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="checkbox"
+                  id="isFeatured"
+                  checked={formData.isFeatured === true}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      isFeatured: e.target.checked,
+                      // If turning off featured, clear price to avoid confusion.
+                      ...(e.target.checked ? {} : { price: "" }),
+                    }))
+                  }
+                  style={{ width: 18, height: 18 }}
+                />
+                <label htmlFor="isFeatured" style={{ color: "#111", fontWeight: 600, fontSize: "1.08rem" }}>
+                  Featured (shows on homepage)
+                </label>
+              </div>
+
+              {formData.isFeatured === true && (
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <label htmlFor="price" style={{ color: "#111", fontWeight: 700, fontSize: "1.02rem" }}>
+                    Price
+                  </label>
+                  <input
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
+                    placeholder="0.00"
+                    style={{
+                      width: 140,
+                      padding: "10px 12px",
+                      borderRadius: 8,
+                      border: "1px solid #bbb",
+                      fontSize: "1rem",
+                      color: "#111",
+                      fontFamily: "Open Sans, sans-serif",
+                    }}
+                  />
+                  {Number(formData.price) > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => alert("Buy flow not wired yet.")}
+                      style={{
+                        background: "#162040",
+                        color: "#fff",
+                        border: "2px solid #162040",
+                        borderRadius: 8,
+                        padding: "10px 14px",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Buy
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
           )}
           <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
             <button
