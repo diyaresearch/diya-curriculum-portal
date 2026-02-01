@@ -3,28 +3,95 @@ const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
 
 const router = express.Router();
+const functions = require("firebase-functions");
 
-// Validate and initialize Stripe with secret key from environment
-let stripe = null;
-if (!process.env.STRIPE_SECRET_KEY) {
-    console.warn('⚠️  STRIPE_SECRET_KEY is not defined. Payment features will be disabled.');
-    console.warn('   Set STRIPE_SECRET_KEY in your environment file to enable payment functionality.');
-} else {
-    try {
-        stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-        console.log('✅ Stripe initialized successfully');
-    } catch (error) {
-        console.error('❌ Failed to initialize Stripe:', error.message);
-        console.warn('⚠️  Payment features will be disabled.');
-    }
+function getDb() {
+  const admin = require("firebase-admin");
+  if (admin.apps.length === 0) {
+    admin.initializeApp();
+  }
+  return admin.firestore();
 }
 
-const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+function getFunctionsConfig(path, fallback = "") {
+  try {
+    const cfg = functions.config?.() || {};
+    return path.split(".").reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), cfg) ?? fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+function resolveSchemaQualifier() {
+  const explicit = String(process.env.DATABASE_SCHEMA_QUALIFIER || "").trim();
+  if (explicit) return explicit;
+  // When using Stripe test keys (typical for localhost dev), use non-prod collections.
+  const key = String(getStripeSecretKey() || "");
+  if (key.startsWith("sk_live_")) return "prod.";
+  return "";
+}
+
+function normalizeBasename(value, fallback) {
+  const raw = String(value || "").trim() || fallback;
+  const withLeading = raw.startsWith("/") ? raw : `/${raw}`;
+  return withLeading.replace(/\/+$/, "");
+}
+
+function joinDomainAndBasename(domain, basename) {
+  const d = String(domain || "").replace(/\/+$/, "");
+  if (!d) return "";
+  if (d.endsWith(basename)) return d;
+  return `${d}${basename}`;
+}
+
+
+// Validate and initialize Stripe with secret key from environment
+function isTruthy(value) {
+  const v = String(value || "").trim().toLowerCase();
+  return v === "true" || v === "1" || v === "yes";
+}
+
+function getStripeSecretKey() {
+  // Default to TEST unless explicitly forced to LIVE.
+  // You can set this via:
+  // - functions config: firebase functions:config:set stripe.livemode=true
+  // - environment: STRIPE_LIVEMODE=true
+  const forceLive = isTruthy(getFunctionsConfig("stripe.livemode", process.env.STRIPE_LIVEMODE || ""));
+
+  const key =
+    (forceLive
+      ? process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY
+      : process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY) ||
+    // fallback
+    process.env.STRIPE_SECRET_KEY_LIVE ||
+    process.env.STRIPE_SECRET_KEY_TEST ||
+    "";
+
+  return String(key || "").trim();
+}
+
+const stripeClientCache = new Map();
+function getStripeClient() {
+  const key = getStripeSecretKey();
+  if (!key) return null;
+  if (stripeClientCache.has(key)) return stripeClientCache.get(key);
+  try {
+    const client = require("stripe")(key);
+    stripeClientCache.set(key, client);
+    return client;
+  } catch (error) {
+    console.error("❌ Failed to initialize Stripe:", error.message);
+    return null;
+  }
+}
+
+const SCHEMA_QUALIFIER = resolveSchemaQualifier();
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
 
 // Middleware to check if Stripe is available
 const requireStripe = (req, res, next) => {
+    const stripe = getStripeClient();
     if (!stripe) {
         return res.status(503).json({
             success: false,
@@ -35,6 +102,7 @@ const requireStripe = (req, res, next) => {
             }
         });
     }
+    req.stripe = stripe;
     next();
 };
 
@@ -146,16 +214,22 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
       }
   
       // DOMAIN must include scheme (http/https)
-      const domain = process.env.DOMAIN || "";
+      // Prefer Firebase Functions runtime config: firebase functions:config:set app.domain="..."
+      const domain = String(
+        getFunctionsConfig("app.domain", process.env.DOMAIN || req.headers.origin || "") || ""
+      ).trim();
       if (!/^https?:\/\//i.test(domain)) {
         return res.status(500).json({ message: "Server misconfigured: DOMAIN must start with http:// or https://" });
       }
+
+      // React Router in this app uses basename="/diya-ed"
+      // Prefer Firebase Functions runtime config: firebase functions:config:set app.basename="/diya-ed"
+      const configuredBasename = String(getFunctionsConfig("app.basename", process.env.APP_BASENAME || "") || "").trim();
+      const APP_BASENAME = normalizeBasename(configuredBasename, "/diya-ed");
+      const appBaseUrl = joinDomainAndBasename(domain, APP_BASENAME);
   
-      await databaseService.initialize();
-      const db = databaseService.getDb();
-  
-      // Fetch module (collection name is typically "module")
-      const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER || ""}`;
+      const db = getDb();
+
       const TABLE_MODULE = SCHEMA_QUALIFIER + "module";
 
       const moduleSnap = await db.collection(TABLE_MODULE).doc(moduleId).get();
@@ -174,7 +248,10 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
   
       const unitAmount = Math.round(priceNum * 100); // dollars -> cents
       const title = moduleData.title || moduleData.Title || "Module Purchase";
+      const userLabel = req.user?.name || req.user?.email || null;
+      const userEmail = req.user?.email || null;
   
+      const stripe = req.stripe;
       const session = await stripe.checkout.sessions.create({
         ui_mode: "embedded",
         mode: "payment",
@@ -188,17 +265,115 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
             quantity: 1,
           },
         ],
+        payment_intent_data: {
+          metadata: {
+            purchaseType: "module",
+            moduleId,
+            userId,
+          },
+        },
         metadata: {
           purchaseType: "module",
           moduleId,
           userId,
         },
-        return_url: `${domain}/return?session_id={CHECKOUT_SESSION_ID}`,
+        // IMPORTANT: return to a real SPA route to avoid blank page.
+        // Stripe will also append `redirect_status` and `session_id`.
+        return_url: `${appBaseUrl}/module/${moduleId}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       });
+
+      // Helpful for a one-row-per-purchase model: ensure the payment_intent.succeeded event
+      // can link back to this checkout session.
+      try {
+        if (session?.payment_intent) {
+          await stripe.paymentIntents.update(session.payment_intent, {
+            metadata: {
+              purchaseType: "module",
+              moduleId,
+              userId,
+              checkoutSessionId: session.id,
+            },
+          });
+        }
+      } catch (e) {
+        console.warn("Failed to attach checkoutSessionId to payment intent metadata:", e?.message || e);
+      }
+
+      const livemode = Boolean(session?.livemode);
+      // Preferred source: Firebase Secret Manager secrets (firebase functions:secrets:set ...)
+      // These are exposed to runtime as process.env.<SECRET_NAME> when bound in `functions/index.js` `secrets: [...]`.
+      const publishableKeyExplicit = String(
+        process.env.STRIPE_PUBLISHABLE_KEY ||
+          getFunctionsConfig("stripe.publishable_key", "") ||
+          ""
+      ).trim();
+      // Prefer per-mode secrets if set; fall back to functions config.
+      const publishableKeyByMode = livemode
+        ? String(
+            process.env.STRIPE_PUBLISHABLE_KEY_LIVE ||
+              getFunctionsConfig("stripe.publishable_key_live", "") ||
+              ""
+          ).trim()
+        : String(
+            process.env.STRIPE_PUBLISHABLE_KEY_TEST ||
+              getFunctionsConfig("stripe.publishable_key_test", "") ||
+              ""
+          ).trim();
+
+      const stripePublishableKey = publishableKeyExplicit || publishableKeyByMode;
+
+      if (!stripePublishableKey) {
+        return res.status(500).json({
+          message:
+            "Server misconfigured: missing Stripe publishable key. Set Secret STRIPE_PUBLISHABLE_KEY_TEST/STRIPE_PUBLISHABLE_KEY_LIVE (recommended) or functions config stripe.publishable_key_test/stripe.publishable_key_live.",
+        });
+      }
+
+      // Avoid hard-to-debug key mismatches (pk_live with test sessions, etc.)
+      if (livemode && !stripePublishableKey.startsWith("pk_live_")) {
+        return res.status(500).json({
+          message:
+            "Server misconfigured: expected a live publishable key (pk_live_) for a live checkout session.",
+        });
+      }
+      if (!livemode && !stripePublishableKey.startsWith("pk_test_")) {
+        return res.status(500).json({
+          message:
+            "Server misconfigured: expected a test publishable key (pk_test_) for a test checkout session.",
+        });
+      }
+
+      // Log session creation immediately (helps debugging even if webhook fails)
+      const admin = require("firebase-admin");
+      // One row per purchase: use checkoutSessionId as doc id.
+      const logRef = db.collection(TABLE_PAYMENT_LOGS).doc(session.id);
+      await logRef.set({
+        action: "module_checkout_session_created",
+        status: "created",
+        checkoutSessionId: session.id,
+        paymentIntentId: session.payment_intent || null,
+        userId,
+        userLabel,
+        userEmail,
+        moduleId,
+        moduleTitle: title,
+        // Store both human-friendly dollars and Stripe cents for clarity.
+        amount: priceNum, // dollars
+        amountCents: unitAmount, // cents
+        currency: "usd",
+        project: process.env.GCLOUD_PROJECT || null,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastEventType: "module_checkout_session_created",
+      }, { merge: true });
   
       return res.status(200).json({
         clientSecret: session.client_secret,
         sessionId: session.id,
+        livemode,
+        stripePublishableKey,
+        paymentLogId: logRef.id,
+        paymentLogsCollection: TABLE_PAYMENT_LOGS,
+        project: process.env.GCLOUD_PROJECT || null,
       });
     } catch (error) {
       console.error("Error creating module checkout session:", error);
@@ -362,101 +537,8 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         res.status(500).json({ message: "Error confirming payment" });
     }
 });
-
-// Stripe webhook handler
-// IMPORTANT: this must use the raw request body for signature verification.
-// In `server/index.js` we capture it as `req.rawBody`.
-router.post("/webhook", async (req, res) => {
-    if (!stripe) {
-        return res.status(503).send("Stripe is not configured");
-    }
-
-    const sig = req.headers['stripe-signature'];
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!endpointSecret) {
-        return res.status(500).send("Missing STRIPE_WEBHOOK_SECRET");
-    }
-
-    let event;
-
-    try {
-        const payload = req.rawBody || req.body;
-        event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
-    } catch (err) {
-        console.error(`Webhook signature verification failed:`, err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-
-    await databaseService.initialize();
-    const db = databaseService.getDb();
-    const admin = databaseService.getAdmin();
-
-    // Handle the event
-    switch (event.type) {
-        case 'payment_intent.succeeded':
-            const paymentIntent = event.data.object;
-            console.log('PaymentIntent succeeded:', paymentIntent.id);
-
-            // Log webhook event
-            await db.collection(TABLE_PAYMENT_LOGS).add({
-                action: 'webhook_payment_succeeded',
-                timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-                status: 'webhook_received',
-                paymentIntentId: paymentIntent.id,
-                userId: paymentIntent.metadata.userId || null,
-                amount: paymentIntent.amount,
-                currency: paymentIntent.currency
-            });
-            break;
-
-        case 'payment_intent.payment_failed':
-            const failedPayment = event.data.object;
-            console.log('PaymentIntent failed:', failedPayment.id);
-
-            // Log failed payment
-            await db.collection(TABLE_PAYMENT_LOGS).add({
-                action: 'webhook_payment_failed',
-                timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-                status: 'payment_failed',
-                paymentIntentId: failedPayment.id,
-                userId: failedPayment.metadata.userId || null,
-                error: failedPayment.last_payment_error?.message || 'Payment failed'
-            });
-            break;
-
-            case "checkout.session.completed": {
-                const session = event.data.object;
-              
-                // Only handle module purchases
-                if (session?.metadata?.purchaseType !== "module") break;
-              
-                const userId = session.metadata.userId || null;
-                const moduleId = session.metadata.moduleId || null;
-              
-                console.log("Checkout session completed (module):", session.id, { userId, moduleId });
-              
-                await db.collection(TABLE_PAYMENT_LOGS).add({
-                  action: "webhook_checkout_session_completed",
-                  timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-                  status: "completed",
-                  checkoutSessionId: session.id,
-                  paymentIntentId: session.payment_intent || null,
-                  userId,
-                  moduleId,
-                  amount_total: session.amount_total || null,
-                  currency: session.currency || null,
-                });
-              
-                break;
-            }
-              
-            default:
-            console.log(`Unhandled event type ${event.type}`);
-    }
-
-    res.json({ received: true });
-});
-
+// Stripe webhooks are handled in `functions/index.js` using `express.raw()` (required for signature verification).
+// We intentionally keep NO webhook handler in this router to prevent Stripe hitting a parsed-body endpoint.
 // Get payment history for user
 router.get("/history", authenticateUser, async (req, res) => {
     try {

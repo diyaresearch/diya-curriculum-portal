@@ -381,6 +381,52 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     window.location.reload();
   };
 
+    // --- Buy (Stripe Embedded Checkout Session) ---
+    const handleBuy = async () => {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+  
+        if (!user) {
+          setModalMessage("You must be logged in to purchase.");
+          setModalIsOpen(true);
+          return;
+        }
+  
+        // IMPORTANT: this is what prevents "Bearer null"
+        const token = await user.getIdToken();
+  
+        const res = await fetch("/api/payment/create-embedded-checkout-session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ planType: "premium" }),
+        });
+  
+        const data = await res.json();
+  
+        if (!res.ok) {
+          console.error("Create checkout session failed:", data);
+          setModalMessage(data?.message || "Unable to start checkout.");
+          setModalIsOpen(true);
+          return;
+        }
+  
+        // For now, just confirm you received it (next step will mount checkout in a modal)
+        console.log("Stripe clientSecret:", data.clientSecret);
+        setModalMessage("Checkout session created successfully (clientSecret received).");
+        setModalIsOpen(true);
+  
+      } catch (err) {
+        console.error(err);
+        setModalMessage("Error starting checkout: " + (err?.message || "Unknown error"));
+        setModalIsOpen(true);
+      }
+    };
+  
+
   // --- Submit (Publish) ---
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -902,7 +948,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
                   {Number(formData.price) > 0 && (
                     <button
                       type="button"
-                      onClick={() => alert("Buy flow not wired yet.")}
+                      onClick={handleBuy}
                       style={{
                         background: "#162040",
                         color: "#fff",

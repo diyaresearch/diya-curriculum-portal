@@ -21,7 +21,21 @@ const subscriptionRoutes = require("./routes/subscription");
 const paymentRoutes = require("./routes/payment");
 
 const app = express();
-app.use(express.json());
+// Stripe webhooks require the *raw* request body for signature verification.
+// We keep normal JSON parsing, but capture the raw bytes for the webhook route.
+app.use(
+  express.json({
+    verify: (req, _res, buf) => {
+      try {
+        if (req.originalUrl && req.originalUrl.startsWith("/api/payment/webhook")) {
+          req.rawBody = buf;
+        }
+      } catch (_) {
+        // ignore
+      }
+    },
+  })
+);
 
 // Get allowed origins from env, default empty array
 const allowedOrigins = process.env.SERVER_ALLOW_ORIGIN

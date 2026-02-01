@@ -17,11 +17,20 @@ import module3 from "../../assets/modules/module3.png";
 import module4 from "../../assets/modules/module4.png";
 import module5 from "../../assets/modules/module5.png";
 import OverlayTileView from "../../components/OverlayTileView";
+import { loadStripe } from "@stripe/stripe-js";
+import Modal from "react-modal";
+
+
 // Level chip coloring intentionally not used on module page
 
 // Import default images for fallback - using module images instead since AI images don't exist
 // If you have these AI images in a different location, update the paths accordingly
 const aiExplorationImg = module1; // Fallback to module1 image
+
+const fallbackStripeKey = String(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "").trim();
+if (!fallbackStripeKey) {
+  console.error("Missing REACT_APP_STRIPE_PUBLISHABLE_KEY (fallback)");
+}
 
 const imageMap = {
   module1,
@@ -145,13 +154,46 @@ const HARDCODED_MODULES = {
   }
 };
 
+// Required for react-modal accessibility
+if (typeof document !== "undefined") {
+  const appRoot = document.getElementById("root");
+  if (appRoot) Modal.setAppElement(appRoot);
+}
+
 const ModuleDetail = () => {
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { userData } = useUserData();
+  const [checkoutClientSecret, setCheckoutClientSecret] = useState(null);
+  const [checkoutStripeKey, setCheckoutStripeKey] = useState(null);
+  const [showPurchaseSuccess, setShowPurchaseSuccess] = useState(false);
+  const checkoutInitRef = useRef(null);
+  const [isStartingCheckout, setIsStartingCheckout] = useState(false);
+
 
   const returnTo = (location.state && location.state.returnTo) || null;
+
+  // Show confirmation after Stripe redirects back from checkout.
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search || "");
+      const checkoutFlag = params.get("checkout");
+      const redirectStatus = params.get("redirect_status");
+      const sessionId = params.get("session_id");
+
+      if (checkoutFlag === "success" && (redirectStatus === "succeeded" || !!sessionId)) {
+        // If Stripe redirected back, ensure checkout modal is closed
+        // so we don't keep two modals open at once.
+        setCheckoutClientSecret(null);
+        setCheckoutStripeKey(null);
+        checkoutInitRef.current = null;
+        setShowPurchaseSuccess(true);
+      }
+    } catch (e) {
+      console.error("Failed to parse checkout return params:", e);
+    }
+  }, [location.search]);
 
   // Ensure we start at top when navigating here
   useEffect(() => {
@@ -383,6 +425,46 @@ const ModuleDetail = () => {
   }, [location.state?.selectedPlans]);
 
   useEffect(() => {
+    if (!checkoutClientSecret) return;
+    const stripeKeyToUse = String(checkoutStripeKey || fallbackStripeKey || "").trim();
+    if (!stripeKeyToUse) {
+      console.error("Missing Stripe publishable key for embedded checkout.");
+      return;
+    }
+
+    // React 18 StrictMode can run effects twice in dev; guard against double init.
+    if (checkoutInitRef.current === checkoutClientSecret) return;
+    checkoutInitRef.current = checkoutClientSecret;
+  
+    let checkout;
+  
+    (async () => {
+      const stripe = await loadStripe(stripeKeyToUse);
+      if (!stripe) return;
+      checkout = await stripe.initEmbeddedCheckout({
+        clientSecret: checkoutClientSecret,
+        onComplete: () => {
+          try {
+            setCheckoutClientSecret(null);
+            setCheckoutStripeKey(null);
+            checkoutInitRef.current = null;
+            setShowPurchaseSuccess(true);
+          } catch (e) {
+            console.error("Embedded checkout onComplete failed:", e);
+          }
+        },
+      });
+      checkout.mount("#checkout-container");
+    })();
+  
+    return () => {
+      if (checkout) checkout.destroy();
+      if (checkoutInitRef.current === checkoutClientSecret) checkoutInitRef.current = null;
+    };
+  }, [checkoutClientSecret, checkoutStripeKey]);
+  
+
+  useEffect(() => {
     if (moduleId === "create") {
       setMode("create");
       setIsEditMode(true);
@@ -548,6 +630,62 @@ const ModuleDetail = () => {
       setIsDeleting(false);
     }
   };
+
+  const handleBuy = async () => {
+    if (isStartingCheckout) return;
+    if (checkoutClientSecret) return; // already open / initializing
+    try {
+      setIsStartingCheckout(true);
+      const auth = getAuth();
+      const user = auth.currentUser;
+  
+      if (!user) {
+        alert("Please log in to purchase.");
+        return;
+      }
+  
+      const token = await user.getIdToken();
+
+      // In local dev, CRA proxy sends /api/* to localhost:3001. Our payments live in Firebase Functions.
+      // Use the deployed functions URL when running on localhost unless explicitly overridden.
+      const functionsBase = String(process.env.REACT_APP_PAYMENTS_FUNCTIONS_BASE_URL || "").trim();
+      const isLocalhost =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+      const endpoint = isLocalhost
+        ? `${functionsBase || "https://us-central1-curriculum-portal-1ce8f.cloudfunctions.net/payments"}/api/payment/create-module-checkout-session`
+        : "/api/payment/create-module-checkout-session";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ moduleId }),
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        console.error("Create checkout session failed:", data);
+        alert(data?.message || "Unable to start checkout.");
+        return;
+      }
+  
+      console.log("checkout session created:", data);
+      setCheckoutStripeKey(String(data?.stripePublishableKey || fallbackStripeKey || "").trim() || null);
+      setCheckoutClientSecret(data.clientSecret);
+    } catch (err) {
+      console.error("handleBuy error:", err);
+      alert("Error starting checkout.");
+    } finally {
+      setIsStartingCheckout(false);
+    }
+  };
+  
+
 
 
   return (
@@ -803,25 +941,21 @@ const ModuleDetail = () => {
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
                       <button
                         type="button"
-                        onClick={() => {
-                          try {
-                            alert("Buy flow not wired yet.");
-                          } catch (e) {
-                            console.error("Buy click failed:", e);
-                          }
-                        }}
+                        onClick={handleBuy}
+                        disabled={isStartingCheckout || Boolean(checkoutClientSecret)}
                         style={{
                           background: "#162040",
                           color: "#fff",
                           border: "2px solid #162040",
                           borderRadius: 10,
                           padding: "10px 16px",
-                          cursor: "pointer",
+                          cursor: isStartingCheckout || checkoutClientSecret ? "not-allowed" : "pointer",
                           fontWeight: 900,
                           whiteSpace: "nowrap",
+                          opacity: isStartingCheckout || checkoutClientSecret ? 0.7 : 1,
                         }}
                       >
-                        Buy for {priceLabel}
+                        {isStartingCheckout ? "Starting checkout..." : `Buy for ${priceLabel}`}
                       </button>
                       <div style={{ color: "#6b7280", fontWeight: 700, fontSize: "0.95rem" }}>
                         Instant access
@@ -1001,6 +1135,83 @@ const ModuleDetail = () => {
           contentType={"lessonPlan"}
         />
       )}
+      {checkoutClientSecret && (
+        <Modal
+          isOpen={true}
+          onRequestClose={() => {
+            setCheckoutClientSecret(null);
+            setCheckoutStripeKey(null);
+            checkoutInitRef.current = null;
+          }}
+          style={{
+            content: {
+              inset: "5%",
+              padding: 0,
+              borderRadius: 12,
+            },
+            overlay: {
+              backgroundColor: "rgba(0,0,0,0.6)",
+              zIndex: 10000,
+            },
+          }}
+        >
+          <div id="checkout-container" style={{ height: "100%" }} />
+        </Modal>
+      )}
+
+      {showPurchaseSuccess && (
+        <Modal
+          isOpen={true}
+          onRequestClose={() => setShowPurchaseSuccess(false)}
+          style={{
+            content: {
+              top: "50%",
+              left: "50%",
+              right: "auto",
+              bottom: "auto",
+              transform: "translate(-50%, -50%)",
+              width: "95vw",
+              maxWidth: 520,
+              padding: "26px 22px",
+              borderRadius: 16,
+              border: "1px solid #e5e7eb",
+            },
+            overlay: {
+              backgroundColor: "rgba(0,0,0,0.55)",
+              zIndex: 11000,
+            },
+          }}
+          contentLabel="Purchase successful"
+        >
+          <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "#111" }}>
+            Purchase successful
+          </div>
+          <div style={{ marginTop: 12, color: "#333", fontSize: "1.05rem", lineHeight: 1.5 }}>
+            You should be able to access the module.
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPurchaseSuccess(false);
+                navigate("/", { replace: true });
+              }}
+              style={{
+                background: "#162040",
+                color: "#fff",
+                border: "2px solid #162040",
+                borderRadius: 10,
+                padding: "10px 16px",
+                cursor: "pointer",
+                fontWeight: 900,
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </Modal>
+      )}
+
     </div>
   );
 };
