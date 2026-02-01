@@ -647,17 +647,22 @@ const ModuleDetail = () => {
       const token = await user.getIdToken();
 
       // In local dev, CRA proxy sends /api/* to localhost:3001. Our payments live in Firebase Functions.
-      // Use the deployed functions URL when running on localhost unless explicitly overridden.
+      // Prefer calling the deployed functions URL directly when provided (works even if hosting domain
+      // is not Firebase Hosting / rewrites are not configured).
       const functionsBase = String(process.env.REACT_APP_PAYMENTS_FUNCTIONS_BASE_URL || "").trim();
       const isLocalhost =
         typeof window !== "undefined" &&
         (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
-      const endpoint = isLocalhost
-        ? `${functionsBase || "https://us-central1-curriculum-portal-1ce8f.cloudfunctions.net/payments"}/api/payment/create-module-checkout-session`
-        : "/api/payment/create-module-checkout-session";
+      const defaultFunctionsBase = "https://us-central1-curriculum-portal-1ce8f.cloudfunctions.net/payments";
+      const functionsEndpoint = `${functionsBase || defaultFunctionsBase}/api/payment/create-module-checkout-session`;
+      const sameOriginEndpoint = "/api/payment/create-module-checkout-session";
+      const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+      const isFirebaseHostingDomain = /\.web\.app$|\.firebaseapp\.com$/i.test(hostname);
+      const shouldUseFunctionsDirect = isLocalhost || Boolean(functionsBase) || !isFirebaseHostingDomain;
+      let endpoint = shouldUseFunctionsDirect ? functionsEndpoint : sameOriginEndpoint;
 
-      const response = await fetch(endpoint, {
+      let response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -665,12 +670,31 @@ const ModuleDetail = () => {
         },
         body: JSON.stringify({ moduleId }),
       });
+
+      // If we tried same-origin but the host doesn't support rewrites (405/404), fall back to direct functions.
+      if (!shouldUseFunctionsDirect && (response.status === 405 || response.status === 404)) {
+        endpoint = functionsEndpoint;
+        response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ moduleId }),
+        });
+      }
   
-      const data = await response.json();
+      const raw = await response.text();
+      let data = null;
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        data = null;
+      }
   
       if (!response.ok) {
-        console.error("Create checkout session failed:", data);
-        alert(data?.message || "Unable to start checkout.");
+        console.error("Create checkout session failed:", { status: response.status, data, raw });
+        alert((data && data.message) || raw || "Unable to start checkout.");
         return;
       }
   

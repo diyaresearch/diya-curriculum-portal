@@ -22,13 +22,43 @@ function getFunctionsConfig(path, fallback = "") {
   }
 }
 
-function resolveSchemaQualifier() {
+function resolveContentSchemaQualifier(req) {
+  // Content (modules/lessons/content/users) should follow the APP environment, not Stripe key mode.
+  //
+  // IMPORTANT: Cloud Functions always run with NODE_ENV="production", so we can't use NODE_ENV here
+  // or localhost dev would incorrectly read from prod collections.
+  //
+  // Precedence:
+  // 1) Explicit override: DATABASE_SCHEMA_QUALIFIER (e.g. "prod." or "")
+  // 2) Request origin/host indicates localhost -> ""
+  // 3) Otherwise -> "prod." (for deployed app domains)
   const explicit = String(process.env.DATABASE_SCHEMA_QUALIFIER || "").trim();
   if (explicit) return explicit;
-  // When using Stripe test keys (typical for localhost dev), use non-prod collections.
+
+  const origin = String(req?.headers?.origin || "").toLowerCase();
+  const host = String(req?.headers?.host || "").toLowerCase();
+  const isLocal =
+    origin.includes("localhost") ||
+    origin.includes("127.0.0.1") ||
+    host.includes("localhost") ||
+    host.includes("127.0.0.1");
+
+  return isLocal ? "" : "prod.";
+}
+
+function resolvePaymentLogsSchemaQualifier() {
+  // Payment logs should follow Stripe MODE (test vs live).
+  // For module purchases we use the session.livemode signal; for other endpoints use the configured Stripe secret key.
   const key = String(getStripeSecretKey() || "");
-  if (key.startsWith("sk_live_")) return "prod.";
-  return "";
+  return key.startsWith("sk_live_") ? "prod." : "";
+}
+
+function getTableUsers(req) {
+  return `${resolveContentSchemaQualifier(req)}users`;
+}
+
+function getTablePaymentLogsForStripeKeyMode() {
+  return `${resolvePaymentLogsSchemaQualifier()}payment_logs`;
 }
 
 function normalizeBasename(value, fallback) {
@@ -85,9 +115,8 @@ function getStripeClient() {
   }
 }
 
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_USERS = SCHEMA_QUALIFIER + "users";
-const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
+// NOTE: Do not compute schema qualifiers at module load time.
+// We resolve per-request to correctly support localhost dev and prod in the same deployed function.
 
 // Middleware to check if Stripe is available
 const requireStripe = (req, res, next) => {
@@ -137,6 +166,7 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
         const admin = databaseService.getAdmin();
 
         // Use the hierarchical user lookup from databaseService
+        const TABLE_USERS = getTableUsers(req);
         const { ref: userRef, snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
 
         if (!userSnap.exists) {
@@ -164,6 +194,7 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
         });
 
         // Log payment intent creation
+        const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId,
             action: 'payment_intent_created',
@@ -190,6 +221,7 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
             await databaseService.initialize();
             const db = databaseService.getDb();
             const admin = databaseService.getAdmin();
+            const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
             await db.collection(TABLE_PAYMENT_LOGS).add({
                 userId: req.user.uid,
                 action: 'payment_intent_error',
@@ -230,7 +262,12 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
   
       const db = getDb();
 
-      const TABLE_MODULE = SCHEMA_QUALIFIER + "module";
+      const CONTENT_SCHEMA_QUALIFIER = resolveContentSchemaQualifier(req);
+      const TABLE_MODULE = CONTENT_SCHEMA_QUALIFIER + "module";
+      // Payment logs should follow the APP environment (prod UI -> prod.payment_logs),
+      // not Stripe mode (test vs live). We still store `livemode` on the log for clarity.
+      const PAYMENT_LOGS_SCHEMA_QUALIFIER = CONTENT_SCHEMA_QUALIFIER;
+      const TABLE_PAYMENT_LOGS = PAYMENT_LOGS_SCHEMA_QUALIFIER + "payment_logs";
 
       const moduleSnap = await db.collection(TABLE_MODULE).doc(moduleId).get();
 
@@ -255,6 +292,9 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
       const session = await stripe.checkout.sessions.create({
         ui_mode: "embedded",
         mode: "payment",
+        // Avoid forced redirects so the embedded checkout `onComplete` callback can run.
+        // If Stripe must redirect for a given payment method, it will still do so.
+        redirect_on_completion: "if_required",
         line_items: [
           {
             price_data: {
@@ -270,12 +310,20 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
             purchaseType: "module",
             moduleId,
             userId,
+            logSchemaQualifier: PAYMENT_LOGS_SCHEMA_QUALIFIER,
+            moduleTitle: title,
+            userEmail,
+            userLabel,
           },
         },
         metadata: {
           purchaseType: "module",
           moduleId,
           userId,
+          logSchemaQualifier: PAYMENT_LOGS_SCHEMA_QUALIFIER,
+          moduleTitle: title,
+          userEmail,
+          userLabel,
         },
         // IMPORTANT: return to a real SPA route to avoid blank page.
         // Stripe will also append `redirect_status` and `session_id`.
@@ -292,6 +340,10 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
               moduleId,
               userId,
               checkoutSessionId: session.id,
+              logSchemaQualifier: PAYMENT_LOGS_SCHEMA_QUALIFIER,
+              moduleTitle: title,
+              userEmail,
+              userLabel,
             },
           });
         }
@@ -343,35 +395,14 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
         });
       }
 
-      // Log session creation immediately (helps debugging even if webhook fails)
-      const admin = require("firebase-admin");
-      // One row per purchase: use checkoutSessionId as doc id.
-      const logRef = db.collection(TABLE_PAYMENT_LOGS).doc(session.id);
-      await logRef.set({
-        action: "module_checkout_session_created",
-        status: "created",
-        checkoutSessionId: session.id,
-        paymentIntentId: session.payment_intent || null,
-        userId,
-        userLabel,
-        userEmail,
-        moduleId,
-        moduleTitle: title,
-        // Store both human-friendly dollars and Stripe cents for clarity.
-        amount: priceNum, // dollars
-        amountCents: unitAmount, // cents
-        currency: "usd",
-        project: process.env.GCLOUD_PROJECT || null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        lastEventType: "module_checkout_session_created",
-      }, { merge: true });
-  
       return res.status(200).json({
         clientSecret: session.client_secret,
         sessionId: session.id,
         livemode,
         stripePublishableKey,
-        paymentLogId: logRef.id,
+        // The payment log doc will be created by the webhook only upon successful payment.
+        // We still return where it will be written for easier debugging.
+        paymentLogId: session.id,
         paymentLogsCollection: TABLE_PAYMENT_LOGS,
         project: process.env.GCLOUD_PROJECT || null,
       });
@@ -394,6 +425,7 @@ router.post("/create-embedded-checkout-session", authenticateUser, requireStripe
   
       await databaseService.initialize();
       const db = databaseService.getDb();
+      const TABLE_USERS = getTableUsers(req);
   
       const { snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
       if (!userSnap.exists) return res.status(404).json({ message: "User not found" });
@@ -468,6 +500,7 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         const admin = databaseService.getAdmin();
 
         // Use the hierarchical user lookup from databaseService
+        const TABLE_USERS = getTableUsers(req);
         const { ref: userRef, snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
 
         if (!userSnap.exists) {
@@ -499,6 +532,7 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         });
 
         // Log successful payment
+        const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId,
             action: 'payment_confirmed',
@@ -525,6 +559,7 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
+        const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId: req.user.uid,
             action: 'payment_confirmation_error',
@@ -545,6 +580,7 @@ router.get("/history", authenticateUser, async (req, res) => {
         const userId = req.user.uid;
         await databaseService.initialize();
         const db = databaseService.getDb();
+        const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
 
         const paymentHistory = await db.collection(TABLE_PAYMENT_LOGS)
             .where('userId', '==', userId)

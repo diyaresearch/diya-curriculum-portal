@@ -12,6 +12,9 @@ app.use((req, res, next) => {
     "http://127.0.0.1:3000",
     "https://curriculum-portal-1ce8f.web.app",
     "https://curriculum-portal-1ce8f.firebaseapp.com",
+    // Custom/marketing domain (if the portal is embedded/served there)
+    "https://diyaresearch.org",
+    "https://www.diyaresearch.org",
   ]);
 
   if (origin && allowList.has(origin)) {
@@ -111,20 +114,34 @@ async function stripeWebhookHandler(req, res) {
 
     console.log("✅ Stripe event type:", event.type);
 
+    function sanitizeSchemaQualifier(value) {
+      const q = String(value || "").trim();
+      // only allow "" or "prod." to avoid writing to arbitrary collections
+      if (q === "prod.") return "prod.";
+      return "";
+    }
+
     // Persist module purchase events to Firestore for audit/debugging.
     // - checkout.session.completed (best for Checkout)
     // - payment_intent.succeeded (fallback)
     if (event.type === "checkout.session.completed") {
       try {
         const session = event.data.object || {};
+        const purchaseType = session?.metadata?.purchaseType || null;
+        if (purchaseType !== "module") {
+          return res.json({ received: true });
+        }
         const db = getDb();
-        // For webhooks, Stripe's `event.livemode` is authoritative.
-        const SCHEMA_QUALIFIER = event.livemode === true ? "prod." : "";
+        // For payment logs, follow the app environment that created the session.
+        // The creator writes `logSchemaQualifier` into session metadata.
+        const SCHEMA_QUALIFIER = sanitizeSchemaQualifier(session?.metadata?.logSchemaQualifier);
         const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
 
         const userId = session?.metadata?.userId || null;
         const moduleId = session?.metadata?.moduleId || null;
-        const purchaseType = session?.metadata?.purchaseType || null;
+        const moduleTitle = session?.metadata?.moduleTitle || null;
+        const userEmail = session?.metadata?.userEmail || null;
+        const userLabel = session?.metadata?.userLabel || null;
         const amountTotalCents = typeof session.amount_total === "number" ? session.amount_total : null;
         const amountTotal =
           typeof amountTotalCents === "number" && Number.isFinite(amountTotalCents)
@@ -139,8 +156,7 @@ async function stripeWebhookHandler(req, res) {
           moduleId,
         });
 
-        // One row per purchase: update the existing doc created at session-creation time.
-        // Doc id == checkoutSessionId.
+        // One row per purchase: doc id == checkoutSessionId.
         const ref = db.collection(TABLE_PAYMENT_LOGS).doc(String(session.id || "").trim());
         await ref.set(
           {
@@ -148,11 +164,16 @@ async function stripeWebhookHandler(req, res) {
             paymentIntentId: session.payment_intent || null,
             purchaseType,
             userId,
+            userEmail,
+            userLabel,
             moduleId,
+            moduleTitle,
+            livemode: Boolean(event.livemode),
             // Stripe amounts are in the smallest currency unit (USD cents).
             amountTotal,
             amountTotalCents,
             currency: session.currency || null,
+            createdAt: require("firebase-admin").firestore.FieldValue.serverTimestamp(),
             completedAt: require("firebase-admin").firestore.FieldValue.serverTimestamp(),
             lastEventType: "checkout.session.completed",
           },
@@ -168,15 +189,22 @@ async function stripeWebhookHandler(req, res) {
     if (event.type === "payment_intent.succeeded") {
       try {
         const pi = event.data.object || {};
+        const purchaseType = pi?.metadata?.purchaseType || null;
+        if (purchaseType !== "module") {
+          return res.json({ received: true });
+        }
         const db = getDb();
-        // For webhooks, Stripe's `event.livemode` is authoritative.
-        const SCHEMA_QUALIFIER = event.livemode === true ? "prod." : "";
+        // For payment logs, follow the app environment that created the session.
+        // The creator writes `logSchemaQualifier` into payment intent metadata.
+        const SCHEMA_QUALIFIER = sanitizeSchemaQualifier(pi?.metadata?.logSchemaQualifier);
         const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
 
         const userId = pi?.metadata?.userId || null;
         const moduleId = pi?.metadata?.moduleId || null;
-        const purchaseType = pi?.metadata?.purchaseType || null;
         const checkoutSessionId = pi?.metadata?.checkoutSessionId || null;
+        const moduleTitle = pi?.metadata?.moduleTitle || null;
+        const userEmail = pi?.metadata?.userEmail || null;
+        const userLabel = pi?.metadata?.userLabel || null;
         const amountCents = typeof pi.amount === "number" ? pi.amount : null;
         const amount =
           typeof amountCents === "number" && Number.isFinite(amountCents) ? amountCents / 100 : null;
@@ -204,11 +232,16 @@ async function stripeWebhookHandler(req, res) {
             paymentIntentId: pi.id || null,
             purchaseType,
             userId,
+            userEmail,
+            userLabel,
             moduleId,
+            moduleTitle,
+            livemode: Boolean(event.livemode),
             // Stripe amounts are in the smallest currency unit (USD cents).
             amount,
             amountCents,
             currency: pi.currency || null,
+            createdAt: require("firebase-admin").firestore.FieldValue.serverTimestamp(),
             paidAt: require("firebase-admin").firestore.FieldValue.serverTimestamp(),
             lastEventType: "payment_intent.succeeded",
           },
