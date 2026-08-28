@@ -85,7 +85,9 @@ yarn install
 
 ### Firebase Configuration
 
-Create a .env file in the root of the portal-app folder and add the Firebase configuration:
+#### Frontend Configuration
+
+Create a `.env.development` or `.env.production` file in the `portal-app` folder and add the Firebase configuration:
 
 ```env
 REACT_APP_FIREBASE_API_KEY=your-api-key
@@ -94,14 +96,37 @@ REACT_APP_FIREBASE_PROJECT_ID=your-project-id
 REACT_APP_FIREBASE_STORAGE_BUCKET=your-storage-bucket
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
 REACT_APP_FIREBASE_APP_ID=your-app-id
+REACT_APP_SERVER_ORIGIN_URL=http://localhost:3001
+REACT_APP_DATABASE_SCHEMA_QUALIFIER=dev_
+REACT_APP_HOME_PAGE=http://localhost:3000
 ```
+
+#### Backend Configuration
+
+Create a `.env.development` or `.env.production` file in the `server` folder with the following required variables:
+
+```env
+NODE_ENV=development
+PORT=3001
+SERVER_ALLOW_ORIGIN=http://localhost:3000
+DATABASE_SCHEMA_QUALIFIER=dev_
+FIREBASE_PROJECT_ID=curriculum-portal-1ce8f
+ENABLE_MOCK_FIREBASE=false
+```
+
+**Important Notes:**
+- `FIREBASE_PROJECT_ID` must match the project ID in your `serviceAccountKey.json` file
+- `DATABASE_SCHEMA_QUALIFIER` is used to prefix collection names (e.g., `dev_` for development)
+- Set `ENABLE_MOCK_FIREBASE=true` to use mock Firebase for development/testing without real credentials
+- For production, also include `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`
 
 ### Service Account Key
 
 1. In the Firebase Console, go to the Project Settings.
 2. Navigate to the "Service accounts" tab.
 3. Click "Generate new private key" and download the serviceAccountKey.json file.
-4. Place the serviceAccountKey.json file in the server directory.
+4. Place the serviceAccountKey.json file in the `server` directory.
+5. **Important:** The `FIREBASE_PROJECT_ID` in your `.env.development` must match the `project_id` field in the serviceAccountKey.json file.
 
 ### Start the application
 
