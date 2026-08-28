@@ -51,20 +51,56 @@ FIREBASE_ALLOW_KEY_FILE=true npm start
 
 ## Production (App Engine)
 
-App Engine runs as `curriculum-portal-1ce8f@appspot.gserviceaccount.com`. Grant
+App Engine runs as `appengine-default@curriculum-portal-1ce8f.iam.gserviceaccount.com`. Grant
 it Firestore access once, then deploy with no key material at all:
 
+`app.yaml` pins the identity with `service_account:`, which the org policy
+`constraints/appengine.enforceServiceAccountActAsCheck` requires. The
+application also needs an app-level default service account set once:
+
 ```bash
-gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
-  --member=serviceAccount:curriculum-portal-1ce8f@appspot.gserviceaccount.com \
-  --role=roles/datastore.user
+gcloud app update --project=curriculum-portal-1ce8f \
+  --service-account=appengine-default@curriculum-portal-1ce8f.iam.gserviceaccount.com
+```
 
-# Storage access, only if the service reads or writes Cloud Storage
-gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
-  --member=serviceAccount:curriculum-portal-1ce8f@appspot.gserviceaccount.com \
-  --role=roles/storage.objectAdmin
+The service account started with **no roles at all**. These are the ones the
+deploy and the running app actually need (verified 2026-08-28):
 
-cd server && gcloud app deploy app.yaml --quiet
+```bash
+SA=serviceAccount:appengine-default@curriculum-portal-1ce8f.iam.gserviceaccount.com
+
+# Runtime: read and write Firestore
+gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
+  --member=$SA --role=roles/datastore.user --condition=None
+
+# Build: push and pull the container image, write build logs
+gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
+  --member=$SA --role=roles/artifactregistry.writer --condition=None
+gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
+  --member=$SA --role=roles/cloudbuild.builds.builder --condition=None
+gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
+  --member=$SA --role=roles/logging.logWriter --condition=None
+
+# Buckets: Cloud Build staging, and the app's own storage bucket.
+# Scoped to the buckets rather than granting project-wide storage.admin.
+for B in staging.curriculum-portal-1ce8f.appspot.com curriculum-portal-1ce8f.appspot.com; do
+  gcloud storage buckets add-iam-policy-binding gs://$B \
+    --member=$SA --role=roles/storage.admin --project=curriculum-portal-1ce8f
+done
+```
+
+Then deploy:
+
+```bash
+cd server && gcloud app deploy app.yaml --project=curriculum-portal-1ce8f --quiet
+```
+
+Confirm the runtime identity in the logs — it must name the metadata server,
+never a key file:
+
+```bash
+gcloud app logs read --project=curriculum-portal-1ce8f --limit=50 | grep "Firebase initialized"
+# Firebase initialized with attached runtime service account (metadata server)
 ```
 
 `.gcloudignore` excludes `serviceAccountKey.json`, so the key cannot ride along

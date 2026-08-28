@@ -1,7 +1,12 @@
-runtime: nodejs20
+runtime: nodejs22
 
 # This service name can be 'default' or a custom name
 service: default
+
+# Runtime identity. The app authenticates to Firestore as this service account
+# (issue #418) - no downloaded JSON key is deployed. Required explicitly because
+# the org enforces constraints/appengine.enforceServiceAccountActAsCheck.
+service_account: appengine-default@curriculum-portal-1ce8f.iam.gserviceaccount.com
 
 # The instance class defines the compute resources allocated to the service
 instance_class: F2

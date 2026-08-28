@@ -18,7 +18,7 @@ The payment page is returning a 404 error for the `/api/subscription/initiate-up
 4. **Grant the App Engine service account Firestore access** (once per project):
    ```bash
    gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
-     --member=serviceAccount:curriculum-portal-1ce8f@appspot.gserviceaccount.com \
+     --member=serviceAccount:appengine-default@curriculum-portal-1ce8f.iam.gserviceaccount.com \
      --role=roles/datastore.user
    ```
    The deployed service authenticates as this account. Do **not** bundle a

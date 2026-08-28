@@ -213,7 +213,7 @@ function remediationFor(source) {
         "The App Engine / Cloud Run service account cannot reach Firestore.\n" +
         "Grant it the datastore user role:\n" +
         `  gcloud projects add-iam-policy-binding ${PROJECT_ID} \\\n` +
-        `    --member=serviceAccount:${PROJECT_ID}@appspot.gserviceaccount.com \\\n` +
+        `    --member=serviceAccount:appengine-default@${PROJECT_ID}.iam.gserviceaccount.com \\\n` +
         "    --role=roles/datastore.user"
       );
     case "inline-service-account":
