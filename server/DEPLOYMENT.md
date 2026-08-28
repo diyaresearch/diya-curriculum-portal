@@ -15,6 +15,15 @@ The payment page is returning a 404 error for the `/api/subscription/initiate-up
    ```bash
    gcloud config set project curriculum-portal-1ce8f
    ```
+4. **Grant the App Engine service account Firestore access** (once per project):
+   ```bash
+   gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
+     --member=serviceAccount:curriculum-portal-1ce8f@appspot.gserviceaccount.com \
+     --role=roles/datastore.user
+   ```
+   The deployed service authenticates as this account. Do **not** bundle a
+   `serviceAccountKey.json`; `.gcloudignore` excludes it and the app refuses to
+   read one on App Engine. See [CREDENTIALS.md](CREDENTIALS.md).
 
 ### Deployment Steps
 
@@ -54,7 +63,14 @@ The production environment includes:
 - CORS allowed origins: production frontend URL
 
 ### Verification
-After deployment, test the payment functionality:
+First confirm the Admin credential works:
+```bash
+curl -s https://curriculum-portal-1ce8f.uc.r.appspot.com/api/health
+# {"status":"ok","firestore":"reachable"}   -> credentials are good
+# {"status":"degraded",...}                 -> see CREDENTIALS.md
+```
+
+Then test the payment functionality:
 1. Visit the payment page while logged in as teacherDefault
 2. The `/api/subscription/initiate-upgrade` endpoint should work
 3. No more 404 errors

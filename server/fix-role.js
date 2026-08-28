@@ -1,11 +1,15 @@
 const admin = require('firebase-admin');
+const { PROJECT_ID, resolveCredential } = require('./config/credentials');
 
-// Initialize Firebase Admin
+// Initialize Firebase Admin using the same credential resolution as the API,
+// so this script does not depend on a downloaded key file (issue #418).
 if (!admin.apps.length) {
-    const serviceAccount = require('./serviceAccountKey.json');
+    const resolved = resolveCredential();
     admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+        credential: resolved.credential,
+        projectId: PROJECT_ID
     });
+    console.log(`Firebase initialized with ${resolved.detail}`);
 }
 
 const db = admin.firestore();

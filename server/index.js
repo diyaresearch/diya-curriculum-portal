@@ -106,6 +106,25 @@ app.get('/', (req, res) => {
   res.send('Welcome to the Curriculum Portal API');
 });
 
+// Liveness + Firestore reachability. Returns 503 when the Admin credential is
+// dead, so an outage like issue #418 is visible to a health check instead of
+// only surfacing as 500s on every data route.
+app.get('/api/health', async (req, res) => {
+  const { db } = require('./config/firebaseConfig');
+  const { verifyCredential } = require('./config/credentials');
+
+  const result = await verifyCredential(db);
+  if (result.ok) {
+    return res.json({ status: 'ok', firestore: 'reachable' });
+  }
+
+  return res.status(503).json({
+    status: 'degraded',
+    firestore: 'unreachable',
+    error: result.error.message,
+  });
+});
+
 // Import error handlers
 const { globalErrorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
@@ -118,4 +137,35 @@ app.use(globalErrorHandler);
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
+  checkFirestoreOnBoot();
 });
+
+/**
+ * Confirm at boot that the Admin credential actually works. The server still
+ * starts (so /api/health stays answerable), but the log says plainly what is
+ * broken and how to fix it rather than leaving every route to fail with a 500.
+ */
+async function checkFirestoreOnBoot() {
+  let db;
+  let source = 'unknown';
+  try {
+    const { resolveCredential, verifyCredential } = require('./config/credentials');
+    source = resolveCredential().source;
+    db = require('./config/firebaseConfig').db;
+
+    const result = await verifyCredential(db);
+    if (result.ok) {
+      console.log('Firestore reachable - Admin credential is valid');
+      return;
+    }
+
+    const { remediationFor } = require('./config/credentials');
+    console.error(
+      '\nFirestore is UNREACHABLE - API routes backed by Firestore will fail.\n' +
+        `  Reason: ${result.error.message}\n` +
+        `  ${remediationFor(source)}\n`
+    );
+  } catch (error) {
+    console.error('\nFirebase Admin is not configured:\n' + error.message + '\n');
+  }
+}

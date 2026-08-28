@@ -15,3 +15,24 @@
 
 # Node.js dependencies:
 node_modules/
+
+# Credentials must never be uploaded into the App Engine artifact (issue #418).
+# App Engine runs under its own service account, so a downloaded JSON key is
+# both unnecessary here and a long-lived credential sitting in a deployed
+# artifact. server/config/credentials.js refuses to read one on App Engine.
+serviceAccountKey.json
+*serviceAccount*.json
+*.pem
+*.p12
+
+# Local-only helper scripts, logs, and docs
+*.log
+deploy.cmd
+deploy.ps1
+quick-deploy-commands.txt
+
+# NOTE: .env* files are still uploaded, because production config
+# (DATABASE_SCHEMA_QUALIFIER, STRIPE_SECRET_KEY) currently reaches App Engine
+# only through .env.production. Excluding them requires moving that config to
+# app.yaml env_variables plus Secret Manager first - tracked as item 12 of the
+# pre-GA security review, not part of issue #418.

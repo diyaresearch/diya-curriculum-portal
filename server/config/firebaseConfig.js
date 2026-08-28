@@ -1,30 +1,30 @@
 const admin = require("firebase-admin");
+const {
+  PROJECT_ID,
+  STORAGE_BUCKET,
+  resolveCredential,
+} = require("./credentials");
 
-// Initialize Firebase Admin SDK
+// Initialize Firebase Admin SDK.
+//
+// Credential selection lives in ./credentials so this module and
+// ../services/databaseService always agree on which identity is in use.
 let app;
 if (!admin.apps.length) {
+  let resolved;
   try {
-    // First, try to use service account key if it exists
-    try {
-      const serviceAccount = require("../serviceAccountKey.json");
-      app = admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: "curriculum-portal-1ce8f",
-        storageBucket: "curriculum-portal-1ce8f.appspot.com",
-      });
-      console.log("Firebase initialized with service account key");
-    } catch (keyError) {
-      // If service account key doesn't exist, use application default credentials
-      app = admin.initializeApp({
-        projectId: "curriculum-portal-1ce8f",
-        storageBucket: "curriculum-portal-1ce8f.appspot.com",
-      });
-      console.log("Firebase initialized with application default credentials");
-    }
+    resolved = resolveCredential();
   } catch (error) {
-    console.error("Failed to initialize Firebase:", error.message);
-    throw new Error("Firebase initialization failed. Please check your credentials.");
+    console.error("Failed to resolve a Firebase Admin credential:\n" + error.message);
+    throw error;
   }
+
+  app = admin.initializeApp({
+    credential: resolved.credential,
+    projectId: PROJECT_ID,
+    storageBucket: STORAGE_BUCKET,
+  });
+  console.log(`Firebase initialized with ${resolved.detail}`);
 } else {
   app = admin.app();
 }

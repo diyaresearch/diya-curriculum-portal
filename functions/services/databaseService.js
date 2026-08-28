@@ -4,6 +4,12 @@
  */
 
 const { handleFirebaseError } = require('../middleware/errorHandler');
+const {
+  PROJECT_ID,
+  STORAGE_BUCKET,
+  resolveCredential,
+  hasCredentialSource,
+} = require('../config/credentials');
 
 /**
  * Database Service Class
@@ -15,6 +21,7 @@ class DatabaseService {
     this.db = null;
     this.isInitialized = false;
     this.isMocked = false;
+    this.credentialSource = null;
   }
 
   /**
@@ -26,9 +33,15 @@ class DatabaseService {
     }
 
     const env = process.env.NODE_ENV || 'development';
-    const enableMockMode = process.env.ENABLE_MOCK_FIREBASE === 'true' ||
-                          env === 'test' ||
-                          !this.hasValidFirebaseConfig();
+    const mockRequested = process.env.ENABLE_MOCK_FIREBASE === 'true' || env === 'test';
+    const enableMockMode = mockRequested || !this.hasValidFirebaseConfig();
+
+    // Outside development, missing credentials are an outage, not a cue to
+    // start serving mock data (issue #418).
+    if (enableMockMode && !mockRequested && env !== 'development') {
+      const { resolveCredential: probe } = require('../config/credentials');
+      probe(); // throws with the remediation steps
+    }
 
     if (enableMockMode) {
       console.log('🔧 Initializing Firebase in MOCK mode');
@@ -42,18 +55,14 @@ class DatabaseService {
   }
 
   /**
-   * Check if valid Firebase configuration exists
+   * Check if a Firebase Admin credential source is configured.
+   *
+   * This used to test only for serviceAccountKey.json, which never exists in
+   * a deployed Cloud Function - so the payments API silently ran on mock
+   * Firebase instead of the runtime service account (issue #418).
    */
   hasValidFirebaseConfig() {
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      const serviceAccountPath = path.join(__dirname, '..', 'serviceAccountKey.json');
-
-      return fs.existsSync(serviceAccountPath);
-    } catch (error) {
-      return false;
-    }
+    return hasCredentialSource();
   }
 
   /**
@@ -71,22 +80,30 @@ class DatabaseService {
         return;
       }
 
-      // Initialize with service account
-      const serviceAccount = require('../serviceAccountKey.json');
+      const resolved = resolveCredential();
 
       this.admin = admin;
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        projectId: process.env.FIREBASE_PROJECT_ID || serviceAccount.project_id
+        credential: resolved.credential,
+        projectId: PROJECT_ID,
+        storageBucket: STORAGE_BUCKET
       });
 
       this.db = admin.firestore();
       this.isMocked = false;
+      this.credentialSource = resolved.source;
 
-      console.log('✅ Real Firebase initialized successfully');
+      console.log(`✅ Real Firebase initialized with ${resolved.detail}`);
     } catch (error) {
       console.error('❌ Failed to initialize real Firebase:', error.message);
-      console.log('🔄 Falling back to mock Firebase...');
+
+      // Mock data must never stand in for Firestore outside development.
+      // Silently serving fabricated records is worse than being down.
+      if ((process.env.NODE_ENV || 'development') !== 'development') {
+        throw error;
+      }
+
+      console.log('🔄 Falling back to mock Firebase (development only)...');
       await this.initializeMockFirebase();
     }
   }

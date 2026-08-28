@@ -104,7 +104,7 @@ npm start           # Start server (http://localhost:3001)
    ```
 
 3. **Firebase Service Account**:
-   - Place your `serviceAccountKey.json` file in the `server/` directory
+   - Authenticate with `gcloud auth application-default login` (do not download a service account key — see server/CREDENTIALS.md)
    - This file contains Firebase Admin SDK credentials
    - **NEVER** commit this file to version control
 
