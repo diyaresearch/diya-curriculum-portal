@@ -190,7 +190,8 @@ function hasCredentialSource() {
  */
 async function verifyCredential(db) {
   try {
-    await db.collection("__credential_healthcheck__").limit(1).get();
+    // Plain name on purpose: Firestore reserves collection ids matching __*__.
+    await db.collection("credential_healthcheck").limit(1).get();
     return { ok: true };
   } catch (error) {
     return { ok: false, error };
