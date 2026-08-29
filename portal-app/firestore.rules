@@ -1,7 +1,22 @@
 rules_version = '2';
 
+// Firestore security rules for the DIYA Curriculum Portal.
+//
+// Design notes (issues #419, #420, #382):
+//
+// * The client SDK reads content collections directly — the landing page and
+//   module list do not go through the API — so those stay publicly readable.
+// * Everything involving identity, money, or role is server-only. The Express
+//   API and Cloud Functions use the Admin SDK, which bypasses these rules
+//   entirely, so denying the client costs the server nothing.
+// * Firestore evaluates rules as a union: if any match allows, access is
+//   granted. A collection with no matching rule is denied by default.
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------- helpers
+
     function isSignedIn() {
       return request.auth != null;
     }
@@ -10,28 +25,82 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    // User profile documents (legacy)
+    // Fields a client must never set or change. Roles and subscription state
+    // are assigned server-side after payment verification; Stripe identifiers
+    // are written only by the payment handlers.
+    function privilegedFields() {
+      return [
+        'role',
+        'subscriptionType',
+        'subscriptionStatus',
+        'subscriptionEndDate',
+        'stripeCustomerId',
+        'stripePaymentIntentId'
+      ];
+    }
+
+    // An update must not touch any privileged field.
+    function noPrivilegedChange() {
+      return !request.resource.data.diff(resource.data)
+        .affectedKeys().hasAny(privilegedFields());
+    }
+
+    // Self-signup writes its own profile and sets a fixed default role
+    // (portal-app/src/pages/sign_up/index.jsx). Permit exactly that role and
+    // nothing else privileged, so a user cannot register as an admin.
+    function safeSelfCreate(defaultRole) {
+      return !request.resource.data.keys().hasAny([
+               'subscriptionType',
+               'subscriptionStatus',
+               'subscriptionEndDate',
+               'stripeCustomerId',
+               'stripePaymentIntentId'
+             ])
+             && (!request.resource.data.keys().hasAny(['role'])
+                 || request.resource.data.role == defaultRole);
+    }
+
+    // ------------------------------------------------- user profiles (#419/#420)
+
+    // The client only ever reads its own document (hooks/useUseRole.js) and
+    // never writes one — the API owns this collection. Admin listing goes
+    // through the server, where the Admin SDK bypasses rules.
     match /users/{userId} {
-      allow read: if true;
-      allow write: if isSignedIn();
+      allow read: if isOwner(userId);
+      allow write: if false;
     }
 
-    // Prefixed user docs
     match /prod.users/{userId} {
-      allow read: if true;
-      allow write: if isSignedIn();
+      allow read: if isOwner(userId);
+      allow write: if false;
     }
 
-    // Authenticated user role/profile docs used by the app
+    // teachers/ and students/ are written directly by signup, and their `role`
+    // field is what the client trusts for admin checks (hooks/useUseRole.js).
+    // Owner-only was already enforced; what was missing was stopping an owner
+    // from promoting themselves by rewriting their own role.
     match /teachers/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && safeSelfCreate('teacherDefault');
+      allow update: if isOwner(userId) && noPrivilegedChange();
+      allow delete: if false;
     }
 
     match /students/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && safeSelfCreate('student');
+      allow update: if isOwner(userId) && noPrivilegedChange();
+      allow delete: if false;
     }
 
-    // Public content collections (dev + prod)
+    // ------------------------------------------------------- public content
+    //
+    // Unchanged for now: publicly readable, writable by any signed-in user.
+    // Tightening writes to the document author is tracked in #429, which needs
+    // a data audit first — ownership is recorded inconsistently across these
+    // collections (`author` on module/lesson, `User` on content, with some
+    // documents using `authorId`), and legacy documents may carry none of them.
+
     match /content/{contentId} {
       allow read: if true;
       allow write: if isSignedIn();
@@ -61,5 +130,36 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isSignedIn();
     }
+
+    // --------------------------------------------------------- testimonials
+    //
+    // Read by TestimonialsSection.jsx. Previously no rule matched, so the read
+    // was denied and the component silently fell back to fabricated content
+    // (#433). Public to read, never client-writable.
+
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /prod.testimonials/{testimonialId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ------------------------------------------- server-only collections (#382)
+    //
+    // Money, contact records, and counters. These are reached only through the
+    // Admin SDK. They were already denied by default; stating them explicitly
+    // means a future `match /{document=**}` cannot silently open them, and it
+    // documents that the omission is deliberate.
+
+    match /payment_logs/{logId}        { allow read, write: if false; }
+    match /prod.payment_logs/{logId}   { allow read, write: if false; }
+    match /subscriptions/{subId}       { allow read, write: if false; }
+    match /prod.subscriptions/{subId}  { allow read, write: if false; }
+    match /enterprise_contacts/{docId} { allow read, write: if false; }
+    match /counters/{counterId}        { allow read, write: if false; }
+    match /prod.counters/{counterId}   { allow read, write: if false; }
   }
 }

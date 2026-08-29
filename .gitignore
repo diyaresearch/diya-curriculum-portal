@@ -13,3 +13,10 @@ venv/
 **/.env.*
 !**/.env.example
 
+
+# Rules test dependencies
+tests/rules/node_modules/
+
+# Emulator logs
+firestore-debug.log
+ui-debug.log
