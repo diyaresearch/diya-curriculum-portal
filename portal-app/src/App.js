@@ -12,6 +12,7 @@ import LessonDetailNew from "./pages/lesson_detail/LessonDetail";
 import Layout from "./components/Layout";
 import UserProfile from "./pages/profile_detail";
 import ModuleDetail from "./pages/module_detail"; // This one fetches from Firestore
+import NotFound from "./pages/not_found";
 // Import the editing component with a different name
 import AllLessonPlans from "./pages/all_lesson_plans";
 import { TeacherSignup, StudentSignup } from './pages/sign_up';
@@ -62,6 +63,8 @@ function App() {
           <Route path="/content/:id" element={<ContentDetails />} />
           <Route path="/cancel-subscription" element={<CancelSubscriptionPage />} />
           <Route path="/module-builder" element={<ModuleBuilder />} />
+          {/* Catch-all: render a real 404 rather than an empty page (#421) */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>
     </BrowserRouter>

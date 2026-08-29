@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "proxy": "http://localhost:3001",
-  "homepage": "/diya-ed",
+  "_homepage_note": "Firebase Hosting serves portal-app/build at the site ROOT, so assets live at /static/*. The router basename is /diya-ed, but that is a URL prefix only - it is not a directory on the host. homepage must therefore be '/', not '/diya-ed' (issue #421).",
+  "homepage": "/",
   "dependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@stripe/react-stripe-js": "^3.7.0",
