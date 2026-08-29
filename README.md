@@ -115,18 +115,31 @@ ENABLE_MOCK_FIREBASE=false
 ```
 
 **Important Notes:**
-- `FIREBASE_PROJECT_ID` must match the project ID in your `serviceAccountKey.json` file
+- `FIREBASE_PROJECT_ID` must be the real project ID (`curriculum-portal-1ce8f`); placeholder values are ignored
 - `DATABASE_SCHEMA_QUALIFIER` is used to prefix collection names (e.g., `dev_` for development)
 - Set `ENABLE_MOCK_FIREBASE=true` to use mock Firebase for development/testing without real credentials
 - For production, also include `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`
 
-### Service Account Key
+### Firebase Admin credentials
 
-1. In the Firebase Console, go to the Project Settings.
-2. Navigate to the "Service accounts" tab.
-3. Click "Generate new private key" and download the serviceAccountKey.json file.
-4. Place the serviceAccountKey.json file in the `server` directory.
-5. **Important:** The `FIREBASE_PROJECT_ID` in your `.env.development` must match the `project_id` field in the serviceAccountKey.json file.
+Do **not** download a service account key. Authenticate with Application Default
+Credentials instead:
+
+```bash
+gcloud auth application-default login --project curriculum-portal-1ce8f
+```
+
+On startup the server prints which credential it picked and whether Firestore is
+actually reachable. You can also check it any time:
+
+```bash
+curl -s http://localhost:3001/api/health
+```
+
+Downloaded JSON keys are what took the API down in issue #418: they never expire
+visibly, and revoking one breaks every environment at once. Full details,
+including the production setup and how to diagnose credential failures, are in
+[server/CREDENTIALS.md](server/CREDENTIALS.md).
 
 ### Start the application
 
