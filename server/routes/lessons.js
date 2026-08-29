@@ -9,12 +9,14 @@ const { updateLesson } = require("../controllers/lessonsController");
 const { downloadPDF } = require("../controllers/lessonsController");
 const { deleteLessonById } = require("../controllers/lessonsController");
 const authenticateUser = require("../middleware/authenticateUser");
+const { requireAdmin } = require("../middleware/requireRole");
 
 const router = express.Router();
 router.use(express.json());
 
 router.get("/lessons", getAllLessons);
-router.get("/lessons/admin", getAllLessonsAdmin);
+// Returns non-public lessons, so it must be admin-only (#424).
+router.get("/lessons/admin", authenticateUser, requireAdmin, getAllLessonsAdmin);
 router.get("/lesson/myLessons", authenticateUser, getUserLessons);
 router.get("/lesson/:lessonId", getLessonById);
 router.get("/lessons/:lessonId/download", downloadPDF);

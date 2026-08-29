@@ -40,7 +40,10 @@ export const MyPlans = () => {
         if (userRole === "admin") {
           apiUrl = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons/admin`;
 
-          const response = await axios.get(apiUrl);
+          // /api/lessons/admin is now admin-gated and needs the token (#424).
+          const response = await axios.get(apiUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
           if (planType === "all") {
             setPlans(response.data);

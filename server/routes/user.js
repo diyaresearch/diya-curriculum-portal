@@ -2,6 +2,7 @@ const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
 const { requireAdmin, requireValidUser } = require("../middleware/requireRole");
 const { databaseService } = require("../services/databaseService");
+const { isAdminUser } = require("../utils/ownership");
 const {
   sendSuccess,
   sendError,
@@ -95,8 +96,12 @@ router.get("/users", authenticateUser, requireAdmin, asyncHandler(async (req, re
   }
 }));
 
-// Get user details with userId
-router.get("/:userId", asyncHandler(async (req, res) => {
+// Get user details with userId.
+// Was fully unauthenticated and unredacted, returning email, institution and
+// Stripe identifiers to anyone (#424, and the same data #420 closed at the
+// rules layer). Now requires a token, and returns only public-safe fields
+// unless the caller is the user themselves or an admin.
+router.get("/:userId", authenticateUser, asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
   // Basic validation
@@ -136,8 +141,23 @@ router.get("/:userId", asyncHandler(async (req, res) => {
       return sendNotFoundError(res, "User");
     }
 
-    const userData = { id: userId, ...userSnap.data() };
-    return sendSuccess(res, userData, "User details retrieved successfully");
+    const stored = userSnap.data();
+    const isSelf = req.user.uid === userId;
+    const isAdmin = isSelf ? false : await isAdminUser(req.user.uid);
+
+    if (isSelf || isAdmin) {
+      return sendSuccess(res, { id: userId, ...stored }, "User details retrieved successfully");
+    }
+
+    // Everyone else gets a minimal public profile: no email, no institution,
+    // no Stripe identifiers, no subscription state.
+    const publicProfile = {
+      id: userId,
+      fullName: stored.fullName || null,
+      firstName: stored.firstName || null,
+      lastName: stored.lastName || null,
+    };
+    return sendSuccess(res, publicProfile, "User details retrieved successfully");
 
   } catch (error) {
     return handleDatabaseError(res, error, "Fetching user details");

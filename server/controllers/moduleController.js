@@ -1,4 +1,5 @@
 const { databaseService } = require('../services/databaseService');
+const { canMutate } = require('../utils/ownership');
 const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
 // Define the collections
@@ -63,6 +64,10 @@ const createModule = async (req, res) => {
       tags: tags || [],
       lessonPlans: lessonPlans || [],
       image: image,
+      // Stamp ownership from the token, never from the body, so the document
+      // can be authorized on later edits (#424).
+      author: req.user.uid,
+      createdAt: new Date(),
     };
 
     const moduleRef = await db.collection(TABLE_MODULE).add(newModule);
@@ -89,6 +94,10 @@ const editModule = async (req, res) => {
     }
 
     const moduleData = moduleDoc.data();
+
+    if (!(await canMutate(req, moduleData))) {
+      return res.status(403).send("You do not have permission to edit this module");
+    }
 
     const updatedModule = {
       title: title || moduleData.title,
@@ -117,6 +126,10 @@ const deleteModule = async (req, res) => {
 
     if (!moduleDoc.exists) {
       return res.status(404).send("Module not found");
+    }
+
+    if (!(await canMutate(req, moduleDoc.data()))) {
+      return res.status(403).send("You do not have permission to delete this module");
     }
 
     await moduleRef.delete();

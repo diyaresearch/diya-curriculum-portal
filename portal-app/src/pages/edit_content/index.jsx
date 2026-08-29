@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { useNavigate, useParams } from "react-router-dom";
 import ReactQuill from "react-quill";
+import { getAuth } from "firebase/auth";
 import "react-quill/dist/quill.snow.css"; // Import Quill CSS
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
@@ -84,10 +85,19 @@ export const EditContent = () => {
         fileUrl: formData.fileUrl,
       };
 
+      // /api/update/:id now requires authentication and checks ownership (#424).
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("You must be signed in to edit content.");
+      }
+      const token = await user.getIdToken();
+
       const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formDataToSend),
       });

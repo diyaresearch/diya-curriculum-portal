@@ -1,6 +1,7 @@
 const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
+const { requireAdmin } = require("../middleware/requireRole");
 
 const router = express.Router();
 
@@ -294,32 +295,13 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
 });
 
 // Admin endpoint to view upgrade logs
-router.get("/admin/logs", authenticateUser, async (req, res) => {
+// Admin check delegated to requireRole rather than reimplemented inline (#424).
+// The hand-rolled version duplicated the teachers -> students -> users lookup
+// that databaseService.getUserDocument already performs.
+router.get("/admin/logs", authenticateUser, requireAdmin, async (req, res) => {
     try {
-        const userId = req.user.uid;
         await databaseService.initialize();
         const db = databaseService.getDb();
-        const admin = databaseService.getAdmin();
-
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-        }
-
-        if (!userSnap.exists || userSnap.data().role !== "admin") {
-            return res.status(403).json({ message: "Access denied. Admin only." });
-        }
 
         const logsSnapshot = await db.collection(TABLE_PAYMENT_LOGS)
             .orderBy('timestamp', 'desc')

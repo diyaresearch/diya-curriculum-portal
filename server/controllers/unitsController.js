@@ -1,4 +1,5 @@
 const { databaseService } = require('../services/databaseService');
+const { canMutate, resolveOwnerUid } = require('../utils/ownership');
 const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
 // Define the collections
@@ -51,7 +52,20 @@ const getUnitById = async (req, res) => {
       res.status(404).send('Unit not found');
       return;
     }
-    res.status(200).json({ id: unitDoc.id, ...unitDoc.data() });
+
+    // The list endpoint filters on isPublic; fetching by id did not, so private
+    // units were readable by anyone holding the id (#424). Non-public units are
+    // now visible only to their owner or an admin.
+    const unitData = unitDoc.data();
+    if (unitData.isPublic === false) {
+      const requesterUid = req.user && req.user.uid;
+      const isOwner = requesterUid && resolveOwnerUid(unitData) === requesterUid;
+      if (!isOwner && !(await canMutate(req, unitData))) {
+        return res.status(404).send('Unit not found');
+      }
+    }
+
+    res.status(200).json({ id: unitDoc.id, ...unitData });
   } catch (error) {
     console.error('Error fetching unit:', error);
     res.status(500).send(error.message);
@@ -98,6 +112,12 @@ const deleteUnit = async (req, res) => {
     const unitDoc = await db.collection(TABLE_CONTENT).doc(unitId).get();
     if (!unitDoc.exists) {
       return res.status(404).send('Unit not found');
+    }
+
+    // Authenticated but unauthorized: any signed-in user could delete anyone's
+    // content before this check (#424).
+    if (!(await canMutate(req, unitDoc.data()))) {
+      return res.status(403).send('You do not have permission to delete this content');
     }
 
     // Check if unit is used in any lesson plans

@@ -13,7 +13,7 @@ router.get("/units", getAllUnits);
 router.get("/unit/:id", getUnitById);
 router.get("/units/user", authenticateUser, getUserUnits);
 router.post("/unit", authenticateUser, upload, createUnit); // Apply middleware here
-router.post("/update/:id", upload, updateUnitById);
+router.post("/update/:id", authenticateUser, upload, updateUnitById);
 router.delete("/unit/:id", authenticateUser, deleteUnit);
 
 module.exports = router;

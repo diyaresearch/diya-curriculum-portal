@@ -2,6 +2,7 @@
 
 const { db } = require("../config/firebaseConfig");
 const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
+const { canMutate } = require("../utils/ownership");
 
 // Define the collections
 const SCHEMA_QUALIFIER = resolveSchemaQualifier();
@@ -22,6 +23,10 @@ const updateUnitById = async (req, res) => {
     }
 
     const existingData = unitSnapshot.data();
+
+    if (!(await canMutate(req, existingData))) {
+      return res.status(403).json({ message: "You do not have permission to edit this content" });
+    }
 
     let updateData = {
       Title: req.body.Title ?? existingData.Title,
