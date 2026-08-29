@@ -20,6 +20,10 @@ const router = express.Router();
 const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 
+// Every account starts unprivileged. Registration must never be able to mint a
+// privileged role, whatever the client sends (issue #425).
+const DEFAULT_REGISTRATION_ROLE = "teacherDefault";
+
 // Get current user details
 router.get("/me", authenticateUser, asyncHandler(async (req, res) => {
   const userId = req.user.uid;
@@ -151,9 +155,20 @@ router.post("/register", authenticateUser, asyncHandler(async (req, res) => {
     institution,
     userType,
     jobTitle,
-    subjects,
-    role = "teacherDefault"
+    subjects
   } = req.body;
+
+  // Role is never taken from the request body. Registration always produces an
+  // unprivileged account; the only ways to a privileged role are the
+  // admin-gated PUT /updateRole and payment-verified subscription handling
+  // (issue #425).
+  const role = DEFAULT_REGISTRATION_ROLE;
+
+  if (req.body.role && req.body.role !== DEFAULT_REGISTRATION_ROLE) {
+    console.warn(
+      `[security] Ignoring client-supplied role "${req.body.role}" during registration of uid ${req.user.uid}`
+    );
+  }
 
   // Validate required fields
   const requiredFields = ['email', 'fullName', 'firstName', 'lastName'];
@@ -169,12 +184,6 @@ router.post("/register", authenticateUser, asyncHandler(async (req, res) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (email && !emailRegex.test(email)) {
     validationErrors.push({ field: 'email', message: 'Invalid email format' });
-  }
-
-  // Validate role
-  const validRoles = ['admin', 'teacherDefault', 'teacherPlus', 'teacherEnterprise'];
-  if (role && !validRoles.includes(role)) {
-    validationErrors.push({ field: 'role', message: 'Invalid role specified' });
   }
 
   if (validationErrors.length > 0) {
