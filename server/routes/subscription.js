@@ -344,7 +344,7 @@ router.post("/cancel", authenticateUser, async (req, res) => {
         if (userData.stripeSubscriptionId && userData.subscriptionType === 'premium') {
             try {
                 // Cancel the Stripe subscription
-                await stripe.subscriptions.del(userData.stripeSubscriptionId);
+                await getStripe().subscriptions.del(userData.stripeSubscriptionId);
             } catch (err) {
                 console.error("Failed to cancel Stripe subscription:", err);
                 return res.status(500).json({ message: "Failed to cancel Stripe subscription. Please try again later." });

@@ -179,7 +179,7 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
         const amount = planType === 'premiumYearly' ? 10000 : 999; // $100.00 or $9.99 in cents
 
         // Create payment intent with Stripe
-        const paymentIntent = await stripe.paymentIntents.create({
+        const paymentIntent = await req.stripe.paymentIntents.create({
             amount: amount,
             currency: 'usd',
             automatic_payment_methods: {
@@ -445,7 +445,7 @@ router.post("/create-embedded-checkout-session", authenticateUser, requireStripe
       // IMPORTANT for embedded Checkout:
       // - ui_mode: "embedded"
       // - use return_url (NOT success_url/cancel_url)
-      const session = await stripe.checkout.sessions.create({
+      const session = await req.stripe.checkout.sessions.create({
         ui_mode: "embedded",
         mode: "payment",
         line_items: [
@@ -488,7 +488,7 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         }
 
         // Retrieve payment intent from Stripe
-        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        const paymentIntent = await req.stripe.paymentIntents.retrieve(paymentIntentId);
 
         if (paymentIntent.status !== 'succeeded') {
             return res.status(400).json({
