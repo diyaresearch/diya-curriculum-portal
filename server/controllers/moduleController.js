@@ -1,11 +1,13 @@
 const { databaseService } = require('../services/databaseService');
 const { canMutate } = require('../utils/ownership');
+const { canAccessModule, isPaidModule } = require('../utils/entitlements.check');
 const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
 // Define the collections
 const SCHEMA_QUALIFIER = resolveSchemaQualifier();
 const TABLE_MODULE = SCHEMA_QUALIFIER + "module";
 const TABLE_LESSON = SCHEMA_QUALIFIER + "lesson";
+const TABLE_ENTITLEMENTS = SCHEMA_QUALIFIER + "entitlements";
 
 console.log('moduleController tables are', TABLE_MODULE, TABLE_LESSON);
 
@@ -44,7 +46,31 @@ const getModuleById = async (req, res) => {
       return res.status(404).send('Module not found');
     }
 
-    res.status(200).json({ id: moduleDoc.id, ...moduleDoc.data() });
+    const moduleData = moduleDoc.data();
+
+    // A paid module's contents require an entitlement written by the Stripe
+    // webhook (#430). The storefront still needs the metadata, so an
+    // unentitled caller gets the description and price without the lessons.
+    const access = await canAccessModule(
+      db,
+      TABLE_ENTITLEMENTS,
+      req.user && req.user.uid,
+      moduleId,
+      moduleData
+    );
+
+    if (!access.allowed) {
+      const { lessons, lessonPlans, ...preview } = moduleData;
+      return res.status(200).json({
+        id: moduleDoc.id,
+        ...preview,
+        locked: true,
+        entitlementRequired: true,
+        accessReason: access.reason,
+      });
+    }
+
+    res.status(200).json({ id: moduleDoc.id, ...moduleData, locked: false });
   } catch (error) {
     console.error('Error fetching module:', error);
     res.status(500).send(error.message);
@@ -140,7 +166,27 @@ const deleteModule = async (req, res) => {
   }
 };
 
+// List the modules this user is entitled to.
+const listMyEntitlements = async (req, res) => {
+  try {
+    await databaseService.initialize();
+    const db = databaseService.getDb();
+
+    const snap = await db
+      .collection(TABLE_ENTITLEMENTS)
+      .where('userId', '==', req.user.uid)
+      .get();
+
+    const moduleIds = snap.docs.map((d) => d.data().moduleId).filter(Boolean);
+    res.status(200).json({ moduleIds });
+  } catch (error) {
+    console.error('Error listing entitlements:', error);
+    res.status(500).send(error.message);
+  }
+};
+
 module.exports = {
+  listMyEntitlements,
   getAllModules,
   getModuleById,
   createModule,

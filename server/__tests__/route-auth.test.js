@@ -42,6 +42,7 @@ jest.mock("../controllers/moduleController", () => ({
   createModule: (_q, r) => r.status(200).json({ ok: true }),
   editModule: (_q, r) => r.status(200).json({ ok: true }),
   deleteModule: (_q, r) => r.status(200).json({ ok: true }),
+  listMyEntitlements: (_q, r) => r.status(200).json({ moduleIds: [] }),
 }));
 
 jest.mock("../controllers/lessonsController", () => ({

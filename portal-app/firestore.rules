@@ -45,6 +45,44 @@ service cloud.firestore {
         .affectedKeys().hasAny(privilegedFields());
     }
 
+    // Is the caller an admin? Roles live in the profile document, so this costs
+    // one read per evaluation. It is used only on writes to price-bearing
+    // fields, never on reads, so the cost stays off the hot path.
+    // (A custom-claims migration would remove the read entirely — see #382.)
+    function isAdmin() {
+      return isSignedIn() && (
+        (
+          exists(/databases/$(database)/documents/teachers/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/teachers/$(request.auth.uid)).data.role == 'admin'
+        ) || (
+          exists(/databases/$(database)/documents/prod.users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/prod.users/$(request.auth.uid)).data.role == 'admin'
+        ) || (
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        )
+      );
+    }
+
+    // Fields that decide what a buyer is charged. The checkout session reads
+    // `price` straight out of the module document, so a client that can write
+    // it can set its own price (#429).
+    function pricingFields() {
+      return ['price', 'Price', 'isFeatured'];
+    }
+
+    function pricingUnchanged() {
+      return !request.resource.data.diff(resource.data)
+        .affectedKeys().hasAny(pricingFields());
+    }
+
+    function noPricingOnCreate() {
+      return !request.resource.data.keys().hasAny(pricingFields())
+             || (request.resource.data.get('price', 0) == 0
+                 && request.resource.data.get('Price', 0) == 0
+                 && request.resource.data.get('isFeatured', false) == false);
+    }
+
     // Self-signup writes its own profile and sets a fixed default role
     // (portal-app/src/pages/sign_up/index.jsx). Permit exactly that role and
     // nothing else privileged, so a user cannot register as an admin.
@@ -113,12 +151,20 @@ service cloud.firestore {
 
     match /module/{moduleId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      // Anyone signed in may still author modules, but only an admin may set
+      // or change what a module costs (#429).
+      allow create: if isSignedIn() && (isAdmin() || noPricingOnCreate());
+      allow update: if isSignedIn() && (isAdmin() || pricingUnchanged());
+      allow delete: if isSignedIn();
     }
 
     match /prod.module/{moduleId} {
       allow read: if true;
-      allow write: if isSignedIn();
+      // Anyone signed in may still author modules, but only an admin may set
+      // or change what a module costs (#429).
+      allow create: if isSignedIn() && (isAdmin() || noPricingOnCreate());
+      allow update: if isSignedIn() && (isAdmin() || pricingUnchanged());
+      allow delete: if isSignedIn();
     }
 
     match /lesson/{lessonId} {
@@ -144,6 +190,25 @@ service cloud.firestore {
 
     match /prod.testimonials/{testimonialId} {
       allow read: if true;
+      allow write: if false;
+    }
+
+    // ------------------------------------------------- entitlements (#430)
+    //
+    // Proof that a module was paid for. Written only by the Stripe webhook
+    // through the Admin SDK, so the client can read its own entitlements but
+    // can never mint one. Document id is `{uid}_{moduleId}`, which makes the
+    // webhook write idempotent by construction.
+
+    match /entitlements/{entitlementId} {
+      allow read: if isSignedIn()
+                  && entitlementId.split('_')[0] == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /prod.entitlements/{entitlementId} {
+      allow read: if isSignedIn()
+                  && entitlementId.split('_')[0] == request.auth.uid;
       allow write: if false;
     }
 

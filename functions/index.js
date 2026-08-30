@@ -181,6 +181,49 @@ async function stripeWebhookHandler(req, res) {
         );
 
         console.log("Updated payment log doc:", { collection: TABLE_PAYMENT_LOGS, id: session.id });
+
+        // Grant access to the module. Previously the webhook wrote this log row
+        // and nothing else, so paying for a module granted no access at all
+        // (#430). The amount Stripe charged is checked against the price the
+        // server recorded when it created the session (#429).
+        const { checkChargedAmount, grantModuleEntitlement } = require("./utils/entitlementGrant");
+        const amountCheck = checkChargedAmount(session.metadata || {}, amountTotalCents);
+
+        await ref.set(
+          {
+            priceAtPurchase: session?.metadata?.priceAtPurchase ?? null,
+            expectedAmountCents: amountCheck.expectedCents,
+            amountMatchesPrice: amountCheck.matches,
+          },
+          { merge: true }
+        );
+
+        if (!amountCheck.matches) {
+          console.error("[security] Charged amount does not match module price; withholding entitlement", {
+            checkoutSessionId: session.id,
+            userId,
+            moduleId,
+            expectedCents: amountCheck.expectedCents,
+            chargedCents: amountCheck.chargedCents,
+          });
+        } else {
+          const TABLE_ENTITLEMENTS = SCHEMA_QUALIFIER + "entitlements";
+          const grant = await grantModuleEntitlement(
+            db,
+            require("firebase-admin"),
+            TABLE_ENTITLEMENTS,
+            {
+              userId,
+              moduleId,
+              checkoutSessionId: session.id,
+              paymentIntentId: session.payment_intent || null,
+              amountCents: amountTotalCents,
+              priceAtPurchase: session?.metadata?.priceAtPurchase ?? null,
+              livemode: event.livemode,
+            }
+          );
+          console.log("Entitlement grant:", { collection: TABLE_ENTITLEMENTS, ...grant });
+        }
       } catch (e) {
         console.error("Failed to write payment_logs from checkout.session.completed:", e);
       }

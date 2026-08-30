@@ -314,6 +314,8 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
             moduleTitle: title,
             userEmail,
             userLabel,
+            priceAtPurchase: String(priceNum),
+            expectedAmountCents: String(unitAmount),
           },
         },
         metadata: {
@@ -324,6 +326,11 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
           moduleTitle: title,
           userEmail,
           userLabel,
+          // The module's price at the moment the session was created, so the
+          // webhook can check that what Stripe charged matches what the module
+          // claimed, and so payment_logs can be reconciled later (#429).
+          priceAtPurchase: String(priceNum),
+          expectedAmountCents: String(unitAmount),
         },
         // IMPORTANT: return to a real SPA route to avoid blank page.
         // Stripe will also append `redirect_status` and `session_id`.

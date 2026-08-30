@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
+import { getFirestore, doc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import "react-quill/dist/quill.snow.css";
 import useUserData from "../../hooks/useUserData";
@@ -206,6 +206,8 @@ const ModuleDetail = () => {
 
   // Module data states
   const [moduleData, setModuleData] = useState(null);
+  // True when this is a paid module the viewer has not purchased (#430).
+  const [moduleLocked, setModuleLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -328,17 +330,34 @@ const ModuleDetail = () => {
         return;
       }
 
-      // Fetch from Firestore
-      const db = getFirestore();
-      const moduleDoc = await getDoc(doc(db, COLLECTIONS.module, moduleId));
+      // Fetch through the API rather than Firestore directly, so the server
+      // can withhold a paid module's lessons from anyone without an
+      // entitlement (#430). The client SDK cannot make that decision.
+      const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "http://localhost:3001";
+      const currentUser = getAuth().currentUser;
+      const authHeaders = currentUser
+        ? { Authorization: `Bearer ${await currentUser.getIdToken()}` }
+        : {};
 
-      if (!moduleDoc.exists()) {
+      const moduleResponse = await fetch(`${serverUrl}/api/module/${moduleId}`, {
+        headers: authHeaders,
+      });
+
+      if (moduleResponse.status === 404) {
         setError("Module not found");
         setLoading(false);
         return;
       }
 
-      const data = moduleDoc.data();
+      if (!moduleResponse.ok) {
+        setError("Could not load this module. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      const data = await moduleResponse.json();
+      const isLocked = data.locked === true;
+      setModuleLocked(isLocked);
       console.log("Fetched module data:", data); // Debug log
       const authorUid = data.author || data.authorId || "";
       const isFeatured = data.isFeatured === true;
@@ -368,7 +387,7 @@ const ModuleDetail = () => {
         description: data.description || "No description available",
         requirements: data.requirements || "No specific requirements",
         learningObjectives: data.learningObjectives || "Objectives will be defined",
-        _meta: { id: moduleId, authorUid, isFeatured, price },
+        _meta: { id: moduleId, authorUid, isFeatured, price, locked: isLocked },
         details: [
           { label: "Category", value: Array.isArray(categoryRaw) ? categoryRaw.join(", ") : categoryRaw || "N/A" },
           { label: "Level", value: Array.isArray(levelRaw) ? levelRaw.join(", ") : levelRaw || "N/A" },
@@ -387,8 +406,9 @@ const ModuleDetail = () => {
 
       setModuleData(transformedData);
 
-      // Fetch lesson plans if they exist
-      if (lessonPlanIds.length > 0) {
+      // A locked module returns no lesson ids at all, so there is nothing to
+      // fetch and nothing for the page to render.
+      if (!isLocked && lessonPlanIds.length > 0) {
         await fetchLessonDetails(lessonPlanIds);
       }
     } catch (error) {
@@ -1073,6 +1093,27 @@ const ModuleDetail = () => {
             Pick a lesson to view details and materials.
           </div>
         </div>
+
+        {moduleLocked && (
+          <div
+            style={{
+              marginTop: 16,
+              padding: "24px",
+              border: "1px solid #e5e7eb",
+              borderRadius: 12,
+              background: "#F9FAFB",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: "1.6rem", marginBottom: 8 }}>🔒</div>
+            <div style={{ ...TYPO.body, fontWeight: 800, color: "#222", marginBottom: 6 }}>
+              Purchase this module to view its lessons
+            </div>
+            <div style={{ ...TYPO.meta, color: "#666" }}>
+              The lessons in this module are available after purchase.
+            </div>
+          </div>
+        )}
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 14 }}>
           {(module.resources || []).map((res, idx) => {
