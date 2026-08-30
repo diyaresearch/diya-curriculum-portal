@@ -12,7 +12,8 @@ const {
 
 const router = express.Router();
 
-const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
+const SCHEMA_QUALIFIER = resolveSchemaQualifier();
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 const TABLE_SUBSCRIPTIONS = SCHEMA_QUALIFIER + "subscriptions";
 const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";

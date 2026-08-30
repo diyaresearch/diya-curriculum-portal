@@ -16,7 +16,8 @@ const {
 
 const stripe = getStripe();
 
-const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
+const SCHEMA_QUALIFIER = resolveSchemaQualifier();
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
 
@@ -138,7 +139,7 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
       const db = databaseService.getDb();
   
       // Fetch module (collection name is typically "module")
-      const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER || ""}`;
+      // Use the module-level qualifier rather than re-deriving it (#427).
       const TABLE_MODULE = SCHEMA_QUALIFIER + "module";
 
       const moduleSnap = await db.collection(TABLE_MODULE).doc(moduleId).get();

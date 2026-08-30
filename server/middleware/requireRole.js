@@ -6,7 +6,8 @@
 const { databaseService } = require("../services/databaseService");
 const { sendAuthorizationError, sendNotFoundError, handleDatabaseError } = require("../utils/responseHelpers");
 
-const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
+const SCHEMA_QUALIFIER = resolveSchemaQualifier();
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 
 /**

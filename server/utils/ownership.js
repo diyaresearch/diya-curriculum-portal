@@ -19,7 +19,8 @@
 
 const { databaseService } = require("../services/databaseService");
 
-const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const { resolveSchemaQualifier } = require("./schemaQualifier");
+const SCHEMA_QUALIFIER = resolveSchemaQualifier();
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 
 // Ordered by how unambiguous they are.

@@ -18,7 +18,8 @@ const {
 
 const router = express.Router();
 
-const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
+const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
+const SCHEMA_QUALIFIER = resolveSchemaQualifier();
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 
 // Every account starts unprivileged. Registration must never be able to mint a

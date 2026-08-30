@@ -19,6 +19,10 @@ automatic_scaling:
 # Environment variables
 env_variables:
   NODE_ENV: 'production'
+  # Where production data actually lives. Kept here, in version control,
+  # rather than only in the untracked .env.production that disagreed with the
+  # frontend and silently pointed the API at an empty namespace (#427).
+  DATABASE_SCHEMA_QUALIFIER: 'prod.'
 
 # The entry point for your app
 entrypoint: npm start
