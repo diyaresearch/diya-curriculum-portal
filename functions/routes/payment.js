@@ -254,10 +254,10 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
         return res.status(500).json({ message: "Server misconfigured: DOMAIN must start with http:// or https://" });
       }
 
-      // React Router in this app uses basename="/diya-ed"
-      // Prefer Firebase Functions runtime config: firebase functions:config:set app.basename="/diya-ed"
+      // App is served at the site root (no React Router basename) as of issue #421.
+      // Still overridable via Firebase Functions runtime config: firebase functions:config:set app.basename="/some-prefix"
       const configuredBasename = String(getFunctionsConfig("app.basename", process.env.APP_BASENAME || "") || "").trim();
-      const APP_BASENAME = normalizeBasename(configuredBasename, "/diya-ed");
+      const APP_BASENAME = normalizeBasename(configuredBasename, "");
       const appBaseUrl = joinDomainAndBasename(domain, APP_BASENAME);
   
       const db = getDb();

@@ -12,6 +12,8 @@ app.use((req, res, next) => {
     "http://127.0.0.1:3000",
     "https://curriculum-portal-1ce8f.web.app",
     "https://curriculum-portal-1ce8f.firebaseapp.com",
+    // Production custom domain (issue #421 follow-up)
+    "https://learn.diyaresearch.org",
     // Custom/marketing domain (if the portal is embedded/served there)
     "https://diyaresearch.org",
     "https://www.diyaresearch.org",

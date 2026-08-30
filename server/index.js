@@ -58,6 +58,8 @@ const allowedOrigins = process.env.SERVER_ALLOW_ORIGIN
     "https://diyaresearch.org",
     "https://curriculum-portal-1ce8f.web.app",
     "https://curriculum-portal-1ce8f.firebaseapp.com",
+    // Production custom domain (issue #421 follow-up)
+    "https://learn.diyaresearch.org",
   ]);
 
 // Use whitelist-based CORS in production, secure localhost-only in development
