@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app as firebaseApp } from '../firebase/firebaseConfig';
+import { COLLECTIONS } from '../firebase/collectionNames';
 
 const LessonDetails = () => {
     const { id } = useParams();
@@ -12,7 +13,7 @@ const LessonDetails = () => {
         const fetchLesson = async () => {
             try {
                 const db = getFirestore(firebaseApp);
-                const lessonDoc = await getDoc(doc(db, 'lesson', id));
+                const lessonDoc = await getDoc(doc(db, COLLECTIONS.lesson, id));
 
                 if (lessonDoc.exists()) {
                     setLesson({ id: lessonDoc.id, ...lessonDoc.data() });

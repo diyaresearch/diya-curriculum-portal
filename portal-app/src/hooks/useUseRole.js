@@ -24,7 +24,7 @@ const useUserRole = () => {
                         setRole(teacherData.role || 'teacher');
                     } else {
                         // Check in users collection as fallback
-                        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                        const userDoc = await getDoc(doc(db, COLLECTIONS.users, currentUser.uid));
                         if (userDoc.exists()) {
                             const userData = userDoc.data();
                             setRole(userData.role || 'user');

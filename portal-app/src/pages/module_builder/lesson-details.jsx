@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { COLLECTIONS } from "../../firebase/collectionNames";
 
 const NuggetDetails = () => {
   const { id } = useParams();
@@ -9,7 +10,7 @@ const NuggetDetails = () => {
   useEffect(() => {
     const fetchNugget = async () => {
       const db = getFirestore();
-      const docRef = doc(db, "content", id);
+      const docRef = doc(db, COLLECTIONS.content, id);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setNugget({ id: docSnap.id, ...docSnap.data() });

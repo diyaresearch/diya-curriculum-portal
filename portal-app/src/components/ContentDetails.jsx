@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
+import { COLLECTIONS } from "../firebase/collectionNames";
 import BackButton from "./BackButton";
 import MetaChipsRow from "./MetaChipsRow";
 import { TYPO } from "../constants/typography";
@@ -52,7 +53,7 @@ const ContentDetails = () => {
     const fetchContent = async () => {
       try {
         const db = getFirestore(firebaseApp);
-        const snap = await getDoc(doc(db, "content", id));
+        const snap = await getDoc(doc(db, COLLECTIONS.content, id));
 
         if (snap.exists()) {
           setContent({ id: snap.id, ...snap.data() });
@@ -99,7 +100,7 @@ const ContentDetails = () => {
       if (!id) return;
       setIsDeleting(true);
       const db = getFirestore(firebaseApp);
-      await deleteDoc(doc(db, "content", id));
+      await deleteDoc(doc(db, COLLECTIONS.content, id));
       setIsDeleteModalOpen(false);
 
       if (window.history.length > 1) {

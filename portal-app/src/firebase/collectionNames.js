@@ -38,6 +38,8 @@ export const COLLECTIONS = Object.freeze({
   teachers: withQualifier("teachers"),
   students: withQualifier("students"),
   testimonials: withQualifier("testimonials"),
+  // Unified user table (#431) — falls back to here when a uid isn't in teachers/students.
+  users: withQualifier("users"),
 });
 
 // Pre-qualifier names, read-only. A profile that has not been copied into the

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useUserData from '../../hooks/useUserData';
 import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 import { app as firebaseApp } from '../../firebase/firebaseConfig';
+import { COLLECTIONS } from '../../firebase/collectionNames';
 
 const CancelSubscriptionPage = () => {
     const navigate = useNavigate();
@@ -23,7 +24,7 @@ const CancelSubscriptionPage = () => {
         try {
             // Update user role directly in Firestore
             const db = getFirestore(firebaseApp);
-            const userDocRef = doc(db, 'teachers', user.uid);
+            const userDocRef = doc(db, COLLECTIONS.teachers, user.uid);
 
             await updateDoc(userDocRef, {
                 role: 'teacherDefault',

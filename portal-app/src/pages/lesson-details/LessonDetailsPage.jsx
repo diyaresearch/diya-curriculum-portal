@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { COLLECTIONS } from "../../firebase/collectionNames";
 
 const LessonDetailsPage = () => {
   const { id } = useParams();
@@ -11,7 +12,7 @@ const LessonDetailsPage = () => {
   useEffect(() => {
     const fetchLesson = async () => {
       const db = getFirestore();
-      const lessonRef = doc(db, "lesson", id);
+      const lessonRef = doc(db, COLLECTIONS.lesson, id);
       const lessonSnap = await getDoc(lessonRef);
       if (lessonSnap.exists()) {
         setLesson(lessonSnap.data());
@@ -29,7 +30,7 @@ const LessonDetailsPage = () => {
       if (allContentIds.length === 0) return;
       Promise.all(
         allContentIds.map(id =>
-          getDoc(doc(db, "content", id)).then(snap =>
+          getDoc(doc(db, COLLECTIONS.content, id)).then(snap =>
             snap.exists() ? { id, ...snap.data() } : null
           )
         )

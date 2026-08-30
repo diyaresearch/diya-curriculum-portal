@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { COLLECTIONS } from "../firebase/collectionNames";
 import { TYPO } from "../constants/typography";
 import MetaChipsRow from "../components/MetaChipsRow";
 import SectionCard from "../components/SectionCard";
@@ -18,7 +19,7 @@ const NuggetDetails = () => {
       try {
         setError("");
         const db = getFirestore();
-        const docRef = doc(db, "content", id);
+        const docRef = doc(db, COLLECTIONS.content, id);
         const docSnap = await getDoc(docRef);
 
         if (!docSnap.exists()) {
