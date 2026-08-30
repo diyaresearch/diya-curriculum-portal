@@ -127,12 +127,12 @@ function useUserRole() {
       setRole(null);
       if (firebaseUser) {
         // Listen for changes in teachers doc
-        unsubTeacher = onSnapshot(doc(db, "teachers", firebaseUser.uid), (teacherDoc) => {
+        unsubTeacher = onSnapshot(doc(db, COLLECTIONS.teachers, firebaseUser.uid), (teacherDoc) => {
           if (teacherDoc.exists()) {
             setRole(teacherDoc.data().role);
           } else {
             // If not a teacher, listen for student doc
-            unsubStudent = onSnapshot(doc(db, "students", firebaseUser.uid), (studentDoc) => {
+            unsubStudent = onSnapshot(doc(db, COLLECTIONS.students, firebaseUser.uid), (studentDoc) => {
               if (studentDoc.exists()) {
                 setRole(studentDoc.data().role);
               } else {

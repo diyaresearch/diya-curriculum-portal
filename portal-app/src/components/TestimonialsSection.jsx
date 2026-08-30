@@ -4,6 +4,7 @@ import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { CAROUSEL_CONFIG, SAMPLE_TESTIMONIALS } from "../constants/testimonialData";
+import { COLLECTIONS } from "../firebase/collectionNames";
 
 // --- Custom Hook to get user and role from Firebase ---
 function useUserRole() {
@@ -20,12 +21,12 @@ function useUserRole() {
       setRole(null);
       if (firebaseUser) {
         // Listen for changes in teachers doc
-        unsubTeacher = onSnapshot(doc(db, "teachers", firebaseUser.uid), (teacherDoc) => {
+        unsubTeacher = onSnapshot(doc(db, COLLECTIONS.teachers, firebaseUser.uid), (teacherDoc) => {
           if (teacherDoc.exists()) {
             setRole(teacherDoc.data().role);
           } else {
             // If not a teacher, listen for student doc
-            unsubStudent = onSnapshot(doc(db, "students", firebaseUser.uid), (studentDoc) => {
+            unsubStudent = onSnapshot(doc(db, COLLECTIONS.students, firebaseUser.uid), (studentDoc) => {
               if (studentDoc.exists()) {
                 setRole(studentDoc.data().role);
               } else {
@@ -490,7 +491,7 @@ const TestimonialsCarousel = () => {
     const fetchTestimonials = async () => {
       try {
         const db = getFirestore(firebaseApp);
-        const querySnapshot = await getDocs(collection(db, "testimonials"));
+        const querySnapshot = await getDocs(collection(db, COLLECTIONS.testimonials));
         const data = [];
         querySnapshot.forEach((doc) => {
           data.push({ id: doc.id, ...doc.data() });

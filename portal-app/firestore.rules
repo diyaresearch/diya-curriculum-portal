@@ -52,6 +52,9 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && (
         (
+          exists(/databases/$(database)/documents/prod.teachers/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/prod.teachers/$(request.auth.uid)).data.role == 'admin'
+        ) || (
           exists(/databases/$(database)/documents/teachers/$(request.auth.uid)) &&
           get(/databases/$(database)/documents/teachers/$(request.auth.uid)).data.role == 'admin'
         ) || (
@@ -125,6 +128,24 @@ service cloud.firestore {
     }
 
     match /students/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && safeSelfCreate('student');
+      allow update: if isOwner(userId) && noPrivilegedChange();
+      allow delete: if false;
+    }
+
+    // Qualified twins. Identity collections used to be unprefixed literals, so
+    // dev and prod shared one set of user documents (#427). The app now reads
+    // and writes these; without a matching rule every profile read would be
+    // denied by default and users would lose their role.
+    match /prod.teachers/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && safeSelfCreate('teacherDefault');
+      allow update: if isOwner(userId) && noPrivilegedChange();
+      allow delete: if false;
+    }
+
+    match /prod.students/{userId} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId) && safeSelfCreate('student');
       allow update: if isOwner(userId) && noPrivilegedChange();

@@ -2,6 +2,7 @@ const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
 const { requireAdmin } = require("../middleware/requireRole");
+const { findUserDocument } = require("../utils/identityCollections");
 const { getStripe, requireStripe } = require("../utils/stripeClient");
 const {
     roleForPlan,
@@ -32,21 +33,10 @@ router.get("/status", authenticateUser, async (req, res) => {
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-        }
+        // Qualified identity collections, with an unprefixed fallback (#427).
+        const found = await findUserDocument(db, userId, TABLE_USERS);
+        const userRef = found.ref;
+        const userSnap = found.snap;
 
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
@@ -85,24 +75,11 @@ router.post("/initiate-upgrade", authenticateUser, async (req, res) => {
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-        let collectionName = "teachers";
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-            collectionName = "students";
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-            collectionName = TABLE_USERS;
-        }
+        // Qualified identity collections, with an unprefixed fallback (#427).
+        const found = await findUserDocument(db, userId, TABLE_USERS);
+        let userRef = found.ref;
+        let userSnap = found.snap;
+        let collectionName = found.collection;
 
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
@@ -257,21 +234,10 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-        }
+        // Qualified identity collections, with an unprefixed fallback (#427).
+        const found = await findUserDocument(db, userId, TABLE_USERS);
+        const userRef = found.ref;
+        const userSnap = found.snap;
 
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
@@ -350,24 +316,11 @@ router.post("/cancel", authenticateUser, async (req, res) => {
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-        let collectionName = "teachers";
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-            collectionName = "students";
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-            collectionName = TABLE_USERS;
-        }
+        // Qualified identity collections, with an unprefixed fallback (#427).
+        const found = await findUserDocument(db, userId, TABLE_USERS);
+        let userRef = found.ref;
+        let userSnap = found.snap;
+        let collectionName = found.collection;
 
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
@@ -445,21 +398,10 @@ router.post("/reactivate", authenticateUser, async (req, res) => {
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-        }
+        // Qualified identity collections, with an unprefixed fallback (#427).
+        const found = await findUserDocument(db, userId, TABLE_USERS);
+        const userRef = found.ref;
+        const userSnap = found.snap;
 
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });

@@ -5,6 +5,7 @@ import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 // Kept only for side effects (auth state); do not destructure unused values.
 import useUserData from "../hooks/useUserData";
+import { COLLECTIONS } from "../firebase/collectionNames";
 
 
 const HeroSection = () => {
@@ -20,7 +21,7 @@ const HeroSection = () => {
         const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
             if (firebaseUser) {
                 setUser(firebaseUser);
-                const teacherDoc = await getDoc(doc(db, "teachers", firebaseUser.uid));
+                const teacherDoc = await getDoc(doc(db, COLLECTIONS.teachers, firebaseUser.uid));
                 if (teacherDoc.exists()) {
                     const userData = teacherDoc.data();
                     setRole(userData.role);
@@ -33,7 +34,7 @@ const HeroSection = () => {
                     return;
                 }
 
-                const studentDoc = await getDoc(doc(db, "students", firebaseUser.uid));
+                const studentDoc = await getDoc(doc(db, COLLECTIONS.students, firebaseUser.uid));
                 if (studentDoc.exists()) {
                     setRole(studentDoc.data().role);
                     return;

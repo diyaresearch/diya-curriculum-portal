@@ -145,3 +145,47 @@ describe("#430 — entitlements are readable but never client-writable", () => {
     await assertFails(getDoc(doc(anon(), "prod.entitlements", `${BUYER}_paid`)));
   });
 });
+
+describe("#427 — qualified identity collections behave like the unprefixed ones", () => {
+  test("a user can read their own qualified teacher profile", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "prod.teachers", TEACHER), {
+        role: "teacherDefault",
+        email: "t@example.com",
+      });
+    });
+    await assertSucceeds(getDoc(doc(as(TEACHER), "prod.teachers", TEACHER)));
+  });
+
+  test("a user cannot read someone else's qualified profile", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "prod.teachers", ADMIN), { role: "admin" });
+    });
+    await assertFails(getDoc(doc(as(TEACHER), "prod.teachers", ADMIN)));
+  });
+
+  test("self-promotion is blocked in the qualified collection too", async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "prod.teachers", TEACHER), { role: "teacherDefault" });
+    });
+    await assertFails(updateDoc(doc(as(TEACHER), "prod.teachers", TEACHER), { role: "admin" }));
+  });
+
+  test("signup can create a qualified teacher profile with the default role", async () => {
+    await assertSucceeds(
+      setDoc(doc(as(BUYER), "prod.teachers", BUYER), {
+        fullName: "New",
+        email: "new@example.com",
+        role: "teacherDefault",
+      })
+    );
+  });
+
+  test("an admin recorded only in prod.teachers is still recognised for pricing", async () => {
+    const ADMIN2 = "qualified-admin-uid";
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), "prod.teachers", ADMIN2), { role: "admin" });
+    });
+    await assertSucceeds(updateDoc(doc(as(ADMIN2), "prod.module", "paid"), { price: 77 }));
+  });
+});

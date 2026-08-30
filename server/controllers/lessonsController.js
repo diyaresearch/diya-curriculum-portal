@@ -1,4 +1,5 @@
 const { db, storage } = require("../config/firebaseConfig");
+const { TEACHERS } = require("../utils/identityCollections");
 const PDFDocument = require("pdfkit");
 const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
@@ -156,7 +157,7 @@ const updateLesson = async (req, res) => {
 
     const isAdmin = async (uid) => {
       try {
-        const teacherDoc = await db.collection("teachers").doc(uid).get();
+        const teacherDoc = await db.collection(TEACHERS).doc(uid).get();
         if (!teacherDoc.exists) return false;
         const data = teacherDoc.data() || {};
         return data.role === "admin";
@@ -215,7 +216,7 @@ const deleteLessonById = async (req, res) => {
 
     const isAdmin = async (uid) => {
       try {
-        const teacherDoc = await db.collection("teachers").doc(uid).get();
+        const teacherDoc = await db.collection(TEACHERS).doc(uid).get();
         if (!teacherDoc.exists) return false;
         const data = teacherDoc.data() || {};
         return data.role === "admin";

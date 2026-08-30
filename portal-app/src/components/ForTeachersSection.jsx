@@ -6,6 +6,7 @@ import pencilImg from "../assets/finpencil.png";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { COLLECTIONS } from "../firebase/collectionNames";
 
 // --- Sign Up Prompt Modal ---
 const SignUpPrompt = ({ open, onClose, type }) => {
@@ -59,12 +60,12 @@ function useUserRole() {
       setRole(null);
       if (firebaseUser) {
         // Listen for changes in teachers doc
-        unsubTeacher = onSnapshot(doc(db, "teachers", firebaseUser.uid), (teacherDoc) => {
+        unsubTeacher = onSnapshot(doc(db, COLLECTIONS.teachers, firebaseUser.uid), (teacherDoc) => {
           if (teacherDoc.exists()) {
             setRole(teacherDoc.data().role);
           } else {
             // If not a teacher, listen for student doc
-            unsubStudent = onSnapshot(doc(db, "students", firebaseUser.uid), (studentDoc) => {
+            unsubStudent = onSnapshot(doc(db, COLLECTIONS.students, firebaseUser.uid), (studentDoc) => {
               if (studentDoc.exists()) {
                 setRole(studentDoc.data().role);
               } else {

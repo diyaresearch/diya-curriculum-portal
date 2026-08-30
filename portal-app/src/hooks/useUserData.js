@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { useNavigate } from 'react-router-dom';
+import { COLLECTIONS } from "../firebase/collectionNames";
 
 const useUserData = () => {
     const [user, setUser] = useState(null);
@@ -17,14 +18,14 @@ const useUserData = () => {
             if (firebaseUser) {
                 setUser(firebaseUser);
                 // Check teachers first
-                const teacherDoc = await getDoc(doc(db, "teachers", firebaseUser.uid));
+                const teacherDoc = await getDoc(doc(db, COLLECTIONS.teachers, firebaseUser.uid));
                 if (teacherDoc.exists()) {
                     setUserData(teacherDoc.data());
                     setLoading(false);
                     return;
                 }
                 // Then check students
-                const studentDoc = await getDoc(doc(db, "students", firebaseUser.uid));
+                const studentDoc = await getDoc(doc(db, COLLECTIONS.students, firebaseUser.uid));
                 if (studentDoc.exists()) {
                     setUserData(studentDoc.data());
                     setLoading(false);

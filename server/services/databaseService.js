@@ -4,6 +4,7 @@
  */
 
 const { handleFirebaseError } = require('../middleware/errorHandler');
+const { findUserDocument } = require('../utils/identityCollections');
 const {
   PROJECT_ID,
   STORAGE_BUCKET,
@@ -189,29 +190,10 @@ class DatabaseService {
 
     return await this.safeOperation(async () => {
       const db = this.getDb();
-
-      // Check teachers collection first
-      let userRef = db.collection("teachers").doc(userId);
-      let userSnap = await userRef.get();
-
-      if (userSnap.exists) {
-        return { ref: userRef, snap: userSnap, collection: 'teachers' };
-      }
-
-      // Check students collection
-      userRef = db.collection("students").doc(userId);
-      userSnap = await userRef.get();
-
-      if (userSnap.exists) {
-        return { ref: userRef, snap: userSnap, collection: 'students' };
-      }
-
-      // Check unified users collection
-      userRef = db.collection(tableUsers).doc(userId);
-      userSnap = await userRef.get();
-
-      return { ref: userRef, snap: userSnap, collection: 'users' };
-
+      // Qualified collections first, unprefixed as a transitional fallback
+      // (#427). The literals here used to be unqualified, which is how a
+      // developer's laptop resolved production user documents.
+      return await findUserDocument(db, userId, tableUsers);
     }, 'Getting user document');
   }
 

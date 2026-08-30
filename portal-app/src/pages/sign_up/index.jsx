@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { MultiSelectDropdown, SingleSelectDropdown } from "../../components/Dropdowns";
 import SignupSuccess from "../../components/SignupSuccess";
 import { startGoogleRedirect } from "../../auth/googleAuth";
+import { COLLECTIONS } from "../../firebase/collectionNames";
 
 const SUBJECT_OPTIONS = [
   "CS",
@@ -98,7 +99,7 @@ export function TeacherSignup() {
     setLoading(true);
     try {
       // Check for existing teacher with this email (case-insensitive)
-      const q = query(collection(db, "teachers"), where("email", "==", cleanEmail));
+      const q = query(collection(db, COLLECTIONS.teachers), where("email", "==", cleanEmail));
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
         setError("An account with this email already exists.");
@@ -107,7 +108,7 @@ export function TeacherSignup() {
       }
 
       // Create a new teacher document with UID as doc ID
-      await setDoc(doc(db, "teachers", googleUser.uid), {
+      await setDoc(doc(db, COLLECTIONS.teachers, googleUser.uid), {
         fullName,
         email: cleanEmail,
         school,
@@ -463,7 +464,7 @@ export function StudentSignup() {
     setLoading(true);
     try {
       // Check for existing student with this email (case-insensitive)
-      const q = query(collection(db, "students"), where("email", "==", cleanEmail));
+      const q = query(collection(db, COLLECTIONS.students), where("email", "==", cleanEmail));
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
         setError("An account with this email already exists.");
@@ -472,7 +473,7 @@ export function StudentSignup() {
       }
 
       // Create a new student document with UID as doc ID
-      await setDoc(doc(db, "students", googleUser.uid), {
+      await setDoc(doc(db, COLLECTIONS.students, googleUser.uid), {
         fullName,
         email: cleanEmail,
         grade,

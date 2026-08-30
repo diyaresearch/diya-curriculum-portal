@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app as firebaseApp } from '../firebase/firebaseConfig';
+import { COLLECTIONS } from "../firebase/collectionNames";
 
 const ProtectedRoute = ({ children, redirectTeacherPlus = false }) => {
     const [user, setUser] = useState(null);
@@ -18,7 +19,7 @@ const ProtectedRoute = ({ children, redirectTeacherPlus = false }) => {
                 setUser(firebaseUser);
 
                 try {
-                    const teacherDoc = await getDoc(doc(db, "teachers", firebaseUser.uid));
+                    const teacherDoc = await getDoc(doc(db, COLLECTIONS.teachers, firebaseUser.uid));
                     if (teacherDoc.exists()) {
                         setUserRole(teacherDoc.data().role);
                     }

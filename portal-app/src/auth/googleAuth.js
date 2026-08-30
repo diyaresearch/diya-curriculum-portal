@@ -1,6 +1,7 @@
 import { getAuth, GoogleAuthProvider, getRedirectResult, signInWithRedirect, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
+import { COLLECTIONS } from "../firebase/collectionNames";
 import { signInWithPopup } from "firebase/auth";
  
 const RETURN_TO_KEY = "diya_auth:returnTo";
@@ -79,13 +80,13 @@ export async function consumeGoogleRedirectResult() {
  
 export async function resolveAccountByUid(uid) {
   try {
-    const teacherSnap = await getDoc(doc(db, "teachers", uid));
+    const teacherSnap = await getDoc(doc(db, COLLECTIONS.teachers, uid));
     if (teacherSnap.exists()) {
       const data = teacherSnap.data() || {};
       return { exists: true, role: data.role || "teacherDefault", collection: "teachers", data };
     }
  
-    const studentSnap = await getDoc(doc(db, "students", uid));
+    const studentSnap = await getDoc(doc(db, COLLECTIONS.students, uid));
     if (studentSnap.exists()) {
       const data = studentSnap.data() || {};
       return { exists: true, role: data.role || "student", collection: "students", data };

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app as firebaseApp } from '../firebase/firebaseConfig';
+import { COLLECTIONS } from "../firebase/collectionNames";
 
 const useUserRole = () => {
     const [user, setUser] = useState(null);
@@ -17,7 +18,7 @@ const useUserRole = () => {
                 setUser(currentUser);
                 try {
                     // Check in teachers collection first
-                    const teacherDoc = await getDoc(doc(db, "teachers", currentUser.uid));
+                    const teacherDoc = await getDoc(doc(db, COLLECTIONS.teachers, currentUser.uid));
                     if (teacherDoc.exists()) {
                         const teacherData = teacherDoc.data();
                         setRole(teacherData.role || 'teacher');

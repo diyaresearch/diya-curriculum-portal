@@ -33,6 +33,18 @@ export const COLLECTIONS = Object.freeze({
   module: withQualifier("module"),
   lesson: withQualifier("lesson"),
   content: withQualifier("content"),
+  // Identity collections were hardcoded literals, so dev and prod shared the
+  // same user documents (#427). Qualified now, like everything else.
+  teachers: withQualifier("teachers"),
+  students: withQualifier("students"),
+  testimonials: withQualifier("testimonials"),
+});
+
+// Pre-qualifier names, read-only. A profile that has not been copied into the
+// qualified collection yet still resolves through these during the transition.
+export const LEGACY_COLLECTIONS = Object.freeze({
+  teachers: SCHEMA_QUALIFIER ? "teachers" : null,
+  students: SCHEMA_QUALIFIER ? "students" : null,
 });
 
 export function getSchemaQualifier() {
