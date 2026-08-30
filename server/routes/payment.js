@@ -4,39 +4,22 @@ const { databaseService } = require("../services/databaseService");
 
 const router = express.Router();
 
-// Validate and initialize Stripe with secret key from environment
-let stripe = null;
-if (!process.env.STRIPE_SECRET_KEY) {
-    console.warn('⚠️  STRIPE_SECRET_KEY is not defined. Payment features will be disabled.');
-    console.warn('   Set STRIPE_SECRET_KEY in your environment file to enable payment functionality.');
-} else {
-    try {
-        stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-        console.log('✅ Stripe initialized successfully');
-    } catch (error) {
-        console.error('❌ Failed to initialize Stripe:', error.message);
-        console.warn('⚠️  Payment features will be disabled.');
-    }
-}
+// Stripe now lives in a shared module so routes/subscription.js can verify
+// payments with the same client instead of trusting the request body (#422).
+const { getStripe, requireStripe } = require("../utils/stripeClient");
+const {
+    roleForPlan,
+    subscriptionEndDate,
+    verifyPaymentIntent,
+    claimPaymentIntent,
+} = require("../utils/entitlements");
+
+const stripe = getStripe();
 
 const SCHEMA_QUALIFIER = `${process.env.DATABASE_SCHEMA_QUALIFIER}`;
 const TABLE_USERS = SCHEMA_QUALIFIER + "users";
 const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
 
-// Middleware to check if Stripe is available
-const requireStripe = (req, res, next) => {
-    if (!stripe) {
-        return res.status(503).json({
-            success: false,
-            error: {
-                code: 'PAYMENT_SERVICE_UNAVAILABLE',
-                message: 'Payment service is currently unavailable. Please contact support.',
-                details: 'Stripe is not configured on this server.'
-            }
-        });
-    }
-    next();
-};
 
 // Test endpoint for payment system
 router.get("/test", (req, res) => {
@@ -273,20 +256,14 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
             return res.status(400).json({ message: "Payment intent ID required" });
         }
 
-        // Retrieve payment intent from Stripe
-        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-
-        if (paymentIntent.status !== 'succeeded') {
-            return res.status(400).json({
-                message: "Payment not completed",
-                status: paymentIntent.status
-            });
+        const verification = await verifyPaymentIntent(stripe, paymentIntentId, userId);
+        if (!verification.ok) {
+            console.warn(
+                `[security] Rejected confirm-payment for uid ${userId}: ${verification.message}`
+            );
+            return res.status(verification.status).json({ message: verification.message });
         }
-
-        // Verify the payment belongs to this user
-        if (paymentIntent.metadata.userId !== userId) {
-            return res.status(403).json({ message: "Payment verification failed" });
-        }
+        const { paymentIntent } = verification;
 
         await databaseService.initialize();
         const db = databaseService.getDb();
@@ -302,29 +279,9 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         const userData = userSnap.data();
         const targetPlan = paymentIntent.metadata.planType;
 
-        // Update user subscription
-        const endDate = new Date();
-        if (targetPlan === 'premiumYearly') {
-            // Yearly subscription - add 12 months
-            endDate.setFullYear(endDate.getFullYear() + 1);
-        } else {
-            // Monthly subscription - add 1 month
-            endDate.setMonth(endDate.getMonth() + 1);
-        }
-
-        await userRef.update({
-            subscriptionType: targetPlan,
-            subscriptionStatus: 'active',
-            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            subscriptionEndDate: admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate,
-            stripePaymentIntentId: paymentIntentId,
-            stripeCustomerId: paymentIntent.customer || null,
-            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            role: (targetPlan === 'premium' || targetPlan === 'premiumYearly') ? 'teacherPlus' : (targetPlan === 'enterprise' ? 'teacherEnterprise' : userData.role)
-        });
-
-        // Log successful payment
-        await db.collection(TABLE_PAYMENT_LOGS).add({
+        // Claim the payment before granting. A replayed confirmation used to
+        // re-extend the subscription window every time it was sent (#422).
+        const claimed = await claimPaymentIntent(db, TABLE_PAYMENT_LOGS, paymentIntentId, {
             userId,
             action: 'payment_confirmed',
             fromPlan: paymentIntent.metadata.upgradeFrom,
@@ -336,6 +293,30 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
             currency: paymentIntent.currency,
             userEmail: userData.email
         });
+
+        if (!claimed) {
+            return res.status(200).json({
+                message: "Payment already confirmed",
+                subscriptionType: userData.subscriptionType || targetPlan,
+                subscriptionStatus: userData.subscriptionStatus || 'active',
+                alreadyApplied: true
+            });
+        }
+
+        const endDate = subscriptionEndDate(targetPlan);
+
+        await userRef.update({
+            subscriptionType: targetPlan,
+            subscriptionStatus: 'active',
+            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            subscriptionEndDate: admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate,
+            stripePaymentIntentId: paymentIntentId,
+            stripeCustomerId: paymentIntent.customer || null,
+            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            role: roleForPlan(targetPlan) || userData.role
+        });
+
+        // The success log was written above as the idempotency claim.
 
         return res.status(200).json({
             message: "Payment confirmed and subscription activated",

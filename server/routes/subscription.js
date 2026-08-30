@@ -2,6 +2,13 @@ const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
 const { requireAdmin } = require("../middleware/requireRole");
+const { getStripe, requireStripe } = require("../utils/stripeClient");
+const {
+    roleForPlan,
+    subscriptionEndDate,
+    verifyPaymentIntent,
+    claimPaymentIntent,
+} = require("../utils/entitlements");
 
 const router = express.Router();
 
@@ -137,40 +144,45 @@ router.post("/initiate-upgrade", authenticateUser, async (req, res) => {
     }
 });
 
-// Handle successful upgrade
-router.post("/complete-upgrade", authenticateUser, async (req, res) => {
+// Handle successful upgrade.
+//
+// Previously this accepted a paymentIntentId from the request body, stored it,
+// and granted teacherPlus without ever retrieving it from Stripe (#422). The
+// intent is now verified against Stripe, must belong to the caller, must have
+// actually succeeded, and must match the plan being claimed. The grant is
+// claimed exactly once so a replay cannot extend the subscription twice.
+router.post("/complete-upgrade", authenticateUser, requireStripe, async (req, res) => {
     try {
         const userId = req.user.uid;
         const { targetPlan, paymentIntentId, upgradeSessionId } = req.body;
 
-        // Accept both premium variants and enterprise
         const validPlans = ['premium', 'premiumYearly', 'enterprise'];
         if (!targetPlan || !validPlans.includes(targetPlan)) {
             return res.status(400).json({ message: "Invalid target plan" });
         }
 
+        const verification = await verifyPaymentIntent(
+            getStripe(),
+            paymentIntentId,
+            userId,
+            targetPlan
+        );
+        if (!verification.ok) {
+            console.warn(
+                `[security] Rejected complete-upgrade for uid ${userId}: ${verification.message}`
+            );
+            return res.status(verification.status).json({ message: verification.message });
+        }
+        const { paymentIntent } = verification;
+
         await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-        let collectionName = "teachers";
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-            collectionName = "students";
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-            collectionName = TABLE_USERS;
-        }
+        const { ref: userRef, snap: userSnap } = await databaseService.getUserDocument(
+            userId,
+            TABLE_USERS
+        );
 
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
@@ -179,43 +191,48 @@ router.post("/complete-upgrade", authenticateUser, async (req, res) => {
         const userData = userSnap.data();
         const currentPlan = userData.subscriptionType || 'basic';
 
-        // Update user subscription
-        const updateData = {
-            subscriptionType: targetPlan,
-            subscriptionStatus: 'active',
-            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            role: (targetPlan === 'premium' || targetPlan === 'premiumYearly') ? 'teacherPlus' : (targetPlan === 'enterprise' ? 'teacherEnterprise' : userData.role)
-        };
-
-        if (targetPlan === 'premium' || targetPlan === 'premiumYearly') {
-            // Calculate end date based on plan type
-            const endDate = new Date();
-            if (targetPlan === 'premiumYearly') {
-                // Yearly subscription - add 12 months
-                endDate.setFullYear(endDate.getFullYear() + 1);
-            } else {
-                // Monthly subscription - add 1 month
-                endDate.setMonth(endDate.getMonth() + 1);
-            }
-            updateData.subscriptionEndDate = admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate;
-            updateData.stripePaymentIntentId = paymentIntentId;
-        }
-
-        await userRef.update(updateData);
-
-        // Log the successful upgrade
-        await db.collection(TABLE_PAYMENT_LOGS).add({
+        // Claim the payment before granting anything. If another request
+        // already applied it, report success without re-extending the term.
+        const claimed = await claimPaymentIntent(db, TABLE_PAYMENT_LOGS, paymentIntentId, {
             userId,
             action: 'upgrade_completed',
             fromPlan: currentPlan,
             toPlan: targetPlan,
             timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             status: 'completed',
-            paymentIntentId: paymentIntentId || null,
+            paymentIntentId,
             upgradeSessionId: upgradeSessionId || null,
+            amount: paymentIntent.amount,
+            currency: paymentIntent.currency,
             userEmail: userData.email
         });
+
+        if (!claimed) {
+            return res.status(200).json({
+                message: "Upgrade already applied",
+                newPlan: userData.subscriptionType || targetPlan,
+                subscriptionStatus: userData.subscriptionStatus || 'active',
+                alreadyApplied: true
+            });
+        }
+
+        const updateData = {
+            subscriptionType: targetPlan,
+            subscriptionStatus: 'active',
+            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            role: roleForPlan(targetPlan) || userData.role
+        };
+
+        if (targetPlan === 'premium' || targetPlan === 'premiumYearly') {
+            const endDate = subscriptionEndDate(targetPlan);
+            updateData.subscriptionEndDate =
+                admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate;
+            updateData.stripePaymentIntentId = paymentIntentId;
+            updateData.stripeCustomerId = paymentIntent.customer || null;
+        }
+
+        await userRef.update(updateData);
 
         return res.status(200).json({
             message: "Upgrade completed successfully",
@@ -485,111 +502,29 @@ router.post("/reactivate", authenticateUser, async (req, res) => {
     }
 });
 
-// Process payment endpoint - combines initiate-upgrade and payment processing
+// Process payment endpoint.
+//
+// This used to take a card object and an amount from the request body,
+// sleep for a second to "simulate" a charge, and then grant teacherPlus —
+// no Stripe call anywhere (#422). Any authenticated user could call it and
+// get premium for free. It also required raw PAN and CVC to reach our
+// server, which is what #423 is about.
+//
+// The endpoint is retained, rather than deleted, so that a stale cached
+// frontend gets a clear error instead of a 404 it might treat as a network
+// blip. It grants nothing.
 router.post("/process-payment", authenticateUser, async (req, res) => {
-    try {
-        const userId = req.user.uid;
-        const { planType, amount, cardInfo, billingCycle } = req.body;
+    console.warn(
+        `[security] Deprecated /process-payment called by uid ${req.user.uid}; no entitlement granted`
+    );
 
-        // Validate plan type
-        const validPlans = ['premium', 'premiumYearly', 'enterprise'];
-        if (!planType || !validPlans.includes(planType)) {
-            return res.status(400).json({ message: "Invalid plan type" });
-        }
-
-        // Validate required fields
-        if (!amount || !cardInfo) {
-            return res.status(400).json({ message: "Missing required payment information" });
-        }
-
-        await databaseService.initialize();
-        const db = databaseService.getDb();
-        const admin = databaseService.getAdmin();
-
-        // Check in teachers collection first
-        let userRef = db.collection("teachers").doc(userId);
-        let userSnap = await userRef.get();
-        let collectionName = "teachers";
-
-        if (!userSnap.exists) {
-            // Then check students collection
-            userRef = db.collection("students").doc(userId);
-            userSnap = await userRef.get();
-            collectionName = "students";
-        }
-
-        if (!userSnap.exists) {
-            // Finally check unified users collection
-            userRef = db.collection(TABLE_USERS).doc(userId);
-            userSnap = await userRef.get();
-            collectionName = TABLE_USERS;
-        }
-
-        if (!userSnap.exists) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        const userData = userSnap.data();
-        const currentPlan = userData.subscriptionType || 'basic';
-
-        // For demo purposes, we'll simulate a successful payment
-        // In a real implementation, you would integrate with Stripe or another payment processor
-
-        // Simulate payment processing delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Update user subscription
-        const updateData = {
-            subscriptionType: planType,
-            subscriptionStatus: 'active',
-            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            role: (planType === 'premium' || planType === 'premiumYearly') ? 'teacherPlus' : (planType === 'enterprise' ? 'teacherEnterprise' : userData.role)
-        };
-
-        // Calculate subscription end date
-        if (planType === 'premium' || planType === 'premiumYearly') {
-            const endDate = new Date();
-            if (planType === 'premiumYearly') {
-                // Yearly subscription - add 12 months
-                endDate.setFullYear(endDate.getFullYear() + 1);
-            } else {
-                // Monthly subscription - add 1 month
-                endDate.setMonth(endDate.getMonth() + 1);
-            }
-            updateData.subscriptionEndDate = admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate;
-            // In a real implementation, store the actual payment intent ID
-            updateData.paymentReference = `demo_payment_${Date.now()}`;
-        }
-
-        await userRef.update(updateData);
-
-        // Log the payment
-        await db.collection(TABLE_PAYMENT_LOGS).add({
-            userId,
-            action: 'payment_processed',
-            fromPlan: currentPlan,
-            toPlan: planType,
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            status: 'completed',
-            amount: amount,
-            billingCycle: billingCycle || 'month',
-            paymentMethod: 'demo_card',
-            userEmail: userData.email
-        });
-
-        return res.status(200).json({
-            message: "Payment processed successfully",
-            subscriptionType: planType,
-            subscriptionStatus: 'active',
-            amount: amount,
-            billingCycle: billingCycle
-        });
-
-    } catch (error) {
-        console.error("Error processing payment:", error);
-        res.status(500).json({ message: "Error processing payment. Please try again." });
-    }
+    return res.status(410).json({
+        message:
+            "This payment endpoint has been removed. Upgrades now go through Stripe: " +
+            "create a PaymentIntent via /api/payment/create-payment-intent, confirm it " +
+            "with Stripe Elements, then call /api/payment/confirm-payment.",
+        code: "ENDPOINT_REMOVED",
+    });
 });
 
 module.exports = router;
