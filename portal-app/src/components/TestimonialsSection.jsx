@@ -3,7 +3,7 @@ import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/fir
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { db } from "../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { CAROUSEL_CONFIG, SAMPLE_TESTIMONIALS } from "../constants/testimonialData";
+import { CAROUSEL_CONFIG } from "../constants/testimonialData";
 import { COLLECTIONS } from "../firebase/collectionNames";
 
 // --- Custom Hook to get user and role from Firebase ---
@@ -476,8 +476,11 @@ const PopupTestimonialCard = ({
 };
 
 // In TestimonialsCarousel, pass popup navigation handlers and state
-const TestimonialsCarousel = () => {
-  const [testimonials, setTestimonials] = useState([]);
+// `testimonials` is loaded by the parent TestimonialsSection, which also
+// decides whether to render this component at all (#433 — this used to fetch
+// its own data and fall back to fabricated sample testimonials whenever
+// Firestore returned zero real ones).
+const TestimonialsCarousel = ({ testimonials }) => {
   const [openIndex, setOpenIndex] = useState(null);
   const [startIndex, setStartIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -485,42 +488,6 @@ const TestimonialsCarousel = () => {
 
   // Use ref for timer to prevent memory leaks
   const timerRef = useRef(null);
-
-  // Fetch testimonials from Firestore on mount
-  useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        const db = getFirestore(firebaseApp);
-        const querySnapshot = await getDocs(collection(db, COLLECTIONS.testimonials));
-        const data = [];
-        querySnapshot.forEach((doc) => {
-          data.push({ id: doc.id, ...doc.data() });
-        });
-
-        // Sort: Teachers first, then others
-        data.sort((a, b) => {
-          // Use standardized Role field (supporting legacy lowercase for backwards compatibility)
-          const roleA = (a.Role || a.role || "").toLowerCase();
-          const roleB = (b.Role || b.role || "").toLowerCase();
-          if (roleA === "teacher" && roleB !== "teacher") return -1;
-          if (roleA !== "teacher" && roleB === "teacher") return 1;
-          return 0;
-        });
-
-        // If no data from Firebase, use externalized sample data
-        if (data.length === 0) {
-          setTestimonials(SAMPLE_TESTIMONIALS);
-        } else {
-          setTestimonials(data);
-        }
-      } catch (error) {
-        console.log("Firebase error, using sample testimonials:", error);
-        // Use externalized sample data on Firebase error
-        setTestimonials(SAMPLE_TESTIMONIALS);
-      }
-    };
-    fetchTestimonials();
-  }, []);
 
   // Auto-advance functionality with proper timer management
   useEffect(() => {
@@ -761,8 +728,47 @@ const TestimonialsSection = () => {
   const { role } = useUserRole();
   const isTeacherDefault = role === "teacherDefault";
 
-  // Only show Testimonials if NOT teacherDefault
-  if (!isTeacherDefault) {
+  const [testimonials, setTestimonials] = useState([]);
+  const [loaded, setLoaded] = useState(false);
+
+  // Fetch real testimonials from Firestore on mount. No fallback to sample
+  // data: a fabricated testimonial ("Sarah Johnson, Lincoln Elementary
+  // School") shown as real is worse than showing nothing (#433).
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const db = getFirestore(firebaseApp);
+        const querySnapshot = await getDocs(collection(db, COLLECTIONS.testimonials));
+        const data = [];
+        querySnapshot.forEach((doc) => {
+          data.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Sort: Teachers first, then others
+        data.sort((a, b) => {
+          // Use standardized Role field (supporting legacy lowercase for backwards compatibility)
+          const roleA = (a.Role || a.role || "").toLowerCase();
+          const roleB = (b.Role || b.role || "").toLowerCase();
+          if (roleA === "teacher" && roleB !== "teacher") return -1;
+          if (roleA !== "teacher" && roleB === "teacher") return 1;
+          return 0;
+        });
+
+        setTestimonials(data);
+      } catch (error) {
+        console.error("Failed to load testimonials:", error);
+        setTestimonials([]);
+      } finally {
+        setLoaded(true);
+      }
+    };
+    fetchTestimonials();
+  }, []);
+
+  // Hide the whole section — heading included — until there is at least one
+  // real testimonial to show. Rendering "Testimonials" over an empty carousel
+  // would still read as a claim nothing backs up.
+  if (!isTeacherDefault && loaded && testimonials.length > 0) {
     return (
       <div style={{ width: "100%" }}>
         <section
@@ -819,7 +825,7 @@ const TestimonialsSection = () => {
 
           {/* Right: Testimonials Carousel */}
           <div style={{ flex: "1 1 300px", position: "relative", width: "100%" }}>
-            <TestimonialsCarousel />
+            <TestimonialsCarousel testimonials={testimonials} />
           </div>
         </section>
       </div>

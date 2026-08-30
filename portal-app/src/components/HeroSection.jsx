@@ -239,20 +239,8 @@ const HeroSection = () => {
                         Sign Up as Student
                     </button>
                 </div>
-                <p
-                    style={{
-                        color: "rgba(255, 255, 255, 0.7)",
-                        fontSize: "0.9rem",
-                        fontWeight: "400",
-                        fontFamily: "Open Sans, sans-serif",
-                        textAlign: "center",
-                        marginTop: "32px",
-                        lineHeight: "1.4",
-                        margin: "32px 0 0 0"
-                    }}
-                >
-                    Trusted by 1,000+ students and teachers worldwide
-                </p>
+                {/* "Trusted by 1,000+ students and teachers worldwide" removed (#433) —
+                    unsourced claim on a pre-GA product. Reinstate once there's a real number. */}
             </div>
         </section>
     );
