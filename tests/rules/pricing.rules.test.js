@@ -189,3 +189,31 @@ describe("#427 — qualified identity collections behave like the unprefixed one
     await assertSucceeds(updateDoc(doc(as(ADMIN2), "prod.module", "paid"), { price: 77 }));
   });
 });
+
+describe("#382 — the admin custom claim is a fast path, not a gate", () => {
+  test("a claim alone grants admin, with no profile document at all", async () => {
+    const claimed = testEnv
+      .authenticatedContext("claim-only-uid", { role: "admin" })
+      .firestore();
+    await assertSucceeds(updateDoc(doc(claimed, "prod.module", "paid"), { price: 42 }));
+  });
+
+  test("a user with no claim still resolves through their profile document", async () => {
+    // ADMIN is seeded in teachers/ with role admin and carries no claim here.
+    await assertSucceeds(updateDoc(doc(as(ADMIN), "prod.module", "paid"), { price: 43 }));
+  });
+
+  test("a non-admin claim does not grant admin", async () => {
+    const claimed = testEnv
+      .authenticatedContext("teacherplus-uid", { role: "teacherPlus" })
+      .firestore();
+    await assertFails(updateDoc(doc(claimed, "prod.module", "paid"), { price: 44 }));
+  });
+
+  test("a stale claim cannot withhold access the document still grants", async () => {
+    const stale = testEnv
+      .authenticatedContext(ADMIN, { role: "teacherDefault" })
+      .firestore();
+    await assertSucceeds(updateDoc(doc(stale, "prod.module", "paid"), { price: 45 }));
+  });
+});

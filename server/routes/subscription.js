@@ -3,6 +3,7 @@ const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
 const { requireAdmin } = require("../middleware/requireRole");
 const { findUserDocument } = require("../utils/identityCollections");
+const { syncRoleClaim } = require("../utils/customClaims");
 const { getStripe, requireStripe } = require("../utils/stripeClient");
 const {
     roleForPlan,
@@ -211,6 +212,7 @@ router.post("/complete-upgrade", authenticateUser, requireStripe, async (req, re
         }
 
         await userRef.update(updateData);
+        await syncRoleClaim(admin, userId, updateData.role);
 
         return res.status(200).json({
             message: "Upgrade completed successfully",

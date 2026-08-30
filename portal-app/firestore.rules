@@ -45,12 +45,15 @@ service cloud.firestore {
         .affectedKeys().hasAny(privilegedFields());
     }
 
-    // Is the caller an admin? Roles live in the profile document, so this costs
-    // one read per evaluation. It is used only on writes to price-bearing
-    // fields, never on reads, so the cost stays off the hot path.
-    // (A custom-claims migration would remove the read entirely — see #382.)
+    // Is the caller an admin? Custom claim first: it rides in the ID token and costs nothing to read
+    // (#382). Absent or stale claims fall through to the profile document, so
+    // the claim can only grant access sooner, never withhold it.
+    function hasAdminClaim() {
+      return isSignedIn() && request.auth.token.get('role', '') == 'admin';
+    }
+
     function isAdmin() {
-      return isSignedIn() && (
+      return hasAdminClaim() || (isSignedIn() && (
         (
           exists(/databases/$(database)/documents/prod.teachers/$(request.auth.uid)) &&
           get(/databases/$(database)/documents/prod.teachers/$(request.auth.uid)).data.role == 'admin'
@@ -64,7 +67,7 @@ service cloud.firestore {
           exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
         )
-      );
+      ));
     }
 
     // Fields that decide what a buyer is charged. The checkout session reads

@@ -7,6 +7,7 @@ const router = express.Router();
 // Stripe now lives in a shared module so routes/subscription.js can verify
 // payments with the same client instead of trusting the request body (#422).
 const { getStripe, requireStripe } = require("../utils/stripeClient");
+const { syncRoleClaim } = require("../utils/customClaims");
 const {
     roleForPlan,
     subscriptionEndDate,
@@ -316,6 +317,9 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
             lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
             role: roleForPlan(targetPlan) || userData.role
         });
+
+        // Entitlement role into claims (#382), best-effort.
+        await syncRoleClaim(admin, userId, roleForPlan(targetPlan) || userData.role);
 
         // The success log was written above as the idempotency claim.
 

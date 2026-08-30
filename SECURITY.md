@@ -1,5 +1,9 @@
 # Security Guide
 
+> For how authorization works at runtime — rules, API middleware, payment
+> verification and the collection qualifier — see [SECURITY-MODEL.md](SECURITY-MODEL.md).
+> This document covers secret handling and incident history.
+
 ## Issue #376 Resolution - Exposed API Keys
 
 ### Security Issues Identified:

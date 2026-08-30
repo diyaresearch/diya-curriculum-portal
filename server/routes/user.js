@@ -3,6 +3,7 @@ const authenticateUser = require("../middleware/authenticateUser");
 const { requireAdmin, requireValidUser } = require("../middleware/requireRole");
 const { databaseService } = require("../services/databaseService");
 const { isAdminUser } = require("../utils/ownership");
+const { syncRoleClaim } = require("../utils/customClaims");
 const {
   sendSuccess,
   sendError,
@@ -249,6 +250,10 @@ router.post("/register", authenticateUser, asyncHandler(async (req, res) => {
 
     await userRef.set(newUser);
 
+    // Mirror the role into custom claims so rules can check it without a read
+    // (#382). Best-effort: the document remains the source of truth.
+    await syncRoleClaim(admin, userId, role);
+
     return sendSuccess(res, {
       id: userId,
       fullName: newUser.fullName,
@@ -408,6 +413,11 @@ router.put("/updateRole", authenticateUser, requireAdmin, asyncHandler(async (re
       roleUpdatedAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
       roleUpdatedBy: req.user.uid
     });
+
+    // Keep the claim in step with the document (#382). The user sees the new
+    // role in their token on the next refresh; rules fall back to the document
+    // until then, so there is no window where they lose access.
+    await syncRoleClaim(admin, userId, newRole);
 
     return sendSuccess(res, {
       userId,
