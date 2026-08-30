@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
+import { getFirestore, doc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import "react-quill/dist/quill.snow.css";
 import useUserData from "../../hooks/useUserData";
@@ -330,25 +330,35 @@ const ModuleDetail = () => {
         return;
       }
 
-      // Read from Firestore via the client SDK.
-      //
-      // Serving this through /api/module/:id would let the server withhold a
-      // paid module's lessons (#430), and that gating exists and is tested.
-      // It cannot be used here yet: the API resolves collections with the
-      // qualifier `prod_` while this app uses `prod.`, so the server looks in
-      // `prod_module` and finds nothing. That mismatch is #427, and #430's
-      // client-side enforcement is blocked on it.
-      const db = getFirestore();
-      const moduleDoc = await getDoc(doc(db, COLLECTIONS.module, moduleId));
+      // Fetch through the API so the server can withhold a paid module's
+      // lessons from anyone without an entitlement (#430). The client SDK
+      // cannot make that decision. This became usable once #427 aligned the
+      // collection qualifier — before that the API looked in `prod_module`
+      // and found nothing.
+      const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "http://localhost:3001";
+      const currentUser = getAuth().currentUser;
+      const authHeaders = currentUser
+        ? { Authorization: `Bearer ${await currentUser.getIdToken()}` }
+        : {};
 
-      if (!moduleDoc.exists()) {
+      const moduleResponse = await fetch(`${serverUrl}/api/module/${moduleId}`, {
+        headers: authHeaders,
+      });
+
+      if (moduleResponse.status === 404) {
         setError("Module not found");
         setLoading(false);
         return;
       }
 
-      const data = moduleDoc.data();
-      const isLocked = false;
+      if (!moduleResponse.ok) {
+        setError("Could not load this module. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      const data = await moduleResponse.json();
+      const isLocked = data.locked === true;
       setModuleLocked(isLocked);
       console.log("Fetched module data:", data); // Debug log
       const authorUid = data.author || data.authorId || "";
