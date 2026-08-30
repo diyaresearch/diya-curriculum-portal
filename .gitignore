@@ -20,3 +20,6 @@ tests/rules/node_modules/
 # Emulator logs
 firestore-debug.log
 ui-debug.log
+
+# Firebase CLI deploy cache
+.firebase/
