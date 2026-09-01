@@ -336,7 +336,9 @@ function resolveFeaturedTileImage(tile) {
 }
 
 
-const NuggetBuilderSection = () => (
+const NuggetBuilderSection = () => {
+  const navigate = useNavigate();
+  return (
   <section
     style={{
       width: "100%",
@@ -387,15 +389,17 @@ const NuggetBuilderSection = () => (
         transition: "background 0.2s, color 0.2s, border 0.2s",
         minWidth: "260px",
       }}
-      onClick={() => window.location.href = "/nugget-builder"}
+      onClick={() => navigate("/nugget-builder")}
     >
       Go to Nugget Builder
     </button>
   </section>
-);
+  );
+};
 
 // Add this section component near the top of your file
 function ModuleBuilderPromo() {
+  const navigate = useNavigate();
 
   return (
     <section
@@ -436,7 +440,7 @@ function ModuleBuilderPromo() {
       </p>
       <button
         onClick={() => {
-          window.location.href = "/module-builder"; // This will refresh and go to module builder
+          navigate("/module-builder");
         }}
         style={{
           marginTop: "32px",
@@ -720,7 +724,7 @@ const ExploreModulesSection = () => {
             You need to upgrade to Teacher Plus to access this course.
           </div>
           <button
-            onClick={() => window.location.href = "/upgrade"}
+            onClick={() => navigate("/upgrade")}
             style={{
               background: "#162040", color: "#fff", border: "none", borderRadius: 6,
               padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"

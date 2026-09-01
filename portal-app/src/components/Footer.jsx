@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -21,8 +22,8 @@ const Footer = () => {
         gap: "24px"
       }}>
         <span>© 2023 DIYA Ed Portal</span>
-        <a href="/" style={{ color: "#fff", textDecoration: "none" }}>Home</a>
-        <a href="/about" style={{ color: "#fff", textDecoration: "none" }}>About</a>
+        <Link to="/" style={{ color: "#fff", textDecoration: "none" }}>Home</Link>
+        <Link to="/about" style={{ color: "#fff", textDecoration: "none" }}>About</Link>
         <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>Twitter</a>
         <a href="https://facebook.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>Facebook</a>
         <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>Instagram</a>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { COLLECTIONS } from "../../firebase/collectionNames";
 
@@ -172,8 +172,8 @@ const LessonDetailsPage = () => {
                       >
                         <div style={{ fontWeight: 700, fontSize: "1.08rem", marginBottom: 6 }}>
                           {nugget ? (
-                            <a
-                              href={`/view-content/${contentId}`}
+                            <Link
+                              to={`/view-content/${contentId}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               style={{
@@ -184,7 +184,7 @@ const LessonDetailsPage = () => {
                               title="View Nugget Details"
                             >
                               {nugget.title || nugget.Title || "Untitled Nugget"}
-                            </a>
+                            </Link>
                           ) : (
                             "Nugget not found"
                           )}

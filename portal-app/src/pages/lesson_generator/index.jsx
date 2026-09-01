@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
 import OverlayTileView from "../../components/OverlayTileView";
@@ -540,14 +540,14 @@ export const LessonGenerator = () => {
                       className="p-2 border rounded-md m-1 text-xs flex items-center"
                     >
                       {/* Hyperlinked Title */}
-                      <a
-                        href={`/view-content/${material.UnitID}`} 
+                      <Link
+                        to={`/view-content/${material.UnitID}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 underline flex items-center"
                       >
-                        {material.Title} 
-                      </a>
+                        {material.Title}
+                      </Link>
 
                       <button
                         onClick={() => removeMaterial(material.id, index)}

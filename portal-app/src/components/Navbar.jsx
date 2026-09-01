@@ -74,7 +74,7 @@ const Navbar = () => {
       <div>
         No account exists for this Google account.
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-          <a href="/student-signup" style={{ textDecoration: "none" }}>
+          <Link to="/student-signup" style={{ textDecoration: "none" }}>
             <button
               style={{
                 width: "100%",
@@ -91,8 +91,8 @@ const Navbar = () => {
             >
               Sign Up as Student
             </button>
-          </a>
-          <a href="/teacher-signup" style={{ textDecoration: "none" }}>
+          </Link>
+          <Link to="/teacher-signup" style={{ textDecoration: "none" }}>
             <button
               style={{
                 width: "100%",
@@ -108,7 +108,7 @@ const Navbar = () => {
             >
               Sign Up as Teacher
             </button>
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -206,8 +206,8 @@ const Navbar = () => {
 
           {/* Conditional nav links based on user role */}
           {isTeacherDefault && (
-            <a
-              href="/upgrade"
+            <Link
+              to="/upgrade"
               className="hover:underline"
               style={{
                 fontSize: "15px",
@@ -227,7 +227,7 @@ const Navbar = () => {
               }}
             >
               Upgrade
-            </a>
+            </Link>
           )}
 
 
@@ -257,8 +257,8 @@ const Navbar = () => {
           )}
 
           {!isTeacherDefault && !isTeacherPlus && (
-            <a
-              href="/about"
+            <Link
+              to="/about"
               className="hover:underline"
               style={{
                 fontSize: "15px",
@@ -278,7 +278,7 @@ const Navbar = () => {
               }}
             >
               About
-            </a>
+            </Link>
           )}
 
           {!user ? (

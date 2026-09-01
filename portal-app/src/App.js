@@ -21,6 +21,8 @@ import PaymentPage from './pages/payment/PaymentPage';
 import LessonPlanBuilder from "./pages/lesson-plans/builder";
 import NuggetDetails from "./pages/nugget-details";
 import LessonPlanDrafts from "./pages/lesson-plans/drafts";
+import ModuleDrafts from "./pages/module_builder/drafts";
+import LessonDetailsPage from "./pages/lesson-details/LessonDetailsPage";
 import NuggetBuilderPage from "./pages/nugget-builder";
 import TeacherPlusPage from "./pages/teacherplus/teacherplusPage";
 import LessonDetails from './components/LessonDetails';
@@ -57,6 +59,9 @@ function App() {
           <Route path="/lesson-plans/builder" element={<LessonPlanBuilder />} />
           <Route path="/view-content/:id" element={<NuggetDetails />} />
           <Route path="/lesson-plans/drafts" element={<LessonPlanDrafts />} />
+          {/* #442: component already existed, was never wired to a route */}
+          <Route path="/module_builder/drafts" element={<ModuleDrafts />} />
+          <Route path="/lesson-details/:id" element={<LessonDetailsPage />} />
           <Route path="/teacher-plus" element={<TeacherPlusPage />} />
           <Route path="/teacherplus" element={<TeacherPlusPage />} />
           <Route path="/lesson/:id" element={<LessonDetails />} />

@@ -98,7 +98,7 @@ const PaymentForm = () => {
                     // Navigate based on user role after payment
                     setTimeout(() => {
                         if (userData?.role === 'teacher' || confirmResult.subscriptionType?.includes('premium')) {
-                            navigate('/teacherPlus');
+                            navigate('/teacherplus');
                         } else {
                             navigate('/');
                         }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import barchartImg from "../assets/barchart.png";
 import laptopImg from "../assets/laptop.png";
 import teacherImg from "../assets/teacher.png";
@@ -32,14 +33,14 @@ const SignUpPrompt = ({ open, onClose, type }) => {
         <div style={{ marginBottom: 24 }}>
           Please sign up or log in to access this page.
         </div>
-        <a href="/signup">
+        <Link to={isTeacher ? "/teacher-signup" : "/student-signup"}>
           <button style={{
             background: "#162040", color: "#fff", border: "none", borderRadius: 6,
             padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
           }}>
             {isTeacher ? "Sign Up as Teacher" : "Sign Up as Student"}
           </button>
-        </a>
+        </Link>
       </div>
     </div>
   );
@@ -180,7 +181,7 @@ const TeacherRectangles = () => {
       }}
     >
       {/* Rectangle 1 */}
-      <a href="/modules" style={{ textDecoration: "none" }} onClick={handleClick}>
+      <Link to="/modules" style={{ textDecoration: "none" }} onClick={handleClick}>
         <div
           style={{
             background: "#f3f3f1",
@@ -228,9 +229,9 @@ const TeacherRectangles = () => {
             </div>
           </div>
         </div>
-      </a>
+      </Link>
       {/* Rectangle 2 */}
-      <a href="/lesson-plans" style={{ textDecoration: "none" }} onClick={handleClick}>
+      <Link to="/lesson-plans" style={{ textDecoration: "none" }} onClick={handleClick}>
         <div
           style={{
             background: "#f3f3f1",
@@ -278,9 +279,9 @@ const TeacherRectangles = () => {
             </div>
           </div>
         </div>
-      </a>
+      </Link>
       {/* Rectangle 3 */}
-      <a href="/classroom-management" style={{ textDecoration: "none" }} onClick={handleClick}>
+      <Link to="/classroom-management" style={{ textDecoration: "none" }} onClick={handleClick}>
         <div
           style={{
             background: "#f3f3f1",
@@ -328,9 +329,9 @@ const TeacherRectangles = () => {
             </div>
           </div>
         </div>
-      </a>
+      </Link>
       {/* Rectangle 4 */}
-      <a href="/community" style={{ textDecoration: "none" }} onClick={handleClick}>
+      <Link to="/community" style={{ textDecoration: "none" }} onClick={handleClick}>
         <div
           style={{
             background: "#f3f3f1",
@@ -378,7 +379,7 @@ const TeacherRectangles = () => {
             </div>
           </div>
         </div>
-      </a>
+      </Link>
       <SignUpPrompt open={showPrompt} onClose={() => setShowPrompt(false)} type="teacher" />
     </div>
   );
