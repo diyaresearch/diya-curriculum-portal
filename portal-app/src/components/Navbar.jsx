@@ -145,7 +145,24 @@ const Navbar = () => {
   const role = userData?.role;
   const isTeacherDefault = role === "teacherDefault";
   const isTeacherPlus = role === "teacherPlus";
+  const isAdmin = role === "admin";
   const homeTo = isTeacherPlus ? "/teacherplus" : "/";
+  const navLinkStyle = {
+    fontSize: "15px",
+    fontWeight: "600",
+    fontFamily: "Open Sans, sans-serif",
+    letterSpacing: "1.5px",
+    textUnderlineOffset: "20px",
+    padding: "0px 20px",
+    color: "#222",
+    background: "none",
+    border: "none",
+    outline: "none",
+    cursor: "pointer",
+    height: "56px",
+    display: "flex",
+    alignItems: "center"
+  };
 
   return (
     <>
@@ -203,6 +220,18 @@ const Navbar = () => {
           >
             Home
           </Link>
+
+          {/* #443: the only admin user-management UI (/user-profile) had no inbound link */}
+          {user && (
+            <Link to="/user-profile" className="hover:underline" style={navLinkStyle}>
+              Profile
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to="/user-profile" className="hover:underline" style={navLinkStyle}>
+              Admin
+            </Link>
+          )}
 
           {/* Conditional nav links based on user role */}
           {isTeacherDefault && (

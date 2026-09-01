@@ -21,7 +21,9 @@ const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("Users");
   const [users, setUsers] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  // No setter: /api/admin/notifications isn't implemented yet (#443), and the
+  // tab already reads "coming soon" — this stays empty until that's built.
+  const [notifications] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
 
@@ -64,13 +66,9 @@ const UserProfile = () => {
       );
       setUsers(usersRes.data);
 
-      const notificationsRes = await axios.get(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/admin/notifications`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setNotifications(notificationsRes.data);
+      // /api/admin/notifications was never implemented server-side (#443) —
+      // the Notifications tab already says "coming soon"; this just stopped
+      // that tab's data fetch from 404ing and failing the whole admin load.
     } catch (error) {
       console.error("Failed to fetch admin data:", error);
     }
