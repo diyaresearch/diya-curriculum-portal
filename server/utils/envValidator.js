@@ -45,9 +45,14 @@ function validateEnvironment() {
   const missing = [];
   const warnings = [];
 
-  // Check required variables
+  // Check required variables. DATABASE_SCHEMA_QUALIFIER="" is a legitimate
+  // value (development — see schemaQualifier.js), so it can't use the same
+  // falsy check as the others or every dev boot reports it "missing".
   required.forEach(varName => {
-    if (!process.env[varName]) {
+    const isPresent = varName === 'DATABASE_SCHEMA_QUALIFIER'
+      ? process.env[varName] !== undefined
+      : Boolean(process.env[varName]);
+    if (!isPresent) {
       missing.push(varName);
     }
   });
@@ -91,8 +96,11 @@ function generateSuggestions(missing, env) {
   }
 
   if (missing.includes('DATABASE_SCHEMA_QUALIFIER')) {
+    // Must match the frontend for the same tier — see server/utils/schemaQualifier.js (#427).
+    const example = env === 'production' ? 'prod.' : '';
     suggestions.push(
-      `Set DATABASE_SCHEMA_QUALIFIER in .env.${env}. Example: ${env}_`
+      `Set DATABASE_SCHEMA_QUALIFIER in .env.${env}. It must match the frontend's ` +
+      `REACT_APP_DATABASE_SCHEMA_QUALIFIER for this tier — "${example}" for ${env}.`
     );
   }
 

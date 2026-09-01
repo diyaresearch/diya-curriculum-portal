@@ -83,7 +83,40 @@ yarn install
 
 ## Usage
 
-### Firebase Configuration
+### Environment variables
+
+Both tiers use `.env.example` as the template — copy it, don't write files from
+scratch: `cp portal-app/.env.example portal-app/.env.development` and
+`cp server/.env.example server/.env.development` (swap `.production` as needed).
+
+#### Naming convention
+
+- **Frontend (`portal-app/`):** every variable is prefixed `REACT_APP_`. This
+  isn't a style choice — Create React App only inlines variables with that
+  prefix into the client bundle; anything else is invisible to the app.
+- **Backend (`server/`):** no prefix. Node reads `process.env` directly, so
+  none is needed.
+
+Where a value must agree across tiers (`DATABASE_SCHEMA_QUALIFIER` /
+`REACT_APP_DATABASE_SCHEMA_QUALIFIER`), the name matches once the prefix is
+accounted for.
+
+#### File precedence
+
+The two tiers load env files differently — knowing which one wins matters when
+a value looks wrong:
+
+- **Backend:** `server/index.js` calls `dotenv.config({ path: `.env.${NODE_ENV}` })`.
+  Exactly one file loads, selected by `NODE_ENV` (`development` / `production` /
+  `test`) — there is no base `server/.env` and no merging between files.
+- **Frontend:** Create React App loads several files and merges them, most
+  specific wins:
+  `.env.development.local` / `.env.production.local` → `.env.local` (skipped
+  for `test`) → `.env.development` / `.env.production` → `.env`. In this repo,
+  `portal-app/.env` holds the Firebase project keys shared by every tier;
+  `.env.development` / `.env.production` hold the values that differ per tier
+  (server URL, schema qualifier, home page). A real shell environment variable
+  overrides all of these files.
 
 #### Frontend Configuration
 
@@ -97,7 +130,7 @@ REACT_APP_FIREBASE_STORAGE_BUCKET=your-storage-bucket
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
 REACT_APP_FIREBASE_APP_ID=your-app-id
 REACT_APP_SERVER_ORIGIN_URL=http://localhost:3001
-REACT_APP_DATABASE_SCHEMA_QUALIFIER=dev_
+REACT_APP_DATABASE_SCHEMA_QUALIFIER=""
 REACT_APP_HOME_PAGE=http://localhost:3000
 ```
 
@@ -109,14 +142,16 @@ Create a `.env.development` or `.env.production` file in the `server` folder wit
 NODE_ENV=development
 PORT=3001
 SERVER_ALLOW_ORIGIN=http://localhost:3000
-DATABASE_SCHEMA_QUALIFIER=dev_
+DATABASE_SCHEMA_QUALIFIER=
 FIREBASE_PROJECT_ID=curriculum-portal-1ce8f
 ENABLE_MOCK_FIREBASE=false
 ```
 
 **Important Notes:**
 - `FIREBASE_PROJECT_ID` must be the real project ID (`curriculum-portal-1ce8f`); placeholder values are ignored
-- `DATABASE_SCHEMA_QUALIFIER` is used to prefix collection names (e.g., `dev_` for development)
+- `DATABASE_SCHEMA_QUALIFIER` prefixes Firestore collection names and **must match** its
+  frontend counterpart for the same tier (#427): empty for development, `prod.` for
+  production. An empty value is intentional for development, not a placeholder to fill in.
 - Set `ENABLE_MOCK_FIREBASE=true` to use mock Firebase for development/testing without real credentials
 - For production, also include `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`
 
