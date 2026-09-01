@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { collection, setDoc, doc, query, where, getDocs } from "firebase/firestore";
+import { setDoc, doc } from "firebase/firestore";
 import { db } from '../../firebase/firebaseConfig';
 import { getAuth, signOut } from "firebase/auth";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -98,14 +98,15 @@ export function TeacherSignup() {
     }
     setLoading(true);
     try {
-      // Check for existing teacher with this email (case-insensitive)
-      const q = query(collection(db, COLLECTIONS.teachers), where("email", "==", cleanEmail));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        setError("An account with this email already exists.");
-        setLoading(false);
-        return;
-      }
+      // A collection-wide query filtered by email can never be granted by
+      // firestore.rules' `allow read: if isOwner(userId)` on this
+      // collection — Firestore rejects any list/query request it can't
+      // statically prove satisfies the per-document rule for every possible
+      // result, and a query with no constraint on the document ID can't be
+      // proven to only ever match the caller's own doc. This always threw
+      // permission-denied, blocking every signup. Uniqueness is still
+      // guaranteed per Google account: the doc ID below is the Firebase UID,
+      // so the same account can never create two profiles.
 
       // Create a new teacher document with UID as doc ID
       await setDoc(doc(db, COLLECTIONS.teachers, googleUser.uid), {
@@ -463,14 +464,12 @@ export function StudentSignup() {
     }
     setLoading(true);
     try {
-      // Check for existing student with this email (case-insensitive)
-      const q = query(collection(db, COLLECTIONS.students), where("email", "==", cleanEmail));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        setError("An account with this email already exists.");
-        setLoading(false);
-        return;
-      }
+      // See the matching comment in TeacherSignup's handleSubmit: a
+      // collection-wide query filtered by email can never be granted by
+      // firestore.rules' `allow read: if isOwner(userId)` on this
+      // collection, so this always threw permission-denied and blocked
+      // every signup. Uniqueness is still guaranteed per Google account via
+      // the UID-keyed doc ID below.
 
       // Create a new student document with UID as doc ID
       await setDoc(doc(db, COLLECTIONS.students, googleUser.uid), {
