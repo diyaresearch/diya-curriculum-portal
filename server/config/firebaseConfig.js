@@ -3,6 +3,7 @@ const {
   PROJECT_ID,
   STORAGE_BUCKET,
   resolveCredential,
+  credentialOptions,
 } = require("./credentials");
 
 // Initialize Firebase Admin SDK.
@@ -20,7 +21,7 @@ if (!admin.apps.length) {
   }
 
   app = admin.initializeApp({
-    credential: resolved.credential,
+    ...credentialOptions(resolved),
     projectId: PROJECT_ID,
     storageBucket: STORAGE_BUCKET,
   });

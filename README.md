@@ -202,6 +202,34 @@ Make sure that port 3000 and 3001 are available and not being used by other serv
 
 Or you can start the frontend and backend separately.
 
+#### Local dev without touching production data
+
+By default, dev and production are two collection prefixes in the **same**
+Firebase project (`curriculum-portal-1ce8f`) — see [Environment
+variables](#environment-variables) above. `./start.sh --emulator` instead
+runs the Firebase emulator suite (Firestore + Auth) locally and points both
+the frontend and backend at it:
+
+```sh
+./start.sh --emulator
+```
+
+No `gcloud auth application-default login`, no real Firebase project, and
+nothing you do locally can reach production data. Requires Java (the
+emulator runs on the JVM) and network access on first run to fetch
+`firebase-tools` via `npx`. The emulator UI is at
+[http://localhost:4000](http://localhost:4000). Data lives only in the
+running emulator process and resets when it stops.
+
+To opt in when running the frontend or backend individually instead of via
+`start.sh`, run the emulator suite yourself
+(`npx firebase-tools emulators:start --only auth,firestore`) and set:
+- Backend: `FIRESTORE_EMULATOR_HOST=localhost:8080` and
+  `FIREBASE_AUTH_EMULATOR_HOST=localhost:9099` (the Admin SDK picks these up
+  automatically — no code change, no credentials needed)
+- Frontend: `REACT_APP_USE_FIREBASE_EMULATOR=true` in a gitignored
+  `portal-app/.env.development.local`
+
 #### Running the Backend
 
 Navigate to the server directory and start the backend server:

@@ -7,6 +7,7 @@
  * back to mock data when that key was missing).
  *
  * Precedence, highest first:
+ *   0. FIRESTORE_EMULATOR_HOST         - Firestore emulator; no credential needed at all
  *   1. FIREBASE_SERVICE_ACCOUNT        - inline JSON or base64, for CI / secret managers
  *   2. Google-managed runtime          - App Engine / Cloud Run default service account
  *   3. GOOGLE_APPLICATION_CREDENTIALS  - explicit ADC path
@@ -15,6 +16,13 @@
  *
  * A downloaded JSON key is deliberately last and opt-in: long-lived keys are
  * what took production down (issue #418) and they must never ship in a deploy.
+ *
+ * The emulator branch is highest precedence, not lowest, so a developer who
+ * has both a real ADC login *and* the emulator running (the common case,
+ * since `gcloud auth application-default login` is also how they reach real
+ * Firestore) still gets routed to the emulator rather than production data
+ * (#428). FIRESTORE_EMULATOR_HOST is never set outside local dev/CI — it is
+ * not a value anything in this repo sets automatically for production.
  */
 
 const fs = require("fs");
@@ -95,6 +103,18 @@ function parseInlineServiceAccount(raw) {
  * @throws {Error} when no credential source is configured at all
  */
 function resolveCredential() {
+  if (process.env.FIRESTORE_EMULATOR_HOST) {
+    // No `credential` key at all — see credentialOptions() below. The
+    // emulator accepts an unauthenticated connection by design; reaching
+    // into applicationDefault() would defeat the point, since on a machine
+    // with no cloud credentials configured that call itself can throw.
+    return {
+      credential: null,
+      source: "firestore-emulator",
+      detail: `Firestore emulator (FIRESTORE_EMULATOR_HOST=${process.env.FIRESTORE_EMULATOR_HOST})`,
+    };
+  }
+
   const inline = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (inline) {
     let serviceAccount;
@@ -170,6 +190,22 @@ function resolveCredential() {
   );
 }
 
+/**
+ * Turn a resolveCredential() result into the options `admin.initializeApp()`
+ * expects. Not `{ credential: resolved.credential }` unconditionally: the
+ * Admin SDK checks `'credential' in options`, so passing an explicit
+ * `credential: null`/`undefined` still counts as "present" and throws
+ * INVALID_APP_OPTIONS. The emulator source must omit the key entirely.
+ *
+ * @param {{credential: Object|null, source: string}} resolved
+ * @returns {Object} spread into the options object passed to initializeApp()
+ */
+function credentialOptions(resolved) {
+  return resolved.source === "firestore-emulator"
+    ? {}
+    : { credential: resolved.credential };
+}
+
 /** True when some credential source is configured. Never contacts Google. */
 function hasCredentialSource() {
   try {
@@ -229,6 +265,7 @@ module.exports = {
   LEGACY_KEY_PATH,
   isGoogleManagedRuntime,
   resolveCredential,
+  credentialOptions,
   hasCredentialSource,
   verifyCredential,
   remediationFor,

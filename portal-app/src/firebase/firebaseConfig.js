@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -28,5 +28,15 @@ if (typeof window !== "undefined" && typeof window.indexedDB !== "undefined") {
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+// Opt-in local dev against the Firebase emulator suite (#428), off by
+// default so this never affects a real dev/prod build. Set in
+// portal-app/.env.development.local (gitignored) alongside
+// `firebase emulators:start` / `./start.sh --emulator`.
+if (process.env.REACT_APP_USE_FIREBASE_EMULATOR === "true") {
+  connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+  connectFirestoreEmulator(db, "localhost", 8080);
+  console.log("🔧 Connected to Firebase Auth + Firestore emulators");
+}
 
 

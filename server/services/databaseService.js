@@ -9,6 +9,7 @@ const {
   PROJECT_ID,
   STORAGE_BUCKET,
   resolveCredential,
+  credentialOptions,
   hasCredentialSource,
 } = require('../config/credentials');
 
@@ -85,7 +86,7 @@ class DatabaseService {
 
       this.admin = admin;
       admin.initializeApp({
-        credential: resolved.credential,
+        ...credentialOptions(resolved),
         projectId: PROJECT_ID,
         storageBucket: STORAGE_BUCKET
       });
