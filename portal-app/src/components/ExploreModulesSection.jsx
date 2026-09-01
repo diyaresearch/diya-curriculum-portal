@@ -48,7 +48,7 @@ const getFeaturedModuleImage = (moduleKey) => {
     "python-for-ai": softwareEngImg,
     "ai-exploration": aiExploreImg,
     "ai-insights": laptopImg,
-    "physics-ai": physicsImg,
+    "ai-physics": physicsImg,
     "chemistry-ai": textbooksImg,  // Using textbooks for chemistry
     "biology-ai": aiExploreImg3    // Using AI image variant for biology
   };
@@ -253,7 +253,7 @@ const MODULE_POPUP_INFO = [
     description: "Advanced AI concepts: deep learning algorithms, neural networks, and practical implementation strategies for complex problems...",
   },
   {
-    key: "physics-ai",
+    key: "ai-physics",
     title: "Physics & AI",
     level: "Beginner",
     summary:

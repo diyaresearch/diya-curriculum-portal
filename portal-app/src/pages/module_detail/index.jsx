@@ -95,6 +95,25 @@ const extractBulletsFromObjectives = (value) => {
 
 // Hardcoded modules for fallback (kept outside component for stable hooks deps)
 const HARDCODED_MODULES = {
+  "python-for-ai": {
+    title: "PYTHON FOR AI",
+    subtitle: "Master Python basics for AI: variables, functions, and essential libraries like NumPy and Pandas for data manipulation and analysis.",
+    image: module4,
+    description: "Learn Python programming fundamentals specifically for AI applications. This module covers essential programming concepts, data structures, and libraries used in artificial intelligence development.",
+    requirements: "No prior programming experience required.",
+    learningObjectives: "By the end of this module, students will be comfortable writing basic Python programs and using NumPy and Pandas for simple data manipulation and analysis tasks.",
+    details: [
+      { label: "Category", value: "Artificial Intelligence" },
+      { label: "Level", value: "Beginner" },
+      { label: "Type", value: "Interactive Course" },
+      { label: "Duration", value: "120 minutes" },
+    ],
+    resources: [
+      { title: "Python Basics", desc: "Variables, functions, and control flow, the building blocks used throughout the rest of the module.", type: "Lesson Plan", locked: false },
+      { title: "NumPy and Pandas Primer", desc: "Hands-on introduction to the two libraries used across the AI curriculum for data manipulation.", type: "Lesson Plan", locked: false },
+      { title: "Data Wrangling Exercise", desc: "Practice cleaning and analyzing a small dataset end to end.", type: "Assignment", locked: false },
+    ],
+  },
   "ai-exploration": {
     title: "AI EXPLORATION",
     subtitle: "Explore the fundamentals of artificial intelligence and discover how AI is transforming our world.",
@@ -151,7 +170,45 @@ const HARDCODED_MODULES = {
       { title: "Physics Simulation Lab", desc: "Hands-on activity exploring simulations and interpretation.", type: "Assignment", locked: false },
       { title: "Quantum Computing & AI", desc: "Project: compare how AI can help analyze complex physics data.", type: "Project", locked: false },
     ],
-  }
+  },
+  "chemistry-ai": {
+    title: "CHEMISTRY & AI",
+    subtitle: "AI-driven chemistry: molecular prediction, drug discovery processes, and automated chemical analysis using machine learning.",
+    image: module5,
+    description: "Explore how artificial intelligence revolutionizes chemistry through molecular modeling, drug discovery, and chemical analysis. Learn how AI accelerates research and development in chemical sciences.",
+    requirements: "Basic chemistry knowledge and familiarity with AI fundamentals.",
+    learningObjectives: "Students will understand how machine learning models are applied to molecular prediction and drug discovery, and evaluate AI-assisted chemical analysis workflows.",
+    details: [
+      { label: "Category", value: "Chemistry, AI" },
+      { label: "Level", value: "Intermediate" },
+      { label: "Type", value: "Specialized Course" },
+      { label: "Duration", value: "150 minutes" },
+    ],
+    resources: [
+      { title: "AI in Chemistry Research", desc: "Survey where machine learning is used in modern chemistry workflows.", type: "Lesson Plan", locked: false },
+      { title: "Molecular Modeling Lab", desc: "Hands-on activity exploring computational molecular prediction.", type: "Assignment", locked: false },
+      { title: "Drug Discovery Case Study", desc: "Project: examine how AI accelerates a real drug discovery pipeline.", type: "Project", locked: false },
+    ],
+  },
+  "biology-ai": {
+    title: "BIOLOGY & AI",
+    subtitle: "Advanced bioinformatics: genomic analysis, protein folding prediction, and medical AI applications in modern healthcare.",
+    image: module1,
+    description: "Dive into bioinformatics and computational biology. This advanced module covers AI applications in genomics, protein structure prediction, and medical diagnostics using cutting-edge machine learning techniques.",
+    requirements: "Completion of AI Insights module or equivalent background in AI and basic biology.",
+    learningObjectives: "Students will understand how AI is applied to genomic analysis and protein structure prediction, and evaluate its role in medical diagnostics.",
+    details: [
+      { label: "Category", value: "Biology, AI" },
+      { label: "Level", value: "Advanced" },
+      { label: "Type", value: "Specialized Course" },
+      { label: "Duration", value: "180 minutes" },
+    ],
+    resources: [
+      { title: "Genomics and AI", desc: "Introduction to how machine learning is applied to genomic data.", type: "Lecture", duration: 60, locked: false },
+      { title: "Protein Folding Prediction", desc: "Explore how AI models predict protein structure.", type: "Discussion", duration: 30, locked: false },
+      { title: "Medical Diagnostics Project", desc: "Project: evaluate an AI-assisted diagnostic scenario.", type: "Project", duration: 90, locked: false },
+    ],
+  },
 };
 
 // Required for react-modal accessibility
