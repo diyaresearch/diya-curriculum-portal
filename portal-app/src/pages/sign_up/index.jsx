@@ -5,7 +5,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MultiSelectDropdown, SingleSelectDropdown } from "../../components/Dropdowns";
 import SignupSuccess from "../../components/SignupSuccess";
-import { startGoogleRedirect } from "../../auth/googleAuth";
+import { startGoogleRedirect, signInForSignup } from "../../auth/googleAuth";
 import { COLLECTIONS } from "../../firebase/collectionNames";
 
 const SUBJECT_OPTIONS = [
@@ -75,11 +75,11 @@ export function TeacherSignup() {
   const handleGoogleSignup = async () => {
     setError("");
     try {
-      await startGoogleRedirect({
-        returnTo,
-        promptSelectAccount: true,
-      });
+      const user = await signInForSignup({ promptSelectAccount: true });
+      setGoogleUser(user);
+      if (user?.email) setEmail(user.email);
     } catch (err) {
+      console.error("Google sign-in failed:", err);
       setError("Google sign-in failed. Please try again.");
     }
   };
@@ -440,11 +440,11 @@ export function StudentSignup() {
   const handleGoogleSignup = async () => {
     setError("");
     try {
-      await startGoogleRedirect({
-        returnTo,
-        promptSelectAccount: true,
-      });
+      const user = await signInForSignup({ promptSelectAccount: true });
+      setGoogleUser(user);
+      if (user?.email) setEmail(user.email);
     } catch (err) {
+      console.error("Google sign-in failed:", err);
       setError("Google sign-in failed. Please try again.");
     }
   };

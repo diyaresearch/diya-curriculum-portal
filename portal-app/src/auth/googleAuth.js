@@ -39,6 +39,21 @@ function consumePostAuthAction() {
   return safeJsonParse(raw);
 }
  
+// Popup-based sign-in for the signup pages specifically. Unlike
+// startGoogleRedirect(), this never navigates away, so it sidesteps a real
+// production failure mode of signInWithRedirect: the auth result silently
+// failing to persist across the redirect round-trip (no thrown error, just
+// getRedirectResult() coming back empty), which made Google sign-in on the
+// signup pages look like it did nothing at all. It also means a signup
+// page's already-filled form fields survive, since the page never reloads.
+export async function signInForSignup({ promptSelectAccount = false } = {}) {
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+  if (promptSelectAccount) provider.setCustomParameters({ prompt: "select_account" });
+  const result = await signInWithPopup(auth, provider);
+  return result.user;
+}
+
 export async function startGoogleRedirect({
   returnTo,
   promptSelectAccount = false,
