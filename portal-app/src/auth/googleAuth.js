@@ -161,6 +161,15 @@ export async function handleGoogleRedirectOnce(navigate) {
  
   const account = await resolveAccountByUid(user.uid);
   if (!account.exists) {
+    // Landing on the signup pages themselves with no existing account is the
+    // expected state for someone mid-signup, not an invalid login attempt.
+    // Signing them out here (as we do everywhere else) meant Google auth
+    // always looked like it silently failed and no profile was ever created.
+    const isSignupPage = returnTo.startsWith("/teacher-signup") || returnTo.startsWith("/student-signup");
+    if (isSignupPage) {
+      navigate(returnTo, { replace: true });
+      return;
+    }
     await signOut(getAuth());
     navigate(withQueryParam(returnTo, "showSignUpPopup", "1"), { replace: true });
     return;
