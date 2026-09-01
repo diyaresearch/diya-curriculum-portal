@@ -226,15 +226,19 @@ class DatabaseService {
       const totalSnapshot = await countQuery.count().get();
       const totalUsers = totalSnapshot.data().count;
 
-      // Get paginated users
-      let query = db.collection(tableUsers)
-        .orderBy(orderBy, orderDirection)
-        .offset(offset)
-        .limit(limit);
+      // Get paginated users. The filter must be applied before offset/limit
+      // are added — chaining it on afterward (as this used to) left the
+      // query definition technically equivalent but out of step with the
+      // count query above and with the users(role, createdAt) composite
+      // index declared in firestore.indexes.json (#434), whose field order
+      // this now mirrors.
+      let query = db.collection(tableUsers);
 
       if (role) {
         query = query.where('role', '==', role);
       }
+
+      query = query.orderBy(orderBy, orderDirection).offset(offset).limit(limit);
 
       const usersSnapshot = await query.get();
 

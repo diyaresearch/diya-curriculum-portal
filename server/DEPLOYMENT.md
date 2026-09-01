@@ -25,6 +25,23 @@ The payment page is returning a 404 error for the `/api/subscription/initiate-up
    `serviceAccountKey.json`; `.gcloudignore` excludes it and the app refuses to
    read one on App Engine. See [CREDENTIALS.md](CREDENTIALS.md).
 
+### Deploy Firestore Rules and Indexes
+
+Rules and composite indexes live in source (`portal-app/firestore.rules`,
+`portal-app/firestore.indexes.json`) but are **not** deployed by `gcloud app
+deploy` — that only ships the App Engine backend. Deploy them explicitly,
+from the repo root, before or alongside a backend deploy:
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes --project curriculum-portal-1ce8f
+```
+
+Composite indexes can take several minutes to build after deploying; a query
+that needs one fails with `FAILED_PRECONDITION` until the build finishes.
+Run this on every deploy that touches `firestore.indexes.json` or
+`firestore.rules` — a query that works locally against an already-built
+index can 500 on a fresh project otherwise (#434).
+
 ### Deployment Steps
 
 #### Option 1: Use the deployment scripts
