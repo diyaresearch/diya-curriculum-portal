@@ -9,33 +9,34 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.8.0",
+    "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.7.2",
-    "cors": "^2.8.5",
+    "@testing-library/user-event": "^14.6.6",
+    "axios": "^1.20.0",
+    "cors": "^2.8.6",
     "css-select": "^5.1.0",
     "dompurify": "^3.2.4",
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "firebase": "^10.12.2",
-    "firebase-admin": "^13.4.0",
-    "joi": "^17.13.3",
+    "firebase-admin": "^14.3.0",
+    "joi": "^18.2.5",
     "jspdf": "^3.0.1",
     "npmlog": "^7.0.1",
-    "nth-check": "^2.1.1",
-    "postcss": "^8.4.39",
+    "nth-check": "^3.0.1",
+    "postcss": "^8.5.26",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-icons": "^5.2.1",
+    "react-icons": "^5.7.0",
     "react-modal": "^3.16.1",
-    "react-pdf": "^9.2.1",
+    "react-pdf": "^10.5.0",
     "react-quill": "^2.0.0",
-    "react-router-dom": "^6.24.0",
+    "react-router-dom": "^7.18.3",
     "react-scripts": "^5.0.1",
     "resolve-url-loader": "^5.0.0",
     "svgo": "^3.3.2",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^6.2.1"
   },
   "overrides": {
     "css-select": {
@@ -52,9 +53,9 @@
     }
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
     "lint": "eslint src --ext .js,.jsx --max-warnings=0",
     "eject": "react-scripts eject"
   },
@@ -77,7 +78,8 @@
     ]
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.4"
+    "@craco/craco": "^7.1.0",
+    "tailwindcss": "^4.3.3"
   },
   "engines": {
     "node": ">=20.0.0",

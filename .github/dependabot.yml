@@ -11,6 +11,13 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    ignore:
+      # v14 removed the root-namespace API (admin.apps/.app()/.firestore()/
+      # .storage()) this codebase depends on throughout — confirmed breaks
+      # server boot (#465, re-confirmed #481). Needs a real migration to
+      # the modular API before revisiting, not a routine bump.
+      - dependency-name: "firebase-admin"
+        versions: [">=14.0.0"]
 
   - package-ecosystem: "npm"
     directory: "/functions"
