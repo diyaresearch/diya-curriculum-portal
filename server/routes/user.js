@@ -19,9 +19,7 @@ const {
 
 const router = express.Router();
 
-const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_USERS = SCHEMA_QUALIFIER + "users";
+const TABLE_USERS = "users";
 
 // Every account starts unprivileged. Registration must never be able to mint a
 // privileged role, whatever the client sends (issue #425).
@@ -361,7 +359,7 @@ router.put("/updateRole", authenticateUser, requireAdmin, asyncHandler(async (re
   }
 
   // Validate role value
-  const validRoles = ['admin', 'teacherDefault', 'teacherPlus', 'teacherEnterprise'];
+  const validRoles = ['admin', 'teacherDefault', 'teacherPlus', 'teacherEnterprise', 'studentDefault'];
   if (newRole && !validRoles.includes(newRole)) {
     validationErrors.push({
       field: 'newRole',

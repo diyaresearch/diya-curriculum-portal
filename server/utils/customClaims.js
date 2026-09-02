@@ -19,7 +19,7 @@
  * it. That is what makes rolling this out safe.
  */
 
-const VALID_ROLES = ["admin", "teacherDefault", "teacherPlus", "teacherEnterprise", "student"];
+const VALID_ROLES = ["admin", "teacherDefault", "teacherPlus", "teacherEnterprise", "studentDefault"];
 
 /**
  * Mirror a user's role into their custom claims.

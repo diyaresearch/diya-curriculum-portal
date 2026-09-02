@@ -157,7 +157,6 @@ jobs:
           FIRESTORE_EMULATOR_HOST: "localhost:8080"
           PORT: "3001"
           SERVER_ALLOW_ORIGIN: "http://localhost:3000"
-          DATABASE_SCHEMA_QUALIFIER: ""
         run: |
           nohup node index.js > server.log 2>&1 &
           for i in $(seq 1 30); do

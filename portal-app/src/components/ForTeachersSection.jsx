@@ -53,35 +53,21 @@ function useUserRole() {
 
   useEffect(() => {
     const auth = getAuth();
-    let unsubTeacher = null;
-    let unsubStudent = null;
+    let unsubUser = null;
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setRole(null);
       if (firebaseUser) {
-        // Listen for changes in teachers doc
-        unsubTeacher = onSnapshot(doc(db, COLLECTIONS.teachers, firebaseUser.uid), (teacherDoc) => {
-          if (teacherDoc.exists()) {
-            setRole(teacherDoc.data().role);
-          } else {
-            // If not a teacher, listen for student doc
-            unsubStudent = onSnapshot(doc(db, COLLECTIONS.students, firebaseUser.uid), (studentDoc) => {
-              if (studentDoc.exists()) {
-                setRole(studentDoc.data().role);
-              } else {
-                setRole(null);
-              }
-            });
-          }
+        unsubUser = onSnapshot(doc(db, COLLECTIONS.users, firebaseUser.uid), (userDoc) => {
+          setRole(userDoc.exists() ? userDoc.data().role : null);
         });
       }
     });
 
     return () => {
       unsubscribe();
-      if (unsubTeacher) unsubTeacher();
-      if (unsubStudent) unsubStudent();
+      if (unsubUser) unsubUser();
     };
   }, []);
 
@@ -390,7 +376,7 @@ const ForTeachersSection = () => {
   const isTeacherDefault = role === "teacherDefault";
 
   // Only show For Teachers if NOT a student and NOT teacherDefault
-  if (!isTeacherDefault && (!role || !["student", "consumer"].includes(role))) {
+  if (!isTeacherDefault && (!role || !["studentDefault", "consumer"].includes(role))) {
     return (
       <div style={{ width: "100%" }}>
         <SquareSection

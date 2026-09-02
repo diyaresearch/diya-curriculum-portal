@@ -119,35 +119,21 @@ function useUserRole() {
 
   useEffect(() => {
     const auth = getAuth();
-    let unsubTeacher = null;
-    let unsubStudent = null;
+    let unsubUser = null;
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setRole(null);
       if (firebaseUser) {
-        // Listen for changes in teachers doc
-        unsubTeacher = onSnapshot(doc(db, COLLECTIONS.teachers, firebaseUser.uid), (teacherDoc) => {
-          if (teacherDoc.exists()) {
-            setRole(teacherDoc.data().role);
-          } else {
-            // If not a teacher, listen for student doc
-            unsubStudent = onSnapshot(doc(db, COLLECTIONS.students, firebaseUser.uid), (studentDoc) => {
-              if (studentDoc.exists()) {
-                setRole(studentDoc.data().role);
-              } else {
-                setRole(null);
-              }
-            });
-          }
+        unsubUser = onSnapshot(doc(db, COLLECTIONS.users, firebaseUser.uid), (userDoc) => {
+          setRole(userDoc.exists() ? userDoc.data().role : null);
         });
       }
     });
 
     return () => {
       if (typeof unsubscribe === "function") unsubscribe();
-      if (typeof unsubTeacher === "function") unsubTeacher();
-      if (typeof unsubStudent === "function") unsubStudent();
+      if (typeof unsubUser === "function") unsubUser();
     };
   }, []);
 
@@ -1099,7 +1085,7 @@ const ExploreModulesSection = () => {
                 if (!user) {
                   setPopupModule(module);
                   setPopupOpen(true);
-                } else if (["teacherDefault", "student", "admin"].includes(role)) {
+                } else if (["teacherDefault", "studentDefault", "admin"].includes(role)) {
                   navigate(`/module/${module.routeParam}`, { state: { returnTo: currentPath } });
                 }
               }}
@@ -1111,7 +1097,7 @@ const ExploreModulesSection = () => {
                   if (!user) {
                     setPopupModule(module);
                     setPopupOpen(true);
-                  } else if (["teacherDefault", "student", "admin"].includes(role)) {
+                  } else if (["teacherDefault", "studentDefault", "admin"].includes(role)) {
                     navigate(`/module/${module.routeParam}`, { state: { returnTo: currentPath } });
                   }
                 }

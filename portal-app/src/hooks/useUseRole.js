@@ -17,20 +17,12 @@ const useUserRole = () => {
             if (currentUser) {
                 setUser(currentUser);
                 try {
-                    // Check in teachers collection first
-                    const teacherDoc = await getDoc(doc(db, COLLECTIONS.teachers, currentUser.uid));
-                    if (teacherDoc.exists()) {
-                        const teacherData = teacherDoc.data();
-                        setRole(teacherData.role || 'teacher');
+                    const userDoc = await getDoc(doc(db, COLLECTIONS.users, currentUser.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        setRole(userData.role || 'user');
                     } else {
-                        // Check in users collection as fallback
-                        const userDoc = await getDoc(doc(db, COLLECTIONS.users, currentUser.uid));
-                        if (userDoc.exists()) {
-                            const userData = userDoc.data();
-                            setRole(userData.role || 'user');
-                        } else {
-                            setRole('user'); // default role
-                        }
+                        setRole('user'); // default role
                     }
                 } catch (error) {
                     console.error("Error fetching user role:", error);

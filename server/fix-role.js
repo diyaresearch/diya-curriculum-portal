@@ -19,7 +19,7 @@ async function fixRole() {
     try {
         console.log('Updating role to teacherPlus...');
 
-        const userRef = db.collection('teachers').doc(userId);
+        const userRef = db.collection('users').doc(userId);
         await userRef.update({
             role: 'teacherPlus',
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()

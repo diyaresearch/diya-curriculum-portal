@@ -1,13 +1,11 @@
 const { databaseService } = require('../services/databaseService');
 const { canMutate } = require('../utils/ownership');
 const { canAccessModule, isPaidModule } = require('../utils/entitlements.check');
-const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
 // Define the collections
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_MODULE = SCHEMA_QUALIFIER + "module";
-const TABLE_LESSON = SCHEMA_QUALIFIER + "lesson";
-const TABLE_ENTITLEMENTS = SCHEMA_QUALIFIER + "entitlements";
+const TABLE_MODULE = "module";
+const TABLE_LESSON = "lesson";
+const TABLE_ENTITLEMENTS = "entitlements";
 
 console.log('moduleController tables are', TABLE_MODULE, TABLE_LESSON);
 

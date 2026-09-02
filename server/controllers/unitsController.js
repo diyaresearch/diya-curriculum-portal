@@ -1,11 +1,9 @@
 const { databaseService } = require('../services/databaseService');
 const { canMutate, resolveOwnerUid } = require('../utils/ownership');
-const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
 // Define the collections
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
-const TABLE_LESSON =  SCHEMA_QUALIFIER + "lesson"; 
+const TABLE_CONTENT = "content";
+const TABLE_LESSON = "lesson";
 
 console.log('unitsController tables are', TABLE_CONTENT, TABLE_LESSON)
 

@@ -12,19 +12,6 @@ const { validateAndExit, setDefaults } = require('./utils/envValidator');
 validateAndExit(false); // Don't exit on failure, just warn
 setDefaults();
 
-// The collection qualifier is not advisory: getting it wrong points every
-// query at a namespace that may not exist, which is exactly what happened in
-// production (#427). Resolve it once at boot and refuse to start if it cannot
-// be determined, rather than serving empty results that look like success.
-const { resolveSchemaQualifier } = require('./utils/schemaQualifier');
-try {
-  const qualifier = resolveSchemaQualifier();
-  console.log(`Firestore collection qualifier: "${qualifier}"${qualifier ? '' : ' (unprefixed)'}`);
-} catch (error) {
-  console.error('\nRefusing to start:\n  ' + error.message + '\n');
-  process.exit(1);
-}
-
 const unitsRoutes = require("./routes/units");
 const contentRoutes = require("./routes/units"); 
 const lessonsRoutes = require("./routes/lessons");

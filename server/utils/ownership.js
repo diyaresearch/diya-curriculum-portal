@@ -19,9 +19,7 @@
 
 const { databaseService } = require("../services/databaseService");
 
-const { resolveSchemaQualifier } = require("./schemaQualifier");
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_USERS = SCHEMA_QUALIFIER + "users";
+const TABLE_USERS = "users";
 
 // Ordered by how unambiguous they are.
 const UID_FIELDS = ["User", "author", "authorId", "userId", "createdBy", "uid"];

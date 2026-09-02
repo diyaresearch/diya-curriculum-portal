@@ -17,17 +17,9 @@ const useUserData = () => {
             setLoading(true);
             if (firebaseUser) {
                 setUser(firebaseUser);
-                // Check teachers first
-                const teacherDoc = await getDoc(doc(db, COLLECTIONS.teachers, firebaseUser.uid));
-                if (teacherDoc.exists()) {
-                    setUserData(teacherDoc.data());
-                    setLoading(false);
-                    return;
-                }
-                // Then check students
-                const studentDoc = await getDoc(doc(db, COLLECTIONS.students, firebaseUser.uid));
-                if (studentDoc.exists()) {
-                    setUserData(studentDoc.data());
+                const userDoc = await getDoc(doc(db, COLLECTIONS.users, firebaseUser.uid));
+                if (userDoc.exists()) {
+                    setUserData(userDoc.data());
                     setLoading(false);
                     return;
                 }

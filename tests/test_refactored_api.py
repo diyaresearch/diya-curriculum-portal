@@ -217,19 +217,18 @@ class TestDatabaseIntegration:
         # Even with database errors, should return proper JSON response
         assert response.headers.get("content-type", "").startswith("application/json")
 
-    def test_schema_qualifier_working(self):
-        """Test that DATABASE_SCHEMA_QUALIFIER is being used properly"""
-        # This is verified by the server starting successfully
-        # If SCHEMA_QUALIFIER was still "undefined", we'd see it in the startup logs
+    def test_server_boots_cleanly(self):
+        """Test that the server starts and serves its health route.
 
+        The schema qualifier this used to check for was retired in #428 —
+        dev/staging and production are now separate Firebase projects rather
+        than a prefix within one shared project.
+        """
         try:
             response = requests.get("http://localhost:3001/", timeout=5)
             assert response.status_code == 200
-
-            # Success means the schema qualifier is working properly
-            assert True, "Schema qualifier configuration is working"
         except requests.exceptions.RequestException:
-            pytest.fail("Server configuration issues - check DATABASE_SCHEMA_QUALIFIER")
+            pytest.fail("Server is not reachable")
 
 
 class TestSecurityEnhancements:
