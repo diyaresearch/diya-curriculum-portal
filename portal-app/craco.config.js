@@ -1,4 +1,4 @@
-odule.exports = {
+module.exports = {
   style: {
     css: {
       loader: "postcss-loader",
