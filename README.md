@@ -230,6 +230,33 @@ To opt in when running the frontend or backend individually instead of via
 - Frontend: `REACT_APP_USE_FIREBASE_EMULATOR=true` in a gitignored
   `portal-app/.env.development.local`
 
+#### Staging project (#428)
+
+A real second Firebase project, **`curriculum-portal-staging`**, exists for
+work that the emulator can't cover (data that needs to persist between runs,
+or a second person hitting the same backend). It mirrors production's
+Firestore setup (Native mode, `nam5`) and Auth setup (Email/Password only,
+nothing else enabled) but is on the free Spark plan — no Cloud Functions, so
+the Stripe webhook-dependent payment routes aren't exercised there yet.
+
+- **Backend:** create `server/.env.staging` (`FIREBASE_PROJECT_ID=curriculum-portal-staging`,
+  `DATABASE_SCHEMA_QUALIFIER=` — unprefixed, same as development, since staging
+  is a wholly separate project) and run `NODE_ENV=staging npm start`. Credentials
+  come from the same `gcloud auth application-default login` account as
+  production — no new key file — as long as that account has access to the
+  staging project too.
+- **Frontend:** CRA hardcodes `NODE_ENV=development` for `npm start`, so there's
+  no `.env.staging` for the frontend the way there is for the backend. Instead,
+  override the six `REACT_APP_FIREBASE_*` keys in `portal-app/.env.development.local`
+  (gitignored) with the staging project's web app config, from Firebase Console →
+  Project Settings → curriculum-portal-staging → Your apps.
+- `firebase use staging` (via the `staging` alias in `.firebaserc`) targets this
+  project for `firebase deploy`/`firebase firestore:indexes` etc.
+
+This is one slice of the larger #428 epic — a new staging project exists, but
+`DATABASE_SCHEMA_QUALIFIER` is still how dev/prod separate within the shared
+production project, and `teachers`/`students` are not yet merged into `users`.
+
 #### Running the Backend
 
 Navigate to the server directory and start the backend server:
