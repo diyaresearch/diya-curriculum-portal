@@ -1,0 +1,178 @@
+name: CI
+
+# Comprehensive PR validation (issue #435): a PR that does not compile or
+# does not pass lint/tests must not merge green. Runs unconditionally on
+# every PR (no path filters) so the required jobs below always report a
+# status — a path-filtered workflow can leave a required check stuck on
+# "Expected" forever for PRs that don't touch that path.
+#
+# `portal-app`, `server`, and `functions` are REQUIRED checks in main's
+# branch protection. `dependency-audit` and `api-integration` are
+# intentionally NOT required yet:
+#   - dependency-audit: the repo currently carries 91 known vulnerabilities
+#     (35 high, 7 critical) — see #437. Making this required today would
+#     block every PR immediately. Promote it to required once #437 lands.
+#   - api-integration: 3 of the tests in test_refactored_api.py already fail
+#     against current auth behavior — see #436. Promote it to required once
+#     #436 lands.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  portal-app:
+    name: portal-app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: portal-app
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        working-directory: portal-app
+        run: npm run lint
+
+      - name: Build
+        working-directory: portal-app
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Test
+        working-directory: portal-app
+        run: npm test -- --watchAll=false
+        env:
+          CI: true
+
+  server:
+    name: server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm ci --no-audit --no-fund
+
+      - name: Test
+        working-directory: server
+        run: npm test
+
+  functions:
+    name: functions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: functions
+        run: npm ci --no-audit --no-fund
+
+      - name: Test
+        working-directory: functions
+        run: npm test
+
+  dependency-audit:
+    name: dependency-audit
+    runs-on: ubuntu-latest
+    continue-on-error: true # not required yet — see #437
+    strategy:
+      matrix:
+        package: [portal-app, server, functions]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: ${{ matrix.package }}
+        run: npm ci --no-audit --no-fund
+
+      - name: Audit (high and critical)
+        working-directory: ${{ matrix.package }}
+        run: npm audit --audit-level=high
+
+  api-integration:
+    name: api-integration
+    runs-on: ubuntu-latest
+    continue-on-error: true # not required yet — see #436
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci --no-audit --no-fund
+
+      - name: Install pytest dependencies
+        run: pip install -r tests/requirements.txt
+
+      - name: Boot server (mock Firebase, no real credentials required)
+        working-directory: server
+        env:
+          NODE_ENV: test
+          ENABLE_MOCK_FIREBASE: "true"
+          # Legacy controllers initialize Firebase Admin at require time
+          # regardless of ENABLE_MOCK_FIREBASE (see #362). Pointing them at
+          # the (unstarted) emulator address satisfies credential resolution
+          # without touching real Firestore, since these tests never
+          # exercise those routes.
+          FIRESTORE_EMULATOR_HOST: "localhost:8080"
+          PORT: "3001"
+          SERVER_ALLOW_ORIGIN: "http://localhost:3000"
+          DATABASE_SCHEMA_QUALIFIER: ""
+        run: |
+          nohup node index.js > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3001/ > /dev/null && exit 0
+            sleep 1
+          done
+          echo "Server did not become healthy in time" >&2
+          cat server.log
+          exit 1
+
+      - name: Run integration tests
+        env:
+          API_BASE_URL: http://localhost:3001/api
+        run: pytest tests/test_refactored_api.py -v
+
+      - name: Server log (always, for debugging)
+        if: always()
+        run: cat server/server.log || true
