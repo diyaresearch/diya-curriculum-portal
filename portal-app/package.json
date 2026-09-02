@@ -15,7 +15,7 @@
     "@testing-library/user-event": "^14.6.6",
     "axios": "^1.20.0",
     "cors": "^2.8.6",
-    "css-select": "^5.1.0",
+    "css-select": "^7.0.0",
     "dompurify": "^3.2.4",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
