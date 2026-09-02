@@ -14,7 +14,7 @@ jobs:
     steps:
       # Step 1: Check out the code (optional, for context in future steps)
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       # Step 2: Validate PR title and description
       - name: Validate PR title and description
