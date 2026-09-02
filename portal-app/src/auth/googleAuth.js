@@ -95,18 +95,12 @@ export async function consumeGoogleRedirectResult() {
  
 export async function resolveAccountByUid(uid) {
   try {
-    const teacherSnap = await getDoc(doc(db, COLLECTIONS.teachers, uid));
-    if (teacherSnap.exists()) {
-      const data = teacherSnap.data() || {};
-      return { exists: true, role: data.role || "teacherDefault", collection: "teachers", data };
+    const userSnap = await getDoc(doc(db, COLLECTIONS.users, uid));
+    if (userSnap.exists()) {
+      const data = userSnap.data() || {};
+      return { exists: true, role: data.role || "teacherDefault", collection: "users", data };
     }
- 
-    const studentSnap = await getDoc(doc(db, COLLECTIONS.students, uid));
-    if (studentSnap.exists()) {
-      const data = studentSnap.data() || {};
-      return { exists: true, role: data.role || "student", collection: "students", data };
-    }
- 
+
     return { exists: false, role: null, collection: null, data: null };
   } catch (err) {
     console.error("googleAuth: resolveAccountByUid failed", err);

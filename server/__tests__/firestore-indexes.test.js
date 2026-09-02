@@ -5,9 +5,8 @@
  * ad hoc from a console link and would not survive rebuilding the project
  * from this repo.
  *
- * Indexes are declared per literal collection ID, and dev/prod share one
- * Firebase project separated only by the "prod." qualifier (#427), so each
- * query needs an entry for both the unprefixed and "prod."-prefixed name.
+ * The schema qualifier was retired in #428 — collections are unprefixed
+ * everywhere now, so each query needs exactly one declared index.
  */
 
 const path = require("path");
@@ -28,20 +27,21 @@ function findIndex(collectionGroup, fieldPaths) {
   );
 }
 
-describe("payment_logs(userId, timestamp) — server/routes/payment.js history query", () => {
-  test.each(["payment_logs", "prod.payment_logs"])("%s", (collectionGroup) => {
-    const idx = findIndex(collectionGroup, ["userId", "timestamp"]);
-    expect(idx).toBeDefined();
-    expect(idx.fields[0].order).toBe("ASCENDING");
-    expect(idx.fields[1].order).toBe("DESCENDING");
-  });
+test("payment_logs(userId, timestamp) — server/routes/payment.js history query", () => {
+  const idx = findIndex("payment_logs", ["userId", "timestamp"]);
+  expect(idx).toBeDefined();
+  expect(idx.fields[0].order).toBe("ASCENDING");
+  expect(idx.fields[1].order).toBe("DESCENDING");
 });
 
-describe("users(role, createdAt) — databaseService.getAllUsers filtered pagination", () => {
-  test.each(["users", "prod.users"])("%s", (collectionGroup) => {
-    const idx = findIndex(collectionGroup, ["role", "createdAt"]);
-    expect(idx).toBeDefined();
-    expect(idx.fields[0].order).toBe("ASCENDING");
-    expect(idx.fields[1].order).toBe("DESCENDING");
-  });
+test("users(role, createdAt) — databaseService.getAllUsers filtered pagination", () => {
+  const idx = findIndex("users", ["role", "createdAt"]);
+  expect(idx).toBeDefined();
+  expect(idx.fields[0].order).toBe("ASCENDING");
+  expect(idx.fields[1].order).toBe("DESCENDING");
+});
+
+test("no orphaned prod.-prefixed indexes remain (qualifier retired in #428)", () => {
+  const prodIndexes = indexes.filter((idx) => idx.collectionGroup.startsWith("prod."));
+  expect(prodIndexes).toEqual([]);
 });

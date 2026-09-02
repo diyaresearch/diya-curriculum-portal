@@ -14,12 +14,10 @@ const {
 
 const router = express.Router();
 
-const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_USERS = SCHEMA_QUALIFIER + "users";
-const TABLE_SUBSCRIPTIONS = SCHEMA_QUALIFIER + "subscriptions";
-const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
-const TABLE_ENTERPRISE_CONTACTS = SCHEMA_QUALIFIER + "enterprise_contacts";
+const TABLE_USERS = "users";
+const TABLE_SUBSCRIPTIONS = "subscriptions";
+const TABLE_PAYMENT_LOGS = "payment_logs";
+const TABLE_ENTERPRISE_CONTACTS = "enterprise_contacts";
 
 // Test endpoint
 router.get("/test", (req, res) => {

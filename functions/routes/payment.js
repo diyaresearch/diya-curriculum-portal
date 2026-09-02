@@ -22,44 +22,12 @@ function getFunctionsConfig(path, fallback = "") {
   }
 }
 
-function resolveContentSchemaQualifier(req) {
-  // Content (modules/lessons/content/users) should follow the APP environment, not Stripe key mode.
-  //
-  // IMPORTANT: Cloud Functions always run with NODE_ENV="production", so we can't use NODE_ENV here
-  // or localhost dev would incorrectly read from prod collections.
-  //
-  // Precedence:
-  // 1) Explicit override: DATABASE_SCHEMA_QUALIFIER (e.g. "prod." or "")
-  // 2) Request origin/host indicates localhost -> ""
-  // 3) Otherwise -> "prod." (for deployed app domains)
-  const explicit = String(process.env.DATABASE_SCHEMA_QUALIFIER || "").trim();
-  if (explicit) return explicit;
-
-  const origin = String(req?.headers?.origin || "").toLowerCase();
-  const host = String(req?.headers?.host || "").toLowerCase();
-  const isLocal =
-    origin.includes("localhost") ||
-    origin.includes("127.0.0.1") ||
-    host.includes("localhost") ||
-    host.includes("127.0.0.1");
-
-  return isLocal ? "" : "prod.";
-}
-
-function resolvePaymentLogsSchemaQualifier() {
-  // Payment logs should follow Stripe MODE (test vs live).
-  // For module purchases we use the session.livemode signal; for other endpoints use the configured Stripe secret key.
-  const key = String(getStripeSecretKey() || "");
-  return key.startsWith("sk_live_") ? "prod." : "";
-}
-
-function getTableUsers(req) {
-  return `${resolveContentSchemaQualifier(req)}users`;
-}
-
-function getTablePaymentLogsForStripeKeyMode() {
-  return `${resolvePaymentLogsSchemaQualifier()}payment_logs`;
-}
+// Collection names (issue #428 retired the schema qualifier — dev/staging
+// and production are now separate Firebase projects, not a prefix within
+// one shared project, so every collection name is a plain literal).
+const TABLE_USERS = "users";
+const TABLE_MODULE = "module";
+const TABLE_PAYMENT_LOGS = "payment_logs";
 
 function normalizeBasename(value, fallback) {
   const raw = String(value || "").trim() || fallback;
@@ -166,7 +134,6 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
         const admin = databaseService.getAdmin();
 
         // Use the hierarchical user lookup from databaseService
-        const TABLE_USERS = getTableUsers(req);
         const { ref: userRef, snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
 
         if (!userSnap.exists) {
@@ -194,7 +161,6 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
         });
 
         // Log payment intent creation
-        const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId,
             action: 'payment_intent_created',
@@ -221,7 +187,6 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
             await databaseService.initialize();
             const db = databaseService.getDb();
             const admin = databaseService.getAdmin();
-            const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
             await db.collection(TABLE_PAYMENT_LOGS).add({
                 userId: req.user.uid,
                 action: 'payment_intent_error',
@@ -261,13 +226,6 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
       const appBaseUrl = joinDomainAndBasename(domain, APP_BASENAME);
   
       const db = getDb();
-
-      const CONTENT_SCHEMA_QUALIFIER = resolveContentSchemaQualifier(req);
-      const TABLE_MODULE = CONTENT_SCHEMA_QUALIFIER + "module";
-      // Payment logs should follow the APP environment (prod UI -> prod.payment_logs),
-      // not Stripe mode (test vs live). We still store `livemode` on the log for clarity.
-      const PAYMENT_LOGS_SCHEMA_QUALIFIER = CONTENT_SCHEMA_QUALIFIER;
-      const TABLE_PAYMENT_LOGS = PAYMENT_LOGS_SCHEMA_QUALIFIER + "payment_logs";
 
       const moduleSnap = await db.collection(TABLE_MODULE).doc(moduleId).get();
 
@@ -310,7 +268,6 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
             purchaseType: "module",
             moduleId,
             userId,
-            logSchemaQualifier: PAYMENT_LOGS_SCHEMA_QUALIFIER,
             moduleTitle: title,
             userEmail,
             userLabel,
@@ -322,7 +279,6 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
           purchaseType: "module",
           moduleId,
           userId,
-          logSchemaQualifier: PAYMENT_LOGS_SCHEMA_QUALIFIER,
           moduleTitle: title,
           userEmail,
           userLabel,
@@ -347,7 +303,6 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
               moduleId,
               userId,
               checkoutSessionId: session.id,
-              logSchemaQualifier: PAYMENT_LOGS_SCHEMA_QUALIFIER,
               moduleTitle: title,
               userEmail,
               userLabel,
@@ -432,7 +387,6 @@ router.post("/create-embedded-checkout-session", authenticateUser, requireStripe
   
       await databaseService.initialize();
       const db = databaseService.getDb();
-      const TABLE_USERS = getTableUsers(req);
   
       const { snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
       if (!userSnap.exists) return res.status(404).json({ message: "User not found" });
@@ -507,7 +461,6 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         const admin = databaseService.getAdmin();
 
         // Use the hierarchical user lookup from databaseService
-        const TABLE_USERS = getTableUsers(req);
         const { ref: userRef, snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
 
         if (!userSnap.exists) {
@@ -539,7 +492,6 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         });
 
         // Log successful payment
-        const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId,
             action: 'payment_confirmed',
@@ -566,7 +518,6 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
-        const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId: req.user.uid,
             action: 'payment_confirmation_error',
@@ -587,7 +538,6 @@ router.get("/history", authenticateUser, async (req, res) => {
         const userId = req.user.uid;
         await databaseService.initialize();
         const db = databaseService.getDb();
-        const TABLE_PAYMENT_LOGS = getTablePaymentLogsForStripeKeyMode();
 
         const paymentHistory = await db.collection(TABLE_PAYMENT_LOGS)
             .where('userId', '==', userId)

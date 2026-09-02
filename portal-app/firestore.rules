@@ -2,7 +2,7 @@ rules_version = '2';
 
 // Firestore security rules for the DIYA Curriculum Portal.
 //
-// Design notes (issues #419, #420, #382):
+// Design notes (issues #419, #420, #382, #428):
 //
 // * The client SDK reads content collections directly — the landing page and
 //   module list do not go through the API — so those stay publicly readable.
@@ -11,6 +11,12 @@ rules_version = '2';
 //   entirely, so denying the client costs the server nothing.
 // * Firestore evaluates rules as a union: if any match allows, access is
 //   granted. A collection with no matching rule is denied by default.
+// * There is one identity collection, `users`. It used to be split into
+//   `teachers`/`students`, with a `DATABASE_SCHEMA_QUALIFIER` prefix on top
+//   layering dev/prod into the same project (#427). Both were retired in
+//   #428: dev/staging and production are now separate Firebase projects, and
+//   every account — admin, teacherPlus, teacherDefault, studentDefault —
+//   lives in `users` with a `role` field.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -53,21 +59,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return hasAdminClaim() || (isSignedIn() && (
-        (
-          exists(/databases/$(database)/documents/prod.teachers/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/prod.teachers/$(request.auth.uid)).data.role == 'admin'
-        ) || (
-          exists(/databases/$(database)/documents/teachers/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/teachers/$(request.auth.uid)).data.role == 'admin'
-        ) || (
-          exists(/databases/$(database)/documents/prod.users/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/prod.users/$(request.auth.uid)).data.role == 'admin'
-        ) || (
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-        )
-      ));
+      return hasAdminClaim() || (isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
     }
 
     // Fields that decide what a buyer is charged. The checkout session reads
@@ -89,10 +84,11 @@ service cloud.firestore {
                  && request.resource.data.get('isFeatured', false) == false);
     }
 
-    // Self-signup writes its own profile and sets a fixed default role
-    // (portal-app/src/pages/sign_up/index.jsx). Permit exactly that role and
-    // nothing else privileged, so a user cannot register as an admin.
-    function safeSelfCreate(defaultRole) {
+    // Self-signup writes its own profile with a fixed default role
+    // (portal-app/src/pages/sign_up/index.jsx writes 'teacherDefault' or
+    // 'studentDefault'). Permit exactly those roles and nothing else
+    // privileged, so a user cannot register as an admin or teacherPlus.
+    function safeSelfCreate() {
       return !request.resource.data.keys().hasAny([
                'subscriptionType',
                'subscriptionStatus',
@@ -101,56 +97,19 @@ service cloud.firestore {
                'stripePaymentIntentId'
              ])
              && (!request.resource.data.keys().hasAny(['role'])
-                 || request.resource.data.role == defaultRole);
+                 || request.resource.data.role in ['teacherDefault', 'studentDefault']);
     }
 
-    // ------------------------------------------------- user profiles (#419/#420)
+    // --------------------------------------------------------- user profiles
 
-    // The client only ever reads its own document (hooks/useUseRole.js) and
-    // never writes one — the API owns this collection. Admin listing goes
-    // through the server, where the Admin SDK bypasses rules.
+    // Self-signup writes its own document directly (#428); the API owns
+    // everything else (updateRole, admin listing — the Admin SDK bypasses
+    // rules for those). Owner-only was already enforced for the old
+    // teachers/students collections; what was missing was stopping an owner
+    // from promoting themselves by rewriting their own role.
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow write: if false;
-    }
-
-    match /prod.users/{userId} {
-      allow read: if isOwner(userId);
-      allow write: if false;
-    }
-
-    // teachers/ and students/ are written directly by signup, and their `role`
-    // field is what the client trusts for admin checks (hooks/useUseRole.js).
-    // Owner-only was already enforced; what was missing was stopping an owner
-    // from promoting themselves by rewriting their own role.
-    match /teachers/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && safeSelfCreate('teacherDefault');
-      allow update: if isOwner(userId) && noPrivilegedChange();
-      allow delete: if false;
-    }
-
-    match /students/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && safeSelfCreate('student');
-      allow update: if isOwner(userId) && noPrivilegedChange();
-      allow delete: if false;
-    }
-
-    // Qualified twins. Identity collections used to be unprefixed literals, so
-    // dev and prod shared one set of user documents (#427). The app now reads
-    // and writes these; without a matching rule every profile read would be
-    // denied by default and users would lose their role.
-    match /prod.teachers/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && safeSelfCreate('teacherDefault');
-      allow update: if isOwner(userId) && noPrivilegedChange();
-      allow delete: if false;
-    }
-
-    match /prod.students/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && safeSelfCreate('student');
+      allow create: if isOwner(userId) && safeSelfCreate();
       allow update: if isOwner(userId) && noPrivilegedChange();
       allow delete: if false;
     }
@@ -168,21 +127,7 @@ service cloud.firestore {
       allow write: if isSignedIn();
     }
 
-    match /prod.content/{contentId} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-
     match /module/{moduleId} {
-      allow read: if true;
-      // Anyone signed in may still author modules, but only an admin may set
-      // or change what a module costs (#429).
-      allow create: if isSignedIn() && (isAdmin() || noPricingOnCreate());
-      allow update: if isSignedIn() && (isAdmin() || pricingUnchanged());
-      allow delete: if isSignedIn();
-    }
-
-    match /prod.module/{moduleId} {
       allow read: if true;
       // Anyone signed in may still author modules, but only an admin may set
       // or change what a module costs (#429).
@@ -196,11 +141,6 @@ service cloud.firestore {
       allow write: if isSignedIn();
     }
 
-    match /prod.lesson/{lessonId} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-
     // --------------------------------------------------------- testimonials
     //
     // Read by TestimonialsSection.jsx. Previously no rule matched, so the read
@@ -208,11 +148,6 @@ service cloud.firestore {
     // (#433). Public to read, never client-writable.
 
     match /testimonials/{testimonialId} {
-      allow read: if true;
-      allow write: if false;
-    }
-
-    match /prod.testimonials/{testimonialId} {
       allow read: if true;
       allow write: if false;
     }
@@ -230,12 +165,6 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    match /prod.entitlements/{entitlementId} {
-      allow read: if isSignedIn()
-                  && entitlementId.split('_')[0] == request.auth.uid;
-      allow write: if false;
-    }
-
     // ------------------------------------------- server-only collections (#382)
     //
     // Money, contact records, and counters. These are reached only through the
@@ -244,11 +173,8 @@ service cloud.firestore {
     // documents that the omission is deliberate.
 
     match /payment_logs/{logId}        { allow read, write: if false; }
-    match /prod.payment_logs/{logId}   { allow read, write: if false; }
     match /subscriptions/{subId}       { allow read, write: if false; }
-    match /prod.subscriptions/{subId}  { allow read, write: if false; }
     match /enterprise_contacts/{docId} { allow read, write: if false; }
     match /counters/{counterId}        { allow read, write: if false; }
-    match /prod.counters/{counterId}   { allow read, write: if false; }
   }
 }

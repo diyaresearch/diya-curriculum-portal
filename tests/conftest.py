@@ -36,23 +36,10 @@ def mock_firestore_db():
         def mock_doc(doc_id):
             doc_mock = Mock()
 
-            # Mock get method for different scenarios
+            # Mock get method for different scenarios. teachers/students were
+            # retired into one `users` collection in #428.
             async def mock_get():
-                if collection_name == "teachers":
-                    if doc_id == TEST_USER_ID:
-                        return type('obj', (object,), MOCK_FIRESTORE_RESPONSE)
-                    elif doc_id == ADMIN_USER_ID:
-                        return type('obj', (object,), MOCK_ADMIN_FIRESTORE_RESPONSE)
-                    else:
-                        return type('obj', (object,), MOCK_NON_EXISTENT_RESPONSE)
-
-                elif collection_name == "students":
-                    if doc_id == TEST_USER_ID:
-                        return type('obj', (object,), MOCK_FIRESTORE_RESPONSE)
-                    else:
-                        return type('obj', (object,), MOCK_NON_EXISTENT_RESPONSE)
-
-                elif collection_name.endswith("users"):  # Unified users collection
+                if collection_name == "users":
                     if doc_id == TEST_USER_ID:
                         return type('obj', (object,), MOCK_FIRESTORE_RESPONSE)
                     elif doc_id == ADMIN_USER_ID:

@@ -21,9 +21,9 @@ const HeroSection = () => {
         const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
             if (firebaseUser) {
                 setUser(firebaseUser);
-                const teacherDoc = await getDoc(doc(db, COLLECTIONS.teachers, firebaseUser.uid));
-                if (teacherDoc.exists()) {
-                    const userData = teacherDoc.data();
+                const userDoc = await getDoc(doc(db, COLLECTIONS.users, firebaseUser.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
                     setRole(userData.role);
 
                     // ONLY redirect if user is teacherPlus AND on home page
@@ -31,12 +31,6 @@ const HeroSection = () => {
                         navigate("/teacher-plus");
                         return; // Exit early so component doesn't render
                     }
-                    return;
-                }
-
-                const studentDoc = await getDoc(doc(db, COLLECTIONS.students, firebaseUser.uid));
-                if (studentDoc.exists()) {
-                    setRole(studentDoc.data().role);
                     return;
                 }
                 setRole(null);

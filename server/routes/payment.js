@@ -17,10 +17,8 @@ const {
 
 const stripe = getStripe();
 
-const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_USERS = SCHEMA_QUALIFIER + "users";
-const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
+const TABLE_USERS = "users";
+const TABLE_PAYMENT_LOGS = "payment_logs";
 
 
 // Test endpoint for payment system
@@ -139,11 +137,7 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
       await databaseService.initialize();
       const db = databaseService.getDb();
   
-      // Fetch module (collection name is typically "module")
-      // Use the module-level qualifier rather than re-deriving it (#427).
-      const TABLE_MODULE = SCHEMA_QUALIFIER + "module";
-
-      const moduleSnap = await db.collection(TABLE_MODULE).doc(moduleId).get();
+      const moduleSnap = await db.collection("module").doc(moduleId).get();
 
       if (!moduleSnap.exists) {
         return res.status(404).json({ message: "Module not found" });

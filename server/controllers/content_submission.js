@@ -1,12 +1,10 @@
 const { db } = require("../config/firebaseConfig");
 const multer = require("multer");
 const { storage } = require("../config/firebaseConfig");
-const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
 // Define the collections
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_COUNTERS =  SCHEMA_QUALIFIER + "counters"; 
-const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
+const TABLE_COUNTERS = "counters";
+const TABLE_CONTENT = "content";
 
 console.log('content_submission tables are', TABLE_CONTENT, TABLE_COUNTERS)
 

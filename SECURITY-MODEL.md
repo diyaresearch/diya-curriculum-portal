@@ -36,23 +36,29 @@ database.
 
 | Collection | Read | Write |
 |---|---|---|
-| `{q}users` | owner only | never from the client — the API owns it |
-| `{q}teachers`, `{q}students` | owner only | owner may create with a fixed default role, and update everything except privileged fields |
+| `users` | owner only | owner may create with a fixed default role (`teacherDefault` or `studentDefault`), and update everything except privileged fields |
 
 Privileged fields — `role`, `subscriptionType`, `subscriptionStatus`,
 `subscriptionEndDate`, `stripeCustomerId`, `stripePaymentIntentId` — can never
 be written by a client. They are assigned server-side after payment
 verification.
 
-The escalation path that mattered was not `users`. `hooks/useUseRole.js` trusts
-`teachers/{uid}.role` for admin checks, and the old rule let an owner rewrite
-their own document freely — a working self-service admin grant from the browser
-console (#419).
+The escalation path that mattered: `hooks/useUseRole.js` trusts the profile
+document's `role` field for admin checks, and the old rule let an owner
+rewrite their own document freely — a working self-service admin grant from
+the browser console (#419).
+
+`teachers` and `students` used to be separate collections here, each with
+their own copy of this rule; a `DATABASE_SCHEMA_QUALIFIER` prefix then
+layered dev/prod into one shared Firebase project on top of that (#427). Both
+were retired in #428: dev/staging and production are now separate Firebase
+projects, so there is one `users` collection, unprefixed, everywhere — every
+collection name below is likewise a plain literal, not a qualified one.
 
 ### Content
 
-`{q}module`, `{q}lesson`, `{q}content` are publicly readable: the landing page
-and module list read them directly, unauthenticated. Any signed-in user may
+`module`, `lesson`, `content` are publicly readable: the landing page and
+module list read them directly, unauthenticated. Any signed-in user may
 write them.
 
 **Pricing fields are the exception.** `price`, `Price` and `isFeatured` may only
@@ -62,12 +68,12 @@ price (#429).
 
 ### Money and PII
 
-`{q}payment_logs`, `{q}subscriptions`, `enterprise_contacts`, `{q}counters` are
+`payment_logs`, `subscriptions`, `enterprise_contacts`, `counters` are
 stated explicitly as `read, write: if false`. They were already denied by
 default; naming them means the omission reads as deliberate and cannot be
 reopened by a future catch-all match.
 
-`{q}entitlements` is readable by its owner and writable by nobody. Only the
+`entitlements` is readable by its owner and writable by nobody. Only the
 Stripe webhook mints one, through the Admin SDK.
 
 ### Admin checks
@@ -138,36 +144,28 @@ For module purchases the webhook additionally compares what Stripe charged
 against the price recorded when the session was created. A mismatch is logged
 and **the entitlement is withheld** rather than silently fulfilled.
 
-## Collection qualifier
+## Environment separation (formerly a collection qualifier)
 
-Environments are separated by a collection-name prefix:
+Environments used to be separated by a collection-name prefix instead of by
+project: `prod.` for production, unprefixed for development, all three tiers
+(frontend, backend, Cloud Functions) required to agree on the value. They did
+not — the server used `prod_`, which no collection ever used, so every
+production API request read and wrote an empty namespace and returned
+`200 []` while doing it (#427).
 
-| Environment | Qualifier |
-|---|---|
-| production | `prod.` |
-| development | `` (unprefixed) |
-
-All three tiers must agree. They did not: the server used `prod_`, which no
-collection ever used, so every production API request read and wrote an empty
-namespace and returned `200 []` while doing it (#427).
-
-Consequences that still hold:
-
-- Resolve it only through `utils/schemaQualifier` — never interpolate the env
-  var, which yields the literal string `"undefined"` when unset and creates
-  collections named `undefinedusers`.
-- The server **refuses to boot** in production without it.
-- Cloud Functions cannot use that module: it throws when the qualifier is unset
-  in production, and Functions always run with `NODE_ENV=production` without
-  setting it. `functions/utils/identityCollections` defaults to `prod.` instead.
+That whole scheme — `DATABASE_SCHEMA_QUALIFIER`, `utils/schemaQualifier`, and
+`functions/utils/identityCollections`'s independent qualifier logic — was
+retired in #428. Dev, staging, and production are separate Firebase projects
+now (see the README's "Staging project" section); every collection name is a
+plain, unprefixed literal in every environment.
 
 ## Deploy order
 
 Three orderings are load-bearing, each learned the hard way:
 
 1. **Rules before the frontend that depends on them.** Firestore denies by
-   default, so shipping a client that reads `prod.teachers` before the rule
-   exists costs every user their role.
+   default, so shipping a client that reads `users` before the rule exists
+   costs every user their role.
 2. **Hosting before the server when tightening auth.** A new frontend sending
    tokens to an old server is harmless; an old frontend without tokens against
    a new server is an outage.
@@ -184,16 +182,13 @@ Three orderings are load-bearing, each learned the hard way:
   splitting public metadata from paid content (#430).
 - **Rules are deployed by hand.** They should be deployed from source in CI
   (#435). The test suite runs in CI today; the deploy does not.
-- **`teachers` / `students` remain readable at their unprefixed names** as a
-  transitional fallback for profiles not yet copied. They are now the
-  development-side data.
 
 ## Testing
 
 | Suite | Location | Covers |
 |---|---|---|
 | Rules | `tests/rules/` | emulator-backed, every rule above |
-| Server | `server/__tests__/` | auth middleware, ownership, entitlements, qualifier, claims |
+| Server | `server/__tests__/` | auth middleware, ownership, entitlements, claims |
 
 Both run in CI. Rules tests are checked against the *previous* rules as well:
 if a test does not fail against the version it was written to fix, it is not

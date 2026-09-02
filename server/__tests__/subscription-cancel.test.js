@@ -43,11 +43,10 @@ jest.mock("../services/databaseService", () => ({
     initialize: jest.fn().mockResolvedValue(undefined),
     getDb: jest.fn(() => ({
       collection: jest.fn((name) => {
-        const { TEACHERS } = require("../utils/identityCollections");
-        if (name === TEACHERS) {
+        if (name === "users") {
           return { doc: () => ({ get: async () => ({ exists: true, data: () => mockUserData }), update: mockUserRef.update }) };
         }
-        // Every other collection findUserDocument probes, plus payment_logs.
+        // Every other collection (e.g. payment_logs).
         return {
           doc: () => ({ get: async () => ({ exists: false }) }),
           add: mockLogsCollection.add,

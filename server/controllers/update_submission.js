@@ -1,12 +1,10 @@
 // Update a specific unit by ID with file upload functionality
 
 const { db } = require("../config/firebaseConfig");
-const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 const { canMutate } = require("../utils/ownership");
 
 // Define the collections
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
+const TABLE_CONTENT = "content";
 
 console.log('update_submission tables are', TABLE_CONTENT)
 

@@ -24,7 +24,7 @@ const CancelSubscriptionPage = () => {
         try {
             // Update user role directly in Firestore
             const db = getFirestore(firebaseApp);
-            const userDocRef = doc(db, COLLECTIONS.teachers, user.uid);
+            const userDocRef = doc(db, COLLECTIONS.users, user.uid);
 
             await updateDoc(userDocRef, {
                 role: 'teacherDefault',

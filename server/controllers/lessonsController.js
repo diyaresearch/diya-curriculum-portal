@@ -1,13 +1,11 @@
 const { db, storage } = require("../config/firebaseConfig");
-const { TEACHERS } = require("../utils/identityCollections");
 const PDFDocument = require("pdfkit");
-const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
 
 // Define the collections
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_CONTENT = SCHEMA_QUALIFIER + "content";
-const TABLE_LESSON =  SCHEMA_QUALIFIER + "lesson"; 
-const TABLE_SECTIONS = SCHEMA_QUALIFIER + "sections";
+const TABLE_CONTENT = "content";
+const TABLE_LESSON = "lesson";
+const TABLE_SECTIONS = "sections";
+const TABLE_USERS = "users";
 
 console.log('lessonsController tables are', TABLE_CONTENT, TABLE_LESSON, TABLE_SECTIONS)
 
@@ -157,7 +155,7 @@ const updateLesson = async (req, res) => {
 
     const isAdmin = async (uid) => {
       try {
-        const teacherDoc = await db.collection(TEACHERS).doc(uid).get();
+        const teacherDoc = await db.collection(TABLE_USERS).doc(uid).get();
         if (!teacherDoc.exists) return false;
         const data = teacherDoc.data() || {};
         return data.role === "admin";
@@ -216,7 +214,7 @@ const deleteLessonById = async (req, res) => {
 
     const isAdmin = async (uid) => {
       try {
-        const teacherDoc = await db.collection(TEACHERS).doc(uid).get();
+        const teacherDoc = await db.collection(TABLE_USERS).doc(uid).get();
         if (!teacherDoc.exists) return false;
         const data = teacherDoc.data() || {};
         return data.role === "admin";

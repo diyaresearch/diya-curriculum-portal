@@ -8,20 +8,17 @@ const requiredEnvVars = {
     'NODE_ENV',
     'PORT',
     'SERVER_ALLOW_ORIGIN',
-    'DATABASE_SCHEMA_QUALIFIER',
     // STRIPE_SECRET_KEY is optional in development for user testing
   ],
   production: [
     'NODE_ENV',
     'PORT',
     'SERVER_ALLOW_ORIGIN',
-    'DATABASE_SCHEMA_QUALIFIER',
     'STRIPE_SECRET_KEY',
     'FIREBASE_PROJECT_ID'
   ],
   test: [
-    'NODE_ENV',
-    'DATABASE_SCHEMA_QUALIFIER'
+    'NODE_ENV'
   ]
 };
 
@@ -45,14 +42,9 @@ function validateEnvironment() {
   const missing = [];
   const warnings = [];
 
-  // Check required variables. DATABASE_SCHEMA_QUALIFIER="" is a legitimate
-  // value (development — see schemaQualifier.js), so it can't use the same
-  // falsy check as the others or every dev boot reports it "missing".
+  // Check required variables.
   required.forEach(varName => {
-    const isPresent = varName === 'DATABASE_SCHEMA_QUALIFIER'
-      ? process.env[varName] !== undefined
-      : Boolean(process.env[varName]);
-    if (!isPresent) {
+    if (!process.env[varName]) {
       missing.push(varName);
     }
   });
@@ -65,10 +57,6 @@ function validateEnvironment() {
   // Validate specific formats
   if (process.env.PORT && isNaN(parseInt(process.env.PORT))) {
     missing.push('PORT (must be a valid number)');
-  }
-
-  if (process.env.DATABASE_SCHEMA_QUALIFIER === 'undefined') {
-    missing.push('DATABASE_SCHEMA_QUALIFIER (currently set to "undefined")');
   }
 
   return {
@@ -92,15 +80,6 @@ function generateSuggestions(missing, env) {
   if (missing.includes('STRIPE_SECRET_KEY')) {
     suggestions.push(
       `Set STRIPE_SECRET_KEY in .env.${env}. Get your key from: https://dashboard.stripe.com/${env === 'production' ? 'apikeys' : 'test/apikeys'}`
-    );
-  }
-
-  if (missing.includes('DATABASE_SCHEMA_QUALIFIER')) {
-    // Must match the frontend for the same tier — see server/utils/schemaQualifier.js (#427).
-    const example = env === 'production' ? 'prod.' : '';
-    suggestions.push(
-      `Set DATABASE_SCHEMA_QUALIFIER in .env.${env}. It must match the frontend's ` +
-      `REACT_APP_DATABASE_SCHEMA_QUALIFIER for this tier — "${example}" for ${env}.`
     );
   }
 

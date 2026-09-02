@@ -108,8 +108,8 @@ export function TeacherSignup() {
       // guaranteed per Google account: the doc ID below is the Firebase UID,
       // so the same account can never create two profiles.
 
-      // Create a new teacher document with UID as doc ID
-      await setDoc(doc(db, COLLECTIONS.teachers, googleUser.uid), {
+      // Create a new user document with UID as doc ID
+      await setDoc(doc(db, COLLECTIONS.users, googleUser.uid), {
         fullName,
         email: cleanEmail,
         school,
@@ -471,12 +471,12 @@ export function StudentSignup() {
       // every signup. Uniqueness is still guaranteed per Google account via
       // the UID-keyed doc ID below.
 
-      // Create a new student document with UID as doc ID
-      await setDoc(doc(db, COLLECTIONS.students, googleUser.uid), {
+      // Create a new user document with UID as doc ID
+      await setDoc(doc(db, COLLECTIONS.users, googleUser.uid), {
         fullName,
         email: cleanEmail,
         grade,
-        role: "student",
+        role: "studentDefault",
         createdAt: new Date(),
       });
 

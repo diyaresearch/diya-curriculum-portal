@@ -112,7 +112,6 @@ npm start           # Start server (http://localhost:3001)
 
 **Frontend (.env.development/.env.production in portal-app/):**
 - `REACT_APP_SERVER_ORIGIN_URL` - Backend server URL
-- `REACT_APP_DATABASE_SCHEMA_QUALIFIER` - Database schema prefix
 - `REACT_APP_HOME_PAGE` - Frontend application URL
 - `REACT_APP_DIYA_BASE_URL` - DIYA research organization URL
 - `REACT_APP_FIREBASE_*` - Firebase configuration keys
@@ -122,10 +121,13 @@ npm start           # Start server (http://localhost:3001)
 - `NODE_ENV` - Environment (development/production)
 - `SERVER_ALLOW_ORIGIN` - CORS allowed origin
 - `PORT` - Server port (default: 3001)
-- `DATABASE_SCHEMA_QUALIFIER` - Schema prefix for multi-environment support
 - `STRIPE_SECRET_KEY` - Stripe secret key (sk_test_* or sk_live_*)
 - `STRIPE_WEBHOOK_SECRET` - Stripe webhook endpoint secret
 - `ENABLE_MOCK_FIREBASE` - Use mock Firebase for development (true/false)
+
+Dev, staging, and production are separate Firebase projects (see the README's
+"Staging project" section) rather than a shared project split by a collection
+prefix — that scheme (`DATABASE_SCHEMA_QUALIFIER`) was retired in #428.
 
 ### Security Notes
 - See `SECURITY.md` for security best practices
@@ -169,57 +171,41 @@ Frontend testing uses Jest and React Testing Library (standard Create React App 
 
 ## User Roles Storage
 
-The user roles (admin, teacherDefault, teacherPlus) are stored in Firebase Firestore collections as string
-values in a role field within user documents.
+The user roles are stored in a single Firebase Firestore `users` collection, as a string
+value in a `role` field within each user document. `teachers` and `students` used to be
+separate collections, looked up ahead of `users` (see git history around #427/#431), with a
+`DATABASE_SCHEMA_QUALIFIER` prefix layering dev/prod into one shared Firebase project on top
+of that. Both were retired in #428: dev/staging and production are now separate Firebase
+projects, and every account lives in one unprefixed `users` collection.
 
 Available Roles:
 - admin - Administrative access
-- teacherDefault - Basic teacher role (default)
-- teacherPlus - Premium teacher role (subscription-based)
-- teacherEnterprise - Enterprise teacher role
-
-Schema Relationships
-
-The backend uses a hybrid collection structure with both legacy and unified collections:
-
-Legacy Collections (for backwards compatibility):
-
-- teachers - Historical teacher user data
-- students - Historical student user data
-
-Unified Collections:
-
-- {SCHEMA_QUALIFIER}users - Main unified user table (modern approach)
-- {SCHEMA_QUALIFIER}payment_logs - Payment transaction logs
-- {SCHEMA_QUALIFIER}subscriptions - Subscription management
+- teacherPlus - Premium teacher role (subscription-based); intended to also scope content
+  access to what that teacher created, once that's built (not yet implemented)
+- teacherDefault - Basic teacher role (default); intended to read content marked for
+  teachers, once that's built (not yet implemented)
+- studentDefault - Student role (default for student self-signup); intended to read content
+  marked for students, once that's built (not yet implemented)
 
 User Lookup Pattern:
 
-The system follows a hierarchical lookup pattern in server/routes/user.js:16-30:
-1. First checks teachers collection
-2. Then checks students collection
-3. Finally checks unified users collection
+server/routes/user.js's `/me` handler reads the caller's own document directly from
+`users` via `databaseService.getUserDocument` — no fallback chain.
 
 Role Assignment Logic:
 
-- Default registration: Users get teacherDefault role (server/routes/user.js:75)
-- Subscription upgrades: Premium plans assign teacherPlus role (server/routes/payment.js:191)
-- Cancellations: Reset to teacherDefault role (server/routes/subscription.js:397)
-
-Schema Environment:
-
-- SCHEMA_QUALIFIER is defined by DATABASE_SCHEMA_QUALIFIER environment variable
-- Allows multiple database environments (dev/staging/prod) with prefixed table names
+- Default registration (teacher path, via POST /api/user/register): teacherDefault
+  (server/routes/user.js)
+- Default registration (student path, client-side signup): studentDefault
+  (portal-app/src/pages/sign_up/index.jsx)
+- Subscription upgrades: Premium plans assign teacherPlus role (server/routes/payment.js)
+- Cancellations: Reset to teacherDefault role (server/routes/subscription.js)
 
 Admin Functions:
 
-- Admin role verification: server/routes/user.js:160,186
-- Admin-only endpoints for user management and role updates
-- Admin logs accessible via /admin/logs endpoint
-
-The system maintains backward compatibility with legacy teachers/students collections while transitioning to a unified users collection architecture.
-- User routes: server/routes/user.js (mounted at /api/user)
-- User registration: POST /api/user/register
+- Admin role verification: server/utils/ownership.js (`isAdminUser`)
+- Admin-only endpoints for user management and role updates (PUT /api/user/updateRole)
+- Custom claims mirror the role into the ID token as a fast path (server/utils/customClaims.js)
 
 Authentication Integration
 
@@ -229,24 +215,8 @@ Authentication Integration
 
 Database Schema
 
-- SCHEMA_QUALIFIER: Environment-based table prefix for multi-environment support
-- Primary collection: {SCHEMA_QUALIFIER}users (unified modern approach)
-- Legacy collections: teachers, students (forbackward compatibility)
-
-
-Multi-Collection Compatibility
-
-The /me endpoint demonstrates the transition strategy:
-- Legacy support: Checks old teachers/students collections
-- Modern approach: Falls back to unified users collection
-- Ensures no user data is lost during migration
-
-Role-Based Access Control
-
-- teacherDefault: Basic access (default for new users)
-- teacherPlus: Premium features (subscription-based)
-- admin: Full system access and user management
-- teacherEnterprise: Enterprise-level access
+- One collection: `users`. No prefix — see the README's "Staging project" section for how
+  environments are separated instead.
 
 Security Considerations
 

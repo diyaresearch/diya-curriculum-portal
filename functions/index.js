@@ -40,16 +40,6 @@ function getDb() {
   return admin.firestore();
 }
 
-function resolveSchemaQualifier() {
-  const explicit = String(process.env.DATABASE_SCHEMA_QUALIFIER || "").trim();
-  if (explicit) return explicit;
-  // In Stripe, `event.livemode` is the most reliable signal for test vs prod payments.
-  // We default based on the secret key as a fallback.
-  const key = String(process.env.STRIPE_SECRET_KEY || "");
-  if (key.startsWith("sk_live_")) return "prod.";
-  return "";
-}
-
 function getStripe() {
   // Prefer mode-specific secrets. Default to TEST unless explicitly forced to LIVE.
   const rawForceLive = String(process.env.STRIPE_LIVEMODE || "").trim().toLowerCase();
@@ -116,13 +106,6 @@ async function stripeWebhookHandler(req, res) {
 
     console.log("✅ Stripe event type:", event.type);
 
-    function sanitizeSchemaQualifier(value) {
-      const q = String(value || "").trim();
-      // only allow "" or "prod." to avoid writing to arbitrary collections
-      if (q === "prod.") return "prod.";
-      return "";
-    }
-
     // Persist module purchase events to Firestore for audit/debugging.
     // - checkout.session.completed (best for Checkout)
     // - payment_intent.succeeded (fallback)
@@ -134,10 +117,7 @@ async function stripeWebhookHandler(req, res) {
           return res.json({ received: true });
         }
         const db = getDb();
-        // For payment logs, follow the app environment that created the session.
-        // The creator writes `logSchemaQualifier` into session metadata.
-        const SCHEMA_QUALIFIER = sanitizeSchemaQualifier(session?.metadata?.logSchemaQualifier);
-        const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
+        const TABLE_PAYMENT_LOGS = "payment_logs";
 
         const userId = session?.metadata?.userId || null;
         const moduleId = session?.metadata?.moduleId || null;
@@ -209,7 +189,7 @@ async function stripeWebhookHandler(req, res) {
             chargedCents: amountCheck.chargedCents,
           });
         } else {
-          const TABLE_ENTITLEMENTS = SCHEMA_QUALIFIER + "entitlements";
+          const TABLE_ENTITLEMENTS = "entitlements";
           const grant = await grantModuleEntitlement(
             db,
             require("firebase-admin"),
@@ -239,10 +219,7 @@ async function stripeWebhookHandler(req, res) {
           return res.json({ received: true });
         }
         const db = getDb();
-        // For payment logs, follow the app environment that created the session.
-        // The creator writes `logSchemaQualifier` into payment intent metadata.
-        const SCHEMA_QUALIFIER = sanitizeSchemaQualifier(pi?.metadata?.logSchemaQualifier);
-        const TABLE_PAYMENT_LOGS = SCHEMA_QUALIFIER + "payment_logs";
+        const TABLE_PAYMENT_LOGS = "payment_logs";
 
         const userId = pi?.metadata?.userId || null;
         const moduleId = pi?.metadata?.moduleId || null;

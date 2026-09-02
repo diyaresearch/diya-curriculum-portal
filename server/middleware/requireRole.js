@@ -6,9 +6,7 @@
 const { databaseService } = require("../services/databaseService");
 const { sendAuthorizationError, sendNotFoundError, handleDatabaseError } = require("../utils/responseHelpers");
 
-const { resolveSchemaQualifier } = require("../utils/schemaQualifier");
-const SCHEMA_QUALIFIER = resolveSchemaQualifier();
-const TABLE_USERS = SCHEMA_QUALIFIER + "users";
+const TABLE_USERS = "users";
 
 /**
  * Creates middleware to require specific role(s)

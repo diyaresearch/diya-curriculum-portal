@@ -97,10 +97,6 @@ scratch: `cp portal-app/.env.example portal-app/.env.development` and
 - **Backend (`server/`):** no prefix. Node reads `process.env` directly, so
   none is needed.
 
-Where a value must agree across tiers (`DATABASE_SCHEMA_QUALIFIER` /
-`REACT_APP_DATABASE_SCHEMA_QUALIFIER`), the name matches once the prefix is
-accounted for.
-
 #### File precedence
 
 The two tiers load env files differently — knowing which one wins matters when
@@ -115,8 +111,8 @@ a value looks wrong:
   for `test`) → `.env.development` / `.env.production` → `.env`. In this repo,
   `portal-app/.env` holds the Firebase project keys shared by every tier;
   `.env.development` / `.env.production` hold the values that differ per tier
-  (server URL, schema qualifier, home page). A real shell environment variable
-  overrides all of these files.
+  (server URL, home page). A real shell environment variable overrides all of
+  these files.
 
 #### Frontend Configuration
 
@@ -130,7 +126,6 @@ REACT_APP_FIREBASE_STORAGE_BUCKET=your-storage-bucket
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
 REACT_APP_FIREBASE_APP_ID=your-app-id
 REACT_APP_SERVER_ORIGIN_URL=http://localhost:3001
-REACT_APP_DATABASE_SCHEMA_QUALIFIER=""
 REACT_APP_HOME_PAGE=http://localhost:3000
 ```
 
@@ -142,16 +137,12 @@ Create a `.env.development` or `.env.production` file in the `server` folder wit
 NODE_ENV=development
 PORT=3001
 SERVER_ALLOW_ORIGIN=http://localhost:3000
-DATABASE_SCHEMA_QUALIFIER=
 FIREBASE_PROJECT_ID=curriculum-portal-1ce8f
 ENABLE_MOCK_FIREBASE=false
 ```
 
 **Important Notes:**
 - `FIREBASE_PROJECT_ID` must be the real project ID (`curriculum-portal-1ce8f`); placeholder values are ignored
-- `DATABASE_SCHEMA_QUALIFIER` prefixes Firestore collection names and **must match** its
-  frontend counterpart for the same tier (#427): empty for development, `prod.` for
-  production. An empty value is intentional for development, not a placeholder to fill in.
 - Set `ENABLE_MOCK_FIREBASE=true` to use mock Firebase for development/testing without real credentials
 - For production, also include `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`
 
@@ -239,12 +230,10 @@ Firestore setup (Native mode, `nam5`) and Auth setup (Email/Password only,
 nothing else enabled) but is on the free Spark plan — no Cloud Functions, so
 the Stripe webhook-dependent payment routes aren't exercised there yet.
 
-- **Backend:** create `server/.env.staging` (`FIREBASE_PROJECT_ID=curriculum-portal-staging`,
-  `DATABASE_SCHEMA_QUALIFIER=` — unprefixed, same as development, since staging
-  is a wholly separate project) and run `NODE_ENV=staging npm start`. Credentials
-  come from the same `gcloud auth application-default login` account as
-  production — no new key file — as long as that account has access to the
-  staging project too.
+- **Backend:** create `server/.env.staging` (`FIREBASE_PROJECT_ID=curriculum-portal-staging`)
+  and run `NODE_ENV=staging npm start`. Credentials come from the same
+  `gcloud auth application-default login` account as production — no new key
+  file — as long as that account has access to the staging project too.
 - **Frontend:** CRA hardcodes `NODE_ENV=development` for `npm start`, so there's
   no `.env.staging` for the frontend the way there is for the backend. Instead,
   override the six `REACT_APP_FIREBASE_*` keys in `portal-app/.env.development.local`
@@ -253,9 +242,11 @@ the Stripe webhook-dependent payment routes aren't exercised there yet.
 - `firebase use staging` (via the `staging` alias in `.firebaserc`) targets this
   project for `firebase deploy`/`firebase firestore:indexes` etc.
 
-This is one slice of the larger #428 epic — a new staging project exists, but
-`DATABASE_SCHEMA_QUALIFIER` is still how dev/prod separate within the shared
-production project, and `teachers`/`students` are not yet merged into `users`.
+This is one slice of the larger #428 epic. `DATABASE_SCHEMA_QUALIFIER` and the
+split `teachers`/`students` collections it required have since been retired —
+every account now lives in one unprefixed `users` collection, in every
+environment. Remaining in the epic: a real staging deployment of Cloud
+Functions, and pointing CI at staging for integration tests.
 
 #### Running the Backend
 

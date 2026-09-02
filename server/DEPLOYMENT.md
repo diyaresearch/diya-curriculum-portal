@@ -76,7 +76,6 @@ The frontend needs to be configured to use the production API URL:
 ### Environment Variables
 The production environment includes:
 - `NODE_ENV=production`
-- Database schema qualifier: `prod.`
 - CORS allowed origins: production frontend URL
 
 ### Verification

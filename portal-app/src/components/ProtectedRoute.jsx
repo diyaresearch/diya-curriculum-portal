@@ -19,9 +19,9 @@ const ProtectedRoute = ({ children, redirectTeacherPlus = false }) => {
                 setUser(firebaseUser);
 
                 try {
-                    const teacherDoc = await getDoc(doc(db, COLLECTIONS.teachers, firebaseUser.uid));
-                    if (teacherDoc.exists()) {
-                        setUserRole(teacherDoc.data().role);
+                    const userDoc = await getDoc(doc(db, COLLECTIONS.users, firebaseUser.uid));
+                    if (userDoc.exists()) {
+                        setUserRole(userDoc.data().role);
                     }
                 } catch (error) {
                     console.error("Error fetching user role:", error);
