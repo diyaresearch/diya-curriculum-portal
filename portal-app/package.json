@@ -19,7 +19,7 @@
     "dompurify": "^3.2.4",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "firebase": "^10.12.2",
+    "firebase": "^12.18.0",
     "firebase-admin": "^14.3.0",
     "joi": "^18.2.5",
     "jspdf": "^3.0.1",
