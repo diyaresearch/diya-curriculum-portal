@@ -18,7 +18,7 @@ jobs:
 
       # Step 2: Validate PR title and description
       - name: Validate PR title and description
-        uses: actions/github-script@v6
+        uses: actions/github-script@v9
         with:
           script: |
             const prTitle = context.payload.pull_request.title;
