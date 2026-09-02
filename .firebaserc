@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "curriculum-portal-1ce8f"
+    "default": "curriculum-portal-1ce8f",
+    "staging": "curriculum-portal-staging"
   }
 }
