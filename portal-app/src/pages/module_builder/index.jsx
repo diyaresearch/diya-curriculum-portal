@@ -38,7 +38,6 @@ export const UploadContent = ({
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [uploading, setUploading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
 
   const navigate = useNavigate();
