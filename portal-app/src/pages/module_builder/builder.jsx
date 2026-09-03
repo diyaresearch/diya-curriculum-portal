@@ -17,8 +17,8 @@ import {
 import OverlayTileView from "../../pages/module_builder/OverlayTileView";
 import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import NuggetBuilderPage from "../nugget-builder";
 import LessonPlanBuilder from "../lesson-plans/builder";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
@@ -694,6 +694,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               Description <RequiredAsterisk />
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={formData.description}
               onChange={handleDescriptionChange}
@@ -705,6 +706,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               Requirements <RequiredAsterisk />
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={formData.requirements}
               onChange={handleRequirementsChange}
@@ -718,6 +720,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               Learning Objectives <RequiredAsterisk />
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={formData.learningObjectives}
               onChange={handleLearningObjectivesChange}

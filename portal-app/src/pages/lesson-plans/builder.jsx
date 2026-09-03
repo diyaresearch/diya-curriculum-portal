@@ -6,8 +6,8 @@ import { getFirestore, collection, getDocs, addDoc, setDoc, doc, serverTimestamp
 import OverlayTileView from "../../components/OverlayTileView";
 import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import NuggetBuilderPage from "../nugget-builder";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
@@ -638,6 +638,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
               Description <RequiredAsterisk />
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={formData.description}
               onChange={handleDescriptionChange}
@@ -700,6 +701,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
               Learning Objectives <RequiredAsterisk />
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={objectives[0]}
               onChange={value => setObjectives([value])}
@@ -763,6 +765,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                   Description <RequiredAsterisk />
                 </label>
                 <ReactQuill
+              useSemanticHTML={false}
                   theme="snow"
                   value={section.intro || ""}
                   onChange={value => {

@@ -8,7 +8,7 @@ import DeleteButton from "../../components/DeleteButton";
 import MetaChipsRow from "../../components/MetaChipsRow";
 import SectionCard from "../../components/SectionCard";
 import { FaExternalLinkAlt } from "react-icons/fa";
-import "react-quill/dist/quill.snow.css";
+import "react-quill-new/dist/quill.snow.css";
 import DOMPurify from "dompurify";
 import { TYPO } from "../../constants/typography";
 

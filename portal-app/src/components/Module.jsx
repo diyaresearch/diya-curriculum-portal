@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 const Module = ({ mode, lessonPlans = [] }) => {
   const [plans, setPlans] = useState([]);
@@ -49,7 +49,7 @@ const Module = ({ mode, lessonPlans = [] }) => {
       {/* Module Description */}
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2">Module Description:</label>
-        <ReactQuill readOnly={mode === "view"} theme="snow" className="bg-white border" />
+        <ReactQuill useSemanticHTML={false} readOnly={mode === "view"} theme="snow" className="bg-white border" />
       </div>
 
       {/* Lesson Plans List - Drag-and-Drop */}
