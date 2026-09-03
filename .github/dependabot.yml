@@ -6,9 +6,20 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     groups:
-      npm-dependencies:
-        patterns:
-          - "*"
+      # Only minor/patch bumps get grouped into one PR - these are the ones
+      # safe to take on trust and merge routinely. Majors are deliberately
+      # left out of every group below, so each gets its own PR instead of
+      # being silently bundled into whatever patch bump happens to land the
+      # same week. #510 bundled a React 18->19 major with 9 other updates,
+      # including 3 more majors (firebase, @stripe/react-stripe-js,
+      # @stripe/stripe-js) - react-quill@2.0.0 (unmaintained, peer-capped at
+      # React 18) blocked npm install outright, which meant the whole PR was
+      # unmergeable even though most of what it carried was fine on its own.
+      npm-minor-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "npm"
     directory: "/server"
@@ -16,9 +27,11 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     groups:
-      npm-dependencies:
-        patterns:
-          - "*"
+      npm-minor-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
     ignore:
       # v14 removed the root-namespace API (admin.apps/.app()/.firestore()/
       # .storage()) this codebase depends on throughout — confirmed breaks
@@ -40,9 +53,11 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     groups:
-      npm-dependencies:
-        patterns:
-          - "*"
+      npm-minor-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
     ignore:
       # v14 conflicts with firebase-functions-test@3.5.0's peer range
       # (^8..^13), which broke `npm ci` after #460 bumped this to 14.3.0.
