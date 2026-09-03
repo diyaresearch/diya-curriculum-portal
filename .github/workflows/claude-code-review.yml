@@ -12,12 +12,11 @@ on:
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-    
+    # Dependabot-triggered pull_request events source secrets from a separate
+    # "Dependabot secrets" store that doesn't have ANTHROPIC_API_KEY, so this
+    # job fails on every Dependabot PR before it can do anything. Skip it —
+    # these PRs are routine version bumps, not code that needs review.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read

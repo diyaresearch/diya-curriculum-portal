@@ -9,6 +9,10 @@ on:
 
 jobs:
   validate-pr:
+    # Dependabot PR titles ("Bump x from a to b") never match the
+    # [Issue #<number>] convention and aren't linked to an issue — skip
+    # rather than fail every automated dependency PR.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
 
     steps:
