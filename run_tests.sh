@@ -1,7 +1,14 @@
 #!/bin/bash
 
 # Test runner script for DIYA Curriculum Portal API tests
-# This script sets up the environment and runs the test suite
+#
+# Runs the real integration suite (tests/test_refactored_api.py) against a
+# live server. If nothing is already listening on the target port, this
+# script boots the server itself in mock-Firebase mode (NODE_ENV=test,
+# ENABLE_MOCK_FIREBASE=true — see server/utils/firebaseMock.js) so the
+# suite needs no real Firebase project or credentials, and tears it down
+# on exit. This mirrors the api-integration job in .github/workflows/ci.yml
+# (#436) — keep the two in sync if either changes.
 
 set -e  # Exit on any error
 
@@ -32,56 +39,93 @@ source venv/bin/activate
 
 # Install test dependencies
 echo "📥 Installing test dependencies..."
-pip3 install -r tests/requirements.txt
+pip3 install -q -r tests/requirements.txt
 
-# Check if server is running
+API_URL="${API_BASE_URL:-http://localhost:3001/api}"
+SERVER_ORIGIN="${API_URL%/api}"
+SERVER_PID=""
+
+cleanup() {
+    if [ -n "$SERVER_PID" ]; then
+        echo "🛑 Stopping the server we started (pid $SERVER_PID)..."
+        kill "$SERVER_PID" 2>/dev/null || true
+        wait "$SERVER_PID" 2>/dev/null || true
+    fi
+    deactivate 2>/dev/null || true
+}
+trap cleanup EXIT
+
 echo "🔍 Checking if API server is running..."
-# ANJ: API_URL="${API_BASE_URL:-http://localhost:3001/api}"
-API_URL="${API_BASE_URL:-http://localhost:3001}"
-
-if curl -s -f "$API_URL" > /dev/null 2>&1; then
-    echo "✅ API server is running at $API_URL"
+if curl -s -f "$SERVER_ORIGIN/" > /dev/null 2>&1; then
+    echo "✅ API server is already running at $SERVER_ORIGIN — using it as-is."
 else
-    echo "⚠️  API server is not running at $API_URL"
-    echo "   Please start the server first:"
-    echo "   cd server && npm start"
-    echo ""
-    echo "   Or run tests in mock mode (recommended for development):"
-    echo "   The tests are designed to work with mocked responses."
+    echo "⚠️  No server at $SERVER_ORIGIN — starting one in mock-Firebase mode."
+    if [ ! -d "server/node_modules" ]; then
+        echo "📥 Installing server dependencies..."
+        (cd server && npm install)
+    fi
+
+    (
+      cd server
+      NODE_ENV=test \
+      ENABLE_MOCK_FIREBASE=true \
+      PORT="${PORT:-3001}" \
+      SERVER_ALLOW_ORIGIN="${SERVER_ALLOW_ORIGIN:-http://localhost:3000}" \
+      nohup node index.js > ../server-test.log 2>&1 &
+      echo $! > ../.server_test.pid
+    )
+    SERVER_PID=$(cat .server_test.pid)
+    rm -f .server_test.pid
+
+    echo "⏳ Waiting for it to become healthy..."
+    ready=false
+    for _ in $(seq 1 30); do
+        if curl -s -f "$SERVER_ORIGIN/" > /dev/null 2>&1; then
+            ready=true
+            break
+        fi
+        sleep 1
+    done
+
+    if [ "$ready" != true ]; then
+        echo "❌ Server did not become healthy in time. Log follows:"
+        cat server-test.log
+        exit 1
+    fi
+    echo "✅ Mock server is running at $SERVER_ORIGIN (pid $SERVER_PID)"
 fi
 
 echo ""
 echo "🧪 Running API tests..."
 echo "========================"
 
-# Set default API URL if not provided
-export API_BASE_URL="${API_BASE_URL:-http://localhost:3001/api}"
+export API_BASE_URL="$API_URL"
 
 # Run tests with different options based on arguments
 case "${1:-default}" in
     "coverage")
         echo "📊 Running tests with coverage report..."
-        pytest tests/signup.py --cov=server --cov-report=html --cov-report=term
+        pytest --cov=server --cov-report=html --cov-report=term
         echo ""
         echo "📊 Coverage report generated in htmlcov/index.html"
         ;;
     "html")
         echo "📄 Running tests with HTML report..."
-        pytest tests/signup.py --html=test-report.html --self-contained-html
+        pytest --html=test-report.html --self-contained-html
         echo ""
         echo "📄 Test report generated: test-report.html"
         ;;
     "verbose")
         echo "🔍 Running tests in verbose mode..."
-        pytest tests/signup.py -v -s --tb=long
+        pytest -v -s --tb=long
         ;;
     "quick")
         echo "⚡ Running tests in quick mode..."
-        pytest tests/signup.py -x --tb=short
+        pytest -x --tb=short
         ;;
     *)
         echo "🏃 Running standard test suite..."
-        pytest tests/signup.py
+        pytest
         ;;
 esac
 
@@ -96,10 +140,6 @@ echo "   ./run_tests.sh verbose      # Verbose output with full tracebacks"
 echo "   ./run_tests.sh quick        # Stop on first failure"
 echo ""
 echo "🔧 Manual test commands:"
-echo "   pytest tests/signup.py -v                                    # Verbose output"
-echo "   pytest tests/signup.py::TestUserAPI::TestGetCurrentUser -v   # Specific test class"
-echo "   pytest tests/signup.py -k \"test_register\" -v                # Tests matching pattern"
-echo ""
-
-# Deactivate virtual environment
-deactivate
+echo "   pytest -v                                          # Verbose output"
+echo "   pytest tests/test_refactored_api.py -v              # This file only"
+echo "   pytest -k \"user_by_id\" -v                          # Tests matching pattern"

@@ -1,248 +1,103 @@
 # API Test Suite for DIYA Curriculum Portal
 
-This directory contains comprehensive REST API tests for the user management endpoints in `server/routes/user.js`.
+This directory contains the real integration tests for the user management endpoints in
+`server/routes/user.js`: `tests/test_refactored_api.py`. They run as HTTP requests against
+a live server started in mock-Firebase mode — nothing here mocks the server itself.
+
+For unit-level coverage (roles, payments, pagination, ownership checks, custom claims, etc.)
+see `server/__tests__/` (Jest) and `functions/__tests__/` (Jest). Firestore security rules
+have their own suite under `tests/rules/`, run against the Firebase emulator — see
+`tests/rules/package.json`.
+
+## What used to be here
+
+This directory previously also held `tests/signup.py`: 35 tests that mocked
+`requests.get`/`requests.post` and then asserted the mock returned what it was told to
+return. No application code ran, and no server needed to be listening — `unittest.mock`
+was the only thing under test. It was deleted in #436, along with `conftest.py` and
+`test_data.py`, which existed only to support it (and had drifted from the real API by
+then anyway — its mock user IDs and JWT tokens didn't match what the server's Firebase mock
+actually accepts). `pytest.ini` also had `[tool:pytest]` instead of `[pytest]`, which is
+only valid in `setup.cfg` — pytest silently ignored the whole file as a result, which is
+part of how `signup.py` went unnoticed as long as it did (`testpaths` and `python_files`
+never took effect, so bare `pytest` only ever collected the real suite already).
 
 ## Test Coverage
 
-The test suite covers all 6 endpoints in the user routes:
+`test_refactored_api.py` covers:
 
-1. **GET /api/user/me** - Get current user details (authenticated)
-2. **GET /api/user/:userId** - Get user details by userId (no authentication required)
-3. **POST /api/user/register** - Register new user (authenticated)
-4. **PUT /api/user/update** - Update user profile (authenticated)
-5. **GET /api/user/users** - Get all users (admin only)
-6. **PUT /api/user/updateRole** - Update user role (admin only)
+1. **GET /api/user/:userId** — auth required, self/admin get the full document, everyone
+   else gets a redacted public profile (fullName/firstName/lastName only), not-found and
+   validation-error paths
+2. **POST /api/user/register** — auth required, validation errors
+3. **GET /api/user/users** — auth + admin required
+4. **PUT /api/user/updateRole** — auth + admin required, privilege-escalation attempts
+5. Response-shape conventions shared across endpoints: the `{success, statusCode, error:
+   {code, message, timestamp}}` error envelope, CORS headers, response latency, and that
+   error messages don't leak stack traces or file paths
 
-## Test Scenarios
+It does not cover `GET /api/user/me` or `PUT /api/user/update` yet — both need only a
+bearer token, no fixture data, so they're a reasonable next addition.
 
-### Authentication & Authorization
-- ✅ Valid JWT token authentication
-- ❌ No authentication token (401 errors)
-- ❌ Invalid authentication token (401 errors)
-- ❌ Non-admin accessing admin endpoints (403 errors)
-- ✅ Admin accessing admin endpoints
+## Setup and Installation
 
-### Data Validation
-- ✅ Valid request data
-- ❌ Missing required fields
-- ❌ Malformed JSON requests
-- ❌ Empty request bodies
-- ✅ Special characters in user data
-- ✅ Partial updates
+```bash
+pip install -r tests/requirements.txt
+```
 
-### Database Operations
-- ✅ User exists scenarios
-- ❌ User not found scenarios (404 errors)
-- ✅ User registration (new users)
-- ✅ User already exists scenarios
-- ✅ User profile updates
-- ✅ Role updates with proper permissions
+`API_BASE_URL` controls the target (defaults to `http://localhost:3001/api`).
 
-### Error Handling
-- ❌ Server errors (500 status codes)
-- ❌ Database connection issues
-- ❌ Firebase authentication failures
-- ✅ Proper error messages returned
+## Running the Tests
+
+`./run_tests.sh` (from the repo root) is the easiest path: it creates/reuses a venv,
+installs dependencies, and — if nothing is already listening on the target port — boots
+the server itself with `NODE_ENV=test ENABLE_MOCK_FIREBASE=true`, so no real Firebase
+project or credentials are needed. It tears that server down again on exit. If a server is
+already running at `API_BASE_URL`, it's used as-is (whatever mode it's in).
+
+```bash
+./run_tests.sh              # standard run
+./run_tests.sh coverage     # + HTML coverage report in htmlcov/
+./run_tests.sh html         # + self-contained HTML test report
+./run_tests.sh verbose      # -v -s --tb=long
+./run_tests.sh quick        # -x, stop on first failure
+```
+
+To run against a server you're already running yourself, point `pytest` at it directly:
+
+```bash
+cd server && npm start &                       # or however you normally run it
+API_BASE_URL=http://localhost:3001/api pytest -v
+```
+
+Mock mode matters here beyond convenience: `server/utils/firebaseMock.js`'s `MockAuth`
+accepts a fixed set of bearer tokens (`valid-admin-token`, `valid-user-token`, ...) in
+place of real Firebase ID tokens, which is how these tests exercise authenticated routes
+without minting real tokens. Run against a server in real-Firebase mode and every
+authenticated test will get a genuine 401.
+
+## CI
+
+`.github/workflows/ci.yml`'s `api-integration` job runs this suite the same way
+`run_tests.sh` does (boot with `NODE_ENV=test ENABLE_MOCK_FIREBASE=true`, then `pytest`) —
+keep the two in sync if either changes. It also sets `FIRESTORE_EMULATOR_HOST` so the
+legacy content/lesson/module controllers, which initialize Firebase Admin for real at
+`require()` time regardless of `ENABLE_MOCK_FIREBASE` (#362), have somewhere to point
+without needing real credentials; these tests never exercise those routes.
 
 ## File Structure
 
 ```
 tests/
-├── __init__.py              # Python package initialization
-├── signup.py               # Main test file with all test cases
-├── conftest.py             # Pytest fixtures and configuration
-├── test_data.py            # Sample data and mock responses
-├── requirements.txt        # Python dependencies
-└── README.md               # This file
+├── __init__.py              # Python package marker
+├── test_refactored_api.py   # The test suite
+├── requirements.txt         # Python dependencies
+├── rules/                   # Firestore security rules tests (separate Jest/emulator suite)
+└── README.md                # This file
 ```
 
-## Setup and Installation
+## Adding a test
 
-### 1. Install Python Dependencies
-
-```bash
-# From the tests directory
-pip install -r requirements.txt
-```
-
-### 2. Environment Variables
-
-Set the API base URL (optional, defaults to localhost:3001):
-
-```bash
-export API_BASE_URL="http://localhost:3001/api"
-```
-
-### 3. Start the Server
-
-Make sure your API server is running:
-
-```bash
-# From the project root
-cd server
-npm install
-npm start
-```
-
-The server should be running on http://localhost:3001
-
-## Running the Tests
-
-### Run All Tests
-```bash
-# From the tests directory or project root
-pytest tests/signup.py -v
-```
-
-### Run Specific Test Classes
-```bash
-# Test only the /me endpoint
-pytest tests/signup.py::TestUserAPI::TestGetCurrentUser -v
-
-# Test only admin endpoints
-pytest tests/signup.py::TestUserAPI::TestGetAllUsers -v
-pytest tests/signup.py::TestUserAPI::TestUpdateUserRole -v
-```
-
-### Run with Coverage Report
-```bash
-pytest tests/signup.py --cov=server --cov-report=html
-```
-
-This generates an HTML coverage report in `htmlcov/index.html`
-
-### Run with HTML Test Report
-```bash
-pytest tests/signup.py --html=report.html --self-contained-html
-```
-
-## Test Architecture
-
-### Mocking Strategy
-
-The tests use Python's `unittest.mock` to mock:
-- **HTTP requests** using `requests` library mocks
-- **Firebase Admin SDK** to avoid real database calls
-- **JWT authentication** for testing different user roles
-- **Firestore database operations** with predictable responses
-
-### Test Data
-
-Sample test data is defined in `test_data.py`:
-- Sample user profiles for different roles (admin, teacherDefault, teacherPlus)
-- Mock JWT tokens for authentication
-- Mock Firestore responses for different scenarios
-- Test user IDs for consistent testing
-
-### Fixtures
-
-The `conftest.py` file provides pytest fixtures:
-- `api_base_url` - Configurable API base URL
-- `mock_firestore_db` - Mocked Firestore database
-- `authenticated_headers` - Headers with valid JWT token
-- `admin_authenticated_headers` - Headers with admin JWT token
-- `registration_data` - Sample user registration data
-- `update_data` - Sample user update data
-
-## Test Results Interpretation
-
-### Expected Test Outcomes
-
-- **✅ PASSED**: Test scenario executed successfully
-- **❌ FAILED**: Test found an issue that needs to be addressed
-- **🔀 SKIPPED**: Test was skipped (not applicable in this suite)
-
-### Common Failure Reasons
-
-1. **Server not running**: Make sure `npm start` is running in the server directory
-2. **Port conflicts**: Ensure port 3001 is available
-3. **Missing dependencies**: Run `pip install -r requirements.txt`
-4. **Environment issues**: Check Python version (requires 3.7+)
-
-## Integration with CI/CD
-
-To integrate with CI/CD pipelines:
-
-```yaml
-# Example GitHub Actions workflow
-- name: Install Python dependencies
-  run: pip install -r tests/requirements.txt
-
-- name: Start API server
-  run: |
-    cd server
-    npm install
-    npm start &
-    sleep 10  # Wait for server to start
-
-- name: Run API tests
-  run: pytest tests/signup.py --html=test-report.html --cov=server
-```
-
-## Extending the Tests
-
-To add new test cases:
-
-1. **Add test data** in `test_data.py`
-2. **Create new test methods** in the appropriate test class in `signup.py`
-3. **Add new fixtures** in `conftest.py` if needed
-4. **Follow the naming convention**: `test_<endpoint>_<scenario>`
-
-### Example New Test Case
-
-```python
-def test_register_user_with_emoji(self, api_base_url, authenticated_headers):
-    """Test user registration with emoji characters"""
-    emoji_data = {
-        "fullName": "Test User 😀",
-        "firstName": "Test 👤",
-        # ... other fields
-    }
-
-    with patch('requests.post') as mock_post:
-        mock_response = Mock()
-        mock_response.status_code = 201
-        mock_response.json.return_value = {"message": "User registered successfully"}
-        mock_post.return_value = mock_response
-
-        url = f"{api_base_url}/user/register"
-        response = requests.post(url, json=emoji_data, headers=authenticated_headers)
-
-        assert response.status_code == 201
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **ModuleNotFoundError**: Make sure you're in the correct directory and have installed dependencies
-2. **Connection refused**: Check if the server is running on the correct port
-3. **Import errors**: Ensure Python path includes the tests directory
-
-### Debug Mode
-
-Run tests with more verbose output:
-
-```bash
-pytest tests/signup.py -v -s --tb=long
-```
-
-### Logging
-
-Add logging to debug test issues:
-
-```python
-import logging
-logging.basicConfig(level=logging.DEBUG)
-```
-
-## Security Considerations
-
-- Tests use mock JWT tokens - never use real authentication tokens in tests
-- Firebase mocking prevents accidental writes to production databases
-- All test data is synthetic and safe for testing environments
-- No real user credentials are used in the test suite
-
----
-
-For questions or issues with the test suite, please check the project documentation or create an issue in the project repository.
+Give it a bearer token from the fixed set `MockAuth.verifyIdToken` accepts (see
+`server/utils/firebaseMock.js`) rather than mocking the response — that's what makes these
+tests worth having.

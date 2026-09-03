@@ -141,22 +141,16 @@ class DatabaseService {
       throw new Error('DatabaseService not initialized. Call initialize() first.');
     }
 
-    // For mock mode, return mock admin with proper FieldValue
-    if (this.isMocked) {
-      return {
-        ...this.admin,
-        firestore: {
-          FieldValue: {
-            serverTimestamp: () => new Date(),
-            delete: () => null,
-            increment: (n) => n,
-            arrayUnion: (...elements) => elements,
-            arrayRemove: (...elements) => elements
-          }
-        }
-      };
-    }
-
+    // this.admin is already a real firebase-admin module or a
+    // createMockFirebaseAdmin() instance, and both expose .auth() and a
+    // callable .firestore() with a .FieldValue namespace on it. Spreading
+    // the mock instance here used to be how this built its return value,
+    // but object spread only copies own enumerable properties - .auth and
+    // .firestore live on the class prototype, so the spread silently
+    // dropped .auth entirely and replaced .firestore with a non-callable
+    // stand-in. That broke admin.auth() for every caller (authenticateUser,
+    // optionalAuth) whenever the service ran in mock mode, i.e. every local
+    // dev run without real Firebase credentials and the whole test suite.
     return this.admin;
   }
 
