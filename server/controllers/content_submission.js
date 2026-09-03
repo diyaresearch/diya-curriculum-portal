@@ -2,6 +2,7 @@ const { db } = require("../config/firebaseConfig");
 const multer = require("multer");
 const { storage } = require("../config/firebaseConfig");
 const { sanitizeHtml } = require("../utils/sanitizeHtml");
+const { sendError } = require("../utils/responseHelpers");
 
 // Define the collections
 const TABLE_COUNTERS = "counters";
@@ -40,7 +41,7 @@ const createUnit = async (req, res) => {
       res.status(201).send(newNugget);
   } catch (error) {
     console.error("Error submitting content:", error);
-    res.status(500).send("Error submitting content");
+    sendError(res, 'Error submitting content', 500, 'CONTENT_SUBMIT_ERROR', error.message);
   }
 };
 

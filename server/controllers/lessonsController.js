@@ -1,6 +1,7 @@
 const { db, storage } = require("../config/firebaseConfig");
 const PDFDocument = require("pdfkit");
 const { sanitizeHtml, sanitizeArray } = require("../utils/sanitizeHtml");
+const { sendError } = require("../utils/responseHelpers");
 
 // Define the collections
 const TABLE_CONTENT = "content";
@@ -28,7 +29,7 @@ const getAllLessons = async (req, res) => {
     res.status(200).json(publicLessons);
   } catch (error) {
     console.error("Error fetching lessons:", error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to fetch lessons', 500, 'LESSON_FETCH_ERROR', error.message);
   }
 };
 
@@ -48,7 +49,7 @@ const getAllLessonsAdmin = async (req, res) => {
     res.status(200).json(lessons);
   } catch (error) {
     console.error("Error fetching lessons:", error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to fetch lessons', 500, 'LESSON_FETCH_ERROR', error.message);
   }
 };
 
@@ -67,7 +68,7 @@ const getLessonById = async (req, res) => {
     res.status(200).json({ id: doc.id, ...doc.data() });
   } catch (error) {
     console.error("Error fetching lesson:", error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to fetch lesson', 500, 'LESSON_FETCH_ERROR', error.message);
   }
 };
 
@@ -96,7 +97,7 @@ const getUserLessons = async (req, res) => {
     res.status(200).json(userLessons);
   } catch (error) {
     console.error("Error fetching user units:", error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to fetch your lessons', 500, 'LESSON_FETCH_ERROR', error.message);
   }
 };
 
@@ -130,7 +131,7 @@ const postLesson = async (req, res) => {
       .json({ message: "Lesson created successfully", id: lessonRef.id });
   } catch (error) {
     console.error("Error creating lesson:", error);
-    res.status(500).json({ error: "Failed to create lesson" });
+    sendError(res, 'Failed to create lesson', 500, 'LESSON_CREATE_ERROR', error.message);
   }
 };
 
@@ -192,7 +193,7 @@ const updateLesson = async (req, res) => {
       .json({ message: "Lesson updated successfully", id: lessonRef.id });
   } catch (error) {
     console.error("Error updating lesson:", error);
-    res.status(500).json({ error: "Failed to update lesson" });
+    sendError(res, 'Failed to update lesson', 500, 'LESSON_UPDATE_ERROR', error.message);
   }
 };
 
@@ -236,7 +237,7 @@ const deleteLessonById = async (req, res) => {
     res.status(200).json({ message: "Lesson deleted successfully." });
   } catch (error) {
     console.error("Error deleting lesson:", error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to delete lesson', 500, 'LESSON_DELETE_ERROR', error.message);
   }
 };
 
@@ -337,7 +338,13 @@ const downloadPDF = async (req, res) => {
     docPdf.end();
   } catch (error) {
     console.error("Error generating PDF:", error);
-    res.status(500).json({ error: "Failed to generate PDF" });
+    // docPdf.pipe(res) above may already have sent headers (or bytes) by
+    // the time an error occurs further down - sendError()'s res.json()
+    // would throw on top of that instead of reporting the real error.
+    if (res.headersSent) {
+      return res.end();
+    }
+    sendError(res, 'Failed to generate PDF', 500, 'PDF_GENERATION_ERROR', error.message);
   }
 };
 
