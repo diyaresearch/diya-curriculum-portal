@@ -1,6 +1,7 @@
 const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
 const { requireAdmin, requireValidUser } = require("../middleware/requireRole");
+const { strictLimiter } = require("../middleware/rateLimiter");
 const { databaseService } = require("../services/databaseService");
 const { isAdminUser } = require("../utils/ownership");
 const { syncRoleClaim } = require("../utils/customClaims");
@@ -165,7 +166,7 @@ router.get("/:userId", authenticateUser, asyncHandler(async (req, res) => {
 }));
 
 // Register new user
-router.post("/register", authenticateUser, asyncHandler(async (req, res) => {
+router.post("/register", authenticateUser, strictLimiter, asyncHandler(async (req, res) => {
   const userId = req.user.uid;
   const {
     email,

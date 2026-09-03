@@ -13,14 +13,22 @@ validateAndExit(false); // Don't exit on failure, just warn
 setDefaults();
 
 const unitsRoutes = require("./routes/units");
-const contentRoutes = require("./routes/units"); 
+const contentRoutes = require("./routes/units");
 const lessonsRoutes = require("./routes/lessons");
 const modulesRoutes = require("./routes/modules");
 const userRoutes = require("./routes/user");
 const subscriptionRoutes = require("./routes/subscription");
 const paymentRoutes = require("./routes/payment");
+const { generalLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
+
+// App Engine terminates the request and forwards it through exactly one
+// proxy hop, setting X-Forwarded-For to the real client IP. Without this,
+// every request looks like it comes from that one proxy - req.ip is wrong,
+// and express-rate-limit (#383) would bucket the entire userbase together
+// instead of limiting per-client.
+app.set("trust proxy", 1);
 // Stripe webhooks require the *raw* request body for signature verification.
 // We keep normal JSON parsing, but capture the raw bytes for the webhook route.
 app.use(
@@ -95,6 +103,8 @@ if (env === 'production') {
     credentials: true
   }));
 }
+
+app.use("/api", generalLimiter);
 
 app.use("/api", unitsRoutes);
 app.use("/api", contentRoutes);

@@ -103,6 +103,43 @@ the only check on that path.
   paid module returns storefront metadata to anonymous callers and full
   contents to an entitled one.
 
+### Rate limiting (#383)
+
+`server/middleware/rateLimiter.js` has two tiers:
+
+- **General** — every `/api/*` route except `/api/health` (uptime monitoring
+  polls that regularly and legitimately). `RATE_LIMIT_WINDOW_MS` /
+  `RATE_LIMIT_MAX_REQUESTS` (`.env.*`, defaulting to 15 min / 100 requests)
+  control it — these variables existed in every environment file and in
+  `envValidator.js`'s optional-vars list well before anything read them.
+- **Strict** — a separate, deliberately non-configurable, tighter budget (15
+  min / 20 requests) on routes that are either expensive (a real Stripe API
+  call) or a meaningful step in a flow worth throttling harder than general
+  browsing: registration (`POST /api/user/register`), payment creation and
+  confirmation, and subscription upgrades
+  (`initiate-upgrade`/`complete-upgrade`). Mounted after `authenticateUser` on
+  each of those routes specifically so it can key by uid.
+
+`functions/middleware/rateLimiter.js` has just the strict tier, on the same
+Stripe-calling routes in `functions/routes/payment.js` - #439 moved all
+payment processing there, so those are the routes #383's own audit worried
+about (#422/#425-adjacent concerns) in practice, not `server/`'s copies.
+
+Both backends key by the authenticated user (`req.user.uid`) when there is
+one, falling back to IP otherwise - a shared IP (a school network is the
+obvious case here) does not mean a shared budget. `app.set('trust proxy', 1)`
+is load-bearing for this in both `server/index.js` and `functions/index.js`:
+App Engine and Cloud Functions each terminate the request through exactly one
+proxy hop, and without trusting it every request looks like it comes from the
+same address.
+
+**Caveat, in both backends:** the limiter's store is in-memory, so it only
+limits per *instance*. Both App Engine (`automatic_scaling.max_instances` in
+`app.yaml`) and Cloud Functions can and do run several concurrent instances
+under load - exactly when a limit matters most - so this raises the bar
+significantly without being a hard global ceiling. A shared store (Firestore-
+or Memorystore-backed, for instance) would close that gap; out of scope here.
+
 ### Ownership
 
 `utils/ownership.js`. Ownership is recorded inconsistently, and the field names
