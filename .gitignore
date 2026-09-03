@@ -23,3 +23,12 @@ ui-debug.log
 
 # Firebase CLI deploy cache
 .firebase/
+
+# Python test artifacts
+__pycache__/
+*.pyc
+.pytest_cache/
+server-test.log
+test-report.html
+htmlcov/
+.coverage

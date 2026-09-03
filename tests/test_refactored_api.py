@@ -1,12 +1,25 @@
 """
 Integration tests for the refactored user.js API endpoints
 Tests the actual API responses against our new standardized format
+
+These run against a live server started in mock-Firebase mode (see
+run_tests.sh / .env.test, ENABLE_MOCK_FIREBASE=true). In that mode,
+server/utils/firebaseMock.js's MockAuth accepts a fixed set of bearer
+tokens - VALID_ADMIN_TOKEN / VALID_USER_TOKEN below - in place of real
+Firebase ID tokens, so these tests can exercise authenticated routes
+without a real Firebase project.
 """
 
 import requests
-import json
 import pytest
-from unittest.mock import patch, Mock
+
+# Recognized by MockAuth.verifyIdToken (server/utils/firebaseMock.js) when
+# the server is running with ENABLE_MOCK_FIREBASE=true. Not real tokens -
+# they only work in mock mode.
+VALID_ADMIN_TOKEN = "valid-admin-token"
+VALID_USER_TOKEN = "valid-user-token"
+ADMIN_USER_ID = "admin-user-123"
+TEST_USER_ID = "test-user-123"
 
 
 class TestRefactoredUserAPI:
@@ -16,8 +29,10 @@ class TestRefactoredUserAPI:
     def setup_test_data(self):
         """Setup test data for each test"""
         self.api_base_url = "http://localhost:3001/api"
-        self.test_user_id = "test-user-123"
-        self.admin_user_id = "admin-user-123"
+        self.test_user_id = TEST_USER_ID
+        self.admin_user_id = ADMIN_USER_ID
+        self.admin_headers = {"Authorization": f"Bearer {VALID_ADMIN_TOKEN}"}
+        self.user_headers = {"Authorization": f"Bearer {VALID_USER_TOKEN}"}
 
     def test_server_health_check(self):
         """Test that the server is running and responding"""
@@ -28,11 +43,28 @@ class TestRefactoredUserAPI:
         except requests.exceptions.RequestException:
             pytest.skip("Server is not running - start server with: cd server && npm start")
 
+    def test_get_user_by_id_requires_auth(self):
+        """GET /user/:userId with no token - should reject before ever touching Firestore.
+
+        This route used to be fully unauthenticated (#424); a missing/invalid
+        token now short-circuits with 401 regardless of whether the userId
+        exists, so 404/400 below are only reachable once authenticated.
+        """
+        url = f"{self.api_base_url}/user/{self.test_user_id}"
+
+        response = requests.get(url)
+
+        assert response.status_code == 401
+
+        data = response.json()
+        assert data["success"] is False
+        assert data["error"]["code"] == "AUTH_ERROR"
+
     def test_get_user_by_id_not_found(self):
         """Test GET /user/:userId when user doesn't exist - should return standardized error"""
         url = f"{self.api_base_url}/user/non-existent-user-id"
 
-        response = requests.get(url)
+        response = requests.get(url, headers=self.admin_headers)
 
         # Should return 404 with standardized error format
         assert response.status_code == 404
@@ -48,7 +80,7 @@ class TestRefactoredUserAPI:
         # Test with empty user ID (just whitespace)
         url = f"{self.api_base_url}/user/   "
 
-        response = requests.get(url)
+        response = requests.get(url, headers=self.admin_headers)
 
         # Should return 400 with validation error
         assert response.status_code == 400
@@ -57,6 +89,35 @@ class TestRefactoredUserAPI:
         assert data["success"] is False
         assert data["error"]["code"] == "VALIDATION_ERROR"
         assert "required" in data["error"]["message"].lower()
+
+    def test_get_user_by_id_redacts_for_non_self_non_admin(self):
+        """A non-admin looking up someone else gets a redacted public profile.
+
+        Covers the access-control split added alongside the #424 auth
+        requirement: self and admins see the full document, everyone else
+        gets id/fullName/firstName/lastName only - no email, institution, or
+        Stripe/subscription fields.
+        """
+        url = f"{self.api_base_url}/user/{self.admin_user_id}"
+
+        response = requests.get(url, headers=self.user_headers)
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert set(data.keys()) == {"id", "fullName", "firstName", "lastName"}
+        assert "email" not in data
+        assert "subscriptionStatus" not in data
+
+    def test_get_user_by_id_self_sees_full_profile(self):
+        """A user looking up their own id gets the full stored document."""
+        url = f"{self.api_base_url}/user/{self.test_user_id}"
+
+        response = requests.get(url, headers=self.user_headers)
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert data["id"] == self.test_user_id
+        assert "email" in data
 
     def test_register_user_without_auth(self):
         """Test POST /register without authentication - should return auth error"""
@@ -247,12 +308,16 @@ class TestSecurityEnhancements:
         ]
 
         base_url = "http://localhost:3001/api/user"
+        headers = {"Authorization": f"Bearer {VALID_ADMIN_TOKEN}"}
 
         for dangerous_input in dangerous_inputs:
             try:
-                # Test as user ID
+                # Test as user ID. Authenticated, since #424 - an
+                # unauthenticated request short-circuits with 401 before the
+                # input ever reaches validation, which would make this test
+                # pass without actually exercising sanitization.
                 url = f"{base_url}/{dangerous_input}"
-                response = requests.get(url, timeout=5)
+                response = requests.get(url, headers=headers, timeout=5)
 
                 # Should handle dangerous input gracefully
                 assert response.status_code in [400, 404], f"Unexpected response for input: {dangerous_input}"
