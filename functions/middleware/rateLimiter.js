@@ -19,13 +19,20 @@
  */
 
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const { sendError } = require('../utils/responseHelpers');
 
 const WINDOW_MS = 15 * 60 * 1000;
 const MAX_REQUESTS = 20;
 
+// The IP fallback goes through express-rate-limit's own `ipKeyGenerator`,
+// not `req.ip` raw - see the matching comment in server/middleware/
+// rateLimiter.js (#359's follow-up) for why: raw IPv6 addresses vary
+// per-connection within a client's assigned range, undercounting the same
+// client as several. This is what the library's own runtime validator
+// warns about (ERR_ERL_KEY_GEN_IPV6).
 function keyByUserOrIp(req) {
-  return req.user?.uid || req.ip;
+  return req.user?.uid || ipKeyGenerator(req.ip);
 }
 
 function rateLimitHandler(req, res) {
