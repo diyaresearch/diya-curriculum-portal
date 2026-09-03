@@ -44,4 +44,21 @@ describe("#383 — functions/'s strictLimiter", () => {
     const forB = await request(a).post("/api/payment/sensitive").set("x-test-uid", "user-b");
     expect(forB.status).toBe(200);
   });
+
+  // #359 follow-up: the IP fallback must go through ipKeyGenerator, not
+  // req.ip raw - see the matching test/comment in server/__tests__/
+  // rateLimiter.test.js for the full explanation.
+  test("unauthenticated: two IPv6 addresses in the same /56 share one bucket", async () => {
+    const a = express();
+    a.set("trust proxy", true);
+    a.post("/api/payment/sensitive", strictLimiter, (_req, res) => res.json({ ok: true }));
+
+    for (let i = 0; i < 25; i++) {
+      await request(a).post("/api/payment/sensitive").set("X-Forwarded-For", "2001:db8::1");
+    }
+    const res = await request(a)
+      .post("/api/payment/sensitive")
+      .set("X-Forwarded-For", "2001:db8::abcd"); // same /56, different host
+    expect(res.status).toBe(429);
+  });
 });

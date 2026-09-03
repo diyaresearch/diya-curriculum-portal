@@ -114,3 +114,64 @@ describe("#383 — strictLimiter keys by authenticated user, not just IP", () =>
     delete process.env.RATE_LIMIT_MAX_REQUESTS;
   });
 });
+
+describe("#359 follow-up — IPv6 addresses are normalized, not used raw", () => {
+  // express-rate-limit's own runtime validator throws ERR_ERL_KEY_GEN_IPV6
+  // if a custom keyGenerator uses req.ip directly instead of going through
+  // ipKeyGenerator(). Caught live at boot while working on #359, unrelated
+  // to that issue - fixed here. `trust proxy` + spoofed X-Forwarded-For
+  // simulates two connections whose IPv6 addresses fall in the same /56,
+  // the way a single client's traffic legitimately varies.
+  function unauthedApp() {
+    jest.resetModules();
+    process.env.RATE_LIMIT_WINDOW_MS = "60000";
+    process.env.RATE_LIMIT_MAX_REQUESTS = "3";
+    const { generalLimiter } = require("../middleware/rateLimiter");
+    const app = express();
+    app.set("trust proxy", true);
+    app.use("/api", generalLimiter);
+    app.get("/api/thing", (_req, res) => res.json({ ok: true }));
+    return app;
+  }
+
+  afterEach(() => {
+    delete process.env.RATE_LIMIT_WINDOW_MS;
+    delete process.env.RATE_LIMIT_MAX_REQUESTS;
+  });
+
+  test("constructing the limiter doesn't trip express-rate-limit's IPv6 validator", () => {
+    // The validator runs (and would throw/warn) the first time the
+    // middleware actually handles a request, not at construction - covered
+    // by the requests below, but this documents the specific failure mode.
+    expect(() => unauthedApp()).not.toThrow();
+  });
+
+  test("two IPv6 addresses in the same /56 share one rate-limit bucket", async () => {
+    const app = unauthedApp();
+    const addrA = "2001:db8::1";
+    const addrB = "2001:db8::abcd"; // same /56 as addrA, different host
+
+    for (let i = 0; i < 3; i++) {
+      const res = await request(app).get("/api/thing").set("X-Forwarded-For", addrA);
+      expect(res.status).toBe(200);
+    }
+
+    // addrA's budget is exhausted; addrB should already be blocked too if
+    // (and only if) both normalize into the same bucket.
+    const res = await request(app).get("/api/thing").set("X-Forwarded-For", addrB);
+    expect(res.status).toBe(429);
+  });
+
+  test("an IPv6 address in a different /56 gets its own budget", async () => {
+    const app = unauthedApp();
+    const addrA = "2001:db8::1";
+    const addrC = "2001:db9::1"; // different /56 from addrA
+
+    for (let i = 0; i < 3; i++) {
+      await request(app).get("/api/thing").set("X-Forwarded-For", addrA);
+    }
+
+    const res = await request(app).get("/api/thing").set("X-Forwarded-For", addrC);
+    expect(res.status).toBe(200);
+  });
+});

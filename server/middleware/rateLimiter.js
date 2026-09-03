@@ -14,6 +14,7 @@
  */
 
 const rateLimit = require('express-rate-limit');
+const { ipKeyGenerator } = require('express-rate-limit');
 const { sendError } = require('../utils/responseHelpers');
 
 const GENERAL_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 900000; // 15 min
@@ -34,9 +35,18 @@ const STRICT_MAX_REQUESTS = 20;
  * after `authenticateUser` have `req.user.uid` by the time this runs), so
  * users behind a shared IP - a school network is the obvious case here -
  * don't share one bucket. Falls back to IP for anything unauthenticated.
+ *
+ * The IP fallback goes through express-rate-limit's own `ipKeyGenerator`,
+ * not `req.ip` raw - IPv6 addresses vary per-connection within a client's
+ * assigned range, so using the raw address undercounts by treating each
+ * variation as a different client. `ipKeyGenerator` normalizes to a /56
+ * subnet instead. Skipping this is exactly what the library's own runtime
+ * validator warns about (ERR_ERL_KEY_GEN_IPV6) - caught live at boot while
+ * working on #359, tracked and fixed here as its own issue rather than
+ * folded into that unrelated one.
  */
 function keyByUserOrIp(req) {
-  return req.user?.uid || req.ip;
+  return req.user?.uid || ipKeyGenerator(req.ip);
 }
 
 function rateLimitHandler(req, res) {

@@ -13,7 +13,6 @@ validateAndExit(false); // Don't exit on failure, just warn
 setDefaults();
 
 const unitsRoutes = require("./routes/units");
-const contentRoutes = require("./routes/units");
 const lessonsRoutes = require("./routes/lessons");
 const modulesRoutes = require("./routes/modules");
 const userRoutes = require("./routes/user");
@@ -107,7 +106,6 @@ if (env === 'production') {
 app.use("/api", generalLimiter);
 
 app.use("/api", unitsRoutes);
-app.use("/api", contentRoutes);
 app.use("/api", lessonsRoutes);
 app.use("/api", modulesRoutes);
 app.use("/api/user", userRoutes);
