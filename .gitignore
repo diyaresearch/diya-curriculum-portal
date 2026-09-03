@@ -1,4 +1,9 @@
 
+# Dependencies (only the per-package .gitignore's covered this before —
+# the root itself didn't, which is how node_modules/ ended up committed
+# at the repo root, from an `npm install` run there by mistake; see #438)
+node_modules/
+
 # Development environment files
 venv/
 .mcp.json
@@ -20,6 +25,11 @@ tests/rules/node_modules/
 # Emulator logs
 firestore-debug.log
 ui-debug.log
+
+# Dev server / build logs (a 172KB webpack-dev-server log was committed at
+# 522bf03 and stayed tracked long enough to actively mislead - it cited
+# stale lint warnings for code that had already changed; see #438)
+*.log
 
 # Firebase CLI deploy cache
 .firebase/
