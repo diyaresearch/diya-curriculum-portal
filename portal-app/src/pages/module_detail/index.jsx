@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getFirestore, doc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import "react-quill/dist/quill.snow.css";
+import "react-quill-new/dist/quill.snow.css";
 import useUserData from "../../hooks/useUserData";
 import DOMPurify from "dompurify";
 import { TYPO } from "../../constants/typography";

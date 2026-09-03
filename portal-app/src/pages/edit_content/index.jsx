@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { useNavigate, useParams } from "react-router-dom";
-import ReactQuill from "react-quill";
+import ReactQuill from "react-quill-new";
 import { getAuth } from "firebase/auth";
-import "react-quill/dist/quill.snow.css"; // Import Quill CSS
+import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
 if (typeof document !== "undefined") {
@@ -269,6 +269,7 @@ export const EditContent = () => {
               Abstract:
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={formData.Abstract}
               onChange={handleAbstractChange}

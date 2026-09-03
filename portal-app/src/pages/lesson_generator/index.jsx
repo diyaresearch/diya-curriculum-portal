@@ -6,8 +6,8 @@ import OverlayTileView from "../../components/OverlayTileView";
 import axios from "axios";
 import UploadContent from "../upload-content/index";
 import useUserData from "../../hooks/useUserData";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css"; // Import Quill CSS
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
 if (typeof document !== "undefined") {
@@ -460,6 +460,7 @@ export const LessonGenerator = () => {
               Lesson Objective:
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={formData.objectives}
               onChange={handleChange_objective}
@@ -472,6 +473,7 @@ export const LessonGenerator = () => {
               Lesson Description:
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={formData.description}
               onChange={handleDescriptionChange}
@@ -497,6 +499,7 @@ export const LessonGenerator = () => {
                   Section #{index + 1}:
                 </label>
                 <ReactQuill
+              useSemanticHTML={false}
                   theme="snow"
                   value={sections[index]?.intro || ""}
                   onChange={(value) => handleSectionChange(index, value)}

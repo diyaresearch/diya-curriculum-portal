@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from "firebase/firestore";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
 import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 import { COLLECTIONS } from "../../firebase/collectionNames";
@@ -363,6 +363,7 @@ export const UploadContent = ({
               Description <RequiredAsterisk />
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={formData.Abstract}
               onChange={handleAbstractChange}
@@ -586,6 +587,7 @@ export const UploadContent = ({
               Instructions/Notes
             </label>
             <ReactQuill
+              useSemanticHTML={false}
               theme="snow"
               value={formData.Instructions}
               onChange={value => setFormData(prev => ({ ...prev, Instructions: value }))}

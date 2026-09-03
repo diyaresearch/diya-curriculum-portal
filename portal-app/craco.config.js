@@ -27,6 +27,26 @@ module.exports = {
           "dist/development/dom-export.js"
         ),
       };
+
+      // react-quill-new (the React 19-compatible fork swapped in after
+      // react-quill was abandoned - unmaintained since 2023, peer-capped at
+      // React 18) ships as an ES module, and so do its own dependencies
+      // quill, parchment, and lodash-es. CRA's default
+      // transformIgnorePatterns excludes all of node_modules from Babel's
+      // transform, so Jest can't parse their `import`/`export` syntax -
+      // carve out an exception for exactly these four instead of the
+      // (much riskier) alternative of disabling transformIgnorePatterns
+      // wholesale.
+      jestConfig.transformIgnorePatterns = jestConfig.transformIgnorePatterns.map(
+        (pattern) =>
+          pattern.includes("node_modules")
+            ? pattern.replace(
+                "node_modules[/\\\\]",
+                "node_modules[/\\\\](?!(react-quill-new|quill|parchment|lodash-es)[/\\\\])"
+              )
+            : pattern
+      );
+
       return jestConfig;
     },
   },
