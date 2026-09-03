@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { setDoc, doc } from "firebase/firestore";
 import { db } from '../../firebase/firebaseConfig';
 import { getAuth, signOut } from "firebase/auth";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { MultiSelectDropdown, SingleSelectDropdown } from "../../components/Dropdowns";
 import SignupSuccess from "../../components/SignupSuccess";
 import { startGoogleRedirect, signInForSignup } from "../../auth/googleAuth";
@@ -190,7 +190,7 @@ export function TeacherSignup() {
                 No account exists for this Google account.
               </div>
               <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-                <a href="/student-signup" style={{ textDecoration: "none" }}>
+                <Link to="/student-signup" style={{ textDecoration: "none" }}>
                   <button
                     style={{
                       width: "100%",
@@ -207,8 +207,8 @@ export function TeacherSignup() {
                   >
                     Sign Up as Student
                   </button>
-                </a>
-                <a href="/teacher-signup" style={{ textDecoration: "none" }}>
+                </Link>
+                <Link to="/teacher-signup" style={{ textDecoration: "none" }}>
                   <button
                     style={{
                       width: "100%",
@@ -224,7 +224,7 @@ export function TeacherSignup() {
                   >
                     Sign Up as Teacher
                   </button>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -550,7 +550,7 @@ export function StudentSignup() {
                 No account exists for this Google account.
               </div>
               <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-                <a href="/student-signup" style={{ textDecoration: "none" }}>
+                <Link to="/student-signup" style={{ textDecoration: "none" }}>
                   <button
                     style={{
                       width: "100%",
@@ -567,8 +567,8 @@ export function StudentSignup() {
                   >
                     Sign Up as Student
                   </button>
-                </a>
-                <a href="/teacher-signup" style={{ textDecoration: "none" }}>
+                </Link>
+                <Link to="/teacher-signup" style={{ textDecoration: "none" }}>
                   <button
                     style={{
                       width: "100%",
@@ -584,7 +584,7 @@ export function StudentSignup() {
                   >
                     Sign Up as Teacher
                   </button>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
