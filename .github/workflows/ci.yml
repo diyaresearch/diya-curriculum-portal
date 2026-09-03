@@ -7,17 +7,22 @@ name: CI
 # "Expected" forever for PRs that don't touch that path.
 #
 # `portal-app`, `server`, and `functions` are REQUIRED checks in main's
-# branch protection. `dependency-audit` is intentionally NOT required yet:
-# the repo currently carries 91 known vulnerabilities (35 high, 7 critical)
-# — see #437. Making it required today would block every PR immediately.
-# Promote it to required once #437 lands.
+# branch protection.
 #
 # `api-integration` no longer sets continue-on-error (#436 fixed the 3
 # tests that were failing against current auth behavior, deleted the
 # mock-only tests.signup.py suite that ran alongside it, and fixed a mock
-# Firebase Admin bug that broke auth for every mock-mode caller). It still
-# needs to be added to branch protection's required-checks list by a repo
-# admin to actually block merges — this workflow file can't do that part.
+# Firebase Admin bug that broke auth for every mock-mode caller).
+#
+# `dependency-audit` (#437) is required for its server/functions matrix
+# legs — both are clean at --audit-level=high. The portal-app leg stays
+# non-blocking (continue-on-error, set per-matrix-entry below) until the
+# Vite migration (#503) replaces react-scripts, which accounts for most of
+# its remaining advisories and isn't fixable by a version bump.
+#
+# Both api-integration and dependency-audit's server/functions legs still
+# need a repo admin to actually add them to branch protection's
+# required-checks list — this workflow file can't do that part.
 
 on:
   pull_request:
@@ -101,7 +106,12 @@ jobs:
   dependency-audit:
     name: dependency-audit
     runs-on: ubuntu-latest
-    continue-on-error: true # not required yet — see #437
+    # server/ and functions/ are clean at --audit-level=high (#437) and can
+    # block merges. portal-app/ can't yet: react-scripts (CRA, deprecated,
+    # last released Dec 2021) accounts for most of its ~40 remaining
+    # advisories and isn't fixable without the Vite migration tracked in
+    # #503. Only that leg stays non-blocking until #503 lands.
+    continue-on-error: ${{ matrix.package == 'portal-app' }}
     strategy:
       matrix:
         package: [portal-app, server, functions]
