@@ -36,6 +36,12 @@ updates:
       npm-dependencies:
         patterns:
           - "*"
+    ignore:
+      # v14 conflicts with firebase-functions-test@3.5.0's peer range
+      # (^8..^13), which broke `npm ci` after #460 bumped this to 14.3.0.
+      # Revisit once firebase-functions-test supports v14, or drop it.
+      - dependency-name: "firebase-admin"
+        versions: [">=14.0.0"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
