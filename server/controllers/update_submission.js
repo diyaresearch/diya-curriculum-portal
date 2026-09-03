@@ -3,6 +3,7 @@
 const { db } = require("../config/firebaseConfig");
 const { canMutate } = require("../utils/ownership");
 const { sanitizeHtml } = require("../utils/sanitizeHtml");
+const { sendError } = require("../utils/responseHelpers");
 
 // Define the collections
 const TABLE_CONTENT = "content";
@@ -46,9 +47,7 @@ const updateUnitById = async (req, res) => {
     res.status(200).send("Content updated successfully");
   } catch (error) {
     console.error("Error:", error);
-    res
-      .status(error.status || 500)
-      .send(error.message || "Error updating content");
+    sendError(res, "Error updating content", error.status || 500, "CONTENT_UPDATE_ERROR", error.message);
   }
 };
 
