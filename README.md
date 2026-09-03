@@ -12,6 +12,7 @@ A full-stack curriculum portal built with React, Express, and Firebase. This pro
 - [Tech Stack](#tech-stack)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Testing](#testing)
 
 ## Introduction
 
@@ -252,6 +253,30 @@ Navigate to the portal-app directory and start the React app:
 cd portal-app
 npm start
 ```
+
+## Testing
+
+Each Node.js package tests itself the normal way - `npm test` from inside
+`portal-app/`, `server/`, or `functions/`. Their dependencies live in each
+package's own `node_modules/`, isolated per-package the same way `npm
+install` always isolates them; there's nothing extra to set up.
+
+There's also a real integration suite in Python, `tests/test_refactored_api.py`,
+run via:
+
+```bash
+./run_tests.sh
+```
+
+from the repo root. This creates (or reuses) a `venv/` at the repo root the
+first time it runs, installs `tests/requirements.txt` into it, and - if
+nothing is already listening on the target port - boots the server itself
+in mock-Firebase mode so the suite needs no real Firebase project or
+credentials. Every dependency this suite needs lives inside that `venv/`,
+never installed globally. See [tests/README.md](tests/README.md) for what
+the suite covers, how to point it at a server you're already running
+yourself, and the mock-mode bearer tokens it uses to exercise authenticated
+routes.
 
 ## Checking Deployment Version and Viewing Logs
 
