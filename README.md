@@ -42,16 +42,7 @@ DIYA Curriculum Portal is a platform served for the educators and content creato
 Ensure you have the following installed on your local development machine:
 
 - **Node.js**: You can download and install Node.js from the [official Node.js website](https://nodejs.org/). Choose the version that best suits your development environment (LTS is recommended for most users).
-- **npm or yarn**:
-
-  - **npm** is included with Node.js, so it will be installed automatically when you install Node.js.
-  - **yarn** can be installed globally after installing Node.js using the following command:
-
-  ```bash
-  npm install -g yarn
-  ```
-
-  For more details, you can refer to the [npm documentation](https://docs.npmjs.com/) or the [Yarn documentation](https://yarnpkg.com/getting-started)
+- **npm**: included with Node.js, so it's installed automatically when you install Node.js. This is the package manager the repo standardizes on — CI runs `npm ci`, and only `package-lock.json` is committed in each package (`server/` and `portal-app/` used to also carry a `yarn.lock`; the two had drifted and only the npm lockfile was ever what CI/tooling actually used, so the yarn one was dropped — see #438). For more details, see the [npm documentation](https://docs.npmjs.com/).
 
 ### Clone the Repository
 
@@ -68,8 +59,6 @@ For the frontend:
 ```bash
 cd portal-app
 npm install
-# or
-yarn install
 ```
 
 For the backend:
@@ -77,8 +66,6 @@ For the backend:
 ```bash
 cd server
 npm install
-# or
-yarn install
 ```
 
 ## Usage
@@ -255,8 +242,6 @@ Navigate to the server directory and start the backend server:
 ```bash
 cd server
 npm start
-# or
-yarn start
 ```
 
 #### Running the Frontend
@@ -266,8 +251,6 @@ Navigate to the portal-app directory and start the React app:
 ```bash
 cd portal-app
 npm start
-# or
-yarn start
 ```
 
 ## Checking Deployment Version and Viewing Logs
