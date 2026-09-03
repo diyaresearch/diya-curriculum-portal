@@ -140,6 +140,45 @@ under load - exactly when a limit matters most - so this raises the bar
 significantly without being a hard global ceiling. A shared store (Firestore-
 or Memorystore-backed, for instance) would close that gap; out of scope here.
 
+### Stored XSS (#381)
+
+ReactQuill-authored content (`Description`/`Instructions`/`objectives`/section
+`intro`s) is rendered via `dangerouslySetInnerHTML`, and can reach Firestore
+by either of the two paths in the diagram above - so the fix has to hold on
+both:
+
+- **Render** (`portal-app/src/**`) - every `dangerouslySetInnerHTML` wraps its
+  input in `DOMPurify.sanitize()`. This is the defense that actually has to
+  hold: it runs regardless of which path got the content into Firestore, or
+  whether it was ever sanitized on the way in. See
+  `portal-app/src/pages/__tests__/xssSanitization.test.jsx`.
+- **Write, via the API** (`server/utils/sanitizeHtml.js`) - a second layer,
+  applied to every rich-text field the content/lesson/module controllers
+  write. Does **not** cover the client-SDK path: `upload-content/index.jsx`
+  writes its `Instructions` field straight to Firestore
+  (`addDoc`/`updateDoc`), never touching the server at all, and #419 lets any
+  signed-in user write any `content`/`lesson`/`module` document directly.
+  Reduces stored garbage and covers what does flow through the server; it
+  is not, by itself, complete.
+- **CSP** (`firebase.json`'s hosting headers) - shipped as
+  `Content-Security-Policy-Report-Only`, deliberately not enforcing yet.
+  A wrong `connect-src` would silently break Firebase Auth/Firestore calls
+  or Stripe in production, and there's no way to verify hosting headers
+  against a live deploy from this repo alone. Report-only logs what
+  *would* have been blocked to the browser console with zero risk of
+  breaking anything; the intended next step is watching the console on the
+  real deployed site for a while, adjusting the policy for anything
+  legitimate it would have blocked, and only then renaming the header to
+  `Content-Security-Policy` to actually enforce it. `style-src` includes
+  `'unsafe-inline'` and will keep needing to: this codebase sets inline
+  `style={{...}}` on nearly every element, which CSP treats the same as an
+  inline `style="..."` attribute regardless of how React applies it -
+  removing that would need nonce-based styling, a real refactor, not part
+  of this fix. `script-src` has no such exception and is the directive
+  that actually matters most: CRA's production build has no inline
+  `<script>` tags, so this blocks arbitrary inline script injection - the
+  actual XSS payload class - without an escape hatch.
+
 ### Ownership
 
 `utils/ownership.js`. Ownership is recorded inconsistently, and the field names
