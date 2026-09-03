@@ -47,7 +47,12 @@ jest.mock("../middleware/authenticateUser", () =>
 const mockUserData = { email: "teacher@example.com", subscriptionType: "basic", role: "teacherDefault" };
 const mockUserRef = { update: jest.fn().mockResolvedValue(undefined) };
 const mockUserSnap = { exists: true, data: () => mockUserData };
-const mockLogsCollection = { add: jest.fn().mockResolvedValue({ id: "log-1" }) };
+// .doc().create() backs claimPaymentIntent's idempotency claim (#422, #439);
+// .add() backs the plain append-only logs elsewhere in this router.
+const mockLogsCollection = {
+  add: jest.fn().mockResolvedValue({ id: "log-1" }),
+  doc: jest.fn(() => ({ create: jest.fn().mockResolvedValue(undefined) })),
+};
 const mockDb = { collection: jest.fn(() => mockLogsCollection) };
 const mockAdmin = {
   firestore: {
@@ -114,4 +119,44 @@ describe("#432 — payment endpoints use req.stripe, not an undefined `stripe`",
   // one endpoint the issue said still worked) and reads Firestore through its
   // own module-scope getDb() via the real firebase-admin SDK rather than the
   // mockable databaseService, so it isn't a fit for this mock-based suite.
+});
+
+describe("#439 — /confirm-payment idempotency, ported from server/", () => {
+  // This route had no protection against a replayed confirmation until
+  // #439 ported claimPaymentIntent over from the maintained copy in
+  // server/routes/payment.js (the fix originally landed there for #422).
+  // A stateful doc().create() is needed here, unlike the plain jest.fn()
+  // above, to actually exercise "the second call loses the claim".
+  test("a replayed confirmation does not re-apply the subscription update", async () => {
+    const claimed = new Set();
+    mockLogsCollection.doc.mockImplementation((id) => ({
+      create: jest.fn(async (data) => {
+        if (claimed.has(id)) {
+          const err = new Error("Document already exists");
+          err.code = 6;
+          throw err;
+        }
+        claimed.add(id);
+        return data;
+      }),
+    }));
+    mockUserRef.update.mockClear();
+
+    const app = buildApp();
+    const first = await request(app)
+      .post("/confirm-payment")
+      .set("Authorization", "Bearer test-uid")
+      .send({ paymentIntentId: "pi_test_123" });
+    const second = await request(app)
+      .post("/confirm-payment")
+      .set("Authorization", "Bearer test-uid")
+      .send({ paymentIntentId: "pi_test_123" });
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(second.body.alreadyApplied).toBe(true);
+    // The subscription document must only be written once, however many
+    // times the same confirmation is replayed.
+    expect(mockUserRef.update).toHaveBeenCalledTimes(1);
+  });
 });

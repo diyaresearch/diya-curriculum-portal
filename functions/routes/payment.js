@@ -1,6 +1,13 @@
 const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
+const { syncRoleClaim } = require("../utils/customClaims");
+const {
+    roleForPlan,
+    subscriptionEndDate,
+    verifyPaymentIntent,
+    claimPaymentIntent,
+} = require("../utils/entitlements");
 
 const router = express.Router();
 const functions = require("firebase-functions");
@@ -437,24 +444,14 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         const userId = req.user.uid;
         const { paymentIntentId } = req.body;
 
-        if (!paymentIntentId) {
-            return res.status(400).json({ message: "Payment intent ID required" });
+        const verification = await verifyPaymentIntent(req.stripe, paymentIntentId, userId);
+        if (!verification.ok) {
+            console.warn(
+                `[security] Rejected confirm-payment for uid ${userId}: ${verification.message}`
+            );
+            return res.status(verification.status).json({ message: verification.message });
         }
-
-        // Retrieve payment intent from Stripe
-        const paymentIntent = await req.stripe.paymentIntents.retrieve(paymentIntentId);
-
-        if (paymentIntent.status !== 'succeeded') {
-            return res.status(400).json({
-                message: "Payment not completed",
-                status: paymentIntent.status
-            });
-        }
-
-        // Verify the payment belongs to this user
-        if (paymentIntent.metadata.userId !== userId) {
-            return res.status(403).json({ message: "Payment verification failed" });
-        }
+        const { paymentIntent } = verification;
 
         await databaseService.initialize();
         const db = databaseService.getDb();
@@ -470,29 +467,11 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
         const userData = userSnap.data();
         const targetPlan = paymentIntent.metadata.planType;
 
-        // Update user subscription
-        const endDate = new Date();
-        if (targetPlan === 'premiumYearly') {
-            // Yearly subscription - add 12 months
-            endDate.setFullYear(endDate.getFullYear() + 1);
-        } else {
-            // Monthly subscription - add 1 month
-            endDate.setMonth(endDate.getMonth() + 1);
-        }
-
-        await userRef.update({
-            subscriptionType: targetPlan,
-            subscriptionStatus: 'active',
-            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            subscriptionEndDate: admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate,
-            stripePaymentIntentId: paymentIntentId,
-            stripeCustomerId: paymentIntent.customer || null,
-            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            role: (targetPlan === 'premium' || targetPlan === 'premiumYearly') ? 'teacherPlus' : (targetPlan === 'enterprise' ? 'teacherEnterprise' : userData.role)
-        });
-
-        // Log successful payment
-        await db.collection(TABLE_PAYMENT_LOGS).add({
+        // Claim the payment before granting. A replayed confirmation used to
+        // re-extend the subscription window every time it was sent (#422) -
+        // this route was missing that fix entirely until #439 ported it over
+        // from the maintained copy in server/routes/payment.js.
+        const claimed = await claimPaymentIntent(db, TABLE_PAYMENT_LOGS, paymentIntentId, {
             userId,
             action: 'payment_confirmed',
             fromPlan: paymentIntent.metadata.upgradeFrom,
@@ -504,6 +483,36 @@ router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res
             currency: paymentIntent.currency,
             userEmail: userData.email
         });
+
+        if (!claimed) {
+            return res.status(200).json({
+                message: "Payment already confirmed",
+                subscriptionType: userData.subscriptionType || targetPlan,
+                subscriptionStatus: userData.subscriptionStatus || 'active',
+                alreadyApplied: true
+            });
+        }
+
+        const endDate = subscriptionEndDate(targetPlan);
+
+        await userRef.update({
+            subscriptionType: targetPlan,
+            subscriptionStatus: 'active',
+            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            subscriptionEndDate: admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate,
+            stripePaymentIntentId: paymentIntentId,
+            stripeCustomerId: paymentIntent.customer || null,
+            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            role: roleForPlan(targetPlan) || userData.role
+        });
+
+        // Entitlement role into claims (#382), best-effort. This route was
+        // missing this call entirely - confirming a subscription upgrade
+        // here updated the Firestore document but never synced the custom
+        // claim, unlike the server/ copy - until #439 ported it over.
+        await syncRoleClaim(admin, userId, roleForPlan(targetPlan) || userData.role);
+
+        // The success log was written above as the idempotency claim.
 
         return res.status(200).json({
             message: "Payment confirmed and subscription activated",

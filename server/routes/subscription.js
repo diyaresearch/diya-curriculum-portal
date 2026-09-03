@@ -15,7 +15,6 @@ const {
 const router = express.Router();
 
 const TABLE_USERS = "users";
-const TABLE_SUBSCRIPTIONS = "subscriptions";
 const TABLE_PAYMENT_LOGS = "payment_logs";
 const TABLE_ENTERPRISE_CONTACTS = "enterprise_contacts";
 

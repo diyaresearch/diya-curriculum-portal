@@ -1,11 +1,10 @@
 # Backend Deployment Instructions
 
-## Current Issue
-The payment page is returning a 404 error for the `/api/subscription/initiate-upgrade` endpoint because the backend server is not deployed to production. The frontend is hosted at https://curriculum-portal-1ce8f.web.app but trying to access a backend API that doesn't exist in production.
+Deploys `server/` to Google App Engine, where it's live today at
+`https://curriculum-portal-1ce8f.uc.r.appspot.com` (also reachable at the
+`.appspot.com` form of the same URL).
 
-## Solution: Deploy Backend to Google App Engine
-
-### Prerequisites
+## Prerequisites
 1. **Install Google Cloud CLI**: https://cloud.google.com/sdk/docs/install
 2. **Authenticate with Google Cloud**:
    ```bash
@@ -25,7 +24,7 @@ The payment page is returning a 404 error for the `/api/subscription/initiate-up
    `serviceAccountKey.json`; `.gcloudignore` excludes it and the app refuses to
    read one on App Engine. See [CREDENTIALS.md](CREDENTIALS.md).
 
-### Deploy Firestore Rules and Indexes
+## Deploy Firestore Rules and Indexes
 
 Rules and composite indexes live in source (`portal-app/firestore.rules`,
 `portal-app/firestore.indexes.json`) but are **not** deployed by `gcloud app
@@ -42,43 +41,20 @@ Run this on every deploy that touches `firestore.indexes.json` or
 `firestore.rules` — a query that works locally against an already-built
 index can 500 on a fresh project otherwise (#434).
 
-### Deployment Steps
+## Deploy
 
-#### Option 1: Use the deployment scripts
-Run one of these scripts from the server directory:
-
-**For Command Prompt:**
-```cmd
-deploy.cmd
-```
-
-**For PowerShell:**
-```powershell
-.\deploy.ps1
-```
-
-#### Option 2: Manual deployment
 ```bash
 cd server
 gcloud app deploy app.yaml --quiet
 ```
 
-### After Deployment
-Once deployed, your backend API will be available at:
-- **Base URL**: https://curriculum-portal-1ce8f.appspot.com
-- **Test endpoint**: https://curriculum-portal-1ce8f.appspot.com/api/subscription/test
+(The `deploy.cmd`/`deploy.ps1` wrapper scripts that used to sit next to this
+file did nothing but this one command, wrapped in Windows-only batch/
+PowerShell that couldn't run in CI — see #439. Removed; run the `gcloud`
+command directly.)
 
-### Frontend Configuration
-The frontend needs to be configured to use the production API URL:
-- **Development**: http://localhost:3001/api
-- **Production**: https://curriculum-portal-1ce8f.appspot.com/api
+## Verification
 
-### Environment Variables
-The production environment includes:
-- `NODE_ENV=production`
-- CORS allowed origins: production frontend URL
-
-### Verification
 First confirm the Admin credential works:
 ```bash
 curl -s https://curriculum-portal-1ce8f.uc.r.appspot.com/api/health
@@ -86,17 +62,6 @@ curl -s https://curriculum-portal-1ce8f.uc.r.appspot.com/api/health
 # {"status":"degraded",...}                 -> see CREDENTIALS.md
 ```
 
-Then test the payment functionality:
-1. Visit the payment page while logged in as teacherDefault
-2. The `/api/subscription/initiate-upgrade` endpoint should work
-3. No more 404 errors
-
-## Current Status
-✅ Backend code is complete and working locally  
-❌ Backend is not deployed to production  
-❌ Frontend cannot access API in production  
-
-## Next Steps
-1. Deploy the backend using the instructions above
-2. Test the payment functionality
-3. Frontend should automatically work with the deployed backend
+Then exercise a payment route end to end while logged in as `teacherDefault`
+to confirm the deploy actually took (e.g. the upgrade flow hitting
+`/api/subscription/initiate-upgrade`).

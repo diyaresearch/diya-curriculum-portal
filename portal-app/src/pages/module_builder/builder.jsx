@@ -26,6 +26,7 @@ import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 import BackButton from "../../components/BackButton";
 import { TYPO } from "../../constants/typography";
 import { COLLECTIONS } from "../../firebase/collectionNames";
+import { fetchPayments } from "../../utils/paymentsApi";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Jest)
 if (typeof document !== "undefined") {
@@ -395,8 +396,8 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   
         // IMPORTANT: this is what prevents "Bearer null"
         const token = await user.getIdToken();
-  
-        const res = await fetch("/api/payment/create-embedded-checkout-session", {
+
+        const res = await fetchPayments("/create-embedded-checkout-session", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

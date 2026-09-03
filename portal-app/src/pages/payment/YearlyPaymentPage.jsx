@@ -4,6 +4,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import useUserData from '../../hooks/useUserData';
 import BackButton from '../../components/BackButton';
+import { fetchPayments } from '../../utils/paymentsApi';
 
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51PYERERqWgqDVRD3kSuQgmgKNIWup77t7Rxsh2mqIsnDDRbCtjuiYh8DCvSO84i5R9FTOgBEzvvr21qHjMGTjvWn00Dwdt2QDv');
@@ -37,13 +38,10 @@ const PaymentForm = () => {
 
         try {
             const cardElement = elements.getElement(CardElement);
-
-            // Get server URL from environment
-            const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || 'http://localhost:3001';
             const token = await user.getIdToken();
 
             // Step 1: Create payment intent
-            const paymentIntentResponse = await fetch(`${serverUrl}/api/payment/create-payment-intent`, {
+            const paymentIntentResponse = await fetchPayments('/create-payment-intent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -79,7 +77,7 @@ const PaymentForm = () => {
 
             if (paymentIntent.status === 'succeeded') {
                 // Step 3: Confirm payment on backend
-                const confirmResponse = await fetch(`${serverUrl}/api/payment/confirm-payment`, {
+                const confirmResponse = await fetchPayments('/confirm-payment', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

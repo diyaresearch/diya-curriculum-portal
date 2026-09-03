@@ -10,8 +10,12 @@ DIYA Curriculum Portal is a full-stack educational platform built with React fro
 
 ### Repository Structure
 - `portal-app/` - React frontend application (port 3000)
-- `server/` - Express.js backend API (port 3001)
-- `start.sh` - Script to start both frontend and backend concurrently
+- `server/` - Express.js backend API (port 3001), deployed to App Engine
+- `functions/` - Express app wrapped in a single Firebase Function (`payments`), deployed to
+  Cloud Functions
+- `start.sh` - Script to start both `portal-app/` and `server/` concurrently (`functions/` isn't
+  part of it - run it separately with `firebase emulators:start --only functions`, or deploy it
+  with `firebase deploy --only functions`)
 
 ### Frontend (portal-app/)
 - **Framework**: React 18 with Create React App
@@ -26,6 +30,22 @@ DIYA Curriculum Portal is a full-stack educational platform built with React fro
 - **Authentication**: Firebase Admin SDK
 - **File Storage**: Firebase Storage, Google Cloud Storage
 - **Key Dependencies**: Firebase Admin, Multer, PDFKit, CORS
+- **Owns**: users, roles, content, lessons, modules, subscription *management* (status/cancel/
+  reactivate/enterprise-contact - `routes/subscription.js`). Does **not** own payment processing
+  (see below) - `routes/payment.js` still exists here but its non-webhook routes are unreachable
+  from the app as of #439; see the comment at the top of that file before touching it.
+
+### Backend (functions/)
+- **Framework**: Express, wrapped as a single `onRequest` Cloud Function named `payments`
+- **Owns**: all payment processing - `create-payment-intent`, `create-module-checkout-session`,
+  `create-embedded-checkout-session`, `confirm-payment`, `history`, and the Stripe webhook
+  (`/webhook`). This is the one authoritative home for payments (#439) - it's the copy with the
+  working idempotent webhook and the entitlement-granting logic for module purchases.
+- `server/` used to duplicate every one of these routes byte-for-byte-adjacent, with real drift
+  between the copies (a missing idempotency fix, a missing custom-claims sync) - #439 has the
+  history if a route here looks unfamiliar next to `server/routes/payment.js`.
+- The frontend reaches this exclusively through `portal-app/src/utils/paymentsApi.js` - never a
+  hardcoded URL or `REACT_APP_SERVER_ORIGIN_URL` for anything under `/api/payment/*`.
 
 ### Firebase Integration
 - **Authentication**: Firebase Auth for user management
@@ -71,10 +91,17 @@ npm start           # Start server (http://localhost:3001)
 - `/upgrade` - Subscription upgrade page
 
 ### Backend API Routes
+`server/` (App Engine, `REACT_APP_SERVER_ORIGIN_URL`):
 - `/api/units` - Content management endpoints
 - `/api/lessons` - Lesson CRUD operations
 - `/api/modules` - Module management
 - `/api/user` - User profile and authentication
+- `/api/subscription` - Subscription management (status/cancel/reactivate/enterprise-contact) -
+  not payment processing, see `functions/` below
+
+`functions/` (Cloud Function `payments`, reached via `portal-app/src/utils/paymentsApi.js`):
+- `/api/payment` - All payment processing: create-payment-intent, create-module-checkout-session,
+  create-embedded-checkout-session, confirm-payment, history, and the Stripe webhook
 
 ### Key Components
 - `Layout.jsx` - Main layout wrapper with navigation

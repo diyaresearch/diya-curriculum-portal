@@ -4,6 +4,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import useUserData from '../../hooks/useUserData';
 import BackButton from '../../components/BackButton';
+import { fetchPayments } from '../../utils/paymentsApi';
 
 // Monthly upgrade, migrated from a hand-rolled card form to Stripe Elements
 // (#423). Card details are entered inside Stripe's iframe and never reach this
@@ -48,12 +49,11 @@ const PaymentForm = () => {
 
         try {
             const cardElement = elements.getElement(CardElement);
-            const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || 'http://localhost:3001';
             const token = await user.getIdToken();
 
             // Step 1: create the PaymentIntent. The amount is set server-side
             // from planType, never sent from here.
-            const paymentIntentResponse = await fetch(`${serverUrl}/api/payment/create-payment-intent`, {
+            const paymentIntentResponse = await fetchPayments('/create-payment-intent', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ const PaymentForm = () => {
 
             // Step 3: the server retrieves the intent from Stripe and grants
             // the subscription only if it really succeeded for this user.
-            const confirmResponse = await fetch(`${serverUrl}/api/payment/confirm-payment`, {
+            const confirmResponse = await fetchPayments('/confirm-payment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

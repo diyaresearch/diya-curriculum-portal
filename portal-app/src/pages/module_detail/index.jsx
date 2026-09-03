@@ -18,6 +18,7 @@ import module4 from "../../assets/modules/module4.png";
 import module5 from "../../assets/modules/module5.png";
 import OverlayTileView from "../../components/OverlayTileView";
 import { loadStripe } from "@stripe/stripe-js";
+import { fetchPayments } from "../../utils/paymentsApi";
 import Modal from "react-modal";
 
 
@@ -725,23 +726,7 @@ const ModuleDetail = () => {
   
       const token = await user.getIdToken();
 
-      // In local dev, CRA proxy sends /api/* to localhost:3001. Our payments live in Firebase Functions.
-      // Prefer calling the deployed functions URL directly when provided (works even if hosting domain
-      // is not Firebase Hosting / rewrites are not configured).
-      const functionsBase = String(process.env.REACT_APP_PAYMENTS_FUNCTIONS_BASE_URL || "").trim();
-      const isLocalhost =
-        typeof window !== "undefined" &&
-        (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-
-      const defaultFunctionsBase = "https://us-central1-curriculum-portal-1ce8f.cloudfunctions.net/payments";
-      const functionsEndpoint = `${functionsBase || defaultFunctionsBase}/api/payment/create-module-checkout-session`;
-      const sameOriginEndpoint = "/api/payment/create-module-checkout-session";
-      const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-      const isFirebaseHostingDomain = /\.web\.app$|\.firebaseapp\.com$/i.test(hostname);
-      const shouldUseFunctionsDirect = isLocalhost || Boolean(functionsBase) || !isFirebaseHostingDomain;
-      let endpoint = shouldUseFunctionsDirect ? functionsEndpoint : sameOriginEndpoint;
-
-      let response = await fetch(endpoint, {
+      const response = await fetchPayments("/create-module-checkout-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -750,19 +735,6 @@ const ModuleDetail = () => {
         body: JSON.stringify({ moduleId }),
       });
 
-      // If we tried same-origin but the host doesn't support rewrites (405/404), fall back to direct functions.
-      if (!shouldUseFunctionsDirect && (response.status === 405 || response.status === 404)) {
-        endpoint = functionsEndpoint;
-        response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ moduleId }),
-        });
-      }
-  
       const raw = await response.text();
       let data = null;
       try {
