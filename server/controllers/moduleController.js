@@ -2,6 +2,7 @@ const { databaseService } = require('../services/databaseService');
 const { canMutate } = require('../utils/ownership');
 const { canAccessModule, isPaidModule } = require('../utils/entitlements.check');
 const { sanitizeHtml } = require('../utils/sanitizeHtml');
+const { sendError } = require('../utils/responseHelpers');
 
 // Define the collections
 const TABLE_MODULE = "module";
@@ -29,7 +30,7 @@ const getAllModules = async (req, res) => {
     res.status(200).json(allModules);
   } catch (error) {
     console.error('Error fetching modules:', error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to fetch modules', 500, 'MODULE_FETCH_ERROR', error.message);
   }
 };
 
@@ -72,7 +73,7 @@ const getModuleById = async (req, res) => {
     res.status(200).json({ id: moduleDoc.id, ...moduleData, locked: false });
   } catch (error) {
     console.error('Error fetching module:', error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to fetch module', 500, 'MODULE_FETCH_ERROR', error.message);
   }
 };
 
@@ -99,7 +100,7 @@ const createModule = async (req, res) => {
     res.status(201).json({ id: moduleRef.id, ...newModule });
   } catch (error) {
     console.error("Error creating module:", error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to create module', 500, 'MODULE_CREATE_ERROR', error.message);
   }
 };
 
@@ -136,7 +137,7 @@ const editModule = async (req, res) => {
     res.status(200).json({ id: moduleId, ...updatedModule });
   } catch (error) {
     console.error("Error updating module:", error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to update module', 500, 'MODULE_UPDATE_ERROR', error.message);
   }
 };
 
@@ -161,7 +162,7 @@ const deleteModule = async (req, res) => {
     res.status(200).send("Module deleted successfully");
   } catch (error) {
     console.error("Error deleting module:", error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to delete module', 500, 'MODULE_DELETE_ERROR', error.message);
   }
 };
 
@@ -180,7 +181,7 @@ const listMyEntitlements = async (req, res) => {
     res.status(200).json({ moduleIds });
   } catch (error) {
     console.error('Error listing entitlements:', error);
-    res.status(500).send(error.message);
+    sendError(res, 'Failed to list entitlements', 500, 'ENTITLEMENT_FETCH_ERROR', error.message);
   }
 };
 
