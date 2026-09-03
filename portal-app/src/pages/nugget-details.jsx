@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import DOMPurify from "dompurify";
 import { COLLECTIONS } from "../firebase/collectionNames";
 import { TYPO } from "../constants/typography";
 import MetaChipsRow from "../components/MetaChipsRow";
@@ -131,7 +132,7 @@ const NuggetDetails = () => {
           <div
             className="nugget-rich-html"
             style={{ ...TYPO.pageSubtitle, color: "#222" }}
-            dangerouslySetInnerHTML={{ __html: nugget.Description || "" }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(nugget.Description || "") }}
           />
         </div>
 
@@ -186,7 +187,7 @@ const NuggetDetails = () => {
         <div
           className="nugget-rich-html"
           style={{ ...TYPO.body, color: "#444" }}
-          dangerouslySetInnerHTML={{ __html: nugget.Instructions || "" }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(nugget.Instructions || "") }}
         />
       </SectionCard>
       </div>

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import DOMPurify from "dompurify";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
 import { COLLECTIONS } from "../firebase/collectionNames";
 import BackButton from "./BackButton";
@@ -246,7 +247,7 @@ const ContentDetails = () => {
           <div
             className="rich-text-content text-gray-700"
             style={TYPO.body}
-            dangerouslySetInnerHTML={{ __html: content.Description || "" }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.Description || "") }}
           />
         </SectionCard>
 
@@ -255,7 +256,7 @@ const ContentDetails = () => {
             <div
               className="rich-text-content text-gray-700"
               style={TYPO.body}
-              dangerouslySetInnerHTML={{ __html: content.Instructions || "" }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.Instructions || "") }}
             />
           </SectionCard>
         )}
