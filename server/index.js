@@ -74,8 +74,14 @@ if (env === 'production') {
     })
   );
   
-  // Ensure preflight always succeeds
-  app.options("*", cors());
+  // Ensure preflight always succeeds. Express 5's router (path-to-regexp
+  // v8) requires wildcard segments to be named - a bare "*" throws
+  // `PathError: Missing parameter name` at route-registration time,
+  // synchronously, before app.listen() ever runs. That's a hard crash on
+  // every boot in production mode specifically (this line is skipped
+  // entirely in the `else` branch below) - confirmed by actually booting
+  // with NODE_ENV=production locally, not just by inspection.
+  app.options("/*splat", cors());
   
 } else {
   // Development: allow only localhost origins for security
