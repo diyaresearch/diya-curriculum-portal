@@ -1,6 +1,7 @@
 const { db } = require("../config/firebaseConfig");
 const multer = require("multer");
 const { storage } = require("../config/firebaseConfig");
+const { sanitizeHtml } = require("../utils/sanitizeHtml");
 
 // Define the collections
 const TABLE_COUNTERS = "counters";
@@ -32,7 +33,7 @@ const createUnit = async (req, res) => {
       Level,
       Duration,
       isPublic,
-      Abstract,
+      sanitizeHtml(Abstract),
       fileUrl,
       Author,
     );
