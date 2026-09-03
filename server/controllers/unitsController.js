@@ -5,8 +5,6 @@ const { canMutate, resolveOwnerUid } = require('../utils/ownership');
 const TABLE_CONTENT = "content";
 const TABLE_LESSON = "lesson";
 
-console.log('unitsController tables are', TABLE_CONTENT, TABLE_LESSON)
-
 // Get all units
 const getAllUnits = async (req, res) => {
   // Add CORS headers

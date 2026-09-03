@@ -17,8 +17,6 @@ const LessonDetails = () => {
 
                 if (lessonDoc.exists()) {
                     setLesson({ id: lessonDoc.id, ...lessonDoc.data() });
-                } else {
-                    console.log('No such lesson!');
                 }
             } catch (error) {
                 console.error('Error fetching lesson:', error);

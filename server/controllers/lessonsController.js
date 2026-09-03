@@ -8,8 +8,6 @@ const TABLE_CONTENT = "content";
 const TABLE_LESSON = "lesson";
 const TABLE_USERS = "users";
 
-console.log('lessonsController tables are', TABLE_CONTENT, TABLE_LESSON)
-
 // Get all public lessons
 const getAllLessons = async (req, res) => {
   try {
@@ -52,7 +50,6 @@ const getAllLessonsAdmin = async (req, res) => {
     sendError(res, 'Failed to fetch lessons', 500, 'LESSON_FETCH_ERROR', error.message);
   }
 };
-
 
 const getLessonById = async (req, res) => {
   const lessonId = req.params.lessonId;

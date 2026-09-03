@@ -552,7 +552,6 @@ const ExploreModulesSection = () => {
           _type: "Module"
         });
       });
-      console.log("Fetched modules:", moduleData); // Add this for debugging
       setModules(moduleData);
     }).catch(error => {
       console.error("Error fetching modules:", error);

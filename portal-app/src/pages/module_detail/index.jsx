@@ -418,7 +418,6 @@ const ModuleDetail = () => {
       const data = await moduleResponse.json();
       const isLocked = data.locked === true;
       setModuleLocked(isLocked);
-      console.log("Fetched module data:", data); // Debug log
       const authorUid = data.author || data.authorId || "";
       const isFeatured = data.isFeatured === true;
       const priceRaw = data.price ?? data.Price ?? 0;
@@ -749,7 +748,6 @@ const ModuleDetail = () => {
         return;
       }
   
-      console.log("checkout session created:", data);
       setCheckoutStripeKey(String(data?.stripePublishableKey || fallbackStripeKey || "").trim() || null);
       setCheckoutClientSecret(data.clientSecret);
     } catch (err) {

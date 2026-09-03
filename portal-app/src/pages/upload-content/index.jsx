@@ -200,7 +200,6 @@ export const UploadContent = ({
         id: a.id || `${Date.now()}-${idx}-${Math.random().toString(16).slice(2)}`,
         createdAt: a.createdAt || now,
       }));
-      console.log("attachmentsToSave", attachmentsToSave);
 
       if (editContentId) {
         await updateDoc(doc(db, COLLECTIONS.content, editContentId), {

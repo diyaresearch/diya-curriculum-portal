@@ -200,8 +200,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         }
         const data = snap.data() || {};
         const details = Array.isArray(data.details) ? data.details : [];
-        console.log("PPARTHAS ",data);
-        console.log("PPARTHAS details ", details);
         const authorUid = data.author || data.authorId || "";
         setEditModuleAuthorUid(authorUid);
 
@@ -218,14 +216,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         const durationRaw =
           data.Duration ?? data.duration ?? data.minutes ?? data.Minutes ?? getDetailValue(details, "Duration") ?? "";
 
-          console.log("PPARTHAS titleRaw ", titleRaw);
-          console.log("PPARTHAS descriptionRaw ", descriptionRaw);
-          console.log("PPARTHAS requirementsRaw ", requirementsRaw);
-          console.log("PPARTHAS learningObjectivesRaw ", learningObjectivesRaw);
-          console.log("PPARTHAS categoryRaw ", categoryRaw);
-          console.log("PPARTHAS typeRaw ", typeRaw);
-          console.log("PPARTHAS levelRaw ", levelRaw);
-          console.log("PPARTHAS durationRaw ", durationRaw);
         const lessonIdsFromLessonPlans =
           data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
             ? Object.values(data.lessonPlans).filter(Boolean)
@@ -416,7 +406,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         }
   
         // For now, just confirm you received it (next step will mount checkout in a modal)
-        console.log("Stripe clientSecret:", data.clientSecret);
         setModalMessage("Checkout session created successfully (clientSecret received).");
         setModalIsOpen(true);
   
