@@ -71,7 +71,6 @@ export const LessonGenerator = () => {
     const savedDraft = localStorage.getItem("lessonPlanDraft");
     if (savedDraft) {
       const parsedDraft = JSON.parse(savedDraft);
-      console.log("Restored Data:", parsedDraft);
 
       setFormData(parsedDraft);
 
@@ -149,8 +148,6 @@ export const LessonGenerator = () => {
   };
 
   const handleCreateNewNugget = () => {
-    console.log("Create Nugget clicked. Current user role:", userRole);
-
     if (!userRole) {
       console.error("User role is undefined.");
       return;
@@ -189,7 +186,6 @@ export const LessonGenerator = () => {
       })),
     };
 
-    console.log("Saving Draft:", savedData);
     localStorage.setItem("lessonPlanDraft", JSON.stringify(savedData));
     alert("Lesson plan draft saved successfully!");
   };
@@ -214,22 +210,15 @@ export const LessonGenerator = () => {
     const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/`;
 
     try {
-      console.log(formData.isPublic === true);
-
       // If the lesson is public, update all content within sections to be public
       if (formData.isPublic) {
         const contentUpdates = sections.flatMap((section, index) => {
-          console.log("Processing section:", section);
-
           const contentIds = selectedMaterials[index]?.map((material) => material.id) || [];
-          console.log(contentIds);
           if (!Array.isArray(contentIds) || contentIds.length === 0) {
-            console.log("No valid contentIds found for section", index);
             return [];
           }
 
           return contentIds.map((contentId) => {
-            console.log("Updating content to public:", contentId);
             return fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
               method: "POST",
               headers: {
@@ -241,10 +230,7 @@ export const LessonGenerator = () => {
           });
         });
 
-        console.log("Content update requests:", contentUpdates);
         await Promise.all(contentUpdates);
-      } else {
-        console.log("Lesson is private. Skipping content update.");
       }
 
       const lessonData = {

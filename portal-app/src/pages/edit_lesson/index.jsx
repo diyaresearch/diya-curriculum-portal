@@ -218,17 +218,12 @@ export const EditLesson = () => {
 
       if (formData.isPublic) {
         const contentUpdates = sections.flatMap((section, index) => {
-          console.log("Processing section:", section);
-
           const contentIds = selectedMaterials[index]?.map((material) => material.id) || [];
-          console.log(contentIds);
           if (!Array.isArray(contentIds) || contentIds.length === 0) {
-            console.log("No valid contentIds found for section", index);
             return [];
           }
 
           return contentIds.map((contentId) => {
-            console.log("Updating content to public:", contentId);
             return fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
               method: "POST",
               headers: {
@@ -240,10 +235,7 @@ export const EditLesson = () => {
           });
         });
 
-        console.log("Content update requests:", contentUpdates);
         await Promise.all(contentUpdates);
-      } else {
-        console.log("Lesson is private. Skipping content update.");
       }
 
       const response = await fetch(url, {
@@ -451,7 +443,6 @@ export const EditLesson = () => {
               onChange={(e) => {
                 const updatedValue = e.target.checked;
                 setFormData((prevData) => ({ ...prevData, isPublic: updatedValue }));
-                console.log(updatedValue);
               }}
             />
             <label className="text-gray-700 text-sm font-bold" htmlFor="isPublic">

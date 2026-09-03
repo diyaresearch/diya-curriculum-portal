@@ -10,22 +10,7 @@ const UpgradePage = () => {
     // Determine current plan based on user data
     const currentPlan = userData?.subscriptionType || 'basic';
 
-    // Debug logging to understand the issue
-    console.log('=== UpgradePage Debug ===');
-    console.log('userData:', userData);
-    console.log('currentPlan:', currentPlan);
-    console.log('userRole:', userData?.role);
-    console.log('subscriptionType:', userData?.subscriptionType);
-    console.log('========================');
-
     const handleUpgradeClick = (planType = 'premium') => {
-        console.log('=== handleUpgradeClick Debug ===');
-        console.log('Button clicked!');
-        console.log('User role:', userData?.role);
-        console.log('Current plan:', currentPlan);
-        console.log('Target plan:', planType);
-        console.log('================================');
-
         // Check if user is authenticated
         if (!user || !userData) {
             alert('Please log in to upgrade your account');
@@ -34,13 +19,10 @@ const UpgradePage = () => {
 
         // Navigate directly to the appropriate payment page
         if (planType === 'premium') {
-            console.log('Navigating to monthly premium payment page');
             navigate('/payment/premium');
         } else if (planType === 'premiumYearly') {
-            console.log('Navigating to yearly premium payment page');
             navigate('/payment/yearly');
         } else {
-            console.log('Fallback navigation for plan:', planType);
             // Fallback for any other plan types
             navigate(`/payment/${planType}`);
         }

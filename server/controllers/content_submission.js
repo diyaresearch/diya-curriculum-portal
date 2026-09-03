@@ -8,10 +8,7 @@ const { sendError } = require("../utils/responseHelpers");
 const TABLE_COUNTERS = "counters";
 const TABLE_CONTENT = "content";
 
-console.log('content_submission tables are', TABLE_CONTENT, TABLE_COUNTERS)
-
 const createUnit = async (req, res) => {
-  console.log("Received content upload request");
   try {
     const { Title, Category, Type, Level, Duration, isPublic, Abstract, fileUrl } =
       req.body;
@@ -25,7 +22,6 @@ const createUnit = async (req, res) => {
       console.error("Author ID is missing");
       return res.status(401).send("Unauthorized");
     }
-    console.log("Author ID:", Author);
 
     const newNugget = await saveContentToFirestore(
       Title,
@@ -46,9 +42,8 @@ const createUnit = async (req, res) => {
 };
 
 async function getNextUnitID() {
-  console.log("in getNextUnitID")
   const counterRef = db.collection(TABLE_COUNTERS).doc("unitIdCounter");
-  
+
 
   return db.runTransaction(async (transaction) => {
     const counterDoc = await transaction.get(counterRef);
@@ -76,8 +71,6 @@ async function saveContentToFirestore(
 ) {
   const contentRef = db.collection(TABLE_CONTENT);
   const newUnitID = await getNextUnitID();
-  console.log("after getNextUnitID")
-  console.log("Generated UnitID:", newUnitID);
 
   const data = {
     UnitID: newUnitID,
@@ -92,10 +85,8 @@ async function saveContentToFirestore(
     Author, // Use the custom user ID
     LastModified: new Date().toISOString(),
   };
-  console.log("Document data to save:", data);
 
   const docRef = await contentRef.add(data);
-  console.log("Document successfully saved to Firestore with ID:", docRef.id);
 
   return { id: docRef.id, ...data };
 }

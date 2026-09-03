@@ -8,13 +8,10 @@ const { sendError } = require("../utils/responseHelpers");
 // Define the collections
 const TABLE_CONTENT = "content";
 
-console.log('update_submission tables are', TABLE_CONTENT)
-
 // Update a specific unit by ID
 const updateUnitById = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(req.body, req.params)
     const unitRef = db.collection(TABLE_CONTENT).doc(id);
     const unitSnapshot = await unitRef.get();
     
@@ -41,7 +38,6 @@ const updateUnitById = async (req, res) => {
       fileUrl: req.body.fileUrl ?? existingData.fileUrl,
       LastModified: new Date().toISOString(),
     };
-    console.log("update Data is", updateData)
 
     await db.collection(TABLE_CONTENT).doc(id).update(updateData);
     res.status(200).send("Content updated successfully");

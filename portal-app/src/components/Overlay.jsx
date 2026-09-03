@@ -44,8 +44,6 @@ const Overlay = ({ content, onClose }) => {
                   onClick={() => {
                     if (userData?.role === "admin") {
                       navigate(`/edit-content/${content.id}`);
-                    } else {
-                      console.log("Access denied: Only admins can edit content.");
                     }
                   }}
                   className={`block px-4 py-2 ${

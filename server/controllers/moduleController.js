@@ -9,8 +9,6 @@ const TABLE_MODULE = "module";
 const TABLE_LESSON = "lesson";
 const TABLE_ENTITLEMENTS = "entitlements";
 
-console.log('moduleController tables are', TABLE_MODULE, TABLE_LESSON);
-
 // Get all modules
 const getAllModules = async (req, res) => {
   try {
