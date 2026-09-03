@@ -2,6 +2,7 @@
 
 const { db } = require("../config/firebaseConfig");
 const { canMutate } = require("../utils/ownership");
+const { sanitizeHtml } = require("../utils/sanitizeHtml");
 
 // Define the collections
 const TABLE_CONTENT = "content";
@@ -33,7 +34,9 @@ const updateUnitById = async (req, res) => {
       Level: req.body.Level ?? existingData.Level,
       Duration: req.body.Duration ?? existingData.Duration,
       isPublic: req.body.isPublic,
-      Abstract: req.body.Abstract ?? existingData.Abstract,
+      // sanitizeHtml is idempotent, so this is safe whether the value came
+      // fresh from the request or fell back to what's already stored.
+      Abstract: sanitizeHtml(req.body.Abstract ?? existingData.Abstract),
       fileUrl: req.body.fileUrl ?? existingData.fileUrl,
       LastModified: new Date().toISOString(),
     };

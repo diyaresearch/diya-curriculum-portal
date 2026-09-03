@@ -1,6 +1,7 @@
 const { databaseService } = require('../services/databaseService');
 const { canMutate } = require('../utils/ownership');
 const { canAccessModule, isPaidModule } = require('../utils/entitlements.check');
+const { sanitizeHtml } = require('../utils/sanitizeHtml');
 
 // Define the collections
 const TABLE_MODULE = "module";
@@ -84,7 +85,7 @@ const createModule = async (req, res) => {
 
     const newModule = {
       title,
-      description,
+      description: sanitizeHtml(description),
       tags: tags || [],
       lessonPlans: lessonPlans || [],
       image: image,
@@ -125,7 +126,7 @@ const editModule = async (req, res) => {
 
     const updatedModule = {
       title: title || moduleData.title,
-      description: description || moduleData.description,
+      description: sanitizeHtml(description || moduleData.description),
       tags: tags || moduleData.tags,
       lessonPlans: lessonPlans || moduleData.lessonPlans,
       image: image || moduleData.image,

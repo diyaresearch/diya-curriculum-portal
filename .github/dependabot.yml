@@ -26,6 +26,13 @@ updates:
       # the modular API before revisiting, not a routine bump.
       - dependency-name: "firebase-admin"
         versions: [">=14.0.0"]
+      # >=2.17.2 bumps its htmlparser2 dependency past v8, to an ESM-only
+      # release (v9+) — confirmed breaks `npm test` outright: Jest's default
+      # CommonJS transform can't require() it (#381). Revisit once either
+      # this project's Jest setup transforms ESM node_modules, or Node here
+      # is >=24.9 (native require(esm) support).
+      - dependency-name: "sanitize-html"
+        versions: [">=2.17.2"]
 
   - package-ecosystem: "npm"
     directory: "/functions"

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import DOMPurify from "dompurify";
 import { COLLECTIONS } from "../../firebase/collectionNames";
 
 const NuggetDetails = () => {
@@ -86,7 +87,7 @@ const NuggetDetails = () => {
       <div
         className="nugget-rich-html"
         style={{ color: "#444", marginBottom: 16 }}
-        dangerouslySetInnerHTML={{ __html: nugget.Description || "" }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(nugget.Description || "") }}
       />
       <div style={{ fontSize: "1rem", color: "#222", marginBottom: 8 }}>
         <strong>Author:</strong> {nugget.Author}
@@ -136,7 +137,7 @@ const NuggetDetails = () => {
         <div
           className="nugget-rich-html"
           style={{ color: "#444" }}
-          dangerouslySetInnerHTML={{ __html: nugget.Instructions || "" }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(nugget.Instructions || "") }}
         />
       </div>
     </div>

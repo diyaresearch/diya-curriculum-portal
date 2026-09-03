@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import DOMPurify from "dompurify";
 import { COLLECTIONS } from "../../firebase/collectionNames";
 
 const LessonDetailsPage = () => {
@@ -59,7 +60,7 @@ const LessonDetailsPage = () => {
           <strong>Description:</strong>
           <div
             className="rich-text-content"
-            dangerouslySetInnerHTML={{ __html: lesson.description }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(lesson.description) }}
           />
         </div>
       )}
@@ -72,7 +73,7 @@ const LessonDetailsPage = () => {
             <div
               key={idx}
               className="rich-text-content"
-              dangerouslySetInnerHTML={{ __html: obj }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(obj) }}
               style={{ marginBottom: 8 }}
             />
           ))}
@@ -146,7 +147,7 @@ const LessonDetailsPage = () => {
               {section.intro && (
                 <div
                   className="rich-text-content"
-                  dangerouslySetInnerHTML={{ __html: section.intro }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(section.intro) }}
                 />
               )}
               {Array.isArray(section.contentIds) && section.contentIds.length > 0 ? (

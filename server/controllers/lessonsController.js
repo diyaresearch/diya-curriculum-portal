@@ -1,5 +1,6 @@
 const { db, storage } = require("../config/firebaseConfig");
 const PDFDocument = require("pdfkit");
+const { sanitizeHtml, sanitizeArray } = require("../utils/sanitizeHtml");
 
 // Define the collections
 const TABLE_CONTENT = "content";
@@ -116,10 +117,10 @@ const postLesson = async (req, res) => {
       category: formData.category,
       type: formData.type,
       level: formData.level,
-      objectives: formData.objectives,
+      objectives: sanitizeArray(formData.objectives),
       duration: formData.duration,
-      sections: formData.sections,
-      description: formData.description,
+      sections: sanitizeArray(formData.sections, ["intro"]),
+      description: sanitizeHtml(formData.description),
       isPublic: formData.isPublic,
       createdAt: new Date().toISOString(),
     });
@@ -174,10 +175,12 @@ const updateLesson = async (req, res) => {
       category: formData.category || lessonData.category,
       type: formData.type || lessonData.type,
       level: formData.level || lessonData.level,
-      objectives: formData.objectives || lessonData.objectives,
+      // sanitizeArray/sanitizeHtml are idempotent, so re-processing an
+      // already-clean fallback value from lessonData is harmless.
+      objectives: sanitizeArray(formData.objectives || lessonData.objectives),
       duration: formData.duration || lessonData.duration,
-      sections: formData.sections || lessonData.sections,
-      description: formData.description || lessonData.description,
+      sections: sanitizeArray(formData.sections || lessonData.sections, ["intro"]),
+      description: sanitizeHtml(formData.description || lessonData.description),
       isPublic: typeof formData.isPublic === "boolean" ? formData.isPublic : lessonData.isPublic,
       updatedAt: new Date().toISOString(),
     };
