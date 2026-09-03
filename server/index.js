@@ -44,17 +44,28 @@ app.use(
   })
 );
 
-// Get allowed origins from env, default empty array
-const allowedOrigins = process.env.SERVER_ALLOW_ORIGIN
-  ? process.env.SERVER_ALLOW_ORIGIN.split(',').map(url => url.trim())
+// Origins from SERVER_ALLOW_ORIGIN (comma-separated) - required in every
+// .env.* file and validated by envValidator.js, but until #393 nothing
+// downstream actually read it: production checked a hardcoded
+// ALLOWED_ORIGINS Set instead, and development a hardcoded
+// devAllowedOrigins array assuming ports 3000/3001, ignoring this entirely.
+// Configuring the env var had zero effect on either. Now the origin lists
+// below are the hardcoded defaults *plus* whatever this adds, in both
+// modes - additive rather than replacing them outright, so a deploy whose
+// SERVER_ALLOW_ORIGIN doesn't happen to list every origin already relied
+// on can't silently start rejecting production traffic.
+const envOrigins = process.env.SERVER_ALLOW_ORIGIN
+  ? process.env.SERVER_ALLOW_ORIGIN.split(',').map(url => url.trim()).filter(Boolean)
   : [];
-  const ALLOWED_ORIGINS = new Set([
-    "https://diyaresearch.org",
-    "https://curriculum-portal-1ce8f.web.app",
-    "https://curriculum-portal-1ce8f.firebaseapp.com",
-    // Production custom domain (issue #421 follow-up)
-    "https://learn.diyaresearch.org",
-  ]);
+
+const ALLOWED_ORIGINS = new Set([
+  "https://diyaresearch.org",
+  "https://curriculum-portal-1ce8f.web.app",
+  "https://curriculum-portal-1ce8f.firebaseapp.com",
+  // Production custom domain (issue #421 follow-up)
+  "https://learn.diyaresearch.org",
+  ...envOrigins,
+]);
 
 // Use whitelist-based CORS in production, secure localhost-only in development
 if (env === 'production') {
@@ -63,9 +74,9 @@ if (env === 'production') {
       origin: (origin, callback) => {
         // Allow server-to-server or same-origin requests (origin may be undefined)
         if (!origin) return callback(null, true);
-  
+
         if (ALLOWED_ORIGINS.has(origin)) return callback(null, true);
-  
+
         return callback(new Error("Not allowed by CORS"));
       },
       credentials: true,
@@ -73,7 +84,7 @@ if (env === 'production') {
       allowedHeaders: ["Content-Type", "Authorization"],
     })
   );
-  
+
   // Ensure preflight always succeeds. Express 5's router (path-to-regexp
   // v8) requires wildcard segments to be named - a bare "*" throws
   // `PathError: Missing parameter name` at route-registration time,
@@ -82,20 +93,25 @@ if (env === 'production') {
   // entirely in the `else` branch below) - confirmed by actually booting
   // with NODE_ENV=production locally, not just by inspection.
   app.options("/*splat", cors());
-  
+
 } else {
-  // Development: allow only localhost origins for security
-  const devAllowedOrigins = [
+  // Development: allow only localhost origins for security. The hardcoded
+  // ports below are the same fallback defaults as before (3000/3001,
+  // matching the frontend and this server's own default PORT) - real
+  // configurability comes from SERVER_ALLOW_ORIGIN, e.g. to add a port a
+  // developer actually runs on locally without editing this file.
+  const devAllowedOrigins = new Set([
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:3001',
-    'http://127.0.0.1:3001'
-  ];
+    'http://127.0.0.1:3001',
+    ...envOrigins,
+  ]);
 
   app.use(cors({
     origin: function(origin, callback) {
       // Allow requests without origin (e.g., mobile apps, Postman) in development only
-      if (!origin || devAllowedOrigins.indexOf(origin) !== -1) {
+      if (!origin || devAllowedOrigins.has(origin)) {
         console.log("CORS allowed (dev):", origin || 'no-origin');
         callback(null, true);
       } else {
