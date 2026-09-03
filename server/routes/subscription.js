@@ -2,6 +2,7 @@ const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
 const { requireAdmin } = require("../middleware/requireRole");
+const { strictLimiter } = require("../middleware/rateLimiter");
 const { findUserDocument } = require("../utils/identityCollections");
 const { syncRoleClaim } = require("../utils/customClaims");
 const { getStripe, requireStripe } = require("../utils/stripeClient");
@@ -58,7 +59,7 @@ router.get("/status", authenticateUser, async (req, res) => {
 });
 
 // Initiate upgrade process
-router.post("/initiate-upgrade", authenticateUser, async (req, res) => {
+router.post("/initiate-upgrade", authenticateUser, strictLimiter, async (req, res) => {
     try {
         const userId = req.user.uid;
         const { targetPlan } = req.body;
@@ -127,7 +128,7 @@ router.post("/initiate-upgrade", authenticateUser, async (req, res) => {
 // intent is now verified against Stripe, must belong to the caller, must have
 // actually succeeded, and must match the plan being claimed. The grant is
 // claimed exactly once so a replay cannot extend the subscription twice.
-router.post("/complete-upgrade", authenticateUser, requireStripe, async (req, res) => {
+router.post("/complete-upgrade", authenticateUser, strictLimiter, requireStripe, async (req, res) => {
     try {
         const userId = req.user.uid;
         const { targetPlan, paymentIntentId, upgradeSessionId } = req.body;
@@ -455,7 +456,7 @@ router.post("/reactivate", authenticateUser, async (req, res) => {
 // The endpoint is retained, rather than deleted, so that a stale cached
 // frontend gets a clear error instead of a 404 it might treat as a network
 // blip. It grants nothing.
-router.post("/process-payment", authenticateUser, async (req, res) => {
+router.post("/process-payment", authenticateUser, strictLimiter, async (req, res) => {
     console.warn(
         `[security] Deprecated /process-payment called by uid ${req.user.uid}; no entitlement granted`
     );

@@ -4,6 +4,12 @@ const paymentRouter = require("./routes/payment");
 
 const app = express();
 
+// Cloud Functions (v2) sits behind Google's front end, one proxy hop away,
+// which sets X-Forwarded-For to the real client IP. Without this,
+// express-rate-limit's IP fallback (#383) would see every request as
+// coming from that one proxy.
+app.set("trust proxy", 1);
+
 // CORS + preflight handling (required for browser calls from localhost/web app)
 app.use((req, res, next) => {
   const origin = req.headers.origin;

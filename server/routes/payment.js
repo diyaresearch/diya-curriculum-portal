@@ -16,6 +16,7 @@
 const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
+const { strictLimiter } = require("../middleware/rateLimiter");
 
 const router = express.Router();
 
@@ -52,7 +53,7 @@ router.get("/test", (req, res) => {
 });
 
 // Create payment intent for premium subscription
-router.post("/create-payment-intent", authenticateUser, requireStripe, async (req, res) => {
+router.post("/create-payment-intent", authenticateUser, strictLimiter, requireStripe, async (req, res) => {
     try {
         const userId = req.user.uid;
         const { planType } = req.body;
@@ -134,7 +135,7 @@ router.post("/create-payment-intent", authenticateUser, requireStripe, async (re
 });
 
 // Create Embedded Checkout Session for MODULE purchase (uses moduleId -> Firestore price)
-router.post("/create-module-checkout-session", authenticateUser, requireStripe, async (req, res) => {
+router.post("/create-module-checkout-session", authenticateUser, strictLimiter, requireStripe, async (req, res) => {
     try {
       const userId = req.user.uid;
       const { moduleId } = req.body;
@@ -202,7 +203,7 @@ router.post("/create-module-checkout-session", authenticateUser, requireStripe, 
 
   
 // Create an Embedded Checkout Session (for a modal "popup" checkout)
-router.post("/create-embedded-checkout-session", authenticateUser, requireStripe, async (req, res) => {
+router.post("/create-embedded-checkout-session", authenticateUser, strictLimiter, requireStripe, async (req, res) => {
     try {
       const userId = req.user.uid;
       const { planType } = req.body;
@@ -258,7 +259,7 @@ router.post("/create-embedded-checkout-session", authenticateUser, requireStripe
   });
   
 // Confirm payment and complete subscription
-router.post("/confirm-payment", authenticateUser, requireStripe, async (req, res) => {
+router.post("/confirm-payment", authenticateUser, strictLimiter, requireStripe, async (req, res) => {
     try {
         const userId = req.user.uid;
         const { paymentIntentId } = req.body;
