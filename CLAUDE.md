@@ -110,6 +110,27 @@ npm start           # Start server (http://localhost:3001)
 - `LessonDetail.jsx` - Lesson viewing component
 - `ExploreModulesSection.jsx` - Module exploration interface
 
+### Navigation Patterns (portal-app/)
+
+Use React Router for anything that goes to another in-app route:
+- `<Link to="/...">` for a link a user clicks (renders an `<a>`, no full page reload)
+- `useNavigate()` (`navigate("/...")`) for programmatic navigation (after a form submit, a
+  role check, a conditional redirect)
+
+Plain `<a href="...">` is reserved for external links (`target="_blank"`, e.g. social links in
+`Footer.jsx`, the DIYA base URL in `Navbar.jsx`) - React Router's `Link` is only meaningful for
+routes this app itself serves.
+
+`window.location.reload()` / `window.location.href = ...` are not a substitute for `navigate()` -
+they force a full page reload, discarding in-memory state (React context, Firebase auth
+listeners, etc.). They're used deliberately in a few places to force a hard refresh of
+cached user/subscription data right after a mutation (see the comments around the
+`window.location.reload()` calls in `pages/payment/PaymentPage.jsx`,
+`pages/payment/YearlyPaymentPage.jsx`, `pages/module_builder/builder.jsx`, and
+`pages/lesson-plans/builder.jsx`) - don't replace those with `navigate()`, which wouldn't
+force the same reset. Reading `window.location.origin/hostname/pathname` (no navigation
+involved) is unaffected by any of this.
+
 ## Environment Configuration
 
 ⚠️ **IMPORTANT**: Never commit `.env` files or `serviceAccountKey.json` to version control!
