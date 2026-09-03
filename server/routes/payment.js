@@ -1,3 +1,18 @@
+// Payments are being consolidated onto functions/ (#439) - it owns the
+// working, idempotent Stripe webhook and the entitlement-granting logic
+// that goes with it; functions/routes/payment.js has since been brought to
+// parity (it was missing the #422 idempotency fix and the #382 custom-claims
+// sync until #439 ported both over). The frontend now calls functions/
+// exclusively for every route in this file (portal-app/src/utils/
+// paymentsApi.js) - as of that change, everything below except /webhook is
+// unreachable from the app. It's not deleted yet because:
+//   1. this router also owns a second, non-idempotent Stripe webhook
+//      (below) whose live/dead status is still unconfirmed - see #439 - and
+//   2. leaving it briefly is a cheap safety margin against a caller this
+//      audit missed, now that the routes are provably unused rather than
+//      just suspected to be.
+// Delete this file's non-webhook routes once the webhook question is
+// resolved and nothing has hit them for a while.
 const express = require("express");
 const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
