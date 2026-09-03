@@ -5,12 +5,20 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/server"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
     ignore:
       # v14 removed the root-namespace API (admin.apps/.app()/.firestore()/
       # .storage()) this codebase depends on throughout — confirmed breaks
@@ -24,6 +32,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
