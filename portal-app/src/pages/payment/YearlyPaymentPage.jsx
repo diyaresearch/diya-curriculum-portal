@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import useUserData from '@/hooks/useUserData';
-import BackButton from '@/components/BackButton';
+import BackButton from '@/components/ui/BackButton';
 import { fetchPayments } from '@/utils/paymentsApi';
 
 // Initialize Stripe with your publishable key

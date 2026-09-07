@@ -3,14 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, getDocs, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
-import OverlayTileView from "@/components/OverlayTileView";
+import OverlayTileView from "@/components/content/OverlayTileView";
 import UploadContent from "@/pages/upload-content/index";
 import useUserData from "@/hooks/useUserData";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import NuggetBuilderPage from "@/pages/nugget-builder";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
-import MultiCheckboxDropdown from "@/components/MultiCheckboxDropdown";
+import MultiCheckboxDropdown from "@/components/ui/MultiCheckboxDropdown";
 import { TYPO } from "@/constants/typography";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 

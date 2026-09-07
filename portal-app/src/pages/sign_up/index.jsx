@@ -3,8 +3,8 @@ import { setDoc, doc } from "firebase/firestore";
 import { db } from '@/firebase/firebaseConfig';
 import { getAuth, signOut } from "firebase/auth";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MultiSelectDropdown, SingleSelectDropdown } from "@/components/Dropdowns";
-import SignupSuccess from "@/components/SignupSuccess";
+import { MultiSelectDropdown, SingleSelectDropdown } from "@/components/ui/Dropdowns";
+import SignupSuccess from "@/components/ui/SignupSuccess";
 import { startGoogleRedirect, signInForSignup } from "@/auth/googleAuth";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 

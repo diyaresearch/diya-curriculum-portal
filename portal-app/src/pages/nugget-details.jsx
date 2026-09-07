@@ -4,9 +4,9 @@ import { getFirestore, doc, getDoc } from "firebase/firestore";
 import DOMPurify from "dompurify";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { TYPO } from "@/constants/typography";
-import MetaChipsRow from "@/components/MetaChipsRow";
-import SectionCard from "@/components/SectionCard";
-import BackButton from "@/components/BackButton";
+import MetaChipsRow from "@/components/ui/MetaChipsRow";
+import SectionCard from "@/components/ui/SectionCard";
+import BackButton from "@/components/ui/BackButton";
 
 const NuggetDetails = () => {
   const { id } = useParams();
