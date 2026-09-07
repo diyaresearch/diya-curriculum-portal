@@ -43,6 +43,7 @@ export const UploadContent = ({
   const navigate = useNavigate();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setFormData((prev) => ({
       ...prev,
       Category: category || prev.Category,

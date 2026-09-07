@@ -82,10 +82,12 @@ const ListView = ({ content }) => {
   }, [content, selectedCategory, selectedType, selectedLevel, searchTerm]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setFilteredContent(content);
   }, [content]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     filterContent();
   }, [filterContent]);
 

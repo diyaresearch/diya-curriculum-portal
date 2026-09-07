@@ -95,6 +95,7 @@ export const EditLesson = () => {
 
   useEffect(() => {
     if (sections.length > 0 && portalContent.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setSelectedMaterials(
         sections.reduce((acc, section, index) => {
           const contentIdsArray = Array.isArray(section.contentIds)

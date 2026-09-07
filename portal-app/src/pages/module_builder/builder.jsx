@@ -107,6 +107,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     if (editModuleId) return;
     if (userData?.role !== "admin") return;
     didInitFeaturedDefaultRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setFormData((prev) => ({ ...prev, isFeatured: true }));
   }, [editModuleId, userData?.role]);
 
@@ -162,6 +163,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     if (editModuleId) return;
     if (savedDraft && portalContent.length > 0) {
       const parsedDraft = JSON.parse(savedDraft);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setFormData({
         title: parsedDraft.title || "",
         Category: parsedDraft.Category || parsedDraft.category || [],
@@ -254,6 +256,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     if (didPrefillLessonsRef.current) return;
     if (!prefillLessonIds || prefillLessonIds.length === 0) {
       didPrefillLessonsRef.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setSelectedMaterials([]);
       return;
     }

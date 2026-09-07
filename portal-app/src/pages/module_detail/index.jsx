@@ -243,6 +243,7 @@ const ModuleDetail = () => {
       if (checkoutFlag === "success" && (redirectStatus === "succeeded" || !!sessionId)) {
         // If Stripe redirected back, ensure checkout modal is closed
         // so we don't keep two modals open at once.
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
         setCheckoutClientSecret(null);
         setCheckoutStripeKey(null);
         checkoutInitRef.current = null;
@@ -280,6 +281,7 @@ const ModuleDetail = () => {
 
   // Reset description expansion when module changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setIsDescExpanded(false);
     setShowDescMore(false);
   }, [moduleId]);
@@ -359,6 +361,7 @@ const ModuleDetail = () => {
     if (isEditMode || mode === "create") return;
     if (!moduleData) return;
     if (isDescExpanded) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setShowDescMore(false);
       return;
     }
@@ -478,6 +481,7 @@ const ModuleDetail = () => {
     }
   }, [moduleId, fetchLessonDetails]);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- pre-existing, see #525
   const fetchLessonPlans = useCallback(async () => {
     try {
       const auth = getAuth();
@@ -545,6 +549,7 @@ const ModuleDetail = () => {
 
   useEffect(() => {
     if (moduleId === "create") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setMode("create");
       setIsEditMode(true);
       fetchLessonPlans();

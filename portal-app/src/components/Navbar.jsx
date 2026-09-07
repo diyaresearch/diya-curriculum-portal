@@ -35,6 +35,7 @@ const Navbar = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get("showSignUpPopup") === "1") {
+      // eslint-disable-next-line react-hooks/immutability, react-hooks/set-state-in-effect -- pre-existing, see #525
       setErrorMsg(renderSignUpError());
     }
   }, [location.search]);
