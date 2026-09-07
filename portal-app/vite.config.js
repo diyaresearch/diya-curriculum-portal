@@ -1,3 +1,5 @@
+import { fileURLToPath, URL } from "node:url";
+
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -18,6 +20,22 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   base: "/",
   plugins: [react(), tailwindcss()],
+  resolve: {
+    // Absolute imports (#358). "@/components/Navbar" instead of counting
+    // "../../" hops, so moving a file only rewrites that file's own imports
+    // and not every import OF it.
+    //
+    // The "@/" prefix rather than CRA's bare `baseUrl: "src"` style
+    // ("components/Navbar"): a bare specifier is ambiguous with an npm
+    // package of the same name, and this app has directories called
+    // components, utils, hooks and constants - all plausible package names.
+    // The prefix can never collide.
+    //
+    // jsconfig.json mirrors this for editors; keep the two in sync.
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
   build: {
     outDir: "build",
     assetsDir: "static",

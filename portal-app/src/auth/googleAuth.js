@@ -1,7 +1,7 @@
 import { getAuth, GoogleAuthProvider, getRedirectResult, signInWithRedirect, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-import { COLLECTIONS } from "../firebase/collectionNames";
+import { db } from "@/firebase/firebaseConfig";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 import { signInWithPopup } from "firebase/auth";
  
 const RETURN_TO_KEY = "diya_auth:returnTo";

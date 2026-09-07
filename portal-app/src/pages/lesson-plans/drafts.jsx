@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { COLLECTIONS } from "../../firebase/collectionNames";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 const LessonPlanDrafts = () => {
   const [drafts, setDrafts] = useState([]);

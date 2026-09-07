@@ -3,15 +3,15 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import DOMPurify from "dompurify";
-import { app as firebaseApp } from "../firebase/firebaseConfig";
-import { COLLECTIONS } from "../firebase/collectionNames";
+import { app as firebaseApp } from "@/firebase/firebaseConfig";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 import BackButton from "./BackButton";
 import MetaChipsRow from "./MetaChipsRow";
-import { TYPO } from "../constants/typography";
+import { TYPO } from "@/constants/typography";
 import SectionCard from "./SectionCard";
 import EditButton from "./EditButton";
 import DeleteButton from "./DeleteButton";
-import useUserData from "../hooks/useUserData";
+import useUserData from "@/hooks/useUserData";
 
 const toSlidesEmbedUrl = (url) => {
   // Example input: https://docs.google.com/presentation/d/<ID>/edit#slide=id....

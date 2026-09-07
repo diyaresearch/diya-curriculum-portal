@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getAuth } from "firebase/auth";
-import useUserData from "../../hooks/useUserData";
+import useUserData from "@/hooks/useUserData";
 
 const categories = ["Python", "Physics", "Chemistry", "Biology", "Economics", "Earth Science"];
 const types = ["Lectures", "Assignments", "Quiz", "Projects", "Case studies", "Data sets"];

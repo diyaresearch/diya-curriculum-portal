@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { app as firebaseApp } from '../firebase/firebaseConfig';
-import { COLLECTIONS } from '../firebase/collectionNames';
+import { app as firebaseApp } from '@/firebase/firebaseConfig';
+import { COLLECTIONS } from '@/firebase/collectionNames';
 
 const LessonDetails = () => {
     const { id } = useParams();

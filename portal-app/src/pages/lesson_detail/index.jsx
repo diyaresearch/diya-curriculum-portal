@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import useUserData from "../../hooks/useUserData";
-import BackButton from "../../components/BackButton";
-import EditButton from "../../components/EditButton";
-import DeleteButton from "../../components/DeleteButton";
-import MetaChipsRow from "../../components/MetaChipsRow";
-import SectionCard from "../../components/SectionCard";
+import useUserData from "@/hooks/useUserData";
+import BackButton from "@/components/BackButton";
+import EditButton from "@/components/EditButton";
+import DeleteButton from "@/components/DeleteButton";
+import MetaChipsRow from "@/components/MetaChipsRow";
+import SectionCard from "@/components/SectionCard";
 import { FaExternalLinkAlt } from "react-icons/fa";
 import "react-quill-new/dist/quill.snow.css";
 import DOMPurify from "dompurify";
-import { TYPO } from "../../constants/typography";
+import { TYPO } from "@/constants/typography";
 
 export const LessonDetail = () => {
   const { user, userData, loading } = useUserData();

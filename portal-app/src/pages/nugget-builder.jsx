@@ -1,6 +1,6 @@
 import React from "react";
 import UploadContent from "./upload-content"; // adjust path if needed
-import { TYPO } from "../constants/typography";
+import { TYPO } from "@/constants/typography";
 
 const NuggetBuilderPage = (props) => (
   <div

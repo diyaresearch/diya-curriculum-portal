@@ -5,9 +5,9 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from "firebase/firestore";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
-import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
-import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
-import { COLLECTIONS } from "../../firebase/collectionNames";
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
+import MultiCheckboxDropdown from "@/components/MultiCheckboxDropdown";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {

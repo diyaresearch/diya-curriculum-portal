@@ -3,16 +3,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, getDocs, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
-import OverlayTileView from "../../components/OverlayTileView";
-import UploadContent from "../upload-content/index";
-import useUserData from "../../hooks/useUserData";
+import OverlayTileView from "@/components/OverlayTileView";
+import UploadContent from "@/pages/upload-content/index";
+import useUserData from "@/hooks/useUserData";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
-import NuggetBuilderPage from "../nugget-builder";
-import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
-import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
-import { TYPO } from "../../constants/typography";
-import { COLLECTIONS } from "../../firebase/collectionNames";
+import NuggetBuilderPage from "@/pages/nugget-builder";
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
+import MultiCheckboxDropdown from "@/components/MultiCheckboxDropdown";
+import { TYPO } from "@/constants/typography";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {

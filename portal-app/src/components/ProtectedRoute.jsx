@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { app as firebaseApp } from '../firebase/firebaseConfig';
-import { COLLECTIONS } from "../firebase/collectionNames";
+import { app as firebaseApp } from '@/firebase/firebaseConfig';
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 const ProtectedRoute = ({ children, redirectTeacherPlus = false }) => {
     const [user, setUser] = useState(null);

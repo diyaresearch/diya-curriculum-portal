@@ -1,5 +1,5 @@
 import React from "react";
-import { TYPO } from "../constants/typography";
+import { TYPO } from "@/constants/typography";
 
 const mk = (Tag, baseStyle) =>
   function Typo({ style, className = "", ...props }) {

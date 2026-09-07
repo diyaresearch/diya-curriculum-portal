@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { app as firebaseApp } from "../firebase/firebaseConfig";
+import { app as firebaseApp } from "@/firebase/firebaseConfig";
 // Kept only for side effects (auth state); do not destructure unused values.
-import useUserData from "../hooks/useUserData";
-import { COLLECTIONS } from "../firebase/collectionNames";
+import useUserData from "@/hooks/useUserData";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 
 const HeroSection = () => {

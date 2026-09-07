@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import textbooksImg from "../assets/textbooks.png";
-import microscopeImg from "../assets/microscope.png";
-import useUserRole from "../hooks/useUserRole";
+import textbooksImg from "@/assets/textbooks.png";
+import microscopeImg from "@/assets/microscope.png";
+import useUserRole from "@/hooks/useUserRole";
 import SignUpPrompt from "./SignUpPrompt";
 
 // --- SquareSection Component ---

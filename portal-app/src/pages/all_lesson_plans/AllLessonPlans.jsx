@@ -1,11 +1,11 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import jsPDF from 'jspdf';
-import BackButton from '../../components/BackButton';
+import BackButton from '@/components/BackButton';
 
 // Import assets
-import lessonPlansIcon from '../../assets/lesson_plans.png';
-import textbooksIcon from '../../assets/textbooks.png';
-import pencilIcon from '../../assets/pencil.png';
+import lessonPlansIcon from '@/assets/lesson_plans.png';
+import textbooksIcon from '@/assets/textbooks.png';
+import pencilIcon from '@/assets/pencil.png';
 
 const AllLessonPlans = () => {
     const navigate = useNavigate();

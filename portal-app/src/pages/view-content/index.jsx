@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { storage } from "../../firebase/firebaseConfig";
+import { storage } from "@/firebase/firebaseConfig";
 import { ref, getDownloadURL } from "firebase/storage";
 import { Document, Page, pdfjs } from "react-pdf";
 import { FaFilePdf, FaVideo, FaExternalLinkAlt } from "react-icons/fa";
 import DOMPurify from "dompurify";
-import { TYPO } from "../../constants/typography";
+import { TYPO } from "@/constants/typography";
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;

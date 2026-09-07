@@ -1,13 +1,13 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import TileItem from "./TileItem";
 import Overlay from "./Overlay";
-import useUserData from "../hooks/useUserData";
+import useUserData from "@/hooks/useUserData";
 import { useNavigate } from "react-router-dom";
-import module1 from "../assets/modules/module1.png";
-import module2 from "../assets/modules/module2.png";
-import module3 from "../assets/modules/module3.png";
-import module4 from "../assets/modules/module4.png";
-import module5 from "../assets/modules/module5.png";
+import module1 from "@/assets/modules/module1.png";
+import module2 from "@/assets/modules/module2.png";
+import module3 from "@/assets/modules/module3.png";
+import module4 from "@/assets/modules/module4.png";
+import module5 from "@/assets/modules/module5.png";
 
 const imageMap = {
   module1,

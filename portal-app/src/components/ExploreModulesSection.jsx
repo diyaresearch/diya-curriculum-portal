@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
-import aiExploreImg from "../assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png";
-import aiExploreImg3 from "../assets/ChatGPT Image Jun 13, 2025, 02_25_51 PM.png";
-import laptopImg from "../assets/laptop.png";
-import physicsImg from "../assets/finphysics.png";
-import textbooksImg from "../assets/textbooks.png";
-import softwareEngImg from "../assets/software_engineering.png";
+import aiExploreImg from "@/assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png";
+import aiExploreImg3 from "@/assets/ChatGPT Image Jun 13, 2025, 02_25_51 PM.png";
+import laptopImg from "@/assets/laptop.png";
+import physicsImg from "@/assets/finphysics.png";
+import textbooksImg from "@/assets/textbooks.png";
+import softwareEngImg from "@/assets/software_engineering.png";
 import { getFirestore, collection, getDocs, query, where, limit } from "firebase/firestore";
-import { app as firebaseApp } from "../firebase/firebaseConfig";
-import { COLLECTIONS } from "../firebase/collectionNames";
+import { app as firebaseApp } from "@/firebase/firebaseConfig";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 import { useLocation, useNavigate } from "react-router-dom";
-import { startGoogleRedirect } from "../auth/googleAuth";
-import useUserRole from "../hooks/useUserRole";
+import { startGoogleRedirect } from "@/auth/googleAuth";
+import useUserRole from "@/hooks/useUserRole";
 
 function isModuleVisibleToViewer(moduleItem, viewerUser) {
   if (!moduleItem || moduleItem._type !== "Module") return true;

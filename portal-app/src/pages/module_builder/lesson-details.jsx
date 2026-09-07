@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import DOMPurify from "dompurify";
-import { COLLECTIONS } from "../../firebase/collectionNames";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 const NuggetDetails = () => {
   const { id } = useParams();

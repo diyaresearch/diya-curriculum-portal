@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import useUserData from "../hooks/useUserData";
-import logo from "../assets/DIYA_Logo.png";
+import useUserData from "@/hooks/useUserData";
+import logo from "@/assets/DIYA_Logo.png";
 import { getAuth } from "firebase/auth";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import defaultUserIcon from "../assets/default_user_icon.png";
-import { startGoogleRedirect } from "../auth/googleAuth";
+import defaultUserIcon from "@/assets/default_user_icon.png";
+import { startGoogleRedirect } from "@/auth/googleAuth";
 
 const Navbar = () => {
   const { userData, logout } = useUserData();

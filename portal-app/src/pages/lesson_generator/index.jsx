@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
-import OverlayTileView from "../../components/OverlayTileView";
+import OverlayTileView from "@/components/OverlayTileView";
 import axios from "axios";
-import UploadContent from "../upload-content/index";
-import useUserData from "../../hooks/useUserData";
+import UploadContent from "@/pages/upload-content/index";
+import useUserData from "@/hooks/useUserData";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
 
