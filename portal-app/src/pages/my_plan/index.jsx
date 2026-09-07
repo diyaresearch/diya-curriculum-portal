@@ -27,6 +27,7 @@ export const MyPlans = () => {
   const [selectedPlans, setSelectedPlans] = useState(new Set()); // Store selected lesson plans
 
   useEffect(() => {
+    let cancelled = false;
     const fetchPlans = async () => {
       try {
         const auth = getAuth();
@@ -39,6 +40,7 @@ export const MyPlans = () => {
         if (userRole === "admin") {
           // /api/lessons/admin is now admin-gated and needs the token (#424).
           const lessons = await api.get("/api/lessons/admin");
+          if (cancelled) return;
 
           if (planType === "all") {
             setPlans(lessons);
@@ -65,6 +67,10 @@ export const MyPlans = () => {
     };
 
     fetchPlans();
+
+    return () => {
+      cancelled = true;
+    };
   }, [navigate, planType, userRole]);
 
   // Filter plans based on search and selected filters

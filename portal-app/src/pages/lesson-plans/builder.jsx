@@ -156,6 +156,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
 
   // Prefill from an existing lesson when editing
   useEffect(() => {
+    let cancelled = false;
     const loadForEdit = async () => {
       try {
         if (!editLessonId) return;
@@ -167,6 +168,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
           return;
         }
         const lesson = await api.get(`/api/lesson/${editLessonId}`);
+        if (cancelled) return;
 
         const nextSections = Array.isArray(lesson.sections)
           ? lesson.sections.map((s) => ({
@@ -205,6 +207,10 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     loadForEdit();
     // `toast` is stable (useMemo over two stable useCallbacks in
     // ToastProvider), so listing it satisfies the rule without re-running.
+
+    return () => {
+      cancelled = true;
+    };
   }, [editLessonId, toast]);
 
   const handleChange = (e) => {

@@ -50,15 +50,22 @@ const ListView = ({ content }) => {
 
 
   useEffect(() => {
+    let cancelled = false;
     const fetchModules = async () => {
       try {
-        setModules(await api.get("/api/modules", { auth: false }));
+        const modules = await api.get("/api/modules", { auth: false });
+        if (cancelled) return;
+        setModules(modules);
       } catch (error) {
         console.error("Error fetching modules:", error);
       }
     };
 
     fetchModules();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filterContent = useCallback(() => {

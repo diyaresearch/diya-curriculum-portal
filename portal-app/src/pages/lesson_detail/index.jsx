@@ -102,6 +102,7 @@ export const LessonDetail = () => {
   };
 
   useEffect(() => {
+    let cancelled = false;
     const fetchLesson = async () => {
       try {
         if (!loading && !user) {
@@ -112,6 +113,7 @@ export const LessonDetail = () => {
         if (loading || !user) return;
 
         const lessonData = await api.get(`/api/lesson/${lessonId}`);
+        if (cancelled) return;
         setLesson(lessonData);
 
         const contentPromises = lessonData.sections.flatMap((section) =>
@@ -122,6 +124,7 @@ export const LessonDetail = () => {
         );
 
         const contentData = await Promise.all(contentPromises);
+        if (cancelled) return;
         const contentDetailsMap = contentData.reduce((acc, content) => {
           // Key by the ID referenced in lesson.sections[].contentIds
           acc[content.contentId] = content;
@@ -142,6 +145,7 @@ export const LessonDetail = () => {
 
         if (authorUid) {
           setAuthor(await api.get(`/api/user/${authorUid}`, { auth: false }));
+          if (cancelled) return;
         }
       } catch (error) {
         console.error("Error fetching lesson:", error);
@@ -151,6 +155,10 @@ export const LessonDetail = () => {
     if (!loading) {
       fetchLesson();
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [lessonId, navigate, user, loading]);
 
   if (!lesson) {

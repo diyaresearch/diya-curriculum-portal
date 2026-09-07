@@ -31,11 +31,13 @@ export const EditContent = () => {
   const navigator = useNavigate();
 
   useEffect(() => {
+    let cancelled = false;
     const fetchContent = async () => {
       const contentId = id;
 
       try {
         const data = await api.get(`/api/unit/${contentId}`, { auth: false });
+        if (cancelled) return;
         setFormData({
           Title: data.Title,
           Category: data.Category,
@@ -53,6 +55,10 @@ export const EditContent = () => {
     };
 
     fetchContent();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const handleChange = (e) => {

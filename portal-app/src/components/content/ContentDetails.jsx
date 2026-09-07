@@ -47,6 +47,7 @@ const ContentDetails = () => {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     if (!id) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setError("Missing id in URL.");
@@ -58,6 +59,7 @@ const ContentDetails = () => {
       try {
         const db = getFirestore(firebaseApp);
         const snap = await getDoc(doc(db, COLLECTIONS.content, id));
+        if (cancelled) return;
 
         if (snap.exists()) {
           setContent({ id: snap.id, ...snap.data() });
@@ -72,6 +74,10 @@ const ContentDetails = () => {
     };
 
     fetchContent();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const attachments = useMemo(() => {

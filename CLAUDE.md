@@ -143,6 +143,38 @@ cached user/subscription data right after a mutation (see the comments around th
 force the same reset. Reading `window.location.origin/hostname/pathname` (no navigation
 involved) is unaffected by any of this.
 
+### Effects: dependencies and cleanup (portal-app/)
+
+`react-hooks/exhaustive-deps` is enforced (#526), so dependency arrays stay
+correct on their own. What the linter cannot see, and what #374 fixed, is
+lifetime:
+
+**An async effect must not apply a result it no longer owns.** Every effect
+that awaits and then sets state carries a cancellation flag, checked after
+each await:
+
+```js
+useEffect(() => {
+  let cancelled = false;
+  const load = async () => {
+    const data = await api.get(`/api/lesson/${lessonId}`);
+    if (cancelled) return;
+    setLesson(data);
+  };
+  load();
+  return () => { cancelled = true; };
+}, [lessonId]);
+```
+
+Without it, moving quickly between two records lets the first response land
+after the second and render the wrong one. `useApi` (#370) does this for you -
+prefer it for plain API reads; the manual form is for Firestore reads and
+multi-value loads.
+
+**A timer started in a handler is not covered by an effect's cleanup.** Use
+`useSafeTimeout` (`@/hooks/useSafeTimeout`), which clears every pending timer
+on unmount, rather than a bare `setTimeout`.
+
 ### Auth and user state (portal-app/)
 
 `AuthProvider` (`@/context/AuthProvider`, mounted in `App.jsx` inside the

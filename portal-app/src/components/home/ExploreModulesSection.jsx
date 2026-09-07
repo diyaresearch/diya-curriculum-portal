@@ -584,6 +584,7 @@ const ExploreModulesSection = () => {
 
   // Featured modules: load modules explicitly marked `isFeatured == true`.
   useEffect(() => {
+    let cancelled = false;
     const db = getFirestore(firebaseApp);
     (async () => {
       try {
@@ -593,6 +594,7 @@ const ExploreModulesSection = () => {
           limit(6)
         );
         const snap = await getDocs(q);
+        if (cancelled) return;
         const tiles = snap.docs
           .map(buildFeaturedTileFromDoc)
           .filter(Boolean)
@@ -618,6 +620,10 @@ const ExploreModulesSection = () => {
       // Fallback to legacy hardcoded list
       setFeaturedTiles(MODULE_POPUP_INFO.map(buildFeaturedTileFromStatic));
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Initial display should exclude drafts

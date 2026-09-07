@@ -45,6 +45,7 @@ export const LessonGenerator = () => {
   const userRole = userData?.role; // Extract role
 
   useEffect(() => {
+    let cancelled = false;
     const fetchUnits = async () => {
       try {
         const auth = getAuth();
@@ -53,13 +54,19 @@ export const LessonGenerator = () => {
           return;
         }
 
-        setPortalContent(await api.get("/api/units/user"));
+        const units = await api.get("/api/units/user");
+        if (cancelled) return;
+        setPortalContent(units);
       } catch (error) {
         console.error("Error fetching user units:", error);
       }
     };
 
     fetchUnits();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
