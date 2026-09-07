@@ -58,16 +58,19 @@ const OverlayTileView = ({
   }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setFilteredContent(content);
   }, [content]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setSelectedCategory(category || "");
     setSelectedType(type || "");
     setSelectedLevel(level || "");
   }, [category, type, level]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     filterContent();
   }, [filterContent]);
 

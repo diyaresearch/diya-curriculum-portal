@@ -136,6 +136,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     const savedDraft = localStorage.getItem("lessonPlanDraft");
     if (savedDraft) {
       const parsedDraft = JSON.parse(savedDraft);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setFormData(parsedDraft);
       setSections(parsedDraft.sections || [{ intro: "", contentIds: [] }]);
       setObjectives(parsedDraft.objectives || [""]);

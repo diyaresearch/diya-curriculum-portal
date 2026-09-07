@@ -412,6 +412,48 @@ function ModuleBuilderPromo() {
   );
 }
 
+// Hoisted out of ExploreModulesSection (#503 follow-up). Defining a
+// component inside another component's body gives it a new identity on
+// every parent render, so React unmounts and remounts the whole subtree
+// each time - state and focus inside it would not survive. The comment
+// that used to sit above this asked for exactly this move.
+function UpgradePrompt({ open, onClose }) {
+  const navigate = useNavigate();
+  if (!open) return null;
+  return (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      background: "rgba(0,0,0,0.3)", zIndex: 4000,
+      display: "flex", alignItems: "center", justifyContent: "center"
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 12, padding: 32, minWidth: 100, maxWidth: 400, width: "90%",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.18)", textAlign: "center", position: "relative"
+      }}>
+        <button onClick={onClose} style={{
+          position: "absolute", top: 10, right: 16, background: "none", border: "none",
+          fontSize: "1.5rem", cursor: "pointer", color: "#888"
+        }}>×</button>
+        <div style={{ fontWeight: "700", fontSize: "1.4rem", marginBottom: 16 }}>
+          Upgrade Required
+        </div>
+        <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
+          You need to upgrade to Teacher Plus to access this course.
+        </div>
+        <button
+          onClick={() => navigate("/upgrade")}
+          style={{
+            background: "#162040", color: "#fff", border: "none", borderRadius: 6,
+            padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
+          }}
+        >
+          Go to Upgrade Page
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const ExploreModulesSection = () => {
   const { user, role } = useUserRole();
   const navigate = useNavigate();
@@ -489,6 +531,7 @@ const ExploreModulesSection = () => {
 
   // Reset to page 1 when filters change or items per page changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setCurrentPage(1);
   }, [filteredItems, itemsPerPage]);
 
@@ -581,6 +624,7 @@ const ExploreModulesSection = () => {
       const publishedModules = modules.filter(m => isModuleVisibleToViewer(m, user));
 
       const publishedLessons = lessons.filter(l => !l.isDraft);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setFilteredItems([...publishedModules, ...publishedLessons, ...nuggets]);
     }
   }, [modules, lessons, nuggets, filtersApplied, user]);
@@ -647,44 +691,6 @@ const ExploreModulesSection = () => {
     setFilteredItems([]);
     setFiltersApplied(false);
   };
-
-  // Add this UpgradePrompt component near the top of your file (outside ExploreModulesSection):
-
-  function UpgradePrompt({ open, onClose }) {
-    if (!open) return null;
-    return (
-      <div style={{
-        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-        background: "rgba(0,0,0,0.3)", zIndex: 4000,
-        display: "flex", alignItems: "center", justifyContent: "center"
-      }}>
-        <div style={{
-          background: "#fff", borderRadius: 12, padding: 32, minWidth: 100, maxWidth: 400, width: "90%",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.18)", textAlign: "center", position: "relative"
-        }}>
-          <button onClick={onClose} style={{
-            position: "absolute", top: 10, right: 16, background: "none", border: "none",
-            fontSize: "1.5rem", cursor: "pointer", color: "#888"
-          }}>×</button>
-          <div style={{ fontWeight: "700", fontSize: "1.4rem", marginBottom: 16 }}>
-            Upgrade Required
-          </div>
-          <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
-            You need to upgrade to Teacher Plus to access this course.
-          </div>
-          <button
-            onClick={() => navigate("/upgrade")}
-            style={{
-              background: "#162040", color: "#fff", border: "none", borderRadius: 6,
-              padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
-            }}
-          >
-            Go to Upgrade Page
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false);
 

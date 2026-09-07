@@ -46,6 +46,7 @@ const ContentDetails = () => {
 
   useEffect(() => {
     if (!id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setError("Missing id in URL.");
       setLoading(false);
       return;

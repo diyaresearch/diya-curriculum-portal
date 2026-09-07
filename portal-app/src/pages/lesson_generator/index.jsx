@@ -72,6 +72,7 @@ export const LessonGenerator = () => {
     if (savedDraft) {
       const parsedDraft = JSON.parse(savedDraft);
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       setFormData(parsedDraft);
 
       // Ensure `sections` and `selectedMaterials` are also restored properly

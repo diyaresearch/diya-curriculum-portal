@@ -158,6 +158,7 @@ const TeacherPlusPage = () => {
             const combined = [...publishedModules, ...publishedLessons, ...nuggets].filter(
                 (item) => item?._type !== "Module" || isModuleVisibleToViewer(item, user)
             );
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
             setFilteredItems(combined);
         }
     }, [modules, lessons, nuggets, filtersApplied, user]);
@@ -175,6 +176,7 @@ const TeacherPlusPage = () => {
     const featuredItems = featuredModules.slice(featuredStart, featuredStart + FEATURED_PAGE_SIZE);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
         setFeaturedPage(1);
     }, [modules]);
 
@@ -183,6 +185,7 @@ const TeacherPlusPage = () => {
     let paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
         setCurrentPage(1);
     }, [filteredItems, itemsPerPage]);
 

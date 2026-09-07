@@ -76,6 +76,7 @@ const UserProfile = () => {
 
   useEffect(() => {
     if (formData.role === "admin") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       fetchAdminData();
     }
   }, [formData.role, fetchAdminData]);

@@ -97,6 +97,7 @@ export const MyPlans = () => {
       filtered = filtered.filter((plan) => plan.level === selectedLevel);
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setFilteredPlans(filtered);
     setCurrentPage(1); // Reset to first page when filters change
   }, [searchTerm, selectedCategory, selectedType, selectedLevel, plans]);

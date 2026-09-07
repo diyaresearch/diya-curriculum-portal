@@ -18,16 +18,20 @@ export default [
     ignores: ["build/**", "node_modules/**", "coverage/**"],
   },
   js.configs.recommended,
+  reactHooks.configs.flat.recommended,
   {
     files: ["**/*.{js,jsx}"],
-    plugins: { "react-hooks": reactHooks },
     rules: {
-      // Exactly the two rules CRA's `react-app` config turned on. The
-      // plugin's own flat/recommended preset now also ships the React
-      // Compiler rule set (set-state-in-effect, immutability, ...), which
-      // flags ~35 pre-existing patterns across this app - real feedback,
-      // but a code-quality change, not part of swapping the build tool.
-      "react-hooks/rules-of-hooks": "error",
+      // The plugin's flat/recommended preset above brings the full React
+      // Compiler rule set (set-state-in-effect, immutability,
+      // static-components, ...) on top of the two rules CRA's `react-app`
+      // config enforced. It is on as errors, which means new code is held to
+      // it. The 34 sites that already violated it when the rules went on
+      // carry a targeted eslint-disable pointing at #525 - the ratchet stops
+      // the count growing while that backlog is worked down deliberately,
+      // rather than rewriting state logic across 18 files in one pass.
+      // exhaustive-deps stays a warning, as it was under `react-app`; lint
+      // runs at --max-warnings=0, so it still fails the build.
       "react-hooks/exhaustive-deps": "warn",
       // react-app's options, plus one addition: eslint's own scope analysis
       // resolves JSX references, so a component used only in JSX no longer

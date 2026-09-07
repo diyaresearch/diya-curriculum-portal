@@ -58,6 +58,7 @@ export function TeacherSignup() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setShowNoAccountPopup(params.get("showSignUpPopup") === "1");
   }, [location.search]);
 
@@ -425,6 +426,7 @@ export function StudentSignup() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setShowNoAccountPopup(params.get("showSignUpPopup") === "1");
   }, [location.search]);
 

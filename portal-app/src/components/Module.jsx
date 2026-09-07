@@ -7,6 +7,7 @@ const Module = ({ mode, lessonPlans = [] }) => {
 
   // Ensure plans update when lessonPlans change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setPlans(lessonPlans);
   }, [lessonPlans]);
 
