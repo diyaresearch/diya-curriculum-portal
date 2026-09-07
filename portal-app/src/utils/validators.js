@@ -1,0 +1,47 @@
+/**
+ * Reusable field rules (#371).
+ *
+ * A rule takes the field's value and returns an error string, or null when
+ * the value is acceptable. Composed by useFormValidation.
+ *
+ * Messages are written for the person filling the form - "Title is required."
+ * rather than "invalid" - because they are rendered next to the field.
+ */
+
+/** Text that must not be blank. Also covers arrays (a multi-select). */
+export const required = (label) => (value) => {
+  if (Array.isArray(value)) return value.length ? null : `${label} is required.`;
+  if (typeof value === "string") return value.trim() ? null : `${label} is required.`;
+  return value === null || value === undefined || value === "" ? `${label} is required.` : null;
+};
+
+/**
+ * Rich-text from ReactQuill, which is never empty: an untouched editor still
+ * yields "<p><br></p>". Checking the string as-is would accept a blank field.
+ */
+export const requiredRichText = (label) => (value) => {
+  const text = String(value || "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+  return text ? null : `${label} is required.`;
+};
+
+export const minLength = (label, n) => (value) =>
+  String(value || "").trim().length >= n ? null : `${label} must be at least ${n} characters.`;
+
+export const maxLength = (label, n) => (value) =>
+  String(value || "").length <= n ? null : `${label} must be ${n} characters or fewer.`;
+
+export const email = (label = "Email") => (value) => {
+  const v = String(value || "").trim();
+  if (!v) return null; // pair with required() when the field is mandatory
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? null : `Enter a valid ${label.toLowerCase()}.`;
+};
+
+/** Every entry of a list must itself pass - e.g. each lesson section. */
+export const everyItem = (label, rule) => (values) => {
+  if (!Array.isArray(values)) return null;
+  const bad = values.findIndex((v) => rule(v) !== null);
+  return bad === -1 ? null : `${label}: item ${bad + 1} is incomplete.`;
+};
