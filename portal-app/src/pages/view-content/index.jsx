@@ -54,14 +54,17 @@ const ViewContent = () => {
   };
 
   useEffect(() => {
+    let cancelled = false;
     const fetchContent = async () => {
       try {
         setIsLoading(true);
         const units = await api.get("/api/units", { auth: false });
+        if (cancelled) return;
 
         const unit = units.find((u) => u.UnitID === UnitID);
         if (unit) {
           const data = await api.get(`/api/unit/${unit.id}`, { auth: false });
+          if (cancelled) return;
           setContent(data);
 
           if (unit.fileUrl) {
@@ -74,6 +77,7 @@ const ViewContent = () => {
                 const decodedUrl = decodeURIComponent(unit.fileUrl);
                 const fileRef = ref(storage, decodedUrl);
                 const downloadURL = await getDownloadURL(fileRef);
+                if (cancelled) return;
                 setFileUrl(downloadURL);
               } catch (error) {
                 console.error("Error getting file URL:", error);
@@ -93,6 +97,10 @@ const ViewContent = () => {
     };
 
     fetchContent();
+
+    return () => {
+      cancelled = true;
+    };
   }, [UnitID]);
 
   const onDocumentLoadSuccess = ({ numPages }) => {

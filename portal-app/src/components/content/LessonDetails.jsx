@@ -11,10 +11,12 @@ const LessonDetails = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+    let cancelled = false;
         const fetchLesson = async () => {
             try {
                 const db = getFirestore(firebaseApp);
                 const lessonDoc = await getDoc(doc(db, COLLECTIONS.lesson, id));
+                if (cancelled) return;
 
                 if (lessonDoc.exists()) {
                     setLesson({ id: lessonDoc.id, ...lessonDoc.data() });
@@ -27,7 +29,11 @@ const LessonDetails = () => {
         };
 
         fetchLesson();
-    }, [id]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
     if (loading) return <Loading variant="page" message="Loading lesson..." />;
     if (!lesson) return <div>Lesson not found</div>;

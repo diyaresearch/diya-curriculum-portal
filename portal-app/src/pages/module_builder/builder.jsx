@@ -192,11 +192,13 @@ const ModuleBuilder = ({ onCancel } = {}) => {
 
   // Edit mode: fetch and prefill existing module
   useEffect(() => {
+    let cancelled = false;
     if (!editModuleId) return;
     (async () => {
       try {
         const db = getFirestore();
         const snap = await getDoc(doc(db, COLLECTIONS.module, editModuleId));
+        if (cancelled) return;
         if (!snap.exists()) {
           setModalMessage("Module not found for editing");
           setModalIsOpen(true);
@@ -250,6 +252,10 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         setModalIsOpen(true);
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [editModuleId]);
 
   // Once we have portalContent (lessons) and module lesson ids, prefill selection.

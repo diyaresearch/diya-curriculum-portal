@@ -37,10 +37,12 @@ const UserProfile = () => {
   }, [user, loading, navigate]);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchUserProfile = async () => {
       if (user) {
         try {
           setFormData(await api.get("/api/user/me"));
+          if (cancelled) return;
         } catch (error) {
           console.error("Failed to fetch user profile:", error);
         }
@@ -48,6 +50,10 @@ const UserProfile = () => {
     };
 
     fetchUserProfile();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const fetchAdminData = useCallback(async () => {

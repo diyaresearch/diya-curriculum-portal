@@ -4,6 +4,7 @@ import { app as firebaseApp } from "@/firebase/firebaseConfig";
 import { CAROUSEL_CONFIG } from "@/constants/testimonialData";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import useUserRole from "@/hooks/useUserRole";
+import useSafeTimeout from "@/hooks/useSafeTimeout";
 
 // Helper function to truncate text to approximately 5 lines
 const truncateToLines = (text, maxCharactersPerLine = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_CHARS_PER_LINE, maxLines = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_LINES) => {
@@ -438,6 +439,8 @@ const PopupTestimonialCard = ({
 // its own data and fall back to fabricated sample testimonials whenever
 // Firestore returned zero real ones).
 const TestimonialsCarousel = ({ testimonials }) => {
+  // Carousel transition timers must not fire into an unmounted component (#374).
+  const setSafeTimeout = useSafeTimeout();
   const [openIndex, setOpenIndex] = useState(null);
   const [startIndex, setStartIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -465,7 +468,7 @@ const TestimonialsCarousel = ({ testimonials }) => {
         const nextIndex = prevIndex + 1 >= testimonials.length ? 0 : prevIndex + 1;
         return nextIndex;
       });
-      setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
+      setSafeTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
     }, CAROUSEL_CONFIG.AUTO_ADVANCE_INTERVAL);
 
     // Cleanup function
@@ -475,7 +478,7 @@ const TestimonialsCarousel = ({ testimonials }) => {
         timerRef.current = null;
       }
     };
-  }, [testimonials.length, isPaused, openIndex]); // Removed startIndex to prevent recreation on every advance
+  }, [testimonials.length, isPaused, openIndex, setSafeTimeout]); // Removed startIndex to prevent recreation on every advance
 
   // Clean up timer on unmount
   useEffect(() => {
@@ -504,7 +507,7 @@ const TestimonialsCarousel = ({ testimonials }) => {
       const newIndex = prevIndex - 1 < 0 ? testimonials.length - 1 : prevIndex - 1;
       return newIndex;
     });
-    setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
+    setSafeTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
   };
 
   const handleNext = () => {
@@ -521,7 +524,7 @@ const TestimonialsCarousel = ({ testimonials }) => {
       const newIndex = prevIndex + 1 >= testimonials.length ? 0 : prevIndex + 1;
       return newIndex;
     });
-    setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
+    setSafeTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
   };
 
   const visibleTestimonials = testimonials.slice(startIndex, startIndex + testimonialsPerPage);
@@ -551,7 +554,7 @@ const TestimonialsCarousel = ({ testimonials }) => {
 
     setIsTransitioning(true);
     setStartIndex(index);
-    setTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
+    setSafeTimeout(() => setIsTransitioning(false), CAROUSEL_CONFIG.TRANSITION_DURATION);
   };
 
   // Hover handlers for pause/resume
@@ -692,10 +695,12 @@ const TestimonialsSection = () => {
   // data: a fabricated testimonial ("Sarah Johnson, Lincoln Elementary
   // School") shown as real is worse than showing nothing (#433).
   useEffect(() => {
+    let cancelled = false;
     const fetchTestimonials = async () => {
       try {
         const db = getFirestore(firebaseApp);
         const querySnapshot = await getDocs(collection(db, COLLECTIONS.testimonials));
+        if (cancelled) return;
         const data = [];
         querySnapshot.forEach((doc) => {
           data.push({ id: doc.id, ...doc.data() });
@@ -720,6 +725,10 @@ const TestimonialsSection = () => {
       }
     };
     fetchTestimonials();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Hide the whole section — heading included — until there is at least one

@@ -57,11 +57,13 @@ export const UploadContent = ({
 
   // Prefill when editing an existing nugget
   useEffect(() => {
+    let cancelled = false;
     const loadForEdit = async () => {
       try {
         if (!editContentId) return;
         const db = getFirestore();
         const snap = await getDoc(doc(db, COLLECTIONS.content, editContentId));
+        if (cancelled) return;
         if (!snap.exists()) return;
         const data = snap.data() || {};
 
@@ -86,6 +88,10 @@ export const UploadContent = ({
       }
     };
     loadForEdit();
+
+    return () => {
+      cancelled = true;
+    };
   }, [editContentId]);
 
   const handleCancel = () => {

@@ -10,15 +10,21 @@ const NuggetDetails = () => {
   const [nugget, setNugget] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchNugget = async () => {
       const db = getFirestore();
       const docRef = doc(db, COLLECTIONS.content, id);
       const docSnap = await getDoc(docRef);
+      if (cancelled) return;
       if (docSnap.exists()) {
         setNugget({ id: docSnap.id, ...docSnap.data() });
       }
     };
     fetchNugget();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (!nugget) return <Loading variant="page" message="Loading lesson..." />;

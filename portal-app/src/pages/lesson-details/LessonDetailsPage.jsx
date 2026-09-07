@@ -12,16 +12,22 @@ const LessonDetailsPage = () => {
   const [nuggets, setNuggets] = useState({});
 
   useEffect(() => {
+    let cancelled = false;
     const fetchLesson = async () => {
       const db = getFirestore();
       const lessonRef = doc(db, COLLECTIONS.lesson, id);
       const lessonSnap = await getDoc(lessonRef);
+      if (cancelled) return;
       if (lessonSnap.exists()) {
         setLesson(lessonSnap.data());
       }
       setLoading(false);
     };
     fetchLesson();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {

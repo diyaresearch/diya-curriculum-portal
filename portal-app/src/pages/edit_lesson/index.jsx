@@ -46,6 +46,7 @@ export const EditLesson = () => {
   const closeModal = () => setModalIsOpen(false);
 
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async () => {
       try {
         if (!loading && !user) {
@@ -56,8 +57,10 @@ export const EditLesson = () => {
         if (loading || !user) return;
 
         setPortalContent(await api.get("/api/units/user"));
+        if (cancelled) return;
 
         const lessonData = await api.get(`/api/lesson/${lessonId}`);
+        if (cancelled) return;
         setFormData({
           title: lessonData.title || "",
           category: lessonData.category || "",
@@ -79,6 +82,10 @@ export const EditLesson = () => {
     if (!loading) {
       fetchData();
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [lessonId, navigate, user, loading]);
 
   useEffect(() => {

@@ -12,6 +12,7 @@ const LessonPlanDrafts = () => {
   const { user } = useAuth();
 
   useEffect(() => {
+    let cancelled = false;
     const loadDrafts = async () => {
       if (!user) {
         setDrafts([]);
@@ -24,6 +25,7 @@ const LessonPlanDrafts = () => {
         where("isDraft", "==", true)
       );
       const snapshot = await getDocs(q);
+      if (cancelled) return;
       setDrafts(
         snapshot.docs.map(doc => ({
           id: doc.id,
@@ -48,6 +50,10 @@ const LessonPlanDrafts = () => {
     };
 
     loadDrafts();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const handleEditDraft = (draft) => {

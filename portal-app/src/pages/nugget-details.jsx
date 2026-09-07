@@ -18,11 +18,13 @@ const NuggetDetails = () => {
 
   const [loading, setLoading] = useState(true);
   useEffect(() => {
+    let cancelled = false;
     const fetchNugget = async () => {
       try {
         const db = getFirestore();
         const docRef = doc(db, COLLECTIONS.content, id);
         const docSnap = await getDoc(docRef);
+        if (cancelled) return;
 
         if (!docSnap.exists()) {
           setError(`No nugget found for id: ${id}`);
@@ -40,6 +42,10 @@ const NuggetDetails = () => {
     };
 
     fetchNugget();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
   // `loading` rather than `!nugget`: those are different states, and
   // conflating them showed a permanent "Loading..." for a nugget that simply

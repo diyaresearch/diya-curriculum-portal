@@ -480,6 +480,7 @@ const ModuleDetail = () => {
   }, [location.state?.selectedPlans]);
 
   useEffect(() => {
+    let cancelled = false;
     if (!checkoutClientSecret) return;
     const stripeKeyToUse = String(checkoutStripeKey || fallbackStripeKey || "").trim();
     if (!stripeKeyToUse) {
@@ -495,6 +496,7 @@ const ModuleDetail = () => {
   
     (async () => {
       const stripe = await loadStripe(stripeKeyToUse);
+      if (cancelled) return;
       if (!stripe) return;
       checkout = await stripe.initEmbeddedCheckout({
         clientSecret: checkoutClientSecret,
@@ -513,6 +515,7 @@ const ModuleDetail = () => {
     })();
   
     return () => {
+      cancelled = true;
       if (checkout) checkout.destroy();
       if (checkoutInitRef.current === checkoutClientSecret) checkoutInitRef.current = null;
     };
