@@ -128,7 +128,7 @@ const ContentDetails = () => {
   };
 
   const checkUsedInAnyLesson = async (contentId) => {
-    const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+    const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
     const auth = getAuth();
     const user = auth.currentUser;
     const token = user ? await user.getIdToken() : null;

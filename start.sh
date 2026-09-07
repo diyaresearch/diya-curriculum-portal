@@ -30,7 +30,7 @@ if [ "$USE_EMULATOR" = true ]; then
 
   export FIRESTORE_EMULATOR_HOST="localhost:8080"
   export FIREBASE_AUTH_EMULATOR_HOST="localhost:9099"
-  export REACT_APP_USE_FIREBASE_EMULATOR=true
+  export VITE_USE_FIREBASE_EMULATOR=true
   echo "Backend and frontend will connect to the local emulators, not the real Firebase project."
 fi
 

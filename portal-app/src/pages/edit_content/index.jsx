@@ -5,7 +5,7 @@ import ReactQuill from "react-quill-new";
 import { getAuth } from "firebase/auth";
 import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
 
-// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+// Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
   const appRoot = document.getElementById("root");
   if (appRoot) Modal.setAppElement(appRoot);
@@ -32,7 +32,7 @@ export const EditContent = () => {
   useEffect(() => {
     const fetchContent = async () => {
       const contentId = id;
-      const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${contentId}`;
+      const url = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${contentId}`;
 
       try {
         const response = await fetch(url);
@@ -71,7 +71,7 @@ export const EditContent = () => {
     e.preventDefault();
 
     const contentId = id;
-    const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`;
+    const url = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/update/${contentId}`;
 
     try {
       const formDataToSend = {

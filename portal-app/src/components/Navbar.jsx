@@ -37,7 +37,6 @@ const Navbar = () => {
     if (params.get("showSignUpPopup") === "1") {
       setErrorMsg(renderSignUpError());
     }
-    // eslint-disable-next-line
   }, [location.search]);
 
   const handleChange = (e) => {
@@ -171,7 +170,7 @@ const Navbar = () => {
         className="px-4 flex justify-between items-center shadow"
       >
         <div className="flex items-center" style={{ gap: "20px" }}>
-          <a href={process.env.REACT_APP_DIYA_BASE_URL} target="_blank" rel="noopener noreferrer">
+          <a href={import.meta.env.VITE_DIYA_BASE_URL} target="_blank" rel="noopener noreferrer">
             <img
               src={logo}
               alt="Logo"

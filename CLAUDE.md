@@ -18,11 +18,15 @@ DIYA Curriculum Portal is a full-stack educational platform built with React fro
   with `firebase deploy --only functions`)
 
 ### Frontend (portal-app/)
-- **Framework**: React 18 with Create React App
+- **Framework**: React 18, built with Vite (`vite.config.js`) — react-scripts/CRA and the
+  `@craco/craco` patch it needed were removed in #503
 - **Styling**: Tailwind CSS
 - **Routing**: React Router DOM
 - **State Management**: React hooks, Firebase context
 - **Key Dependencies**: Firebase SDK, React Quill, jsPDF, React Modal
+- **Testing**: Vitest + React Testing Library (`npm test` runs `vitest run`)
+- **Lint**: flat-config ESLint (`eslint.config.js`), which replaces CRA's bundled
+  `react-app` shareable config
 
 ### Backend (server/)
 - **Framework**: Express.js
@@ -45,7 +49,7 @@ DIYA Curriculum Portal is a full-stack educational platform built with React fro
   between the copies (a missing idempotency fix, a missing custom-claims sync) - #439 has the
   history if a route here looks unfamiliar next to `server/routes/payment.js`.
 - The frontend reaches this exclusively through `portal-app/src/utils/paymentsApi.js` - never a
-  hardcoded URL or `REACT_APP_SERVER_ORIGIN_URL` for anything under `/api/payment/*`.
+  hardcoded URL or `VITE_SERVER_ORIGIN_URL` for anything under `/api/payment/*`.
 
 ### Firebase Integration
 - **Authentication**: Firebase Auth for user management
@@ -66,10 +70,18 @@ chmod +x start.sh
 ```bash
 cd portal-app
 npm install
-npm start           # Development server (http://localhost:3000)
-npm run build       # Production build
-npm test            # Run tests
+npm start           # Vite dev server (http://localhost:3000)
+npm run build       # Production build -> portal-app/build/ (assets under build/static/)
+npm run preview     # Serve that build locally, as Firebase Hosting would
+npm test            # Run tests once (vitest run)
+npm run test:watch  # Watch mode
+npm run lint        # ESLint, zero-warnings
 ```
+
+Requires Node 22.12+ (Vite 7 / Vitest 5). The build output directory (`build/`, assets
+under `static/`) is deliberately CRA's, not Vite's default `dist/`+`assets/` — the root
+`firebase.json` serves `portal-app/build` and caches `/static/**` immutably. See the
+comments in `portal-app/vite.config.js` before changing either.
 
 ### Backend (server/)
 ```bash
@@ -91,7 +103,7 @@ npm start           # Start server (http://localhost:3001)
 - `/upgrade` - Subscription upgrade page
 
 ### Backend API Routes
-`server/` (App Engine, `REACT_APP_SERVER_ORIGIN_URL`):
+`server/` (App Engine, `VITE_SERVER_ORIGIN_URL`):
 - `/api/units` - Content management endpoints
 - `/api/lessons` - Lesson CRUD operations
 - `/api/modules` - Module management
@@ -158,12 +170,14 @@ involved) is unaffected by any of this.
 
 ### Environment Variables Reference
 
-**Frontend (.env.development/.env.production in portal-app/):**
-- `REACT_APP_SERVER_ORIGIN_URL` - Backend server URL
-- `REACT_APP_HOME_PAGE` - Frontend application URL
-- `REACT_APP_DIYA_BASE_URL` - DIYA research organization URL
-- `REACT_APP_FIREBASE_*` - Firebase configuration keys
-- `REACT_APP_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key (pk_test_* or pk_live_*)
+**Frontend (.env.development/.env.production in portal-app/):** read as
+`import.meta.env.VITE_*`; only the `VITE_` prefix is inlined into the bundle. The prefix
+was `REACT_APP_` before #503.
+- `VITE_SERVER_ORIGIN_URL` - Backend server URL
+- `VITE_HOME_PAGE` - Frontend application URL
+- `VITE_DIYA_BASE_URL` - DIYA research organization URL
+- `VITE_FIREBASE_*` - Firebase configuration keys
+- `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key (pk_test_* or pk_live_*)
 
 **Backend (.env.development/.env.production in server/):**
 - `NODE_ENV` - Environment (development/production)
@@ -213,7 +227,10 @@ prefix — that scheme (`DATABASE_SCHEMA_QUALIFIER`) was retired in #428.
 
 ## Testing
 
-Frontend testing uses Jest and React Testing Library (standard Create React App setup). No specific test scripts are configured for the backend.
+Frontend testing uses Vitest and React Testing Library, configured in the `test` block of
+`portal-app/vite.config.js` with `portal-app/src/setupTests.js` as the setup file. Tests use
+Vitest's globals (`describe`/`test`/`expect`) plus `vi` for mocking — there is no `jest`
+global. No specific test scripts are configured for the backend.
 
 ## Code Documentation
 

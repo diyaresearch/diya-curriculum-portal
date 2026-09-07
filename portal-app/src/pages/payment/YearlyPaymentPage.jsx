@@ -7,7 +7,7 @@ import BackButton from '../../components/BackButton';
 import { fetchPayments } from '../../utils/paymentsApi';
 
 // Initialize Stripe with your publishable key
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51PYERERqWgqDVRD3kSuQgmgKNIWup77t7Rxsh2mqIsnDDRbCtjuiYh8DCvSO84i5R9FTOgBEzvvr21qHjMGTjvWn00Dwdt2QDv');
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51PYERERqWgqDVRD3kSuQgmgKNIWup77t7Rxsh2mqIsnDDRbCtjuiYh8DCvSO84i5R9FTOgBEzvvr21qHjMGTjvWn00Dwdt2QDv');
 
 const PaymentForm = () => {
     const navigate = useNavigate();

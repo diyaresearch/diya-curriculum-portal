@@ -51,7 +51,7 @@ const ListView = ({ content }) => {
   useEffect(() => {
     const fetchModules = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/modules`);
+        const response = await fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/modules`);
         const data = await response.json();
         setModules(data);
       } catch (error) {
@@ -129,7 +129,7 @@ const ListView = ({ content }) => {
       }
 
       const token = await user.getIdToken();
-      const response = await fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${id}`, {
+      const response = await fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -162,7 +162,7 @@ const ListView = ({ content }) => {
 
       const token = await user.getIdToken();
       const deletePromises = Array.from(selectedItems).map((id) =>
-        fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${id}`, {
+        fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${id}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,

@@ -28,9 +28,9 @@ import Modal from "react-modal";
 // If you have these AI images in a different location, update the paths accordingly
 const aiExplorationImg = module1; // Fallback to module1 image
 
-const fallbackStripeKey = String(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || "").trim();
+const fallbackStripeKey = String(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "").trim();
 if (!fallbackStripeKey) {
-  console.error("Missing REACT_APP_STRIPE_PUBLISHABLE_KEY (fallback)");
+  console.error("Missing VITE_STRIPE_PUBLISHABLE_KEY (fallback)");
 }
 
 const imageMap = {
@@ -289,7 +289,7 @@ const ModuleDetail = () => {
       const auth = getAuth();
       const user = auth.currentUser;
       // Use same-origin by default in production; allow override via env for dev/proxies.
-      const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+      const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
       const token = user ? await user.getIdToken() : null;
 
       const stripHtmlToText = (html) => {
@@ -393,7 +393,7 @@ const ModuleDetail = () => {
       // cannot make that decision. This became usable once #427 aligned the
       // collection qualifier — before that the API looked in `prod_module`
       // and found nothing.
-      const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "http://localhost:3001";
+      const serverUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "http://localhost:3001";
       const currentUser = getAuth().currentUser;
       const authHeaders = currentUser
         ? { Authorization: `Bearer ${await currentUser.getIdToken()}` }
@@ -488,7 +488,7 @@ const ModuleDetail = () => {
       const selectedPlanIds = location.state?.selectedPlans || [];
 
       const lessonPlanRequests = selectedPlanIds.map(async (id) => {
-        const response = await fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         return response.json();

@@ -84,7 +84,7 @@ export async function consumeGoogleRedirectResult() {
     const result = await getRedirectResult(auth);
     return { result, error: null };
   } catch (error) {
-    // In non-browser environments (e.g. Jest, SSR) redirect operations may be unsupported.
+    // In non-browser environments (e.g. Vitest, SSR) redirect operations may be unsupported.
     if (error?.code === "auth/operation-not-supported-in-this-environment") {
       return { result: null, error: null };
     }
@@ -123,9 +123,9 @@ function withQueryParam(pathWithSearch, key, value) {
 }
  
 async function runRegisterUserAction({ user, payload }) {
-  const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+  const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
   if (!baseUrl) {
-    console.error("googleAuth: missing REACT_APP_SERVER_ORIGIN_URL for register action");
+    console.error("googleAuth: missing VITE_SERVER_ORIGIN_URL for register action");
     return { ok: false, status: 0 };
   }
  

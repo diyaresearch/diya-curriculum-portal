@@ -15,25 +15,29 @@
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { vi } from "vitest";
+import { getDoc } from "firebase/firestore";
 
 const XSS_PAYLOAD = '<img src=x onerror="window.__xss=true">safe text<script>window.__xss=true</script>';
 
-jest.mock("firebase/firestore", () => ({
-  getFirestore: jest.fn(() => ({})),
-  doc: jest.fn(),
-  getDoc: jest.fn(),
-  deleteDoc: jest.fn(),
+vi.mock("firebase/firestore", () => ({
+  getFirestore: vi.fn(() => ({})),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  deleteDoc: vi.fn(),
 }));
 
-jest.mock("../../firebase/firebaseConfig", () => ({ app: {}, db: {} }));
+vi.mock("../../firebase/firebaseConfig", () => ({ app: {}, db: {} }));
 
-jest.mock("../../hooks/useUserData", () => () => ({
-  user: null,
-  userData: null,
-  loading: false,
+// The factory's return value is the module namespace, so the hook has to be
+// handed back as `default` rather than as the factory's bare return.
+vi.mock("../../hooks/useUserData", () => ({
+  default: () => ({
+    user: null,
+    userData: null,
+    loading: false,
+  }),
 }));
-
-const { getDoc } = require("firebase/firestore");
 
 function mockDocData(data) {
   getDoc.mockResolvedValueOnce({
@@ -62,7 +66,7 @@ function assertRenderedSafely(container) {
 
 describe("#381 — dangerouslySetInnerHTML sinks sanitize before rendering", () => {
   test("components/ContentDetails.jsx", async () => {
-    const ContentDetails = require("../../components/ContentDetails").default;
+    const { default: ContentDetails } = await import("../../components/ContentDetails");
     mockDocData({
       Title: "t",
       Description: XSS_PAYLOAD,
@@ -86,7 +90,7 @@ describe("#381 — dangerouslySetInnerHTML sinks sanitize before rendering", () 
   });
 
   test("pages/nugget-details.jsx", async () => {
-    const NuggetDetails = require("../nugget-details").default;
+    const { default: NuggetDetails } = await import("../nugget-details");
     mockDocData({
       Title: "t",
       Description: XSS_PAYLOAD,
@@ -106,7 +110,7 @@ describe("#381 — dangerouslySetInnerHTML sinks sanitize before rendering", () 
   });
 
   test("pages/lesson-details/LessonDetailsPage.jsx", async () => {
-    const LessonDetailsPage = require("../lesson-details/LessonDetailsPage").default;
+    const { default: LessonDetailsPage } = await import("../lesson-details/LessonDetailsPage");
     mockDocData({
       title: "t",
       description: XSS_PAYLOAD,
