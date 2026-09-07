@@ -55,19 +55,3 @@ vi.mock("react-pdf", async () => {
     pdfjs: { GlobalWorkerOptions: { workerSrc: "" } },
   };
 });
-
-// Keep tests off the network: no component under test should reach a real
-// backend, and an unmocked axios call would try.
-vi.mock("axios", () => {
-  const mockAxios = {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    patch: vi.fn(),
-    delete: vi.fn(),
-    create: () => mockAxios,
-    defaults: {},
-    interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
-  };
-  return { __esModule: true, default: mockAxios };
-});

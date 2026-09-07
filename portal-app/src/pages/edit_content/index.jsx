@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { useNavigate, useParams } from "react-router-dom";
 import ReactQuill from "react-quill-new";
+import { api } from "@/utils/apiClient";
 import { getAuth } from "firebase/auth";
 import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
 
@@ -32,14 +33,9 @@ export const EditContent = () => {
   useEffect(() => {
     const fetchContent = async () => {
       const contentId = id;
-      const url = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${contentId}`;
 
       try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error("Failed to fetch content");
-        }
-        const data = await response.json();
+        const data = await api.get(`/api/unit/${contentId}`, { auth: false });
         setFormData({
           Title: data.Title,
           Category: data.Category,
@@ -71,7 +67,6 @@ export const EditContent = () => {
     e.preventDefault();
 
     const contentId = id;
-    const url = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/update/${contentId}`;
 
     try {
       const formDataToSend = {
@@ -91,20 +86,7 @@ export const EditContent = () => {
       if (!user) {
         throw new Error("You must be signed in to edit content.");
       }
-      const token = await user.getIdToken();
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formDataToSend),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error updating content");
-      }
+      await api.post(`/api/update/${contentId}`, formDataToSend);
 
       setModalMessage("Content updated successfully");
       setModalIsOpen(true);

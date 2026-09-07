@@ -3,9 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
 import OverlayTileView from "@/components/content/OverlayTileView";
-import axios from "axios";
 import UploadContent from "@/pages/upload-content/index";
 import useUserData from "@/hooks/useUserData";
+import { api } from "@/utils/apiClient";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
 
@@ -50,15 +50,7 @@ export const LessonGenerator = () => {
           return;
         }
 
-        const token = await user.getIdToken();
-        const response = await axios.get(
-          `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/units/user`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        setPortalContent(response.data);
+        setPortalContent(await api.get("/api/units/user"));
       } catch (error) {
         console.error("Error fetching user units:", error);
       }
@@ -206,9 +198,6 @@ export const LessonGenerator = () => {
     }
 
     const userId = user.uid;
-    const token = await user.getIdToken();
-
-    const url = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/`;
 
     try {
       // If the lesson is public, update all content within sections to be public
@@ -219,16 +208,9 @@ export const LessonGenerator = () => {
             return [];
           }
 
-          return contentIds.map((contentId) => {
-            return fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ isPublic: true }),
-            });
-          });
+          return contentIds.map((contentId) =>
+            api.post(`/api/update/${contentId}`, { isPublic: true })
+          );
         });
 
         await Promise.all(contentUpdates);
@@ -251,18 +233,7 @@ export const LessonGenerator = () => {
         author: userId,
       };
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(lessonData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error generating lesson plan");
-      }
+      await api.post("/api/lesson/", lessonData);
 
       setModalMessage("Lesson plan generated successfully");
       setFormData({

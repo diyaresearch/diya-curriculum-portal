@@ -6,6 +6,7 @@ import { getFirestore, collection, getDocs, addDoc, setDoc, doc, serverTimestamp
 import OverlayTileView from "@/components/content/OverlayTileView";
 import UploadContent from "@/pages/upload-content/index";
 import useUserData from "@/hooks/useUserData";
+import { api } from "@/utils/apiClient";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import NuggetBuilderPage from "@/pages/nugget-builder";
@@ -167,16 +168,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
           alert("You must be logged in to edit a lesson plan.");
           return;
         }
-        const token = await user.getIdToken();
-        const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
-
-        const res = await fetch(`${baseUrl}/api/lesson/${editLessonId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) {
-          throw new Error(`Failed to load lesson (${res.status})`);
-        }
-        const lesson = await res.json();
+        const lesson = await api.get(`/api/lesson/${editLessonId}`);
 
         const nextSections = Array.isArray(lesson.sections)
           ? lesson.sections.map((s) => ({
@@ -354,11 +346,6 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     }
 
     const userId = user.uid;
-    const token = await user.getIdToken();
-    const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
-    const url = editLessonId
-      ? `${baseUrl}/api/lesson/${editLessonId}`
-      : `${baseUrl}/api/lesson/`;
 
     try {
       if (formData.isPublic) {
@@ -367,16 +354,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
           if (!Array.isArray(contentIds) || contentIds.length === 0) {
             return [];
           }
-          return contentIds.map((contentId) => {
-            return fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ isPublic: true }),
-            });
-          });
+          return contentIds.map((contentId) =>
+            api.post(`/api/update/${contentId}`, { isPublic: true })
+          );
         });
         await Promise.all(contentUpdates);
       }
@@ -399,22 +379,13 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
         author: userId,
       };
 
-      const response = await fetch(url, {
-        method: editLessonId ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(lessonData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error generating lesson plan");
-      }
-      const result = await response.json();
+      const result = editLessonId
+        ? await api.put(`/api/lesson/${editLessonId}`, lessonData)
+        : await api.post("/api/lesson/", lessonData);
       if (onSave) {
         onSave({
-          id: editLessonId || result.id,
+          // apiRequest returns null for an empty body, so guard the read.
+          id: editLessonId || result?.id,
           title: lessonData.title,
           // add other fields if needed
         });

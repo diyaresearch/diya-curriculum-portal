@@ -12,6 +12,7 @@ import SectionCard from "@/components/ui/SectionCard";
 import EditButton from "@/components/ui/EditButton";
 import DeleteButton from "@/components/ui/DeleteButton";
 import useUserData from "@/hooks/useUserData";
+import { api } from "@/utils/apiClient";
 
 const toSlidesEmbedUrl = (url) => {
   // Example input: https://docs.google.com/presentation/d/<ID>/edit#slide=id....
@@ -129,18 +130,12 @@ const ContentDetails = () => {
   };
 
   const checkUsedInAnyLesson = async (contentId) => {
-    const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
-    const auth = getAuth();
-    const user = auth.currentUser;
-    const token = user ? await user.getIdToken() : null;
-    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
-
     // Prefer server APIs (more likely to have permission than direct Firestore reads).
-    const fetchJsonSafe = async (url) => {
+    // Any failure here means "cannot prove it is in use", so it degrades to []
+    // rather than surfacing - apiClient attaches the token itself.
+    const fetchJsonSafe = async (path) => {
       try {
-        const res = await fetch(url, { headers });
-        if (!res.ok) return [];
-        const data = await res.json();
+        const data = await api.get(path);
         return Array.isArray(data) ? data : [];
       } catch {
         return [];
@@ -148,10 +143,10 @@ const ContentDetails = () => {
     };
 
     const lessonLists = isAdmin
-      ? [await fetchJsonSafe(`${baseUrl}/api/lessons/admin`)]
+      ? [await fetchJsonSafe("/api/lessons/admin")]
       : await Promise.all([
-          fetchJsonSafe(`${baseUrl}/api/lessons`), // public lessons
-          fetchJsonSafe(`${baseUrl}/api/lesson/myLessons`), // viewer's private lessons
+          fetchJsonSafe("/api/lessons"), // public lessons
+          fetchJsonSafe("/api/lesson/myLessons"), // viewer's private lessons
         ]);
 
     const lessons = lessonLists.flat();

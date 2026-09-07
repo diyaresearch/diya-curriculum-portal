@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Modal from "react-modal";
 import OverlayTileView from "@/components/content/OverlayTileView";
-import axios from "axios";
 import useUserData from "@/hooks/useUserData";
+import { api } from "@/utils/apiClient";
 import UploadContent from "@/pages/upload-content/index";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
@@ -53,23 +53,9 @@ export const EditLesson = () => {
 
         if (loading || !user) return;
 
-        const token = await user.getIdToken();
+        setPortalContent(await api.get("/api/units/user"));
 
-        const portalResponse = await axios.get(
-          `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/units/user`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setPortalContent(portalResponse.data);
-
-        const lessonResponse = await axios.get(
-          `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const lessonData = lessonResponse.data;
+        const lessonData = await api.get(`/api/lesson/${lessonId}`);
         setFormData({
           title: lessonData.title || "",
           category: lessonData.category || "",
@@ -195,9 +181,6 @@ export const EditLesson = () => {
     }
 
     const userId = user.uid;
-    const token = await user.getIdToken();
-
-    const url = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`;
 
     try {
       const lessonData = {
@@ -224,32 +207,15 @@ export const EditLesson = () => {
             return [];
           }
 
-          return contentIds.map((contentId) => {
-            return fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({ isPublic: true }),
-            });
-          });
+          return contentIds.map((contentId) =>
+            api.post(`/api/update/${contentId}`, { isPublic: true })
+          );
         });
 
         await Promise.all(contentUpdates);
       }
 
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(lessonData),
-      });
-      if (!response.ok) {
-        throw new Error("Error generating lesson plan");
-      }
+      await api.put(`/api/lesson/${lessonId}`, lessonData);
 
       setModalMessage("Lesson plan updated successfully");
       setConfirmationModalOpen(false);
