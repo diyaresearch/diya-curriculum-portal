@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { TYPO } from "../constants/typography";
+import { TYPO } from "@/constants/typography";
 
 /**
  * Catch-all route target (issue #421).

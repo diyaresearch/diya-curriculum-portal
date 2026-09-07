@@ -27,11 +27,11 @@ vi.mock("firebase/firestore", () => ({
   deleteDoc: vi.fn(),
 }));
 
-vi.mock("../../firebase/firebaseConfig", () => ({ app: {}, db: {} }));
+vi.mock("@/firebase/firebaseConfig", () => ({ app: {}, db: {} }));
 
 // The factory's return value is the module namespace, so the hook has to be
 // handed back as `default` rather than as the factory's bare return.
-vi.mock("../../hooks/useUserData", () => ({
+vi.mock("@/hooks/useUserData", () => ({
   default: () => ({
     user: null,
     userData: null,
@@ -66,7 +66,7 @@ function assertRenderedSafely(container) {
 
 describe("#381 — dangerouslySetInnerHTML sinks sanitize before rendering", () => {
   test("components/ContentDetails.jsx", async () => {
-    const { default: ContentDetails } = await import("../../components/ContentDetails");
+    const { default: ContentDetails } = await import("@/components/ContentDetails");
     mockDocData({
       Title: "t",
       Description: XSS_PAYLOAD,
@@ -90,7 +90,7 @@ describe("#381 — dangerouslySetInnerHTML sinks sanitize before rendering", () 
   });
 
   test("pages/nugget-details.jsx", async () => {
-    const { default: NuggetDetails } = await import("../nugget-details");
+    const { default: NuggetDetails } = await import("@/pages/nugget-details");
     mockDocData({
       Title: "t",
       Description: XSS_PAYLOAD,
@@ -110,7 +110,7 @@ describe("#381 — dangerouslySetInnerHTML sinks sanitize before rendering", () 
   });
 
   test("pages/lesson-details/LessonDetailsPage.jsx", async () => {
-    const { default: LessonDetailsPage } = await import("../lesson-details/LessonDetailsPage");
+    const { default: LessonDetailsPage } = await import("@/pages/lesson-details/LessonDetailsPage");
     mockDocData({
       title: "t",
       description: XSS_PAYLOAD,

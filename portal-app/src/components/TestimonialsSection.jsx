@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
-import { app as firebaseApp } from "../firebase/firebaseConfig";
-import { CAROUSEL_CONFIG } from "../constants/testimonialData";
-import { COLLECTIONS } from "../firebase/collectionNames";
-import useUserRole from "../hooks/useUserRole";
+import { app as firebaseApp } from "@/firebase/firebaseConfig";
+import { CAROUSEL_CONFIG } from "@/constants/testimonialData";
+import { COLLECTIONS } from "@/firebase/collectionNames";
+import useUserRole from "@/hooks/useUserRole";
 
 // Helper function to truncate text to approximately 5 lines
 const truncateToLines = (text, maxCharactersPerLine = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_CHARS_PER_LINE, maxLines = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_LINES) => {

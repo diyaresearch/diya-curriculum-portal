@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import useUserData from '../../hooks/useUserData';
-import BackButton from '../../components/BackButton';
-import { fetchPayments } from '../../utils/paymentsApi';
+import useUserData from '@/hooks/useUserData';
+import BackButton from '@/components/BackButton';
+import { fetchPayments } from '@/utils/paymentsApi';
 
 // Initialize Stripe with your publishable key
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51PYERERqWgqDVRD3kSuQgmgKNIWup77t7Rxsh2mqIsnDDRbCtjuiYh8DCvSO84i5R9FTOgBEzvvr21qHjMGTjvWn00Dwdt2QDv');

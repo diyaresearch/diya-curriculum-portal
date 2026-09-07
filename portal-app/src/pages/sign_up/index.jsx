@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { setDoc, doc } from "firebase/firestore";
-import { db } from '../../firebase/firebaseConfig';
+import { db } from '@/firebase/firebaseConfig';
 import { getAuth, signOut } from "firebase/auth";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MultiSelectDropdown, SingleSelectDropdown } from "../../components/Dropdowns";
-import SignupSuccess from "../../components/SignupSuccess";
-import { startGoogleRedirect, signInForSignup } from "../../auth/googleAuth";
-import { COLLECTIONS } from "../../firebase/collectionNames";
+import { MultiSelectDropdown, SingleSelectDropdown } from "@/components/Dropdowns";
+import SignupSuccess from "@/components/SignupSuccess";
+import { startGoogleRedirect, signInForSignup } from "@/auth/googleAuth";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 const SUBJECT_OPTIONS = [
   "CS",

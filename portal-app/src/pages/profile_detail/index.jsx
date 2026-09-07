@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
-import useUserData from "../../hooks/useUserData";
+import useUserData from "@/hooks/useUserData";
 import { useNavigate } from "react-router-dom";
-import defaultProfileIcon from "../../assets/default_user_icon.png";
+import defaultProfileIcon from "@/assets/default_user_icon.png";
 
 const UserProfile = () => {
   const { user, loading } = useUserData();

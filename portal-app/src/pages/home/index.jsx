@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 
-import HomePage from "../../components/HomePage";
-import useUserData from "../../hooks/useUserData";
+import HomePage from "@/components/HomePage";
+import useUserData from "@/hooks/useUserData";
 
 const Home = () => {
   const { user, userData, loading } = useUserData();

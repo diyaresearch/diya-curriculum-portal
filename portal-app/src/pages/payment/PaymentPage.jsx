@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import useUserData from '../../hooks/useUserData';
-import BackButton from '../../components/BackButton';
-import { fetchPayments } from '../../utils/paymentsApi';
+import useUserData from '@/hooks/useUserData';
+import BackButton from '@/components/BackButton';
+import { fetchPayments } from '@/utils/paymentsApi';
 
 // Monthly upgrade, migrated from a hand-rolled card form to Stripe Elements
 // (#423). Card details are entered inside Stripe's iframe and never reach this

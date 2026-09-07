@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import DOMPurify from "dompurify";
-import { COLLECTIONS } from "../../firebase/collectionNames";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 const LessonDetailsPage = () => {
   const { id } = useParams();

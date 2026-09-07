@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
+import { db } from "@/firebase/firebaseConfig";
 import { useNavigate } from 'react-router-dom';
-import { COLLECTIONS } from "../firebase/collectionNames";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 const useUserData = () => {
     const [user, setUser] = useState(null);

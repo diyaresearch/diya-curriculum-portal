@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useUserData from '../../hooks/useUserData';
+import useUserData from '@/hooks/useUserData';
 import { getFirestore, doc, updateDoc } from 'firebase/firestore';
-import { app as firebaseApp } from '../../firebase/firebaseConfig';
-import { COLLECTIONS } from '../../firebase/collectionNames';
+import { app as firebaseApp } from '@/firebase/firebaseConfig';
+import { COLLECTIONS } from '@/firebase/collectionNames';
 
 const CancelSubscriptionPage = () => {
     const navigate = useNavigate();

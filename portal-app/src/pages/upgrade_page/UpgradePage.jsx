@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useUserData from '../../hooks/useUserData';
+import useUserData from '@/hooks/useUserData';
 
 const UpgradePage = () => {
     const navigate = useNavigate();

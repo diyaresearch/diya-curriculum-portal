@@ -14,19 +14,19 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import OverlayTileView from "../../pages/module_builder/OverlayTileView";
-import UploadContent from "../upload-content/index";
-import useUserData from "../../hooks/useUserData";
+import OverlayTileView from "@/pages/module_builder/OverlayTileView";
+import UploadContent from "@/pages/upload-content/index";
+import useUserData from "@/hooks/useUserData";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
-import NuggetBuilderPage from "../nugget-builder";
-import LessonPlanBuilder from "../lesson-plans/builder";
-import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "../../constants/formOptions";
-import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
-import BackButton from "../../components/BackButton";
-import { TYPO } from "../../constants/typography";
-import { COLLECTIONS } from "../../firebase/collectionNames";
-import { fetchPayments } from "../../utils/paymentsApi";
+import NuggetBuilderPage from "@/pages/nugget-builder";
+import LessonPlanBuilder from "@/pages/lesson-plans/builder";
+import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
+import MultiCheckboxDropdown from "@/components/MultiCheckboxDropdown";
+import BackButton from "@/components/BackButton";
+import { TYPO } from "@/constants/typography";
+import { COLLECTIONS } from "@/firebase/collectionNames";
+import { fetchPayments } from "@/utils/paymentsApi";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {

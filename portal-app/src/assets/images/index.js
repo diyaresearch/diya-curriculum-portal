@@ -9,9 +9,9 @@
 
 
 
-import aiExploreImg from '../ChatGPT Image Jun 13, 2025, 02_04_24 PM.png';
-import laptopImg from '../ChatGPT Image Jun 13, 2025, 02_17_05 PM.png';
-import physicsImg from '../ChatGPT Image Jun 13, 2025, 02_25_51 PM.png';
+import aiExploreImg from '@/assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png';
+import laptopImg from '@/assets/ChatGPT Image Jun 13, 2025, 02_17_05 PM.png';
+import physicsImg from '@/assets/ChatGPT Image Jun 13, 2025, 02_25_51 PM.png';
 
 // Export all images
 export {

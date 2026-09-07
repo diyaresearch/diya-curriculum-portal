@@ -1,7 +1,7 @@
 import React from "react";
-import data_science from "../assets/data_science.png";
-import software_engineering from "../assets/software_engineering.png";
-import software_testing from "../assets/software_testing.png";
+import data_science from "@/assets/data_science.png";
+import software_engineering from "@/assets/software_engineering.png";
+import software_testing from "@/assets/software_testing.png";
 const resources = [
   { title: "Data Science", img: data_science },
   { title: "Software Engineering", img: software_engineering },

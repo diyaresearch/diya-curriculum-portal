@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import useUserData from '../../hooks/useUserData';
+import useUserData from '@/hooks/useUserData';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { app as firebaseApp } from '../../firebase/firebaseConfig';
-import { COLLECTIONS } from '../../firebase/collectionNames';
+import { app as firebaseApp } from '@/firebase/firebaseConfig';
+import { COLLECTIONS } from '@/firebase/collectionNames';
 
 import {
     MODULE_CONTENT_TYPES,
     MODULE_CATEGORIES,
     MODULE_LEVELS,
-} from '../../constants/moduleConstants';
+} from '@/constants/moduleConstants';
 
-import laptopImg from '../../assets/laptop.png';
+import laptopImg from '@/assets/laptop.png';
 
 function normalizeBoolean(value) {
     if (value === true) return true;

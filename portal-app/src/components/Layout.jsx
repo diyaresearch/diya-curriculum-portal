@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useNavigate } from "react-router-dom";
-import { handleGoogleRedirectOnce } from "../auth/googleAuth";
+import { handleGoogleRedirectOnce } from "@/auth/googleAuth";
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();

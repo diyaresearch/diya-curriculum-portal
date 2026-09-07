@@ -1,5 +1,5 @@
 import React from "react";
-import { TYPO } from "../constants/typography";
+import { TYPO } from "@/constants/typography";
 
 const SectionCard = ({ title, children, style, titleStyle }) => {
   return (

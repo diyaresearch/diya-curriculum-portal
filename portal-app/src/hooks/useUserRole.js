@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
+import { db } from "@/firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { COLLECTIONS } from "../firebase/collectionNames";
+import { COLLECTIONS } from "@/firebase/collectionNames";
 
 // Tracks the signed-in user and their role via a realtime listener on their
 // users/{uid} document, so role changes (e.g. an admin upgrade) are picked

@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import DOMPurify from "dompurify";
-import { COLLECTIONS } from "../firebase/collectionNames";
-import { TYPO } from "../constants/typography";
-import MetaChipsRow from "../components/MetaChipsRow";
-import SectionCard from "../components/SectionCard";
-import BackButton from "../components/BackButton";
+import { COLLECTIONS } from "@/firebase/collectionNames";
+import { TYPO } from "@/constants/typography";
+import MetaChipsRow from "@/components/MetaChipsRow";
+import SectionCard from "@/components/SectionCard";
+import BackButton from "@/components/BackButton";
 
 const NuggetDetails = () => {
   const { id } = useParams();
