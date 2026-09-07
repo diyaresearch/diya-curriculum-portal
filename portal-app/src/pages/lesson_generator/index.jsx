@@ -8,6 +8,7 @@ import useUserData from "@/hooks/useUserData";
 import { api } from "@/utils/apiClient";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
+import { useToast } from "@/components/ui/ToastProvider";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
@@ -16,6 +17,7 @@ if (typeof document !== "undefined") {
 }
 
 export const LessonGenerator = () => {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -180,7 +182,7 @@ export const LessonGenerator = () => {
     };
 
     localStorage.setItem("lessonPlanDraft", JSON.stringify(savedData));
-    alert("Lesson plan draft saved successfully!");
+    toast.success("Lesson plan draft saved successfully!");
   };
 
   const handleSubmit = async (e) => {

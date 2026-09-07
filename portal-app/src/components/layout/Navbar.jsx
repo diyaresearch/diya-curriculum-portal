@@ -5,8 +5,10 @@ import { getAuth } from "firebase/auth";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import defaultUserIcon from "@/assets/default_user_icon.png";
 import { startGoogleRedirect } from "@/auth/googleAuth";
+import { useToast } from "@/components/ui/ToastProvider";
 
 const Navbar = () => {
+  const toast = useToast();
   const { userData, logout } = useUserData();
   const [user, setUser] = useState(null);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
@@ -64,7 +66,7 @@ const Navbar = () => {
       });
     } catch (error) {
       console.error("Signup error:", error?.message || error);
-      alert("Signup failed. Please check your information and try again.");
+      toast.error("Signup failed. Please check your information and try again.");
     }
   };
 
@@ -138,7 +140,7 @@ const Navbar = () => {
     try {
       await logout();
     } catch (error) {
-      alert("Logout failed. Please try again.");
+      toast.error("Logout failed. Please try again.");
     }
   };
 

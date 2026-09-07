@@ -11,6 +11,7 @@ import { COLLECTIONS } from "@/firebase/collectionNames";
 import { useLocation, useNavigate } from "react-router-dom";
 import { startGoogleRedirect } from "@/auth/googleAuth";
 import useUserRole from "@/hooks/useUserRole";
+import { useToast } from "@/components/ui/ToastProvider";
 
 function isModuleVisibleToViewer(moduleItem, viewerUser) {
   if (!moduleItem || moduleItem._type !== "Module") return true;
@@ -110,6 +111,7 @@ function capitalizeWords(str) {
 }
 
 function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
+  const toast = useToast();
   const location = useLocation();
   if (!open) return null;
 
@@ -119,7 +121,7 @@ function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
         returnTo: `${location.pathname}${location.search || ""}`,
       });
     } catch (error) {
-      alert("Login failed. Please try again.");
+      toast.error("Login failed. Please try again.");
     }
   };
   

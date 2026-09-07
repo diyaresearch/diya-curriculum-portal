@@ -10,6 +10,8 @@ import MyPlans from "./pages/my_plan";
 import LessonDetail from "./pages/lesson_detail";
 import LessonDetailNew from "./pages/lesson_detail/LessonDetail";
 import Layout from "@/components/layout/Layout";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 import UserProfile from "./pages/profile_detail";
 import ModuleDetail from "./pages/module_detail"; // This one fetches from Firestore
 import NotFound from "./pages/not_found";
@@ -33,46 +35,55 @@ import ModuleBuilder from "./pages/module_builder/builder";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/upload-content" element={<UploadContent />} />
-          <Route path="/edit-content/:id" element={<EditContent />} />
-          <Route path="/payment" element={<PaymentPage />} />
-          <Route path="/payment/premium" element={<PaymentPage />} />
-          <Route path="/payment/yearly" element={<YearlyPaymentPage />} />
-          <Route path="/lesson-generator" element={<LessonGenerator />} />
-          <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
-          <Route path="/my-plans" element={<MyPlans />} />
-          <Route path="/lesson/:lessonId" element={<LessonDetail />} />
-          <Route path="/lesson/:moduleId/:lessonIndex" element={<LessonDetailNew />} />
-          <Route path="/user-profile" element={<UserProfile />} />
-          {/* Use the correct component for viewing modules */}
-          <Route path="/module/:moduleId" element={<ModuleDetail />} />
-          <Route path="/all-lesson-plans/:moduleId" element={<AllLessonPlans />} />
-          <Route path="/teacher-signup" element={<TeacherSignup />} />
-          <Route path="/student-signup" element={<StudentSignup />} />
-          <Route path="/upgrade" element={<UpgradePage />} />
-          <Route path="/nugget-builder" element={<NuggetBuilderPage />} />
-          <Route path="/nugget-details/:id" element={<NuggetDetails />} />
-          <Route path="/lesson-plans/builder" element={<LessonPlanBuilder />} />
-          <Route path="/view-content/:id" element={<NuggetDetails />} />
-          <Route path="/lesson-plans/drafts" element={<LessonPlanDrafts />} />
-          {/* #442: component already existed, was never wired to a route */}
-          <Route path="/module_builder/drafts" element={<ModuleDrafts />} />
-          <Route path="/lesson-details/:id" element={<LessonDetailsPage />} />
-          <Route path="/teacher-plus" element={<TeacherPlusPage />} />
-          <Route path="/teacherplus" element={<TeacherPlusPage />} />
-          <Route path="/lesson/:id" element={<LessonDetails />} />
-          <Route path="/content/:id" element={<ContentDetails />} />
-          <Route path="/cancel-subscription" element={<CancelSubscriptionPage />} />
-          <Route path="/module-builder" element={<ModuleBuilder />} />
-          {/* Catch-all: render a real 404 rather than an empty page (#421) */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
-    </BrowserRouter>
+    // ToastProvider sits ABOVE the router so a toast raised right before a
+    // navigate() survives the transition instead of unmounting with the page
+    // that raised it. ErrorBoundary wraps only the routed content, so a
+    // component that throws during render loses that page but keeps the
+    // navbar - the user can always get somewhere else (#367).
+    <ToastProvider>
+      <BrowserRouter>
+        <Layout>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/upload-content" element={<UploadContent />} />
+              <Route path="/edit-content/:id" element={<EditContent />} />
+              <Route path="/payment" element={<PaymentPage />} />
+              <Route path="/payment/premium" element={<PaymentPage />} />
+              <Route path="/payment/yearly" element={<YearlyPaymentPage />} />
+              <Route path="/lesson-generator" element={<LessonGenerator />} />
+              <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
+              <Route path="/my-plans" element={<MyPlans />} />
+              <Route path="/lesson/:lessonId" element={<LessonDetail />} />
+              <Route path="/lesson/:moduleId/:lessonIndex" element={<LessonDetailNew />} />
+              <Route path="/user-profile" element={<UserProfile />} />
+              {/* Use the correct component for viewing modules */}
+              <Route path="/module/:moduleId" element={<ModuleDetail />} />
+              <Route path="/all-lesson-plans/:moduleId" element={<AllLessonPlans />} />
+              <Route path="/teacher-signup" element={<TeacherSignup />} />
+              <Route path="/student-signup" element={<StudentSignup />} />
+              <Route path="/upgrade" element={<UpgradePage />} />
+              <Route path="/nugget-builder" element={<NuggetBuilderPage />} />
+              <Route path="/nugget-details/:id" element={<NuggetDetails />} />
+              <Route path="/lesson-plans/builder" element={<LessonPlanBuilder />} />
+              <Route path="/view-content/:id" element={<NuggetDetails />} />
+              <Route path="/lesson-plans/drafts" element={<LessonPlanDrafts />} />
+              {/* #442: component already existed, was never wired to a route */}
+              <Route path="/module_builder/drafts" element={<ModuleDrafts />} />
+              <Route path="/lesson-details/:id" element={<LessonDetailsPage />} />
+              <Route path="/teacher-plus" element={<TeacherPlusPage />} />
+              <Route path="/teacherplus" element={<TeacherPlusPage />} />
+              <Route path="/lesson/:id" element={<LessonDetails />} />
+              <Route path="/content/:id" element={<ContentDetails />} />
+              <Route path="/cancel-subscription" element={<CancelSubscriptionPage />} />
+              <Route path="/module-builder" element={<ModuleBuilder />} />
+              {/* Catch-all: render a real 404 rather than an empty page (#421) */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
+        </Layout>
+      </BrowserRouter>
+    </ToastProvider>
   );
 }
 

@@ -27,6 +27,7 @@ import BackButton from "@/components/ui/BackButton";
 import { TYPO } from "@/constants/typography";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { fetchPayments } from "@/utils/paymentsApi";
+import { useToast } from "@/components/ui/ToastProvider";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
@@ -67,6 +68,7 @@ function normalizeToArray(value) {
 }
 
 const ModuleBuilder = ({ onCancel } = {}) => {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     title: "",
     Category: [],
@@ -339,7 +341,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
-      alert("You must be logged in to save a draft.");
+      toast.error("You must be logged in to save a draft.");
       return;
     }
     const db = getFirestore();
@@ -371,7 +373,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     }
     await addDoc(collection(db, COLLECTIONS.module), draftData);
     localStorage.removeItem("moduleDraft");
-    alert("Module draft saved successfully!");
+    toast.success("Module draft saved successfully!");
     window.location.reload();
   };
 
@@ -442,7 +444,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       formData.Level.length === 0 ||
       !formData.Duration
     ) {
-      alert("Please fill all required fields.");
+      toast.error("Please fill all required fields.");
       setIsSubmitting(false);
       return;
     }

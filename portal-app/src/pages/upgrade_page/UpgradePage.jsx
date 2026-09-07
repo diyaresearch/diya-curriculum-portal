@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
 import { api } from '@/utils/apiClient';
+import { useToast } from "@/components/ui/ToastProvider";
 
 const UpgradePage = () => {
+  const toast = useToast();
     const navigate = useNavigate();
     const { user, userData } = useUserData();
     const [showContactModal, setShowContactModal] = useState(false);
@@ -14,7 +16,7 @@ const UpgradePage = () => {
     const handleUpgradeClick = (planType = 'premium') => {
         // Check if user is authenticated
         if (!user || !userData) {
-            alert('Please log in to upgrade your account');
+            toast.error('Please log in to upgrade your account');
             return;
         }
 
@@ -35,7 +37,7 @@ const UpgradePage = () => {
                 message: 'Enterprise plan inquiry',
                 contactPreference: 'email'
             });
-            alert('Enterprise contact request submitted successfully! Our team will reach out to you soon.');
+            toast.success('Enterprise contact request submitted successfully! Our team will reach out to you soon.');
         } catch (error) {
             // A non-2xx now throws, so the old response.ok branch and the
             // catch collapse into one path.

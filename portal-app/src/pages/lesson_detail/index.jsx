@@ -11,8 +11,11 @@ import { FaExternalLinkAlt } from "react-icons/fa";
 import "react-quill-new/dist/quill.snow.css";
 import DOMPurify from "dompurify";
 import { TYPO } from "@/constants/typography";
+import { useToast } from "@/components/ui/ToastProvider";
+import { toUserMessage } from "@/utils/errorMessage";
 
 export const LessonDetail = () => {
+  const toast = useToast();
   const { user, userData, loading } = useUserData();
   const [lesson, setLesson] = useState(null);
   const navigate = useNavigate();
@@ -42,17 +45,17 @@ export const LessonDetail = () => {
     try {
       if (!user || !canManage) {
         console.error("No permissions to delete lesson");
-        alert("Contact Admin to delete the lesson plan.");
+        toast.error("Contact Admin to delete the lesson plan.");
         return;
       }
 
       await api.del(`/api/lesson/${lessonId}`);
 
-      alert("Lesson plan deleted successfully.");
+      toast.success("Lesson plan deleted successfully.");
       navigate("/my-plans");
     } catch (error) {
       console.error("Error deleting lesson:", error);
-      alert("Failed to delete the lesson plan.");
+      toast.error(toUserMessage(error, "Failed to delete the lesson plan."));
     } finally {
       closeModal();
     }

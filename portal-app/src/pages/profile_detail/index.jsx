@@ -3,8 +3,11 @@ import useUserData from "@/hooks/useUserData";
 import { api } from "@/utils/apiClient";
 import { useNavigate } from "react-router-dom";
 import defaultProfileIcon from "@/assets/default_user_icon.png";
+import { useToast } from "@/components/ui/ToastProvider";
+import { toUserMessage } from "@/utils/errorMessage";
 
 const UserProfile = () => {
+  const toast = useToast();
   const { user, loading } = useUserData();
   const navigate = useNavigate();
 
@@ -76,18 +79,18 @@ const UserProfile = () => {
 
     const { firstName, lastName, institution, userType, jobTitle, subjects } = formData;
     if (!firstName || !lastName || !institution || !userType || !jobTitle || !subjects) {
-      alert("Please fill in all fields before updating the profile.");
+      toast.error("Please fill in all fields before updating the profile.");
       return;
     }
 
     try {
       await api.put("/api/user/update", formData);
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (error) {
       // A non-2xx throws now, so the old "else -> Failed to update" branch
       // and this catch are the same path.
-      alert("Failed to update profile");
+      toast.error(toUserMessage(error, "Failed to update profile"));
       console.error("Error updating profile:", error);
     }
   };
@@ -107,12 +110,12 @@ const UserProfile = () => {
         userId: selectedUser.id,
         newRole: confirmation.role,
       });
-      alert(`Role updated to ${confirmation.role}`);
+      toast.success(`Role updated to ${confirmation.role}`);
       setUsers(
         users.map((u) => (u.id === selectedUser.id ? { ...u, role: confirmation.role } : u))
       );
     } catch (error) {
-      alert("Failed to update role");
+      toast.error(toUserMessage(error, "Failed to update role"));
       console.error("Failed to update user role:", error);
     }
     setConfirmation(null);

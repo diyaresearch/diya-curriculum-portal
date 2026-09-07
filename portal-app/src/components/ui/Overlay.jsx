@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { FaEllipsisV } from "react-icons/fa";
 import DOMPurify from "dompurify";
 import useUserData from "@/hooks/useUserData";
+import { useToast } from "@/components/ui/ToastProvider";
 
 const Overlay = ({ content, onClose }) => {
+  const toast = useToast();
   const navigate = useNavigate();
   const [showOptions, setShowOptions] = useState(false);
   const { userData } = useUserData();
@@ -14,7 +16,7 @@ const Overlay = ({ content, onClose }) => {
   const handleSaveLink = () => {
     const url = `${window.location.origin}/view-content/${content.UnitID}`;
     navigator.clipboard.writeText(url).then(() => {
-      alert("Link saved to clipboard!");
+      toast.success("Link saved to clipboard!");
     });
   };
 
