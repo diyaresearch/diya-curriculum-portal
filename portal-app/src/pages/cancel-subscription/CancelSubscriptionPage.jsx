@@ -4,8 +4,11 @@ import useUserData from '@/hooks/useUserData';
 import { getFirestore, doc, updateDoc } from 'firebase/firestore';
 import { app as firebaseApp } from '@/firebase/firebaseConfig';
 import { COLLECTIONS } from '@/firebase/collectionNames';
+import { useToast } from "@/components/ui/ToastProvider";
+import { toUserMessage } from "@/utils/errorMessage";
 
 const CancelSubscriptionPage = () => {
+  const toast = useToast();
     const navigate = useNavigate();
     const { user, userData, loading } = useUserData();
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -36,7 +39,7 @@ const CancelSubscriptionPage = () => {
             setShowConfirmModal(true);
         } catch (error) {
             console.error('Error cancelling subscription:', error);
-            alert('Error cancelling subscription. Please try again.');
+            toast.error(toUserMessage(error, 'Error cancelling subscription. Please try again.'));
         } finally {
             setIsProcessing(false);
         }

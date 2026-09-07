@@ -21,6 +21,8 @@ import { loadStripe } from "@stripe/stripe-js";
 import { fetchPayments } from "@/utils/paymentsApi";
 import { api } from "@/utils/apiClient";
 import Modal from "react-modal";
+import { useToast } from "@/components/ui/ToastProvider";
+import { toUserMessage } from "@/utils/errorMessage";
 
 
 // Level chip coloring intentionally not used on module page
@@ -220,6 +222,7 @@ if (typeof document !== "undefined") {
 }
 
 const ModuleDetail = () => {
+  const toast = useToast();
   const { moduleId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -677,7 +680,7 @@ const ModuleDetail = () => {
       navigate("/");
     } catch (err) {
       console.error("Failed to delete module:", err);
-      alert("Failed to delete module. Please try again.");
+      toast.error(toUserMessage(error, "Failed to delete module. Please try again."));
     } finally {
       setIsDeleting(false);
     }
@@ -692,7 +695,7 @@ const ModuleDetail = () => {
       const user = auth.currentUser;
   
       if (!user) {
-        alert("Please log in to purchase.");
+        toast.error("Please log in to purchase.");
         return;
       }
   
@@ -717,7 +720,7 @@ const ModuleDetail = () => {
   
       if (!response.ok) {
         console.error("Create checkout session failed:", { status: response.status, data, raw });
-        alert((data && data.message) || raw || "Unable to start checkout.");
+        toast.error((data && data.message) || raw || "Unable to start checkout.");
         return;
       }
   
@@ -725,7 +728,7 @@ const ModuleDetail = () => {
       setCheckoutClientSecret(data.clientSecret);
     } catch (err) {
       console.error("handleBuy error:", err);
-      alert("Error starting checkout.");
+      toast.error("Error starting checkout.");
     } finally {
       setIsStartingCheckout(false);
     }

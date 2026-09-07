@@ -14,6 +14,8 @@ import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formO
 import MultiCheckboxDropdown from "@/components/ui/MultiCheckboxDropdown";
 import { TYPO } from "@/constants/typography";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import { useToast } from "@/components/ui/ToastProvider";
+import { toUserMessage } from "@/utils/errorMessage";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
@@ -36,6 +38,7 @@ const normalizeBoolean = (value) => {
 };
 
 const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) => {
+  const toast = useToast();
   const location = useLocation();
   const [formData, setFormData] = useState({
     title: "",
@@ -165,7 +168,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
         const auth = getAuth();
         const user = auth.currentUser;
         if (!user) {
-          alert("You must be logged in to edit a lesson plan.");
+          toast.error("You must be logged in to edit a lesson plan.");
           return;
         }
         const lesson = await api.get(`/api/lesson/${editLessonId}`);
@@ -201,11 +204,13 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
         setSelectedMaterials(initialMaterials);
       } catch (e) {
         console.error("Error prefilling lesson builder:", e);
-        alert("Failed to load lesson plan for editing.");
+        toast.error(toUserMessage(e, "Failed to load lesson plan for editing."));
       }
     };
     loadForEdit();
-  }, [editLessonId]);
+    // `toast` is stable (useMemo over two stable useCallbacks in
+    // ToastProvider), so listing it satisfies the rule without re-running.
+  }, [editLessonId, toast]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -271,7 +276,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     const auth = getAuth();
     const user = auth.currentUser;
     if (!user) {
-      alert("You must be logged in to save a draft.");
+      toast.error("You must be logged in to save a draft.");
       return;
     }
     const db = getFirestore();
@@ -293,7 +298,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       await addDoc(collection(db, COLLECTIONS.lesson), draftData);
     }
     localStorage.removeItem("lessonPlanDraft");
-    alert("Lesson plan draft saved successfully!");
+    toast.success("Lesson plan draft saved successfully!");
     window.location.reload();
   };
 
@@ -304,19 +309,19 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
 
     // Require description
     if (!formData.description || formData.description.trim() === "" || formData.description === "<p><br></p>") {
-      alert("Description is required.");
+      toast.error("Description is required.");
       setIsSubmitting(false);
       return;
     }
     // Require learning objectives
     if (!objectives[0] || objectives[0].trim() === "" || objectives[0] === "<p><br></p>") {
-      alert("Learning objectives are required.");
+      toast.error("Learning objectives are required.");
       setIsSubmitting(false);
       return;
     }
     // Require section content
     if (sections.some(section => !section.intro || section.intro.trim() === "")) {
-      alert("Section content is required for all sections.");
+      toast.error("Section content is required for all sections.");
       setIsSubmitting(false);
       return;
     }
@@ -330,7 +335,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       !formData.Level ||
       (Array.isArray(formData.Level) && formData.Level.length === 0)
     ) {
-      alert("Category, Type, and Level are required.");
+      toast.error("Category, Type, and Level are required.");
       setIsSubmitting(false);
       return;
     }

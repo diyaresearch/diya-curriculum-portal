@@ -7,6 +7,7 @@ import { api } from "@/utils/apiClient";
 import UploadContent from "@/pages/upload-content/index";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import { useToast } from "@/components/ui/ToastProvider";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
@@ -15,6 +16,7 @@ if (typeof document !== "undefined") {
 }
 
 export const EditLesson = () => {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     title: "",
     category: "",
@@ -176,7 +178,7 @@ export const EditLesson = () => {
 
     if (userData.role !== "admin" && user.uid !== authorId) {
       console.error("No permissions to update lesson");
-      alert("Contact the Admin to update the lesson plan.");
+      toast.error("Contact the Admin to update the lesson plan.");
       return;
     }
 

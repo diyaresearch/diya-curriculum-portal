@@ -143,6 +143,60 @@ cached user/subscription data right after a mutation (see the comments around th
 force the same reset. Reading `window.location.origin/hostname/pathname` (no navigation
 involved) is unaffected by any of this.
 
+### API calls, errors, and user feedback (portal-app/)
+
+One way in, one way out. Established in #370 (transport) and #367 (reporting).
+
+**Calling the backend.** Everything under `server/` goes through
+`src/utils/apiClient.js` - never a bare `fetch` and never `axios` (removed in
+#370, it is no longer a dependency):
+
+```js
+import { api } from "@/utils/apiClient";
+
+const lesson = await api.get(`/api/lesson/${id}`);        // token attached automatically
+const units  = await api.get("/api/units", { auth: false });  // public endpoint
+await api.post("/api/lesson/", lessonData);
+```
+
+A non-2xx **throws** an `ApiError` carrying `{ status, code, details }` - there
+is no `response.ok` to check. The client does **not** unwrap a response
+envelope: only `server/routes/user.js` uses `responseHelpers.js`, the other 53
+responses are raw `res.json()`, so the parsed body comes back verbatim.
+
+Payments are the one exception - they live in `functions/`, not `server/`, and
+keep using `src/utils/paymentsApi.js`.
+
+For data a component loads on mount, prefer the hook, which adds cancellation
+and a uniform shape:
+
+```js
+const { data, loading, error, refetch } = useApi(
+  (signal) => api.get(`/api/lesson/${lessonId}`, { signal }),
+  [lessonId]
+);
+```
+
+**Telling the user.** `alert()` is not used anywhere any more; there were 32 and
+they are all gone. Use the toast channel, mounted once above the router:
+
+```js
+const toast = useToast();          // from @/components/ui/ToastProvider
+toast.success("Profile updated successfully!");
+toast.error(toUserMessage(error, "Failed to update profile"));
+```
+
+`toUserMessage(error, fallback)` (`@/utils/errorMessage`) turns an `ApiError`
+into something a teacher can act on, keyed on `code`/`status` rather than
+message text: offline, session expired, no permission, not found. It returns
+**null** for a cancelled request, and `toast.*` ignores null - so callers never
+need to guard that case.
+
+**Render-time crashes.** `ErrorBoundary` wraps the routed content in `App.jsx`,
+so a component that throws loses its page but keeps the navbar, with a "Try
+again" that resets it. Before #367 there were none, and any render exception
+blanked the entire app.
+
 ## Environment Configuration
 
 ⚠️ **IMPORTANT**: Never commit `.env` files or `serviceAccountKey.json` to version control!
