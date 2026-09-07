@@ -28,7 +28,7 @@ import { TYPO } from "../../constants/typography";
 import { COLLECTIONS } from "../../firebase/collectionNames";
 import { fetchPayments } from "../../utils/paymentsApi";
 
-// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+// Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
   const appRoot = document.getElementById("root");
   if (appRoot) Modal.setAppElement(appRoot);

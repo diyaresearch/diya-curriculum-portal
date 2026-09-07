@@ -42,7 +42,7 @@ DIYA Curriculum Portal is a platform served for the educators and content creato
 
 Ensure you have the following installed on your local development machine:
 
-- **Node.js**: You can download and install Node.js from the [official Node.js website](https://nodejs.org/). Choose the version that best suits your development environment (LTS is recommended for most users).
+- **Node.js**: You can download and install Node.js from the [official Node.js website](https://nodejs.org/). Use an active LTS release — `portal-app/` requires Node 22.12 or newer (Vite 7 and Vitest 5 both drop older lines), and CI runs Node 22.
 - **npm**: included with Node.js, so it's installed automatically when you install Node.js. This is the package manager the repo standardizes on — CI runs `npm ci`, and only `package-lock.json` is committed in each package (`server/` and `portal-app/` used to also carry a `yarn.lock`; the two had drifted and only the npm lockfile was ever what CI/tooling actually used, so the yarn one was dropped — see #438). For more details, see the [npm documentation](https://docs.npmjs.com/).
 
 ### Clone the Repository
@@ -79,9 +79,11 @@ scratch: `cp portal-app/.env.example portal-app/.env.development` and
 
 #### Naming convention
 
-- **Frontend (`portal-app/`):** every variable is prefixed `REACT_APP_`. This
-  isn't a style choice — Create React App only inlines variables with that
-  prefix into the client bundle; anything else is invisible to the app.
+- **Frontend (`portal-app/`):** every variable is prefixed `VITE_`. This
+  isn't a style choice — Vite only inlines variables with that prefix into the
+  client bundle; anything else is invisible to the app. (The prefix was
+  `REACT_APP_` until the Vite migration in #503, which is why older branches
+  and any long-lived `.env.*.local` file may still use it.)
 - **Backend (`server/`):** no prefix. Node reads `process.env` directly, so
   none is needed.
 
@@ -93,8 +95,7 @@ a value looks wrong:
 - **Backend:** `server/index.js` calls `dotenv.config({ path: `.env.${NODE_ENV}` })`.
   Exactly one file loads, selected by `NODE_ENV` (`development` / `production` /
   `test`) — there is no base `server/.env` and no merging between files.
-- **Frontend:** Create React App loads several files and merges them, most
-  specific wins:
+- **Frontend:** Vite loads several files and merges them, most specific wins:
   `.env.development.local` / `.env.production.local` → `.env.local` (skipped
   for `test`) → `.env.development` / `.env.production` → `.env`. In this repo,
   `portal-app/.env` holds the Firebase project keys shared by every tier;
@@ -107,14 +108,14 @@ a value looks wrong:
 Create a `.env.development` or `.env.production` file in the `portal-app` folder and add the Firebase configuration:
 
 ```env
-REACT_APP_FIREBASE_API_KEY=your-api-key
-REACT_APP_FIREBASE_AUTH_DOMAIN=your-auth-domain
-REACT_APP_FIREBASE_PROJECT_ID=your-project-id
-REACT_APP_FIREBASE_STORAGE_BUCKET=your-storage-bucket
-REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
-REACT_APP_FIREBASE_APP_ID=your-app-id
-REACT_APP_SERVER_ORIGIN_URL=http://localhost:3001
-REACT_APP_HOME_PAGE=http://localhost:3000
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-auth-domain
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+VITE_SERVER_ORIGIN_URL=http://localhost:3001
+VITE_HOME_PAGE=http://localhost:3000
 ```
 
 #### Backend Configuration
@@ -206,7 +207,7 @@ To opt in when running the frontend or backend individually instead of via
 - Backend: `FIRESTORE_EMULATOR_HOST=localhost:8080` and
   `FIREBASE_AUTH_EMULATOR_HOST=localhost:9099` (the Admin SDK picks these up
   automatically — no code change, no credentials needed)
-- Frontend: `REACT_APP_USE_FIREBASE_EMULATOR=true` in a gitignored
+- Frontend: `VITE_USE_FIREBASE_EMULATOR=true` in a gitignored
   `portal-app/.env.development.local`
 
 #### Staging project (#428)
@@ -222,9 +223,9 @@ the Stripe webhook-dependent payment routes aren't exercised there yet.
   and run `NODE_ENV=staging npm start`. Credentials come from the same
   `gcloud auth application-default login` account as production — no new key
   file — as long as that account has access to the staging project too.
-- **Frontend:** CRA hardcodes `NODE_ENV=development` for `npm start`, so there's
-  no `.env.staging` for the frontend the way there is for the backend. Instead,
-  override the six `REACT_APP_FIREBASE_*` keys in `portal-app/.env.development.local`
+- **Frontend:** Vite's dev server runs in `development` mode, so there's no
+  `.env.staging` for the frontend the way there is for the backend. Instead,
+  override the six `VITE_FIREBASE_*` keys in `portal-app/.env.development.local`
   (gitignored) with the staging project's web app config, from Firebase Console →
   Project Settings → curriculum-portal-staging → Your apps.
 - `firebase use staging` (via the `staging` alias in `.firebaserc`) targets this

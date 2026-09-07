@@ -14,7 +14,7 @@ import MultiCheckboxDropdown from "../../components/MultiCheckboxDropdown";
 import { TYPO } from "../../constants/typography";
 import { COLLECTIONS } from "../../firebase/collectionNames";
 
-// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+// Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
   const appRoot = document.getElementById("root");
   if (appRoot) Modal.setAppElement(appRoot);
@@ -167,7 +167,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
           return;
         }
         const token = await user.getIdToken();
-        const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+        const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
 
         const res = await fetch(`${baseUrl}/api/lesson/${editLessonId}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -354,7 +354,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
 
     const userId = user.uid;
     const token = await user.getIdToken();
-    const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+    const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
     const url = editLessonId
       ? `${baseUrl}/api/lesson/${editLessonId}`
       : `${baseUrl}/api/lesson/`;
@@ -367,7 +367,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
             return [];
           }
           return contentIds.map((contentId) => {
-            return fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
+            return fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

@@ -2,23 +2,15 @@
   "name": "portal-app",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:3001",
-  "_homepage_note": "Firebase Hosting serves portal-app/build at the site ROOT, so assets live at /static/*. The router basename is /diya-ed, but that is a URL prefix only - it is not a directory on the host. homepage must therefore be '/', not '/diya-ed' (issue #421).",
-  "homepage": "/",
+  "type": "module",
+  "_build_output_note": "Firebase Hosting serves portal-app/build at the site ROOT, so assets live at /static/* (root firebase.json caches /static/** immutably). Vite's defaults are dist/ + assets/, so vite.config.js overrides build.outDir/assetsDir to keep the deploy contract from CRA unchanged. `base` must stay '/' - the router basename is /diya-ed, but that is a URL prefix only, not a directory on the host (issue #421).",
   "dependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@stripe/react-stripe-js": "^3.7.0",
     "@stripe/stripe-js": "^7.8.0",
-    "@tailwindcss/postcss": "^4.3.3",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
     "axios": "^1.20.0",
-    "css-select": "^5.1.0",
     "dompurify": "^3.2.4",
     "firebase": "^10.12.2",
-    "jspdf": "^3.0.1",
-    "nth-check": "^3.0.1",
-    "postcss": "^8.5.26",
+    "jspdf": "^4.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.7.0",
@@ -26,56 +18,39 @@
     "react-pdf": "^10.5.0",
     "react-quill-new": "^3.8.3",
     "react-router-dom": "^7.18.3",
-    "react-scripts": "^5.0.1",
-    "resolve-url-loader": "^5.0.0",
-    "svgo": "^3.3.2",
     "web-vitals": "^6.2.1"
   },
+  "_overrides_note": "firebase@10 pins undici to exactly 6.19.7, which carries a batch of high-severity advisories (GHSA-c76h-2ccp-4975 and friends). undici is only reachable from @firebase/*'s Node builds - it is not in the browser bundle this app ships - but it still fails `npm audit --audit-level=high`, which the CI dependency-audit job blocks on as of #503. Pinning forward within undici 6.x clears it without a firebase major bump.",
   "overrides": {
-    "css-select": {
-      "nth-check": "^2.1.1"
-    },
-    "svgo": {
-      "css-select": "^4.1.0"
-    },
-    "@svgr/plugin-svgo": {
-      "svgo": "^2.8.0"
-    },
-    "resolve-url-loader": {
-      "postcss": "8.4.39"
-    }
+    "undici": "^6.28.1"
   },
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "test": "craco test",
-    "lint": "eslint src --ext .js,.jsx --max-warnings=0",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . --max-warnings=0"
   },
   "devDependencies": {
-    "@craco/craco": "^7.1.0",
-    "tailwindcss": "^4.3.3"
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "eslint": "^10.4.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-testing-library": "^7.16.2",
+    "globals": "^17.12.0",
+    "jsdom": "^29.1.1",
+    "tailwindcss": "^4.3.3",
+    "vite": "^7.3.6",
+    "vitest": "^5.0.0"
   },
   "engines": {
-    "node": ">=20.0.0",
+    "node": "^22.12.0 || >=24.0.0",
     "npm": ">=10.0.0"
   }
 }

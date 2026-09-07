@@ -1,15 +1,15 @@
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
+// jest-dom adds custom matchers for asserting on DOM nodes, e.g.
 // expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
-import '@testing-library/jest-dom';
+// https://github.com/testing-library/jest-dom
+import "@testing-library/jest-dom/vitest";
+import { vi } from "vitest";
 
-// Firebase Auth (via undici) needs TextEncoder/TextDecoder in Jest.
+// Firebase Auth (via undici) needs TextEncoder/TextDecoder under jsdom.
 import { TextDecoder, TextEncoder } from "util";
 import { ReadableStream } from "stream/web";
 
-// Prevent Firebase Auth from starting real listeners/timers in Jest.
-jest.mock("firebase/auth", () => {
+// Prevent Firebase Auth from starting real listeners/timers in tests.
+vi.mock("firebase/auth", () => {
   class GoogleAuthProvider {
     setCustomParameters() {}
   }
@@ -26,10 +26,10 @@ jest.mock("firebase/auth", () => {
     __esModule: true,
     getAuth: () => mockAuth,
     GoogleAuthProvider,
-    signInWithRedirect: jest.fn(async () => undefined),
-    getRedirectResult: jest.fn(async () => null),
-    onAuthStateChanged: jest.fn((auth, cb) => mockAuth.onAuthStateChanged(cb)),
-    signOut: jest.fn(async () => undefined),
+    signInWithRedirect: vi.fn(async () => undefined),
+    getRedirectResult: vi.fn(async () => null),
+    onAuthStateChanged: vi.fn((auth, cb) => mockAuth.onAuthStateChanged(cb)),
+    signOut: vi.fn(async () => undefined),
   };
 });
 
@@ -44,9 +44,11 @@ if (!global.ReadableStream) {
   global.ReadableStream = ReadableStream;
 }
 
-// react-pdf pulls in ESM pdfjs builds that Jest (CRA) can't parse.
-jest.mock("react-pdf", () => {
-  const React = require("react");
+// react-pdf renders through pdfjs, which needs a real canvas/worker that
+// jsdom doesn't provide. The factory is async because vi.mock is hoisted
+// above this file's own imports, so it can't close over one.
+vi.mock("react-pdf", async () => {
+  const React = await import("react");
   return {
     Document: ({ children }) => React.createElement("div", null, children),
     Page: () => React.createElement("div", null),
@@ -54,17 +56,18 @@ jest.mock("react-pdf", () => {
   };
 });
 
-// Axios is ESM-only in this repo's dependency tree; CRA/Jest won't transform it.
-jest.mock("axios", () => {
+// Keep tests off the network: no component under test should reach a real
+// backend, and an unmocked axios call would try.
+vi.mock("axios", () => {
   const mockAxios = {
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
     create: () => mockAxios,
     defaults: {},
-    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+    interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } },
   };
   return { __esModule: true, default: mockAxios };
 });

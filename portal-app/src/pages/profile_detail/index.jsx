@@ -39,7 +39,7 @@ const UserProfile = () => {
         try {
           const token = await user.getIdToken();
           const response = await axios.get(
-            `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/me`,
+            `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/me`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -59,7 +59,7 @@ const UserProfile = () => {
     try {
       const token = await user.getIdToken();
       const usersRes = await axios.get(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/users`,
+        `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/users`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -96,7 +96,7 @@ const UserProfile = () => {
     try {
       const token = await user.getIdToken();
       const response = await axios.put(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/update`,
+        `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/update`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -126,7 +126,7 @@ const UserProfile = () => {
     const token = await user.getIdToken();
     try {
       const response = await axios.put(
-        `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/updateRole`,
+        `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/updateRole`,
         {
           userId: selectedUser.id,
           newRole: confirmation.role,

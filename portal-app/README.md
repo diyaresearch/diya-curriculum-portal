@@ -1,70 +1,52 @@
-# Getting Started with Create React App
+# portal-app
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+The DIYA Curriculum Portal frontend: React 18 built with [Vite](https://vite.dev).
+It was bootstrapped with Create React App and migrated off `react-scripts` in
+issue #503 — CRA was formally sunset by the React team and accounted for nearly
+all of this package's dependency advisories.
 
-## Available Scripts
+## Available scripts
 
-In the project directory, you can run:
+Run these from `portal-app/`. Node 22.12 or newer is required (Vite 7, Vitest 5).
 
-### `npm start`
+### `npm start` (alias: `npm run dev`)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Starts the Vite dev server on [http://localhost:3000](http://localhost:3000)
+with hot module replacement. `/api/*` is proxied to the local `server/` backend
+on port 3001 — payments are *not* covered by that proxy; they go straight to
+Cloud Functions via `src/utils/paymentsApi.js`.
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Builds to `build/`, with hashed assets under `build/static/`. Those two paths
+are not Vite's defaults (`dist/` + `assets/`) — they're pinned in
+`vite.config.js` because the repo-root `firebase.json` serves
+`portal-app/build` at the site root and applies immutable caching to
+`/static/**`. Changing either one means changing the hosting config too.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### `npm run preview`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Serves the contents of `build/` locally, which is the closest local
+approximation of what Firebase Hosting will serve.
 
-### `npm run eject`
+### `npm test` / `npm run test:watch`
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Runs [Vitest](https://vitest.dev) once, or in watch mode. Configuration lives in
+the `test` block of `vite.config.js`; `src/setupTests.js` registers the
+`@testing-library/jest-dom` matchers and the module mocks (Firebase Auth,
+react-pdf, axios) that keep tests off the network. Tests use Vitest's globals
+plus `vi` for mocking — there is no `jest` global.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### `npm run lint`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+ESLint with a flat config (`eslint.config.js`), which replaces CRA's bundled
+`react-app` / `react-app/jest` presets. Warnings fail the run
+(`--max-warnings=0`), same as before.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Environment variables
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Client-side config comes from `.env*` files in this directory and must be
+prefixed `VITE_` — Vite only inlines that prefix into the bundle. Read them as
+`import.meta.env.VITE_FOO`, never `process.env`. Start from `.env.example`; the
+root README's "Environment variables" section covers file precedence, the
+Firebase emulator toggle, and the staging project.

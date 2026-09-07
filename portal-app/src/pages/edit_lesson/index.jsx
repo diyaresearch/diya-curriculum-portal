@@ -8,7 +8,7 @@ import UploadContent from "../upload-content/index";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 
-// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+// Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
   const appRoot = document.getElementById("root");
   if (appRoot) Modal.setAppElement(appRoot);
@@ -56,7 +56,7 @@ export const EditLesson = () => {
         const token = await user.getIdToken();
 
         const portalResponse = await axios.get(
-          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units/user`,
+          `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/units/user`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -64,7 +64,7 @@ export const EditLesson = () => {
         setPortalContent(portalResponse.data);
 
         const lessonResponse = await axios.get(
-          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`,
+          `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -196,7 +196,7 @@ export const EditLesson = () => {
     const userId = user.uid;
     const token = await user.getIdToken();
 
-    const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`;
+    const url = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`;
 
     try {
       const lessonData = {
@@ -224,7 +224,7 @@ export const EditLesson = () => {
           }
 
           return contentIds.map((contentId) => {
-            return fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
+            return fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

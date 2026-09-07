@@ -9,7 +9,7 @@ import useUserData from "../../hooks/useUserData";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
 
-// Avoid test/runtime crashes when #root is not present (e.g. Jest)
+// Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
   const appRoot = document.getElementById("root");
   if (appRoot) Modal.setAppElement(appRoot);
@@ -52,7 +52,7 @@ export const LessonGenerator = () => {
 
         const token = await user.getIdToken();
         const response = await axios.get(
-          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units/user`,
+          `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/units/user`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -207,7 +207,7 @@ export const LessonGenerator = () => {
     const userId = user.uid;
     const token = await user.getIdToken();
 
-    const url = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/`;
+    const url = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/`;
 
     try {
       // If the lesson is public, update all content within sections to be public
@@ -219,7 +219,7 @@ export const LessonGenerator = () => {
           }
 
           return contentIds.map((contentId) => {
-            return fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
+            return fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/update/${contentId}`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

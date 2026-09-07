@@ -96,7 +96,7 @@ const LessonDetailsPage = () => {
 
         // Format createdAt field
         if (key === "createdAt" && value) {
-          let dateObj = value;
+          let dateObj;
           if (typeof value === "object" && value.seconds) {
             dateObj = new Date(value.seconds * 1000);
           } else {

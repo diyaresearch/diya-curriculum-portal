@@ -13,7 +13,7 @@ const Home = () => {
       // Fetch content from the backend API
       (async () => {
         try {
-          const baseUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || "";
+          const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
           const response = await fetch(`${baseUrl}/api/units`);
           if (!response.ok) {
             throw new Error(`Failed to fetch units: ${response.status}`);

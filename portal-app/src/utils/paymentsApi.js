@@ -3,7 +3,7 @@
  *
  * Payment routes used to be split across two live backends by convention,
  * not architecture: module_detail's checkout call hit Firebase Functions
- * directly, PaymentPage/YearlyPaymentPage called REACT_APP_SERVER_ORIGIN_URL
+ * directly, PaymentPage/YearlyPaymentPage called VITE_SERVER_ORIGIN_URL
  * (App Engine - a different backend entirely), and module_builder's checkout
  * call was a bare relative fetch with no fallback at all. Each copy of the
  * origin-selection logic had drifted independently. Payments are now
@@ -12,7 +12,7 @@
  *
  * Firebase Hosting rewrites /api/** to that same function (firebase.json),
  * so a same-origin relative path also works when the page is actually served
- * through a Hosting rewrite. Everywhere else - localhost (CRA's dev proxy
+ * through a Hosting rewrite. Everywhere else - localhost (Vite's dev proxy
  * only forwards to the App Engine dev server, not Functions), an explicit
  * override, or any domain Hosting rewrites don't cover - this calls the
  * Cloud Function directly instead, so payments work regardless of how or
@@ -34,7 +34,7 @@ function isFirebaseHostingDomain(hostname) {
  * on the Firebase Hosting rewrite).
  */
 export function paymentsOrigin() {
-  const override = String(process.env.REACT_APP_PAYMENTS_FUNCTIONS_BASE_URL || "").trim();
+  const override = String(import.meta.env.VITE_PAYMENTS_FUNCTIONS_BASE_URL || "").trim();
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
   const shouldUseFunctionsDirect =
     isLocalhost(hostname) || Boolean(override) || !isFirebaseHostingDomain(hostname);

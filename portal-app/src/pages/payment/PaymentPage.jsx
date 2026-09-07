@@ -11,13 +11,13 @@ import { fetchPayments } from '../../utils/paymentsApi';
 // application or its API, which keeps the portal out of PCI scope. The flow
 // mirrors YearlyPaymentPage: create a PaymentIntent server-side, confirm it
 // with Stripe, then have the server verify it before granting anything (#422).
-const STRIPE_PUBLISHABLE_KEY = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || '';
+const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
 const stripePromise = STRIPE_PUBLISHABLE_KEY ? loadStripe(STRIPE_PUBLISHABLE_KEY) : null;
 
 if (!STRIPE_PUBLISHABLE_KEY) {
     // Deliberately no hard-coded fallback key. A pk_test fallback would let the
     // page look functional in production while quietly taking no real money.
-    console.error('REACT_APP_STRIPE_PUBLISHABLE_KEY is not set; the payment form cannot load.');
+    console.error('VITE_STRIPE_PUBLISHABLE_KEY is not set; the payment form cannot load.');
 }
 
 const PaymentForm = () => {

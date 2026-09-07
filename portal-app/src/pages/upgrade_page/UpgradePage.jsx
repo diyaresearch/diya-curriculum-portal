@@ -31,7 +31,7 @@ const UpgradePage = () => {
     const handleContactSales = async () => {
         try {
             // Get the server URL from environment
-            const serverUrl = process.env.REACT_APP_SERVER_ORIGIN_URL || 'http://localhost:3001';
+            const serverUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || 'http://localhost:3001';
 
             const response = await fetch(`${serverUrl}/api/subscription/enterprise-contact`, {
                 method: 'POST',

@@ -38,7 +38,7 @@ export const MyPlans = () => {
 
         let apiUrl;
         if (userRole === "admin") {
-          apiUrl = `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons/admin`;
+          apiUrl = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lessons/admin`;
 
           // /api/lessons/admin is now admin-gated and needs the token (#424).
           const response = await axios.get(apiUrl, {
@@ -57,8 +57,8 @@ export const MyPlans = () => {
         } else {
           apiUrl =
             planType === "public"
-              ? `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lessons`
-              : `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/myLessons`;
+              ? `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lessons`
+              : `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/myLessons`;
 
           const response = await axios.get(apiUrl, {
             headers: { Authorization: `Bearer ${token}` },

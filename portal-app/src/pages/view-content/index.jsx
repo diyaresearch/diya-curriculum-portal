@@ -55,13 +55,13 @@ const ViewContent = () => {
     const fetchContent = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/units`);
+        const response = await fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/units`);
         const units = await response.json();
 
         const unit = units.find((u) => u.UnitID === UnitID);
         if (unit) {
           const contentResponse = await fetch(
-            `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${unit.id}`
+            `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${unit.id}`
           );
           const data = await contentResponse.json();
           setContent(data);

@@ -14,15 +14,14 @@ name: CI
 # mock-only tests.signup.py suite that ran alongside it, and fixed a mock
 # Firebase Admin bug that broke auth for every mock-mode caller).
 #
-# `dependency-audit` (#437) is required for its server/functions matrix
-# legs — both are clean at --audit-level=high. The portal-app leg stays
-# non-blocking (continue-on-error, set per-matrix-entry below) until the
-# Vite migration (#503) replaces react-scripts, which accounts for most of
-# its remaining advisories and isn't fixable by a version bump.
+# `dependency-audit` (#437) blocks on all three matrix legs — all are
+# clean at --audit-level=high. portal-app's leg was non-blocking until #503
+# swapped react-scripts/CRA for Vite: that migration took it from 40
+# advisories (1 critical, 10 high) to 2 low.
 #
-# Both api-integration and dependency-audit's server/functions legs still
-# need a repo admin to actually add them to branch protection's
-# required-checks list — this workflow file can't do that part.
+# Both api-integration and dependency-audit still need a repo admin to
+# actually add them to branch protection's required-checks list — this
+# workflow file can't do that part.
 
 on:
   pull_request:
@@ -57,9 +56,11 @@ jobs:
         env:
           CI: true
 
+      # `npm test` is `vitest run` — single-shot by construction, so it
+      # needs no CRA-era --watchAll=false.
       - name: Test
         working-directory: portal-app
-        run: npm test -- --watchAll=false
+        run: npm test
         env:
           CI: true
 
@@ -139,12 +140,6 @@ jobs:
   dependency-audit:
     name: dependency-audit
     runs-on: ubuntu-latest
-    # server/ and functions/ are clean at --audit-level=high (#437) and can
-    # block merges. portal-app/ can't yet: react-scripts (CRA, deprecated,
-    # last released Dec 2021) accounts for most of its ~40 remaining
-    # advisories and isn't fixable without the Vite migration tracked in
-    # #503. Only that leg stays non-blocking until #503 lands.
-    continue-on-error: ${{ matrix.package == 'portal-app' }}
     strategy:
       matrix:
         package: [portal-app, server, functions]

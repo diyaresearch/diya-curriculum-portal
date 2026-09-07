@@ -47,7 +47,7 @@ export const LessonDetail = () => {
       }
 
       const token = await user.getIdToken();
-      await axios.delete(`${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`, {
+      await axios.delete(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -113,7 +113,7 @@ export const LessonDetail = () => {
 
         const token = await user.getIdToken();
         const response = await axios.get(
-          `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`,
+          `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -124,7 +124,7 @@ export const LessonDetail = () => {
         const contentPromises = lessonData.sections.flatMap((section) =>
           section.contentIds.map(async (contentId) => {
             const contentResponse = await axios.get(
-              `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/unit/${contentId}`
+              `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${contentId}`
             );
             return { contentId, ...contentResponse.data };
           })
@@ -151,7 +151,7 @@ export const LessonDetail = () => {
 
         if (authorUid) {
           const authorResponse = await axios.get(
-            `${process.env.REACT_APP_SERVER_ORIGIN_URL}/api/user/${authorUid}`
+            `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/${authorUid}`
           );
           setAuthor(authorResponse.data);
         }
