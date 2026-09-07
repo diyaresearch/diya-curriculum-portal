@@ -1,38 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { getFirestore, collection, getDocs, doc, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
-import { db } from "../firebase/firebaseConfig";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { CAROUSEL_CONFIG } from "../constants/testimonialData";
 import { COLLECTIONS } from "../firebase/collectionNames";
-
-// --- Custom Hook to get user and role from Firebase ---
-function useUserRole() {
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    const auth = getAuth();
-    let unsubUser = null;
-
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setRole(null);
-      if (firebaseUser) {
-        unsubUser = onSnapshot(doc(db, COLLECTIONS.users, firebaseUser.uid), (userDoc) => {
-          setRole(userDoc.exists() ? userDoc.data().role : null);
-        });
-      }
-    });
-
-    return () => {
-      if (typeof unsubscribe === "function") unsubscribe();
-      if (typeof unsubUser === "function") unsubUser();
-    };
-  }, []);
-
-  return { user, role };
-}
+import useUserRole from "../hooks/useUserRole";
 
 // Helper function to truncate text to approximately 5 lines
 const truncateToLines = (text, maxCharactersPerLine = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_CHARS_PER_LINE, maxLines = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_LINES) => {

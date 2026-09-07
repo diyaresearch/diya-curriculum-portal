@@ -1,78 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import barchartImg from "../assets/barchart.png";
 import laptopImg from "../assets/laptop.png";
 import teacherImg from "../assets/teacher.png";
 import pencilImg from "../assets/finpencil.png";
-import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "../firebase/firebaseConfig";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { COLLECTIONS } from "../firebase/collectionNames";
-
-// --- Sign Up Prompt Modal ---
-const SignUpPrompt = ({ open, onClose, type }) => {
-  if (!open) return null;
-  const isTeacher = type === "teacher";
-  return (
-    <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-      background: "rgba(0,0,0,0.3)", zIndex: 2000,
-      display: "flex", alignItems: "center", justifyContent: "center"
-    }}>
-      <div style={{
-        background: "#fff", borderRadius: 12, padding: 32, minWidth: 320,
-        boxShadow: "0 4px 24px rgba(0,0,0,0.18)", textAlign: "center", position: "relative"
-      }}>
-        <button onClick={onClose} style={{
-          position: "absolute", top: 10, right: 16, background: "none", border: "none",
-          fontSize: "1.5rem", cursor: "pointer", color: "#888"
-        }}>×</button>
-        <h3 style={{ marginBottom: 16 }}>
-          {isTeacher ? "Sign Up for Teacher Account" : "Sign Up for Student Account"}
-        </h3>
-        <div style={{ marginBottom: 24 }}>
-          Please sign up or log in to access this page.
-        </div>
-        <Link to={isTeacher ? "/teacher-signup" : "/student-signup"}>
-          <button style={{
-            background: "#162040", color: "#fff", border: "none", borderRadius: 6,
-            padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
-          }}>
-            {isTeacher ? "Sign Up as Teacher" : "Sign Up as Student"}
-          </button>
-        </Link>
-      </div>
-    </div>
-  );
-};
-
-// --- Custom Hook to get user and role from Firebase ---
-function useUserRole() {
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    const auth = getAuth();
-    let unsubUser = null;
-
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setRole(null);
-      if (firebaseUser) {
-        unsubUser = onSnapshot(doc(db, COLLECTIONS.users, firebaseUser.uid), (userDoc) => {
-          setRole(userDoc.exists() ? userDoc.data().role : null);
-        });
-      }
-    });
-
-    return () => {
-      unsubscribe();
-      if (unsubUser) unsubUser();
-    };
-  }, []);
-
-  return { user, role };
-}
+import useUserRole from "../hooks/useUserRole";
+import SignUpPrompt from "./SignUpPrompt";
 
 // --- SquareSection Component ---
 const SquareSection = ({ title, description, buttonText, buttonLink, children }) => (

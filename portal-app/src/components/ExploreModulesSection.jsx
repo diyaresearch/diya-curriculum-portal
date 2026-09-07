@@ -5,13 +5,12 @@ import laptopImg from "../assets/laptop.png";
 import physicsImg from "../assets/finphysics.png";
 import textbooksImg from "../assets/textbooks.png";
 import softwareEngImg from "../assets/software_engineering.png";
-import { getFirestore, collection, getDocs, doc, onSnapshot, query, where, limit } from "firebase/firestore";
+import { getFirestore, collection, getDocs, query, where, limit } from "firebase/firestore";
 import { app as firebaseApp } from "../firebase/firebaseConfig";
-import { db } from "../firebase/firebaseConfig";
 import { COLLECTIONS } from "../firebase/collectionNames";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useLocation, useNavigate } from "react-router-dom";
 import { startGoogleRedirect } from "../auth/googleAuth";
+import useUserRole from "../hooks/useUserRole";
 
 function isModuleVisibleToViewer(moduleItem, viewerUser) {
   if (!moduleItem || moduleItem._type !== "Module") return true;
@@ -109,41 +108,6 @@ function capitalizeWords(str) {
     .toLowerCase()
     .replace(/\b\w/g, c => c.toUpperCase());
 }
-
-
-
-// --- Custom Hook to get user and role from Firebase ---
-function useUserRole() {
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
-
-  useEffect(() => {
-    const auth = getAuth();
-    let unsubUser = null;
-
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setRole(null);
-      if (firebaseUser) {
-        unsubUser = onSnapshot(doc(db, COLLECTIONS.users, firebaseUser.uid), (userDoc) => {
-          setRole(userDoc.exists() ? userDoc.data().role : null);
-        });
-      }
-    });
-
-    return () => {
-      if (typeof unsubscribe === "function") unsubscribe();
-      if (typeof unsubUser === "function") unsubUser();
-    };
-  }, []);
-
-  return { user, role };
-}
-
-
-
-
-
 
 function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
   const location = useLocation();
