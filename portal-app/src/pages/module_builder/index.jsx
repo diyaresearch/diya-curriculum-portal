@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Modal from "react-modal";
+import Modal from "@/components/ui/Modal";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, addDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import ReactQuill from "react-quill-new";
@@ -8,12 +8,6 @@ import "react-quill-new/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
 import MultiCheckboxDropdown from "@/components/ui/MultiCheckboxDropdown";
 import { COLLECTIONS } from "@/firebase/collectionNames";
-
-// Avoid test/runtime crashes when #root is not present (e.g. Vitest)
-if (typeof document !== "undefined") {
-  const appRoot = document.getElementById("root");
-  if (appRoot) Modal.setAppElement(appRoot);
-}
 
 
 export const UploadContent = ({
@@ -153,23 +147,6 @@ export const UploadContent = ({
 
   const closeModal = () => {
     setModalIsOpen(false);
-  };
-
-  const customStyles = {
-    content: {
-      top: "50%",
-      left: "50%",
-      right: "auto",
-      bottom: "auto",
-      marginRight: "-50%",
-      transform: "translate(-50%, -50%)",
-      width: "400px",
-      padding: "20px",
-      textAlign: "center",
-    },
-    overlay: {
-      backgroundColor: "rgba(0, 0, 0, 0.75)",
-    },
   };
 
   return (
@@ -404,10 +381,9 @@ export const UploadContent = ({
       </form>
       {/* Modal remains unchanged */}
       <Modal
-        isOpen={modalIsOpen}
-        onRequestClose={closeModal}
-        style={customStyles}
-        contentLabel="Submission Result"
+        open={modalIsOpen}
+        onClose={closeModal}
+        title="Submission Result"
       >
         <h2>{modalMessage}</h2>
         <button

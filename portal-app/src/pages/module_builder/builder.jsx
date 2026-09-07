@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Modal from "react-modal";
+import Modal from "@/components/ui/Modal";
 import { getAuth } from "firebase/auth";
 import {
   addDoc,
@@ -28,12 +28,6 @@ import { TYPO } from "@/constants/typography";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { fetchPayments } from "@/utils/paymentsApi";
 import { useToast } from "@/components/ui/ToastProvider";
-
-// Avoid test/runtime crashes when #root is not present (e.g. Vitest)
-if (typeof document !== "undefined") {
-  const appRoot = document.getElementById("root");
-  if (appRoot) Modal.setAppElement(appRoot);
-}
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -562,29 +556,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     setSelectedMaterials(selectedMaterials.filter((m) => m.id !== materialId));
   };
 
-  const customStyles = {
-    content: {
-      top: "50%",
-      left: "50%",
-      right: "auto",
-      bottom: "auto",
-      marginRight: "-50%",
-      transform: "translate(-50%, -50%)",
-      width: "95vw",
-      maxWidth: "540px",
-      maxHeight: "90vh",
-      overflowY: "auto",
-      padding: "20px",
-      textAlign: "center",
-      borderRadius: "12px",
-      boxSizing: "border-box",
-    },
-    overlay: {
-      backgroundColor: "rgba(0, 0, 0, 0.75)",
-      zIndex: 1000,
-    },
-  };
-
   const closeUploadModal = () => setShowUploadModal(false);
 
   const handleNewNuggetAdded = (newNugget) => {
@@ -1023,10 +994,10 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         </form>
         {/* Centered Overlay Modal for "Add Existing Lesson Plans" */}
         <Modal
-          isOpen={showOverlay}
-          onRequestClose={() => setShowOverlay(false)}
+          open={showOverlay}
+          onClose={() => setShowOverlay(false)}
 
-          contentLabel="Add Existing Lesson Plans"
+          title="Add Existing Lesson Plans"
         >
           <OverlayTileView
             content={portalContent}
@@ -1038,10 +1009,9 @@ const ModuleBuilder = ({ onCancel } = {}) => {
           />
         </Modal>
         <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={closeModal}
-          style={customStyles}
-          contentLabel="Submission Result"
+          open={modalIsOpen}
+          onClose={closeModal}
+          title="Submission Result"
         >
           <h2>{modalMessage}</h2>
           <button
@@ -1052,7 +1022,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
           </button>
         </Modal>
       </div>
-      <Modal isOpen={showUploadModal} onRequestClose={closeUploadModal}>
+      <Modal open={showUploadModal} onClose={closeUploadModal}>
         <UploadContent
           fromLesson={closeUploadModal}
           onNuggetCreated={handleNewNuggetAdded}
@@ -1063,10 +1033,9 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         />
       </Modal>
       <Modal
-        isOpen={showNuggetBuilderModal}
-        onRequestClose={() => setShowNuggetBuilderModal(false)}
-        style={customStyles}
-        contentLabel="Create New Nugget"
+        open={showNuggetBuilderModal}
+        onClose={() => setShowNuggetBuilderModal(false)}
+        title="Create New Nugget"
       >
         <NuggetBuilderPage
           onSave={handleNewNuggetAdded}
@@ -1074,8 +1043,8 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         />
       </Modal>
       <Modal
-        isOpen={showLessonPlanBuilderModal}
-        onRequestClose={() => setShowLessonPlanBuilderModal(false)}
+        open={showLessonPlanBuilderModal}
+        onClose={() => setShowLessonPlanBuilderModal(false)}
         style={{
           content: {
             top: "50%",
@@ -1100,7 +1069,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
             zIndex: 1000,
           }
         }}
-        contentLabel="Create New Lesson Plan"
+        title="Create New Lesson Plan"
       >
         {/* X button in top right */}
         <button

@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Modal from "react-modal";
+import Modal from "@/components/ui/Modal";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, getDocs, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import OverlayTileView from "@/components/content/OverlayTileView";
@@ -19,12 +19,6 @@ import { toUserMessage } from "@/utils/errorMessage";
 import FieldError from "@/components/ui/FieldError";
 import useFormValidation from "@/hooks/useFormValidation";
 import { everyItem, required, requiredRichText } from "@/utils/validators";
-
-// Avoid test/runtime crashes when #root is not present (e.g. Vitest)
-if (typeof document !== "undefined") {
-  const appRoot = document.getElementById("root");
-  if (appRoot) Modal.setAppElement(appRoot);
-}
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -470,29 +464,6 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       ...selectedMaterials,
       [sectionIndex]: updatedSectionMaterials,
     });
-  };
-
-  const customStyles = {
-    content: {
-      top: "50%",
-      left: "50%",
-      right: "auto",
-      bottom: "auto",
-      marginRight: "-50%",
-      transform: "translate(-50%, -50%)",
-      width: "95vw",           // Responsive width
-      maxWidth: "540px",       // Limit max width
-      maxHeight: "90vh",       // Limit max height
-      overflowY: "auto",       // Scroll if content is too tall
-      padding: "20px",
-      textAlign: "center",
-      borderRadius: "12px",
-      boxSizing: "border-box",
-    },
-    overlay: {
-      backgroundColor: "rgba(0, 0, 0, 0.75)",
-      zIndex: 1000,
-    },
   };
 
   const closeUploadModal = () => setShowUploadModal(false);
@@ -1022,10 +993,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
           />
         )}
         <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={closeModal}
-          style={customStyles}
-          contentLabel="Submission Result"
+          open={modalIsOpen}
+          onClose={closeModal}
+          title="Submission Result"
         >
           <h2>{modalMessage}</h2>
           <button
@@ -1036,7 +1006,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
           </button>
         </Modal>
       </div>
-      <Modal isOpen={showUploadModal} onRequestClose={closeUploadModal}>
+      <Modal open={showUploadModal} onClose={closeUploadModal}>
         <UploadContent
           fromLesson={closeUploadModal}
           onNuggetCreated={handleNewNuggetAdded}
@@ -1048,10 +1018,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       </Modal>
       {/* Nugget Builder Modal */}
       <Modal
-        isOpen={showNuggetBuilderModal}
-        onRequestClose={() => setShowNuggetBuilderModal(false)}
-        style={customStyles}
-        contentLabel="Create New Nugget"
+        open={showNuggetBuilderModal}
+        onClose={() => setShowNuggetBuilderModal(false)}
+        title="Create New Nugget"
       >
         <NuggetBuilderPage
           onSave={handleNuggetBuilderSave}

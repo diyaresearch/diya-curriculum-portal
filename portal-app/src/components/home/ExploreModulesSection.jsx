@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { startGoogleRedirect } from "@/auth/googleAuth";
 import useUserRole from "@/hooks/useUserRole";
 import { useToast } from "@/components/ui/ToastProvider";
+import Modal from "@/components/ui/Modal";
 
 function isModuleVisibleToViewer(moduleItem, viewerUser) {
   if (!moduleItem || moduleItem._type !== "Module") return true;
@@ -421,38 +422,30 @@ function ModuleBuilderPromo() {
 // that used to sit above this asked for exactly this move.
 function UpgradePrompt({ open, onClose }) {
   const navigate = useNavigate();
-  if (!open) return null;
   return (
-    <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-      background: "rgba(0,0,0,0.3)", zIndex: 4000,
-      display: "flex", alignItems: "center", justifyContent: "center"
-    }}>
-      <div style={{
-        background: "#fff", borderRadius: 12, padding: 32, minWidth: 100, maxWidth: 400, width: "90%",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.18)", textAlign: "center", position: "relative"
-      }}>
-        <button onClick={onClose} style={{
-          position: "absolute", top: 10, right: 16, background: "none", border: "none",
-          fontSize: "1.5rem", cursor: "pointer", color: "#888"
-        }}>×</button>
-        <div style={{ fontWeight: "700", fontSize: "1.4rem", marginBottom: 16 }}>
-          Upgrade Required
-        </div>
-        <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
+    <Modal open={open} onClose={onClose} size="small" title="Upgrade Required">
+      <div style={{ textAlign: "center" }}>
+        <p style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
           You need to upgrade to Teacher Plus to access this course.
-        </div>
+        </p>
         <button
+          type="button"
           onClick={() => navigate("/upgrade")}
           style={{
-            background: "#162040", color: "#fff", border: "none", borderRadius: 6,
-            padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
+            background: "#162040",
+            color: "#fff",
+            border: "none",
+            borderRadius: 6,
+            padding: "12px 32px",
+            fontWeight: 600,
+            fontSize: "1rem",
+            cursor: "pointer",
           }}
         >
           Go to Upgrade Page
         </button>
       </div>
-    </div>
+    </Modal>
   );
 }
 

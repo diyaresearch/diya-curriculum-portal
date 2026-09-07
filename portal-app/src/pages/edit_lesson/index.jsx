@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Modal from "react-modal";
+import Modal from "@/components/ui/Modal";
 import OverlayTileView from "@/components/content/OverlayTileView";
 import useUserData from "@/hooks/useUserData";
 import { api } from "@/utils/apiClient";
@@ -8,12 +8,6 @@ import UploadContent from "@/pages/upload-content/index";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { useToast } from "@/components/ui/ToastProvider";
-
-// Avoid test/runtime crashes when #root is not present (e.g. Vitest)
-if (typeof document !== "undefined") {
-  const appRoot = document.getElementById("root");
-  if (appRoot) Modal.setAppElement(appRoot);
-}
 
 export const EditLesson = () => {
   const toast = useToast();
@@ -267,23 +261,6 @@ export const EditLesson = () => {
       ...selectedMaterials,
       [sectionIndex]: updatedSectionMaterials,
     });
-  };
-
-  const customStyles = {
-    content: {
-      top: "50%",
-      left: "50%",
-      right: "auto",
-      bottom: "auto",
-      marginRight: "-50%",
-      transform: "translate(-50%, -50%)",
-      width: "400px",
-      padding: "20px",
-      textAlign: "center",
-    },
-    overlay: {
-      backgroundColor: "rgba(0, 0, 0, 0.75)",
-    },
   };
 
   return (
@@ -546,10 +523,9 @@ export const EditLesson = () => {
           />
         )}
         <Modal
-          isOpen={modalIsOpen}
-          onRequestClose={closeModal}
-          style={customStyles}
-          contentLabel="Submission Result"
+          open={modalIsOpen}
+          onClose={closeModal}
+          title="Submission Result"
         >
           <h2>{modalMessage}</h2>
           <button
@@ -559,7 +535,7 @@ export const EditLesson = () => {
             Close
           </button>
         </Modal>
-        <Modal isOpen={showUploadModal} onRequestClose={closeUploadModal}>
+        <Modal open={showUploadModal} onClose={closeUploadModal}>
           <UploadContent
             fromLesson={closeUploadModal}
             onNuggetCreated={handleNewNuggetAdded}
