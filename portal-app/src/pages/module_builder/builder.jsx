@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -93,7 +93,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const { userData } = useUserData();
+  const { user, userData } = useUserData();
   const didInitFeaturedDefaultRef = useRef(false);
 
   const editModuleId = location.state?.editModuleId || null;
@@ -302,19 +302,16 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     setPortalContent(userLessons);
   };
 
+  // The uid comes from the shared provider (#368); this page used to open its
+  // own auth listener purely to learn who was signed in.
   useEffect(() => {
-    const auth = getAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        setPortalContent([]);
-        return;
-      }
-      fetchLessonPlans(user.uid);
-    });
-
-    return () => unsubscribe();
-  }, []);
+    if (!user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
+      setPortalContent([]);
+      return;
+    }
+    fetchLessonPlans(user.uid);
+  }, [user]);
 
   const handleChange = (e) => {
     const { id, value } = e.target;

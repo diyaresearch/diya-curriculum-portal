@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getFirestore, collection, getDocs, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
 import OverlayTileView from "@/components/content/OverlayTileView";
 import UploadContent from "@/pages/upload-content/index";
@@ -63,7 +63,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const { userData } = useUserData();
+  const { user, userData } = useUserData();
 
   const editLessonId = useMemo(() => location?.state?.editLessonId || null, [location?.state?.editLessonId]);
   const returnTo = useMemo(() => location?.state?.returnTo || null, [location?.state?.returnTo]);
@@ -122,17 +122,12 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     }
   }, []);
 
-  // Load nuggets for overlay (role-based)
+  // Load nuggets for overlay (role-based). The user comes from the shared
+  // provider (#368) rather than a listener this page opens for itself.
   useEffect(() => {
-    const db = getFirestore();
-    const auth = getAuth();
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      loadNuggetsForOverlay(db, user, userData?.role);
-    });
-
-    return () => unsubscribe();
-  }, [loadNuggetsForOverlay, userData?.role]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
+    loadNuggetsForOverlay(getFirestore(), user, userData?.role);
+  }, [loadNuggetsForOverlay, user, userData?.role]);
 
   // Load draft from localStorage if present (skip when editing an existing lesson)
   useEffect(() => {

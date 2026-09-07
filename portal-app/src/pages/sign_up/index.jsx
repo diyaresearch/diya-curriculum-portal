@@ -7,6 +7,7 @@ import { MultiSelectDropdown, SingleSelectDropdown } from "@/components/ui/Dropd
 import SignupSuccess from "@/components/ui/SignupSuccess";
 import { startGoogleRedirect, signInForSignup } from "@/auth/googleAuth";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import { useAuth } from "@/context/AuthProvider";
 
 const SUBJECT_OPTIONS = [
   "CS",
@@ -35,30 +36,27 @@ export function TeacherSignup() {
   const [subjects, setSubjects] = useState([]);
   const [grades, setGrades] = useState([]);
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [typedEmail] = useState("");
+  // Falls back to the signed-in Google address rather than copying it into
+  // state on an effect: it is already available during render, and mirroring
+  // it was a setState-in-effect purely to duplicate a value (#368/#369).
+  const email = typedEmail || googleUser?.email || "";
   const [school, setSchool] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [signedUp, setSignedUp] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
-  const [googleUser, setGoogleUser] = useState(null);
+  // The signed-in Google account comes from the shared provider (#368); this
+  // page used to run its own auth listener for it, in each of the two forms.
+  const { user: googleUser } = useAuth();
   const [showNoAccountPopup, setShowNoAccountPopup] = useState(false);
 
   const returnTo = `${location.pathname}${location.search || ""}`;
 
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setGoogleUser(user);
-      if (user?.email) setEmail(user.email);
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setShowNoAccountPopup(params.get("showSignUpPopup") === "1");
   }, [location.search]);
 
@@ -76,9 +74,8 @@ export function TeacherSignup() {
   const handleGoogleSignup = async () => {
     setError("");
     try {
-      const user = await signInForSignup({ promptSelectAccount: true });
-      setGoogleUser(user);
-      if (user?.email) setEmail(user.email);
+      // The provider's auth listener picks the new user up; nothing to mirror.
+      await signInForSignup({ promptSelectAccount: true });
     } catch (err) {
       console.error("Google sign-in failed:", err);
       setError("Google sign-in failed. Please try again.");
@@ -403,30 +400,27 @@ export function StudentSignup() {
   const location = useLocation();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [typedEmail] = useState("");
+  // Falls back to the signed-in Google address rather than copying it into
+  // state on an effect: it is already available during render, and mirroring
+  // it was a setState-in-effect purely to duplicate a value (#368/#369).
+  const email = typedEmail || googleUser?.email || "";
   const [grade, setGrade] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [signedUp, setSignedUp] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
-  const [googleUser, setGoogleUser] = useState(null);
+  // The signed-in Google account comes from the shared provider (#368); this
+  // page used to run its own auth listener for it, in each of the two forms.
+  const { user: googleUser } = useAuth();
   const [showNoAccountPopup, setShowNoAccountPopup] = useState(false);
 
   const returnTo = `${location.pathname}${location.search || ""}`;
 
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setGoogleUser(user);
-      if (user?.email) setEmail(user.email);
-    });
-    return () => unsubscribe();
-  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setShowNoAccountPopup(params.get("showSignUpPopup") === "1");
   }, [location.search]);
 
@@ -443,9 +437,8 @@ export function StudentSignup() {
   const handleGoogleSignup = async () => {
     setError("");
     try {
-      const user = await signInForSignup({ promptSelectAccount: true });
-      setGoogleUser(user);
-      if (user?.email) setEmail(user.email);
+      // The provider's auth listener picks the new user up; nothing to mirror.
+      await signInForSignup({ promptSelectAccount: true });
     } catch (err) {
       console.error("Google sign-in failed:", err);
       setError("Google sign-in failed. Please try again.");

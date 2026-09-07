@@ -1,46 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { getAuth } from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { app as firebaseApp } from "@/firebase/firebaseConfig";
-// Kept only for side effects (auth state); do not destructure unused values.
-import useUserData from "@/hooks/useUserData";
-import { COLLECTIONS } from "@/firebase/collectionNames";
+
+import { useAuth } from "@/context/AuthProvider";
 
 
 const HeroSection = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState(null);
-    const [role, setRole] = useState(null);
-    useUserData();
-
+    // Was: a bare useUserData() call for its side effects, plus its own
+    // onAuthStateChanged and its own users/{uid} read - three ways of asking
+    // the same question. All of it is the provider's job now (#368).
+    const { user, role } = useAuth();
 
     useEffect(() => {
-        const auth = getAuth();
-        const db = getFirestore(firebaseApp);
-        const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-            if (firebaseUser) {
-                setUser(firebaseUser);
-                const userDoc = await getDoc(doc(db, COLLECTIONS.users, firebaseUser.uid));
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    setRole(userData.role);
-
-                    // ONLY redirect if user is teacherPlus AND on home page
-                    if (userData.role === "teacherPlus" && window.location.pathname === "/") {
-                        navigate("/teacher-plus");
-                        return; // Exit early so component doesn't render
-                    }
-                    return;
-                }
-                setRole(null);
-            } else {
-                setUser(null);
-                setRole(null);
-            }
-        });
-        return () => unsubscribe();
-    }, [navigate]);
+        // ONLY redirect if user is teacherPlus AND on home page
+        if (role === "teacherPlus" && window.location.pathname === "/") {
+            navigate("/teacher-plus");
+        }
+    }, [role, navigate]);
 
     // ONLY hide the component for teacherPlus users (they get redirected)
     if (role === "teacherPlus") {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import useUserData from "@/hooks/useUserData";
 import logo from "@/assets/DIYA_Logo.png";
-import { getAuth } from "firebase/auth";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/context/AuthProvider";
 import defaultUserIcon from "@/assets/default_user_icon.png";
 import { startGoogleRedirect } from "@/auth/googleAuth";
 import { useToast } from "@/components/ui/ToastProvider";
@@ -10,7 +10,8 @@ import { useToast } from "@/components/ui/ToastProvider";
 const Navbar = () => {
   const toast = useToast();
   const { userData, logout } = useUserData();
-  const [user, setUser] = useState(null);
+  // Was a local mirror kept in sync by this component's own auth listener.
+  const { user } = useAuth();
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -25,13 +26,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
-      setUser(firebaseUser);
-    });
-    return () => unsubscribe();
-  }, []);
 
   // Show popup if query param is present
   useEffect(() => {
