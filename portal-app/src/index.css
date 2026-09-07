@@ -115,3 +115,18 @@ code {
 .rich-text-content em {
   font-style: italic;
 }
+
+/* Spinner keyframes for components/ui/Loading.jsx (#369). Kept in CSS rather
+   than inline style so prefers-reduced-motion can switch it off - an inline
+   animation cannot be media-queried. */
+@keyframes diya-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="diya-spin"] {
+    animation: none !important;
+  }
+}

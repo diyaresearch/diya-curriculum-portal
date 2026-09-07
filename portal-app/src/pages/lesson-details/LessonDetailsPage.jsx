@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import DOMPurify from "dompurify";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import Loading from "@/components/ui/Loading";
 
 const LessonDetailsPage = () => {
   const { id } = useParams();
@@ -45,7 +46,7 @@ const LessonDetailsPage = () => {
     }
   }, [lesson]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <Loading variant="page" message="Loading lesson..." />;
   if (!lesson) return <div>Lesson not found.</div>;
 
   return (

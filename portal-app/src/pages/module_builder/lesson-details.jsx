@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import DOMPurify from "dompurify";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import Loading from "@/components/ui/Loading";
 
 const NuggetDetails = () => {
   const { id } = useParams();
@@ -20,7 +21,7 @@ const NuggetDetails = () => {
     fetchNugget();
   }, [id]);
 
-  if (!nugget) return <div>Loading...</div>;
+  if (!nugget) return <Loading variant="page" message="Loading lesson..." />;
 
   // Custom styles for lists, links, and headings
   const customStyles = `

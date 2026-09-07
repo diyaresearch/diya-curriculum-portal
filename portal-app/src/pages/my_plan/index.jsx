@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import useUserData from "@/hooks/useUserData";
 import { api } from "@/utils/apiClient";
+import Loading from "@/components/ui/Loading";
 
 const categories = ["Python", "Physics", "Chemistry", "Biology", "Economics", "Earth Science"];
 const types = ["Lectures", "Assignments", "Quiz", "Projects", "Case studies", "Data sets"];
@@ -10,6 +11,7 @@ const levels = ["Basic", "Intermediate", "Advanced"];
 
 export const MyPlans = () => {
   const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filteredPlans, setFilteredPlans] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
@@ -57,6 +59,8 @@ export const MyPlans = () => {
         }
       } catch (error) {
         console.error("Error fetching plans:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -132,6 +136,10 @@ export const MyPlans = () => {
       navigate("/module/create", { state: { selectedPlans: Array.from(selectedPlans) } });
     }
   };
+
+  // Distinguishes "still fetching" from "you have no lesson plans" -
+  // before this the page rendered an empty list for both (#369).
+  if (loading) return <Loading variant="page" message="Loading your lesson plans..." />;
 
   return (
     <div className="min-h-screen bg-blue-100 flex flex-col items-center justify-center">
