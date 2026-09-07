@@ -21,8 +21,13 @@ export default defineConfig({
   build: {
     outDir: "build",
     assetsDir: "static",
-    // CRA emitted sourcemaps for production builds by default; keep parity.
-    sourcemap: true,
+    // No production sourcemaps. CRA emitted them by default, so they were
+    // publicly served off Hosting for as long as this app has been deployed
+    // (~8 MB of readable source at /static/*.js.map). Turned off with the
+    // Vite migration (#503) rather than carried forward - nothing here needs
+    // them in production, and `npm run preview` still builds locally if a
+    // production-mode stack trace ever needs decoding.
+    sourcemap: false,
     // package.json's "browserslist" is gone with react-scripts - nothing in
     // this toolchain reads it any more (Tailwind 4 does its own prefixing,
     // and there is no autoprefixer/postcss-preset-env step left). Vite's
