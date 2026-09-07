@@ -66,7 +66,7 @@ function assertRenderedSafely(container) {
 
 describe("#381 — dangerouslySetInnerHTML sinks sanitize before rendering", () => {
   test("components/ContentDetails.jsx", async () => {
-    const { default: ContentDetails } = await import("@/components/ContentDetails");
+    const { default: ContentDetails } = await import("@/components/content/ContentDetails");
     mockDocData({
       Title: "t",
       Description: XSS_PAYLOAD,

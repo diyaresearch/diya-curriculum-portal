@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Modal from "react-modal";
-import OverlayTileView from "@/components/OverlayTileView";
+import OverlayTileView from "@/components/content/OverlayTileView";
 import axios from "axios";
 import useUserData from "@/hooks/useUserData";
 import UploadContent from "@/pages/upload-content/index";

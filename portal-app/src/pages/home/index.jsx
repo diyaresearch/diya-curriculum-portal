@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 
-import HomePage from "@/components/HomePage";
+import HomePage from "@/components/home/HomePage";
 import useUserData from "@/hooks/useUserData";
 
 const Home = () => {
