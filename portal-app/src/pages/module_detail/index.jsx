@@ -20,7 +20,7 @@ import OverlayTileView from "@/components/content/OverlayTileView";
 import { loadStripe } from "@stripe/stripe-js";
 import { fetchPayments } from "@/utils/paymentsApi";
 import { api } from "@/utils/apiClient";
-import Modal from "react-modal";
+import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
 import Loading from "@/components/ui/Loading";
@@ -215,12 +215,6 @@ const HARDCODED_MODULES = {
     ],
   },
 };
-
-// Required for react-modal accessibility
-if (typeof document !== "undefined") {
-  const appRoot = document.getElementById("root");
-  if (appRoot) Modal.setAppElement(appRoot);
-}
 
 const ModuleDetail = () => {
   const toast = useToast();
@@ -1203,8 +1197,8 @@ const ModuleDetail = () => {
       )}
       {checkoutClientSecret && (
         <Modal
-          isOpen={true}
-          onRequestClose={() => {
+          open={true}
+          onClose={() => {
             setCheckoutClientSecret(null);
             setCheckoutStripeKey(null);
             checkoutInitRef.current = null;
@@ -1227,8 +1221,8 @@ const ModuleDetail = () => {
 
       {showPurchaseSuccess && (
         <Modal
-          isOpen={true}
-          onRequestClose={() => setShowPurchaseSuccess(false)}
+          open={true}
+          onClose={() => setShowPurchaseSuccess(false)}
           style={{
             content: {
               top: "50%",
@@ -1247,7 +1241,7 @@ const ModuleDetail = () => {
               zIndex: 11000,
             },
           }}
-          contentLabel="Purchase successful"
+          title="Purchase successful"
         >
           <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "#111" }}>
             Purchase successful

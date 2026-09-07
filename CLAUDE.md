@@ -143,6 +143,28 @@ cached user/subscription data right after a mutation (see the comments around th
 force the same reset. Reading `window.location.origin/hostname/pathname` (no navigation
 involved) is unaffected by any of this.
 
+### Modals (portal-app/)
+
+One component: `@/components/ui/Modal`. Never import `react-modal` directly,
+and never hand-roll a fixed-position overlay.
+
+```js
+<Modal open={isOpen} onClose={close} title="Delete this lesson?" size="small">
+  ...
+</Modal>
+```
+
+It wraps `react-modal` rather than replacing it, because the focus trap,
+Escape handling, scroll lock and `role="dialog"` it provides are exactly what
+the nine hand-rolled overlays were missing - a keyboard user could tab out of
+those into the page behind, and a screen reader was never told a dialog had
+opened. `Modal.setAppElement` is handled once inside the wrapper; it used to
+be repeated in four files.
+
+`dismissable={false}` for a dialog reporting an outcome already committed,
+where dismissing by accident loses the message: it drops the close button and
+ignores Escape and backdrop clicks.
+
 ### Form validation (portal-app/)
 
 `useFormValidation` (`@/hooks/useFormValidation`) with rules from
