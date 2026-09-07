@@ -143,6 +143,28 @@ cached user/subscription data right after a mutation (see the comments around th
 force the same reset. Reading `window.location.origin/hostname/pathname` (no navigation
 involved) is unaffected by any of this.
 
+### Auth and user state (portal-app/)
+
+`AuthProvider` (`@/context/AuthProvider`, mounted in `App.jsx` inside the
+router) owns **one** `onAuthStateChanged` and **one** realtime listener on
+`users/{uid}`. Everything else reads from it:
+
+```js
+const { user, userData, role, loading, logout } = useAuth();
+```
+
+`useUserData()` and `useUserRole()` still exist and keep their old return
+shapes - all 25 call sites are unchanged - but they are now thin reads of that
+context rather than each opening their own listener and their own document
+read. Before #368, a single screen could hold five to ten listeners on the
+same document, and two components could disagree about the current role
+depending on which read finished first.
+
+Never call `getAuth()` in a component to learn who is signed in - use the
+context. `getAuth()` is still correct in exactly two places: `utils/apiClient.js`
+(it needs a fresh ID token per request) and `auth/googleAuth.js` (it runs the
+sign-in flow itself).
+
 ### API calls, errors, and user feedback (portal-app/)
 
 One way in, one way out. Established in #370 (transport) and #367 (reporting).

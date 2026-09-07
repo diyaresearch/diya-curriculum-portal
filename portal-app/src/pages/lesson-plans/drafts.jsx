@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import { useAuth } from "@/context/AuthProvider";
 
 const LessonPlanDrafts = () => {
   const [drafts, setDrafts] = useState([]);
   const navigate = useNavigate();
+  // The uid comes from the shared provider (#368); this page used to open its
+  // own auth listener purely to learn who was signed in before querying.
+  const { user } = useAuth();
 
   useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const loadDrafts = async () => {
       if (!user) {
         setDrafts([]);
         return;
@@ -43,9 +45,10 @@ const LessonPlanDrafts = () => {
               : [],
         }))
       );
-    });
-    return () => unsubscribe();
-  }, []);
+    };
+
+    loadDrafts();
+  }, [user]);
 
   const handleEditDraft = (draft) => {
     localStorage.setItem("lessonPlanDraft", JSON.stringify(draft));

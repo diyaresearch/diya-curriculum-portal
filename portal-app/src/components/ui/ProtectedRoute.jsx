@@ -1,51 +1,23 @@
-import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { app as firebaseApp } from '@/firebase/firebaseConfig';
-import { COLLECTIONS } from "@/firebase/collectionNames";
 
+import Loading from "@/components/ui/Loading";
+import { useAuth } from "@/context/AuthProvider";
+
+/**
+ * Reads auth from the shared provider (#368) instead of running its own
+ * onAuthStateChanged plus its own users/{uid} read. It is rendered around
+ * routes, so on some screens it was the second or third component doing
+ * exactly that work for exactly the same document.
+ */
 const ProtectedRoute = ({ children, redirectTeacherPlus = false }) => {
-    const [user, setUser] = useState(null);
-    const [userRole, setUserRole] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const auth = getAuth();
-        const db = getFirestore(firebaseApp);
-
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                setUser(firebaseUser);
-
-                try {
-                    const userDoc = await getDoc(doc(db, COLLECTIONS.users, firebaseUser.uid));
-                    if (userDoc.exists()) {
-                        setUserRole(userDoc.data().role);
-                    }
-                } catch (error) {
-                    console.error("Error fetching user role:", error);
-                }
-            } else {
-                setUser(null);
-                setUserRole(null);
-            }
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }, []);
+    const { user, role, loading } = useAuth();
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-            </div>
-        );
+        return <Loading variant="page" />;
     }
 
     // Redirect TeacherPlus users to their dashboard
-    if (redirectTeacherPlus && user && userRole === "teacherPlus") {
+    if (redirectTeacherPlus && user && role === "teacherPlus") {
         return <Navigate to="/teacher-plus" replace />;
     }
 
