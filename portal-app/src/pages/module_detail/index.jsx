@@ -19,6 +19,7 @@ import module5 from "@/assets/modules/module5.png";
 import OverlayTileView from "@/components/content/OverlayTileView";
 import { loadStripe } from "@stripe/stripe-js";
 import { fetchPayments } from "@/utils/paymentsApi";
+import { api } from "@/utils/apiClient";
 import Modal from "react-modal";
 
 
@@ -288,12 +289,6 @@ const ModuleDetail = () => {
 
   const fetchLessonDetails = useCallback(async (ids) => {
     try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      // Use same-origin by default in production; allow override via env for dev/proxies.
-      const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
-      const token = user ? await user.getIdToken() : null;
-
       const stripHtmlToText = (html) => {
         if (!html || typeof html !== "string") return "";
         return html
@@ -311,17 +306,9 @@ const ModuleDetail = () => {
       // Fetch lesson plans from backend API
       const lessonPlanRequests = ids.map(async (id) => {
         try {
-          const response = await fetch(`${baseUrl}/api/lesson/${id}`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-          });
-
-          if (!response.ok) {
-            console.error(`Failed to fetch lesson ${id}:`, response.status);
-            return null;
-          }
-
-          return await response.json();
+          return await api.get(`/api/lesson/${id}`);
         } catch (error) {
+          // A non-2xx throws now, so the old !response.ok branch folds in here.
           console.error(`Error fetching lesson ${id}:`, error);
           return null;
         }
@@ -396,29 +383,16 @@ const ModuleDetail = () => {
       // cannot make that decision. This became usable once #427 aligned the
       // collection qualifier — before that the API looked in `prod_module`
       // and found nothing.
-      const serverUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "http://localhost:3001";
-      const currentUser = getAuth().currentUser;
-      const authHeaders = currentUser
-        ? { Authorization: `Bearer ${await currentUser.getIdToken()}` }
-        : {};
-
-      const moduleResponse = await fetch(`${serverUrl}/api/module/${moduleId}`, {
-        headers: authHeaders,
-      });
-
-      if (moduleResponse.status === 404) {
-        setError("Module not found");
+      let data;
+      try {
+        data = await api.get(`/api/module/${moduleId}`);
+      } catch (err) {
+        // "not found" stays distinguishable from every other failure, which
+        // is why this is a status check rather than one generic message.
+        setError(err?.status === 404 ? "Module not found" : "Could not load this module. Please try again.");
         setLoading(false);
         return;
       }
-
-      if (!moduleResponse.ok) {
-        setError("Could not load this module. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      const data = await moduleResponse.json();
       const isLocked = data.locked === true;
       setModuleLocked(isLocked);
       const authorUid = data.author || data.authorId || "";
@@ -488,15 +462,9 @@ const ModuleDetail = () => {
       const user = auth.currentUser;
       if (!user) return;
 
-      const token = await user.getIdToken();
       const selectedPlanIds = location.state?.selectedPlans || [];
 
-      const lessonPlanRequests = selectedPlanIds.map(async (id) => {
-        const response = await fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        return response.json();
-      });
+      const lessonPlanRequests = selectedPlanIds.map((id) => api.get(`/api/lesson/${id}`));
 
       const responses = await Promise.all(lessonPlanRequests);
       const fetchedPlans = responses;

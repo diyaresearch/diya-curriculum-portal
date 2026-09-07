@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
+import { api } from '@/utils/apiClient';
 
 const UpgradePage = () => {
     const navigate = useNavigate();
@@ -30,29 +31,14 @@ const UpgradePage = () => {
 
     const handleContactSales = async () => {
         try {
-            // Get the server URL from environment
-            const serverUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || 'http://localhost:3001';
-
-            const response = await fetch(`${serverUrl}/api/subscription/enterprise-contact`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${await user?.getIdToken()}`
-                },
-                body: JSON.stringify({
-                    message: 'Enterprise plan inquiry',
-                    contactPreference: 'email'
-                })
+            await api.post('/api/subscription/enterprise-contact', {
+                message: 'Enterprise plan inquiry',
+                contactPreference: 'email'
             });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert('Enterprise contact request submitted successfully! Our team will reach out to you soon.');
-            } else {
-                console.error('Contact request failed:', result.message);
-            }
+            alert('Enterprise contact request submitted successfully! Our team will reach out to you soon.');
         } catch (error) {
+            // A non-2xx now throws, so the old response.ok branch and the
+            // catch collapse into one path.
             console.error('Error submitting contact request:', error);
         }
 

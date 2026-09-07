@@ -6,6 +6,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import { FaFilePdf, FaVideo, FaExternalLinkAlt } from "react-icons/fa";
 import DOMPurify from "dompurify";
 import { TYPO } from "@/constants/typography";
+import { api } from "@/utils/apiClient";
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -55,15 +56,11 @@ const ViewContent = () => {
     const fetchContent = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/units`);
-        const units = await response.json();
+        const units = await api.get("/api/units", { auth: false });
 
         const unit = units.find((u) => u.UnitID === UnitID);
         if (unit) {
-          const contentResponse = await fetch(
-            `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${unit.id}`
-          );
-          const data = await contentResponse.json();
+          const data = await api.get(`/api/unit/${unit.id}`, { auth: false });
           setContent(data);
 
           if (unit.fileUrl) {

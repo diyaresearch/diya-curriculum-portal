@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { getAuth } from "firebase/auth";
 import useUserData from "@/hooks/useUserData";
+import { api } from "@/utils/apiClient";
 
 const categories = ["Python", "Physics", "Chemistry", "Biology", "Economics", "Earth Science"];
 const types = ["Lectures", "Assignments", "Quiz", "Projects", "Case studies", "Data sets"];
@@ -34,38 +34,26 @@ export const MyPlans = () => {
           return;
         }
 
-        const token = await user.getIdToken();
-
-        let apiUrl;
         if (userRole === "admin") {
-          apiUrl = `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lessons/admin`;
-
           // /api/lessons/admin is now admin-gated and needs the token (#424).
-          const response = await axios.get(apiUrl, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const lessons = await api.get("/api/lessons/admin");
 
           if (planType === "all") {
-            setPlans(response.data);
+            setPlans(lessons);
           } else if (planType === "public") {
-            setPlans(response.data.filter((lesson) => lesson.isPublic === true));
+            setPlans(lessons.filter((lesson) => lesson.isPublic === true));
           } else if (planType === "private") {
-            setPlans(response.data.filter((lesson) => lesson.isPublic === false));
+            setPlans(lessons.filter((lesson) => lesson.isPublic === false));
           }
 
-          setFilteredPlans(response.data);
+          setFilteredPlans(lessons);
         } else {
-          apiUrl =
-            planType === "public"
-              ? `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lessons`
-              : `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/myLessons`;
+          const lessons = await api.get(
+            planType === "public" ? "/api/lessons" : "/api/lesson/myLessons"
+          );
 
-          const response = await axios.get(apiUrl, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          setPlans(response.data);
-          setFilteredPlans(response.data);
+          setPlans(lessons);
+          setFilteredPlans(lessons);
         }
       } catch (error) {
         console.error("Error fetching plans:", error);

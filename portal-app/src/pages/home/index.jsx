@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 
 import HomePage from "@/components/home/HomePage";
 import useUserData from "@/hooks/useUserData";
+import { api } from "@/utils/apiClient";
 
 const Home = () => {
   const { user, userData, loading } = useUserData();
@@ -13,12 +14,7 @@ const Home = () => {
       // Fetch content from the backend API
       (async () => {
         try {
-          const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
-          const response = await fetch(`${baseUrl}/api/units`);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch units: ${response.status}`);
-          }
-          await response.json();
+          await api.get("/api/units", { auth: false });
         } catch (error) {
           console.error("Error fetching data:", error);
         }

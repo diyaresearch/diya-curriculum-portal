@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import axios from "axios";
 import useUserData from "@/hooks/useUserData";
+import { api } from "@/utils/apiClient";
 import { useNavigate } from "react-router-dom";
 import defaultProfileIcon from "@/assets/default_user_icon.png";
 
@@ -37,14 +37,7 @@ const UserProfile = () => {
     const fetchUserProfile = async () => {
       if (user) {
         try {
-          const token = await user.getIdToken();
-          const response = await axios.get(
-            `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/me`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          setFormData(response.data);
+          setFormData(await api.get("/api/user/me"));
         } catch (error) {
           console.error("Failed to fetch user profile:", error);
         }
@@ -57,14 +50,7 @@ const UserProfile = () => {
   const fetchAdminData = useCallback(async () => {
     if (!user) return;
     try {
-      const token = await user.getIdToken();
-      const usersRes = await axios.get(
-        `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/users`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setUsers(usersRes.data);
+      setUsers(await api.get("/api/user/users"));
 
       // /api/admin/notifications was never implemented server-side (#443) —
       // the Notifications tab already says "coming soon"; this just stopped
@@ -95,21 +81,13 @@ const UserProfile = () => {
     }
 
     try {
-      const token = await user.getIdToken();
-      const response = await axios.put(
-        `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/update`,
-        formData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (response.status === 200) {
-        alert("Profile updated successfully!");
-        setIsEditing(false);
-      } else {
-        alert("Failed to update profile");
-      }
+      await api.put("/api/user/update", formData);
+      alert("Profile updated successfully!");
+      setIsEditing(false);
     } catch (error) {
+      // A non-2xx throws now, so the old "else -> Failed to update" branch
+      // and this catch are the same path.
+      alert("Failed to update profile");
       console.error("Error updating profile:", error);
     }
   };
@@ -124,27 +102,17 @@ const UserProfile = () => {
 
   const handleRoleUpdate = async () => {
     if (!selectedUser || !confirmation) return;
-    const token = await user.getIdToken();
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/updateRole`,
-        {
-          userId: selectedUser.id,
-          newRole: confirmation.role,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      await api.put("/api/user/updateRole", {
+        userId: selectedUser.id,
+        newRole: confirmation.role,
+      });
+      alert(`Role updated to ${confirmation.role}`);
+      setUsers(
+        users.map((u) => (u.id === selectedUser.id ? { ...u, role: confirmation.role } : u))
       );
-      if (response.status === 200) {
-        alert(`Role updated to ${confirmation.role}`);
-        setUsers(
-          users.map((u) => (u.id === selectedUser.id ? { ...u, role: confirmation.role } : u))
-        );
-      } else {
-        alert("Failed to update role");
-      }
     } catch (error) {
+      alert("Failed to update role");
       console.error("Failed to update user role:", error);
     }
     setConfirmation(null);

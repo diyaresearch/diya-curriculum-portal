@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import useUserData from "@/hooks/useUserData";
+import { api } from "@/utils/apiClient";
 import BackButton from "@/components/ui/BackButton";
 import EditButton from "@/components/ui/EditButton";
 import DeleteButton from "@/components/ui/DeleteButton";
@@ -46,10 +46,7 @@ export const LessonDetail = () => {
         return;
       }
 
-      const token = await user.getIdToken();
-      await axios.delete(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.del(`/api/lesson/${lessonId}`);
 
       alert("Lesson plan deleted successfully.");
       navigate("/my-plans");
@@ -111,23 +108,14 @@ export const LessonDetail = () => {
 
         if (loading || !user) return;
 
-        const token = await user.getIdToken();
-        const response = await axios.get(
-          `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/lesson/${lessonId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const lessonData = response.data;
+        const lessonData = await api.get(`/api/lesson/${lessonId}`);
         setLesson(lessonData);
 
         const contentPromises = lessonData.sections.flatMap((section) =>
-          section.contentIds.map(async (contentId) => {
-            const contentResponse = await axios.get(
-              `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${contentId}`
-            );
-            return { contentId, ...contentResponse.data };
-          })
+          section.contentIds.map(async (contentId) => ({
+            contentId,
+            ...(await api.get(`/api/unit/${contentId}`, { auth: false })),
+          }))
         );
 
         const contentData = await Promise.all(contentPromises);
@@ -150,10 +138,7 @@ export const LessonDetail = () => {
         setAuthorId(authorUid || null);
 
         if (authorUid) {
-          const authorResponse = await axios.get(
-            `${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/user/${authorUid}`
-          );
-          setAuthor(authorResponse.data);
+          setAuthor(await api.get(`/api/user/${authorUid}`, { auth: false }));
         }
       } catch (error) {
         console.error("Error fetching lesson:", error);

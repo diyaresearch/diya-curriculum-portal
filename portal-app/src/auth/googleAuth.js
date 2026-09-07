@@ -2,6 +2,7 @@ import { getAuth, GoogleAuthProvider, getRedirectResult, signInWithRedirect, sig
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase/firebaseConfig";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import { api } from "@/utils/apiClient";
 import { signInWithPopup } from "firebase/auth";
  
 const RETURN_TO_KEY = "diya_auth:returnTo";
@@ -123,30 +124,24 @@ function withQueryParam(pathWithSearch, key, value) {
 }
  
 async function runRegisterUserAction({ user, payload }) {
-  const baseUrl = import.meta.env.VITE_SERVER_ORIGIN_URL || "";
-  if (!baseUrl) {
+  if (!import.meta.env.VITE_SERVER_ORIGIN_URL) {
     console.error("googleAuth: missing VITE_SERVER_ORIGIN_URL for register action");
     return { ok: false, status: 0 };
   }
- 
+
   try {
-    const token = await user.getIdToken();
-    const response = await fetch(`${baseUrl}/api/user/register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        ...payload,
-        email: user.email,
-        fullName: user.displayName,
-      }),
+    await api.post("/api/user/register", {
+      ...payload,
+      email: user.email,
+      fullName: user.displayName,
     });
-    return { ok: response.ok, status: response.status };
+    return { ok: true, status: 200 };
   } catch (err) {
+    // Callers here only branch on ok/status, so a non-2xx and a transport
+    // failure collapse into the same shape they always got - ApiError just
+    // carries a real status now instead of 0.
     console.error("googleAuth: register action failed", err);
-    return { ok: false, status: 0, error: err };
+    return { ok: false, status: err?.status ?? 0, error: err };
   }
 }
  

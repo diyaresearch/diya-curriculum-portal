@@ -8,6 +8,7 @@ import module2 from "@/assets/modules/module2.png";
 import module3 from "@/assets/modules/module3.png";
 import module4 from "@/assets/modules/module4.png";
 import module5 from "@/assets/modules/module5.png";
+import { api } from "@/utils/apiClient";
 
 const imageMap = {
   module1,
@@ -51,9 +52,7 @@ const ListView = ({ content }) => {
   useEffect(() => {
     const fetchModules = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/modules`);
-        const data = await response.json();
-        setModules(data);
+        setModules(await api.get("/api/modules", { auth: false }));
       } catch (error) {
         console.error("Error fetching modules:", error);
       }
@@ -130,18 +129,7 @@ const ListView = ({ content }) => {
         throw new Error("User not authenticated");
       }
 
-      const token = await user.getIdToken();
-      const response = await fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
-      }
+      await api.del(`/api/unit/${id}`);
 
       setFilteredContent(filteredContent.filter((item) => item.id !== id));
       setDeleteError("");
@@ -162,18 +150,13 @@ const ListView = ({ content }) => {
         throw new Error("User not authenticated");
       }
 
-      const token = await user.getIdToken();
-      const deletePromises = Array.from(selectedItems).map((id) =>
-        fetch(`${import.meta.env.VITE_SERVER_ORIGIN_URL}/api/unit/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+      // allSettled, not all: a failed delete now rejects instead of coming
+      // back as a falsy response.ok, and one failure must not abandon the
+      // rest of the batch.
+      const results = await Promise.allSettled(
+        Array.from(selectedItems).map((id) => api.del(`/api/unit/${id}`))
       );
-
-      const results = await Promise.all(deletePromises);
-      const failedDeletions = results.filter((r) => !r.ok);
+      const failedDeletions = results.filter((r) => r.status === "rejected");
 
       if (failedDeletions.length > 0) {
         throw new Error(`Failed to delete ${failedDeletions.length} items`);
