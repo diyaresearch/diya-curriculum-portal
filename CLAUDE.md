@@ -143,6 +143,37 @@ cached user/subscription data right after a mutation (see the comments around th
 force the same reset. Reading `window.location.origin/hostname/pathname` (no navigation
 involved) is unaffected by any of this.
 
+### Form validation (portal-app/)
+
+`useFormValidation` (`@/hooks/useFormValidation`) with rules from
+`@/utils/validators`, and `FieldError` for the message:
+
+```js
+const form = useFormValidation({
+  Title: [required("Title")],
+  Description: [requiredRichText("Description")],
+});
+
+if (!form.validateAll(formData)) return;   // submit blocked, all errors shown
+```
+
+Two rules the app follows uniformly:
+
+- **Check every field on submit, not one at a time.** The old pattern showed a
+  toast for the first failure and stopped, so a form with three mistakes took
+  three submits to discover them.
+- **Show the message next to its field, wired for assistive tech.** `FieldError`
+  renders `role="alert"` with an id, and `fieldErrorProps` puts the matching
+  `aria-invalid` / `aria-describedby` on the input. Red text alone tells a
+  screen-reader user nothing.
+
+Validation runs on submit, then re-runs per field as the user edits it
+(`form.revalidate`) - never on first keystroke, which shouts at someone who
+has not finished typing.
+
+Use `requiredRichText` for ReactQuill fields: an untouched editor still holds
+`"<p><br></p>"`, so a plain `required` would accept a blank one.
+
 ### Effects: dependencies and cleanup (portal-app/)
 
 `react-hooks/exhaustive-deps` is enforced (#526), so dependency arrays stay

@@ -16,6 +16,9 @@ import { TYPO } from "@/constants/typography";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
+import FieldError from "@/components/ui/FieldError";
+import useFormValidation from "@/hooks/useFormValidation";
+import { everyItem, required, requiredRichText } from "@/utils/validators";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
@@ -39,6 +42,14 @@ const normalizeBoolean = (value) => {
 
 const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) => {
   const toast = useToast();
+  const form = useFormValidation({
+    description: [requiredRichText("Description")],
+    objectives: [requiredRichText("Learning objectives")],
+    sections: [everyItem("Section content", required("Section content"))],
+    Category: [required("Category")],
+    Level: [required("Level")],
+    Type: [required("Type")],
+  });
   const location = useLocation();
   const [formData, setFormData] = useState({
     title: "",
@@ -223,6 +234,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
 
   const handleDescriptionChange = (value) => {
     setFormData({ ...formData, description: value });
+    form.revalidate("description", value);
   };
 
   // (Objective/section field change handlers removed; editing is done inline where used)
@@ -308,35 +320,20 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     e.preventDefault();
     if (isSubmitting) return;
 
-    // Require description
-    if (!formData.description || formData.description.trim() === "" || formData.description === "<p><br></p>") {
-      toast.error("Description is required.");
-      setIsSubmitting(false);
-      return;
-    }
-    // Require learning objectives
-    if (!objectives[0] || objectives[0].trim() === "" || objectives[0] === "<p><br></p>") {
-      toast.error("Learning objectives are required.");
-      setIsSubmitting(false);
-      return;
-    }
-    // Require section content
-    if (sections.some(section => !section.intro || section.intro.trim() === "")) {
-      toast.error("Section content is required for all sections.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Require category, type, and level
+    // Every field is checked at once and each failure is shown next to its
+    // own field. This used to be four sequential toasts that stopped at the
+    // first problem, so a form with three mistakes took three submits to
+    // discover them (#371).
     if (
-      !formData.Category ||
-      (Array.isArray(formData.Category) && formData.Category.length === 0) ||
-      !formData.Type ||
-      (Array.isArray(formData.Type) && formData.Type.length === 0) ||
-      !formData.Level ||
-      (Array.isArray(formData.Level) && formData.Level.length === 0)
+      !form.validateAll({
+        description: formData.description,
+        objectives: objectives[0],
+        sections: sections.map((section) => section.intro),
+        Category: formData.Category,
+        Level: formData.Level,
+        Type: formData.Type,
+      })
     ) {
-      toast.error("Category, Type, and Level are required.");
       setIsSubmitting(false);
       return;
     }
@@ -622,35 +619,48 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
               onChange={handleDescriptionChange}
               style={{ background: "#fff", borderRadius: 6, color: "#111", fontFamily: "Open Sans, sans-serif" }}
             />
+            <FieldError id="description" message={form.errors.description} />
           </div>
           <div>
             <MultiCheckboxDropdown
               label="Category"
               options={CATEGORY_OPTIONS}
               selected={formData.Category || []}
-              onChange={(values) => setFormData({ ...formData, Category: values })}
+              onChange={(values) => {
+                setFormData({ ...formData, Category: values });
+                form.revalidate("Category", values);
+              }}
               showRequired={true}
             />
+            <FieldError id="Category" message={form.errors.Category} />
           </div>
           <div>
             <MultiCheckboxDropdown
               label="Level"
               options={LEVEL_OPTIONS}
               selected={formData.Level || []}
-              onChange={(values) => setFormData({ ...formData, Level: values })}
+              onChange={(values) => {
+                setFormData({ ...formData, Level: values });
+                form.revalidate("Level", values);
+              }}
               single={true}
               showRequired={true}
             />
+            <FieldError id="Level" message={form.errors.Level} />
           </div>
           <div>
             <MultiCheckboxDropdown
               label="Type"
               options={TYPE_OPTIONS}
               selected={formData.Type || []}
-              onChange={(values) => setFormData({ ...formData, Type: values })}
+              onChange={(values) => {
+                setFormData({ ...formData, Type: values });
+                form.revalidate("Type", values);
+              }}
               single={true}
               showRequired={true}
             />
+            <FieldError id="Type" message={form.errors.Type} />
           </div>
           <div>
             <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
@@ -682,7 +692,10 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
               useSemanticHTML={false}
               theme="snow"
               value={objectives[0]}
-              onChange={value => setObjectives([value])}
+              onChange={value => {
+                setObjectives([value]);
+                form.revalidate("objectives", value);
+              }}
               style={{
                 background: "#fff",
                 borderRadius: 6,
@@ -690,6 +703,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                 fontFamily: "Open Sans, sans-serif"
               }}
             />
+            <FieldError id="objectives" message={form.errors.objectives} />
           </div>
           <div>
             {sections.map((section, index) => (
