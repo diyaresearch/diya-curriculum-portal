@@ -12,6 +12,7 @@ import {
 } from '@/constants/moduleConstants';
 
 import laptopImg from '@/assets/laptop.png';
+import Loading from "@/components/ui/Loading";
 
 function normalizeBoolean(value) {
     if (value === true) return true;
@@ -246,7 +247,7 @@ const TeacherPlusPage = () => {
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <Loading variant="page" />;
     }
 
     return (

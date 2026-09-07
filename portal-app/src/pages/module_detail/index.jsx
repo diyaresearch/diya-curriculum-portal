@@ -23,6 +23,7 @@ import { api } from "@/utils/apiClient";
 import Modal from "react-modal";
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
+import Loading from "@/components/ui/Loading";
 
 
 // Level chip coloring intentionally not used on module page
@@ -563,15 +564,7 @@ const ModuleDetail = () => {
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '1.2rem'
-      }}>
-        Loading module details...
-      </div>
+      <Loading variant="page" message="Loading module details..." />
     );
   }
 

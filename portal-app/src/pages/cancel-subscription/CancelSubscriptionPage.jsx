@@ -6,6 +6,7 @@ import { app as firebaseApp } from '@/firebase/firebaseConfig';
 import { COLLECTIONS } from '@/firebase/collectionNames';
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
+import Loading from "@/components/ui/Loading";
 
 const CancelSubscriptionPage = () => {
   const toast = useToast();
@@ -56,7 +57,7 @@ const CancelSubscriptionPage = () => {
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <Loading variant="page" />;
     }
 
     return (

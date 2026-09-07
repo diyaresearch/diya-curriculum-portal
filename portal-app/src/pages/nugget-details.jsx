@@ -7,6 +7,7 @@ import { TYPO } from "@/constants/typography";
 import MetaChipsRow from "@/components/ui/MetaChipsRow";
 import SectionCard from "@/components/ui/SectionCard";
 import BackButton from "@/components/ui/BackButton";
+import Loading from "@/components/ui/Loading";
 
 const NuggetDetails = () => {
   const { id } = useParams();
@@ -15,10 +16,10 @@ const NuggetDetails = () => {
   const [error, setError] = useState("");
 
 
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchNugget = async () => {
       try {
-        setError("");
         const db = getFirestore();
         const docRef = doc(db, COLLECTIONS.content, id);
         const docSnap = await getDoc(docRef);
@@ -33,16 +34,23 @@ const NuggetDetails = () => {
       } catch (e) {
         console.error("NuggetDetails fetch error:", e);
         setError(e?.message || "Failed to load nugget.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchNugget();
   }, [id]);
+  // `loading` rather than `!nugget`: those are different states, and
+  // conflating them showed a permanent "Loading..." for a nugget that simply
+  // does not exist (#369).
+  if (loading) return <Loading variant="page" message="Loading nugget..." />;
+
   if (error) {
     return <div style={{ padding: 24, color: "crimson" }}>{error}</div>;
   }
 
-  if (!nugget) return <div style={{ padding: 24 }}>Loading...</div>;
+  if (!nugget) return <div style={{ padding: 24 }}>This nugget is no longer available.</div>;
   
   // Custom styles for lists, links, and headings
   const customStyles = `

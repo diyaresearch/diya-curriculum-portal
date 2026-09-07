@@ -13,6 +13,7 @@ import EditButton from "@/components/ui/EditButton";
 import DeleteButton from "@/components/ui/DeleteButton";
 import useUserData from "@/hooks/useUserData";
 import { api } from "@/utils/apiClient";
+import Loading from "@/components/ui/Loading";
 
 const toSlidesEmbedUrl = (url) => {
   // Example input: https://docs.google.com/presentation/d/<ID>/edit#slide=id....
@@ -89,7 +90,7 @@ const ContentDetails = () => {
     return s.length > 0;
   };
 
-  if (loading) return <div style={{ padding: 40 }}>Loading...</div>;
+  if (loading) return <Loading variant="page" message="Loading content..." />;
   if (error) return <div style={{ padding: 40, color: "crimson" }}>{error}</div>;
   if (!content) return <div style={{ padding: 40 }}>Content not found.</div>;
 

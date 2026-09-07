@@ -9,6 +9,7 @@ import { api } from "@/utils/apiClient";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
 import { useToast } from "@/components/ui/ToastProvider";
+import Loading from "@/components/ui/Loading";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)
 if (typeof document !== "undefined") {
@@ -549,7 +550,7 @@ export const LessonGenerator = () => {
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? <Loading variant="button" message="Submitting..." color="#374151" /> : "Submit"}
             </button>
           </div>
         </form>

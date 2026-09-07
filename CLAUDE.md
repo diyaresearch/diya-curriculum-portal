@@ -192,6 +192,31 @@ message text: offline, session expired, no permission, not found. It returns
 **null** for a cancelled request, and `toast.*` ignores null - so callers never
 need to guard that case.
 
+**Pending states.** One indicator, `@/components/ui/Loading`, in three variants:
+`page` (a whole route waiting on data), `inline` (a section still filling in),
+`button` (inside a button mid-submit). All set `role="status"` with
+`aria-live="polite"`; the ten hand-rolled `<div>Loading...</div>`s it replaced
+announced nothing. The spin honours `prefers-reduced-motion`.
+
+For actions rather than reads, `useAsyncAction` (`@/hooks/useAsyncAction`)
+gives `{ run, pending, error, reset }` and **drops a second call while one is
+in flight**, which is what stops a double-clicked submit firing twice:
+
+```js
+const save = useAsyncAction(async () => {
+  await api.post("/api/lesson/", lessonData);
+  toast.success("Saved");
+});
+
+<button onClick={save.run} disabled={save.pending}>
+  {save.pending ? <Loading variant="button" message="Saving..." /> : "Save"}
+</button>
+```
+
+Never use `!data` as the loading test - "still fetching" and "there is nothing
+here" are different states, and conflating them showed a permanent spinner for
+records that simply did not exist.
+
 **Render-time crashes.** `ErrorBoundary` wraps the routed content in `App.jsx`,
 so a component that throws loses its page but keeps the navbar, with a "Try
 again" that resets it. Before #367 there were none, and any render exception

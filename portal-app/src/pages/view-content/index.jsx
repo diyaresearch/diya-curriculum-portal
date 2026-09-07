@@ -7,6 +7,7 @@ import { FaFilePdf, FaVideo, FaExternalLinkAlt } from "react-icons/fa";
 import DOMPurify from "dompurify";
 import { TYPO } from "@/constants/typography";
 import { api } from "@/utils/apiClient";
+import Loading from "@/components/ui/Loading";
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -99,7 +100,7 @@ const ViewContent = () => {
   };
 
   if (error) return <div>{error}</div>;
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <Loading variant="page" message="Loading content..." />;
   if (!content) return <div>No content found</div>;
 
   return (
@@ -224,7 +225,7 @@ const ViewContent = () => {
                       file={fileUrl}
                       onLoadSuccess={onDocumentLoadSuccess}
                       className="mb-4"
-                      loading={<div className="text-center py-4">Loading PDF...</div>}
+                      loading={<Loading message="Loading PDF..." />}
                       error={
                         <div className="text-center py-4 text-red-600">
                           Error loading PDF. Please try again later.
@@ -238,7 +239,7 @@ const ViewContent = () => {
                             scale={scale}
                             className="border shadow-lg"
                             renderTextLayer={false}
-                            loading={<div>Loading page {index + 1}...</div>}
+                            loading={<Loading message={`Loading page ${index + 1}...`} />}
                           />
                         </div>
                       ))}
