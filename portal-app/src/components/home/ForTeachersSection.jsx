@@ -5,7 +5,7 @@ import laptopImg from "@/assets/laptop.png";
 import teacherImg from "@/assets/teacher.png";
 import pencilImg from "@/assets/finpencil.png";
 import useUserRole from "@/hooks/useUserRole";
-import SignUpPrompt from "./SignUpPrompt";
+import SignUpPrompt from "@/components/ui/SignUpPrompt";
 
 // --- SquareSection Component ---
 const SquareSection = ({ title, description, buttonText, buttonLink, children }) => (

@@ -6,7 +6,7 @@ import { getFirestore, collection, addDoc, serverTimestamp, getDoc } from "fireb
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
-import MultiCheckboxDropdown from "@/components/MultiCheckboxDropdown";
+import MultiCheckboxDropdown from "@/components/ui/MultiCheckboxDropdown";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 
 // Avoid test/runtime crashes when #root is not present (e.g. Vitest)

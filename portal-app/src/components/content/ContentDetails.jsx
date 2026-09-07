@@ -5,12 +5,12 @@ import { getAuth } from "firebase/auth";
 import DOMPurify from "dompurify";
 import { app as firebaseApp } from "@/firebase/firebaseConfig";
 import { COLLECTIONS } from "@/firebase/collectionNames";
-import BackButton from "./BackButton";
-import MetaChipsRow from "./MetaChipsRow";
+import BackButton from "@/components/ui/BackButton";
+import MetaChipsRow from "@/components/ui/MetaChipsRow";
 import { TYPO } from "@/constants/typography";
-import SectionCard from "./SectionCard";
-import EditButton from "./EditButton";
-import DeleteButton from "./DeleteButton";
+import SectionCard from "@/components/ui/SectionCard";
+import EditButton from "@/components/ui/EditButton";
+import DeleteButton from "@/components/ui/DeleteButton";
 import useUserData from "@/hooks/useUserData";
 
 const toSlidesEmbedUrl = (url) => {

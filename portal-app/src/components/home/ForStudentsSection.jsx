@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import textbooksImg from "@/assets/textbooks.png";
 import microscopeImg from "@/assets/microscope.png";
 import useUserRole from "@/hooks/useUserRole";
-import SignUpPrompt from "./SignUpPrompt";
+import SignUpPrompt from "@/components/ui/SignUpPrompt";
 
 // --- SquareSection Component ---
 const SquareSection = ({ title, description, buttonText, buttonLink, children }) => (

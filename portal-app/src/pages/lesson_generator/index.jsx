@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Modal from "react-modal";
 import { getAuth } from "firebase/auth";
-import OverlayTileView from "@/components/OverlayTileView";
+import OverlayTileView from "@/components/content/OverlayTileView";
 import axios from "axios";
 import UploadContent from "@/pages/upload-content/index";
 import useUserData from "@/hooks/useUserData";

@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import TileItem from "./TileItem";
-import Overlay from "./Overlay";
+import Overlay from "@/components/ui/Overlay";
 import useUserData from "@/hooks/useUserData";
 import { useNavigate } from "react-router-dom";
 import module1 from "@/assets/modules/module1.png";
