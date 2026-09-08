@@ -23,6 +23,32 @@ import { getAuth } from "firebase/auth";
 
 import { API_ORIGIN } from "@/utils/apiOrigin";
 
+/** Synthetic codes this module raises when the server did not supply one. */
+export type ApiErrorCode = "NETWORK_ERROR" | "HTTP_ERROR" | "ABORTED" | (string & {});
+
+export interface ApiErrorInit {
+  status?: number;
+  code?: ApiErrorCode;
+  details?: unknown;
+}
+
+export interface RequestOptions {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  /** Plain object (JSON-encoded) or FormData (left to the browser). */
+  body?: unknown;
+  /** Attach the caller's Firebase ID token. Default true. */
+  auth?: boolean;
+  signal?: AbortSignal;
+  headers?: Record<string, string>;
+}
+
+/** The response envelope the backend's responseHelpers.js sends, when it does. */
+interface ErrorEnvelope {
+  message?: string;
+  code?: string;
+  details?: unknown;
+}
+
 /**
  * A failed API call. Carries enough for a caller to branch on the cause
  * rather than string-matching a message.
@@ -32,7 +58,11 @@ import { API_ORIGIN } from "@/utils/apiOrigin";
  *           one: NETWORK_ERROR / HTTP_ERROR / ABORTED
  */
 export class ApiError extends Error {
-  constructor(message, { status = 0, code = "HTTP_ERROR", details = null } = {}) {
+  readonly status: number;
+  readonly code: ApiErrorCode;
+  readonly details: unknown;
+
+  constructor(message: string, { status = 0, code = "HTTP_ERROR", details = null }: ApiErrorInit = {}) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -41,32 +71,34 @@ export class ApiError extends Error {
   }
 
   /** True for the cases where asking the user to sign in again is the fix. */
-  get isAuthError() {
+  get isAuthError(): boolean {
     return this.status === 401 || this.status === 403;
   }
 }
 
 /** Pull the most useful message out of whatever the server sent back. */
-async function errorFromResponse(response) {
-  let body = null;
+async function errorFromResponse(response: Response): Promise<ApiError> {
+  let body: unknown = null;
   try {
     body = await response.json();
   } catch {
     // Non-JSON error body (an HTML error page, or empty). Fall through.
   }
 
-  const enveloped = body && typeof body === "object" ? body.error : null;
-  return new ApiError(
-    enveloped?.message || body?.message || `Request failed (${response.status})`,
-    {
-      status: response.status,
-      code: enveloped?.code || "HTTP_ERROR",
-      details: enveloped?.details ?? null,
-    }
-  );
+  // `body` is genuinely unknown - it is whatever the route chose to send -
+  // so it is narrowed rather than asserted.
+  const asRecord = body && typeof body === "object" ? (body as Record<string, unknown>) : null;
+  const enveloped = (asRecord?.error ?? null) as ErrorEnvelope | null;
+  const bodyMessage = typeof asRecord?.message === "string" ? asRecord.message : undefined;
+
+  return new ApiError(enveloped?.message || bodyMessage || `Request failed (${response.status})`, {
+    status: response.status,
+    code: enveloped?.code || "HTTP_ERROR",
+    details: enveloped?.details ?? null,
+  });
 }
 
-async function authHeader() {
+async function authHeader(): Promise<Record<string, string>> {
   const user = getAuth().currentUser;
   if (!user) return {};
   return { Authorization: `Bearer ${await user.getIdToken()}` };
@@ -75,19 +107,19 @@ async function authHeader() {
 /**
  * Call `path` on the backend.
  *
- * @param {string} path     e.g. "/api/user/me" (leading slash optional)
- * @param {object} options
- *   method   HTTP verb, default GET
- *   body     plain object, JSON-encoded automatically; pass FormData to send
- *            a multipart upload (Content-Type is then left to the browser)
- *   auth     attach the caller's Firebase ID token. Default true - most of
- *            this API is authenticated, so opting OUT is the exception worth
- *            spelling out at the call site.
- *   signal   AbortSignal, so a caller (or useApi) can cancel in flight
- * @returns   parsed JSON body, or null for 204/empty
- * @throws    {ApiError}
+ * The result type is a caller-supplied generic defaulting to `unknown`,
+ * because this client deliberately does not unwrap a response envelope - the
+ * body is whatever the route sent. Pass the shape you expect
+ * (`api.get<Lesson>(...)`) and `unknown` will make you handle it otherwise.
+ *
+ * @param path     e.g. "/api/user/me" (leading slash optional)
+ * @returns        parsed JSON body, or null for 204/empty
+ * @throws         {ApiError}
  */
-export async function apiRequest(path, options = {}) {
+export async function apiRequest<T = unknown>(
+  path: string,
+  options: RequestOptions = {}
+): Promise<T | null> {
   const { method = "GET", body, auth = true, signal, headers = {} } = options;
 
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
@@ -97,22 +129,23 @@ export async function apiRequest(path, options = {}) {
     ...headers,
   };
 
-  let response;
+  let response: Response;
   try {
     response = await fetch(`${API_ORIGIN}${path.startsWith("/") ? path : `/${path}`}`, {
       method,
       headers: requestHeaders,
       signal,
-      ...(body != null ? { body: isFormData ? body : JSON.stringify(body) } : {}),
+      ...(body != null ? { body: isFormData ? (body as FormData) : JSON.stringify(body) } : {}),
     });
   } catch (cause) {
     // fetch() rejects only on network failure or abort - never on 4xx/5xx.
-    if (cause?.name === "AbortError") {
+    const error = cause as { name?: string; message?: string } | null;
+    if (error?.name === "AbortError") {
       throw new ApiError("Request cancelled", { code: "ABORTED" });
     }
     throw new ApiError("Could not reach the server. Check your connection and try again.", {
       code: "NETWORK_ERROR",
-      details: cause?.message ?? null,
+      details: error?.message ?? null,
     });
   }
 
@@ -122,13 +155,30 @@ export async function apiRequest(path, options = {}) {
   const text = await response.text();
   if (!text) return null;
   try {
-    return JSON.parse(text);
+    return JSON.parse(text) as T;
   } catch {
-    return text;
+    // A 2xx that is not JSON: hand back the raw text, as this has always done.
+    return text as T;
   }
 }
 
-export const api = {
+type BodylessCall = <T = unknown>(
+  path: string,
+  options?: RequestOptions
+) => Promise<T | null>;
+type BodiedCall = <T = unknown>(
+  path: string,
+  body?: unknown,
+  options?: RequestOptions
+) => Promise<T | null>;
+
+export const api: {
+  get: BodylessCall;
+  post: BodiedCall;
+  put: BodiedCall;
+  patch: BodiedCall;
+  del: BodylessCall;
+} = {
   get: (path, options) => apiRequest(path, { ...options, method: "GET" }),
   post: (path, body, options) => apiRequest(path, { ...options, method: "POST", body }),
   put: (path, body, options) => apiRequest(path, { ...options, method: "PUT", body }),

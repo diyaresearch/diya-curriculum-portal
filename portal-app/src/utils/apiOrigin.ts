@@ -28,6 +28,6 @@ export const API_ORIGIN = String(import.meta.env.VITE_SERVER_ORIGIN_URL || "")
   .replace(/\/+$/, "");
 
 /** Absolute URL for an API path, e.g. apiUrl("/api/units"). */
-export function apiUrl(path) {
+export function apiUrl(path: string): string {
   return `${API_ORIGIN}${path.startsWith("/") ? path : `/${path}`}`;
 }

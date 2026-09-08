@@ -1,9 +1,7 @@
 import React from "react";
 
 // Helper for required asterisks
-const RequiredAsterisk = () => (
-  <span style={{ color: "red", marginLeft: 4 }}>*</span>
-);
+const RequiredAsterisk = () => <span className="ml-1 text-red-600">*</span>;
 
 function MultiCheckboxDropdown({ label, options, selected, onChange, single = false, placeholder, showRequired = false }) {
   const [open, setOpen] = React.useState(false);
@@ -66,61 +64,32 @@ function MultiCheckboxDropdown({ label, options, selected, onChange, single = fa
   const displayPlaceholder = placeholder || `Select ${getLabelText().toLowerCase()}...`;
 
   return (
-    <div ref={dropdownRef} style={{ position: "relative", marginBottom: 0 }}>
-      <label style={{ fontWeight: 600, marginBottom: 6, display: "block", color: "#222" }}>
+    <div ref={dropdownRef} className="relative mb-0">
+      <label className="mb-1.5 block font-semibold text-ink">
         {labelContent} {showRequired && <RequiredAsterisk />}
       </label>
       <div
-        style={{
-          border: "1.5px solid #bbb",
-          borderRadius: 6,
-          background: "#fafbfc",
-          padding: "10px 14px",
-          cursor: "pointer",
-          minHeight: 40,
-          fontFamily: "Open Sans, sans-serif",
-        }}
+        className="min-h-10 cursor-pointer rounded-md border-[1.5px] border-[#bbb] bg-[#fafbfc] px-3.5 py-2.5 font-sans"
         onClick={() => setOpen((o) => !o)}
       >
         {selected.length === 0 ? (
-          <span style={{ color: "#888" }}>{displayPlaceholder}</span>
+          <span className="text-ink-faint">{displayPlaceholder}</span>
         ) : (
           selected.join(", ")
         )}
       </div>
       {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: 0,
-            right: 0,
-            background: "#fff",
-            border: "1.5px solid #bbb",
-            borderRadius: 6,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            zIndex: 100,
-            maxHeight: 180,
-            overflowY: "auto",
-            marginTop: 2,
-          }}
-        >
+        <div className="absolute top-full right-0 left-0 z-[100] mt-0.5 max-h-[180px] overflow-y-auto rounded-md border-[1.5px] border-[#bbb] bg-surface shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
           {options.map((opt) => (
             <label
               key={opt}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "8px 12px",
-                cursor: "pointer",
-                fontFamily: "Open Sans, sans-serif",
-              }}
+              className="flex cursor-pointer items-center px-3 py-2 font-sans"
             >
               <input
                 type="checkbox"
                 checked={selected.includes(opt)}
                 onChange={() => handleCheckboxChange(opt)}
-                style={{ marginRight: 8 }}
+                className="mr-2"
               />
               {opt}
             </label>

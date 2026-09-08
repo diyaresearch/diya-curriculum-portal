@@ -72,51 +72,26 @@ export default class ErrorBoundary extends React.Component {
     return (
       <div
         role="alert"
-        style={{
-          margin: "48px auto",
-          maxWidth: 560,
-          padding: 28,
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
-          background: "#fff",
-          textAlign: "center",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-        }}
+        className="mx-auto my-12 max-w-[560px] rounded-xl border border-rule bg-surface p-7 text-center shadow-[0_2px_12px_rgba(0,0,0,0.06)]"
       >
-        <h2 style={{ fontSize: "1.4rem", fontWeight: 700, marginBottom: 10, color: "#162040" }}>
+        <h2 className="mb-2.5 text-[1.4rem] font-bold text-navy">
           Something went wrong on this page
         </h2>
-        <p style={{ color: "#4b5563", marginBottom: 22, lineHeight: 1.5 }}>
+        <p className="mb-[22px] leading-normal text-[#4b5563]">
           The rest of the app is still working. You can try this page again, or head back to the
           home page.
         </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        <div className="flex flex-wrap justify-center gap-3">
           <button
             type="button"
             onClick={this.handleReset}
-            style={{
-              background: "#162040",
-              color: "#fff",
-              border: "none",
-              borderRadius: 6,
-              padding: "10px 22px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
+            className="cursor-pointer rounded-md border-0 bg-navy px-[22px] py-2.5 font-semibold text-white"
           >
             Try again
           </button>
           <a
             href="/"
-            style={{
-              background: "#fff",
-              color: "#162040",
-              border: "1px solid #162040",
-              borderRadius: 6,
-              padding: "10px 22px",
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
+            className="rounded-md border border-navy bg-surface px-[22px] py-2.5 font-semibold text-navy no-underline"
           >
             Go to home
           </a>

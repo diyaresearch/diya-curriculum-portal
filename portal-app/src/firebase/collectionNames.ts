@@ -15,3 +15,6 @@ export const COLLECTIONS = Object.freeze({
   testimonials: "testimonials",
   users: "users",
 });
+
+/** e.g. "users" | "lesson" - so a mistyped collection name is a build error. */
+export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];

@@ -17,8 +17,15 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
-export default function useSafeTimeout() {
-  const timers = useRef(new Set());
+/**
+ * Browser setTimeout returns a number; @types/node also declares a Node
+ * Timeout in scope. Naming the browser overload's return type keeps
+ * clearTimeout happy without depending on which lib wins.
+ */
+type TimerId = ReturnType<typeof setTimeout>;
+
+export default function useSafeTimeout(): (callback: () => void, delay?: number) => TimerId {
+  const timers = useRef(new Set<TimerId>());
 
   useEffect(
     () => () => {
@@ -28,7 +35,7 @@ export default function useSafeTimeout() {
     []
   );
 
-  return useCallback((callback, delay) => {
+  return useCallback((callback: () => void, delay?: number): TimerId => {
     const id = setTimeout(() => {
       timers.current.delete(id);
       callback();

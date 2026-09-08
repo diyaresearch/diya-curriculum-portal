@@ -22,13 +22,17 @@ import { join, relative } from "node:path";
 // Vitest runs from portal-app/ (where vite.config.js lives). import.meta.url
 // is not a file: URL under the jsdom environment, so it cannot be used here.
 const SRC = join(process.cwd(), "src");
-const CONFIG = join("firebase", "firebaseConfig.js");
+const CONFIG = join("firebase", "firebaseConfig.ts");
 
+// ts/tsx are in this pattern, not just js/jsx. The migration in #365 converts
+// files one at a time, and a scan that only looked at .js would quietly stop
+// covering each file as it moved - so this guard would keep passing while the
+// thing it guards against became possible again in every converted module.
 function sourceFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) return entry.name === "__tests__" ? [] : sourceFiles(full);
-    return /\.(js|jsx)$/.test(entry.name) ? [full] : [];
+    return /\.(js|jsx|ts|tsx)$/.test(entry.name) ? [full] : [];
   });
 }
 

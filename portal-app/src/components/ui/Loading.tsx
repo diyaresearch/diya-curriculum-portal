@@ -17,38 +17,50 @@
  * announces the wait. None of the hand-rolled versions did.
  */
 
-import { TYPO } from "@/constants/typography";
+export type LoadingVariant = "page" | "inline" | "button";
 
-const SIZES = { page: 34, inline: 22, button: 15 };
+const SIZES: Record<LoadingVariant, number> = { page: 34, inline: 22, button: 15 };
 
-function Spinner({ size, color }) {
+function Spinner({ size, color }: { size: number; color: string }) {
   return (
     <span
       aria-hidden="true"
+      // .diya-spin is defined in index.css, with its keyframes and the
+      // @media (prefers-reduced-motion) rule that stops the spin for users
+      // who ask for less movement.
+      className="diya-spin inline-block shrink-0 rounded-full"
+      // Ring geometry and colour are computed from props, so they stay inline
+      // - a Tailwind class cannot take a runtime value (#360).
       style={{
-        display: "inline-block",
         width: size,
         height: size,
         border: `${Math.max(2, Math.round(size / 9))}px solid ${color}33`,
         borderTopColor: color,
-        borderRadius: "50%",
-        // The keyframes live in index.css; @media (prefers-reduced-motion)
-        // there stops the spin for users who ask for less movement.
-        animation: "diya-spin 0.7s linear infinite",
-        flexShrink: 0,
       }}
     />
   );
 }
 
-export default function Loading({ variant = "inline", message = "Loading...", color = "#162040" }) {
+export interface LoadingProps {
+  variant?: LoadingVariant;
+  /** Pass "" to show the spinner alone. */
+  message?: string;
+  /** Defaults to the brand navy (--color-navy). */
+  color?: string;
+}
+
+export default function Loading({
+  variant = "inline",
+  message = "Loading...",
+  color = "#162040",
+}: LoadingProps) {
   const size = SIZES[variant] ?? SIZES.inline;
 
   if (variant === "button") {
     return (
       <>
         <Spinner size={size} color={color} />
-        <span role="status" aria-live="polite" style={{ marginLeft: 8 }}>
+        <span role="status" aria-live="polite" className="ml-2">
           {message}
         </span>
       </>
@@ -59,17 +71,10 @@ export default function Loading({ variant = "inline", message = "Loading...", co
     <div
       role="status"
       aria-live="polite"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 14,
-        color,
-        ...(variant === "page"
-          ? { minHeight: "60vh", fontSize: TYPO?.body ?? "1.2rem" }
-          : { padding: 24 }),
-      }}
+      className={`flex flex-col items-center justify-center gap-3.5 ${
+        variant === "page" ? "min-h-[60vh] text-body" : "p-6"
+      }`}
+      style={{ color }}
     >
       <Spinner size={size} color={color} />
       {message ? <span>{message}</span> : null}

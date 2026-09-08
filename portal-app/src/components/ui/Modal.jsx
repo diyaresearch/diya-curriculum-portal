@@ -92,23 +92,13 @@ export default function Modal({
         },
       }}
     >
-      <div style={{ padding: 28, position: "relative" }}>
+      <div className="relative p-7">
         {dismissable && (
           <button
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            style={{
-              position: "absolute",
-              top: 12,
-              right: 16,
-              background: "none",
-              border: "none",
-              fontSize: "1.6rem",
-              lineHeight: 1,
-              cursor: "pointer",
-              color: "#6b7280",
-            }}
+            className="absolute top-3 right-4 cursor-pointer border-0 bg-transparent text-[1.6rem] leading-none text-[#6b7280]"
           >
             ×
           </button>
@@ -116,13 +106,7 @@ export default function Modal({
         {title && (
           <h2
             id="diya-modal-title"
-            style={{
-              margin: "0 0 16px",
-              paddingRight: 32,
-              fontSize: "1.25rem",
-              fontWeight: 700,
-              color: "#162040",
-            }}
+            className="mt-0 mr-0 mb-4 ml-0 pr-8 text-section-title font-bold text-navy"
           >
             {title}
           </h2>

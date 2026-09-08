@@ -1,0 +1,61 @@
+{
+  // TypeScript for a codebase that is still mostly JavaScript (#365).
+  //
+  // The two settings that make an incremental migration possible are
+  // "allowJs": true with "checkJs": false. Together they mean tsc will
+  // RESOLVE the ~90 remaining .js/.jsx files - so a converted module can
+  // import one and still get its own types checked - without reporting
+  // errors inside them. Turning checkJs on would produce thousands of errors
+  // in files this PR does not touch and make `npm run typecheck` useless as
+  // a gate.
+  //
+  // "strict" is on, and applies to the converted files only. That is the
+  // point: each file that moves to .ts arrives fully typed rather than
+  // arriving as implicit `any` and being tightened later.
+  //
+  // Nothing here emits. Vite (esbuild) does the transpiling; tsc is only ever
+  // run as `--noEmit` by `npm run typecheck`. That is also why
+  // isolatedModules is on - esbuild compiles one file at a time and cannot
+  // see across modules, so tsc must reject the patterns it would get wrong.
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "verbatimModuleSyntax": false,
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Mirrors the "@/" alias in vite.config.js. Keep the two in sync - this
+    // one is what tsc and the editor read, that one is what the bundler
+    // reads, and they have no common source.
+    //
+    // No "baseUrl": TypeScript 6 deprecates it (TS5101) and drops it in 7.
+    // Since 5.4 "paths" resolves relative to this file on its own, which is
+    // what the "./src/*" spelling below relies on.
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    // vite/client types import.meta.env; src/vite-env.d.ts narrows it to the
+    // VITE_* variables this app actually reads.
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "build"]
+}

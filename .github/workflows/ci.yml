@@ -6,6 +6,11 @@ name: CI
 # status — a path-filtered workflow can leave a required check stuck on
 # "Expected" forever for PRs that don't touch that path.
 #
+# `portal-app` now also runs `npm run typecheck` between lint and build, for
+# the TypeScript migration (#365). It is a step of the existing required
+# `portal-app` job rather than a new job, so it needs no branch-protection
+# change to start gating.
+#
 # `portal-app` and `functions` are REQUIRED checks in main's branch
 # protection. There used to be a third, `server`, for the App Engine backend;
 # #439 collapsed that into `functions` (one backend, one deploy target), so a
@@ -60,6 +65,13 @@ jobs:
       - name: Lint
         working-directory: portal-app
         run: npm run lint
+
+      # tsc --noEmit (#365). The build does NOT cover this: Vite transpiles
+      # with esbuild, which strips types without checking them, so a type
+      # error compiles and ships. This is the only step that fails on one.
+      - name: Typecheck
+        working-directory: portal-app
+        run: npm run typecheck
 
       - name: Build
         working-directory: portal-app

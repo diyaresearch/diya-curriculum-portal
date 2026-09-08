@@ -31,7 +31,8 @@ export default defineConfig({
     // components, utils, hooks and constants - all plausible package names.
     // The prefix can never collide.
     //
-    // jsconfig.json mirrors this for editors; keep the two in sync.
+    // tsconfig.json mirrors this for editors and `npm run typecheck`
+    // (it replaced jsconfig.json in #365); keep the two in sync.
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
@@ -71,7 +72,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: "./src/setupTests.js",
     // Match CRA/Jest's default test discovery (src/**/*.test.*), not
-    // Vitest's repo-wide default.
-    include: ["src/**/*.{test,spec}.{js,jsx}"],
+    // Vitest's repo-wide default. ts/tsx are here so a test written
+    // alongside a converted module is actually picked up (#365).
+    include: ["src/**/*.{test,spec}.{js,jsx,ts,tsx}"],
   },
 });

@@ -41,6 +41,9 @@ const firebaseConfig = {
 // missing one surfaces much later as `auth/invalid-api-key` on the sign-in
 // button or an empty page where Firestore data should be, with nothing
 // naming the actual cause.
+// `satisfies` rather than a bare array: every entry must be a real key of
+// firebaseConfig, so renaming a config field breaks this list at build time
+// instead of silently dropping it from the check.
 const REQUIRED_KEYS = [
   "apiKey",
   "authDomain",
@@ -48,7 +51,7 @@ const REQUIRED_KEYS = [
   "storageBucket",
   "messagingSenderId",
   "appId",
-];
+] as const satisfies readonly (keyof typeof firebaseConfig)[];
 
 const missing = REQUIRED_KEYS.filter((key) => !firebaseConfig[key]);
 if (missing.length > 0) {
