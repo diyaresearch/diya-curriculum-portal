@@ -6,7 +6,22 @@ export const CAROUSEL_CONFIG = {
     MAX_LINES: 5
   },
   TRANSITION_DURATION: 300, // milliseconds
-  MAX_DOTS: 5
+  MAX_DOTS: 5,
+  // Carousel geometry. These were inline literals repeated between the card
+  // and the fixed-size frame it sits in, so the two could drift and the card
+  // would overflow its own container (#411).
+  LAYOUT: {
+    CARD_WIDTH: 520,
+    CARD_MIN_WIDTH: 480,
+    CARD_HEIGHT: 320,
+    CARD_MIN_HEIGHT: 280,
+    CARD_TEXT_MAX_HEIGHT: 160,
+    CARD_TEXT_MIN_HEIGHT: 80,
+    AVATAR_SIZE: 60,
+    DETAIL_AVATAR_SIZE: 100,
+    ARROW_SIZE: 36,
+    DETAIL_ARROW_SIZE: 32
+  }
 };
 
 // Fabricated sample testimonials (invented people, institutions, and even a
