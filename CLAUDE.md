@@ -10,12 +10,9 @@ DIYA Curriculum Portal is a full-stack educational platform built with React fro
 
 ### Repository Structure
 - `portal-app/` - React frontend application (port 3000)
-- `server/` - Express.js backend API (port 3001), deployed to App Engine
-- `functions/` - Express app wrapped in a single Firebase Function (`payments`), deployed to
-  Cloud Functions
-- `start.sh` - Script to start both `portal-app/` and `server/` concurrently (`functions/` isn't
-  part of it - run it separately with `firebase emulators:start --only functions`, or deploy it
-  with `firebase deploy --only functions`)
+- `functions/` - the entire Express backend API. Deployed as a single Cloud Function
+  (`payments`); runs locally on port 3001 via `npm start`
+- `start.sh` - Script to start `portal-app/` and `functions/` concurrently
 
 ### Frontend (portal-app/)
 - **Framework**: React 18, built with Vite (`vite.config.js`) — react-scripts/CRA and the
@@ -28,28 +25,51 @@ DIYA Curriculum Portal is a full-stack educational platform built with React fro
 - **Lint**: flat-config ESLint (`eslint.config.js`), which replaces CRA's bundled
   `react-app` shareable config
 
-### Backend (server/)
+### Backend (functions/)
+
+**There is one backend.** It owns everything: users, roles, content, lessons, modules,
+subscription management, *and* all payment processing including the Stripe webhook.
+
 - **Framework**: Express.js
 - **Database**: Firebase Firestore
 - **Authentication**: Firebase Admin SDK
-- **File Storage**: Firebase Storage, Google Cloud Storage
-- **Key Dependencies**: Firebase Admin, Multer, PDFKit, CORS
-- **Owns**: users, roles, content, lessons, modules, subscription *management* (status/cancel/
-  reactivate/enterprise-contact - `routes/subscription.js`). Does **not** own payment processing
-  (see below) - `routes/payment.js` still exists here but its non-webhook routes are unreachable
-  from the app as of #439; see the comment at the top of that file before touching it.
+- **File Storage**: Firebase Storage
+- **Key Dependencies**: Firebase Admin, Multer, PDFKit, CORS, Stripe, sanitize-html
+- **Deployed as**: a single `onRequest` Cloud Function named `payments`
 
-### Backend (functions/)
-- **Framework**: Express, wrapped as a single `onRequest` Cloud Function named `payments`
-- **Owns**: all payment processing - `create-payment-intent`, `create-module-checkout-session`,
-  `create-embedded-checkout-session`, `confirm-payment`, `history`, and the Stripe webhook
-  (`/webhook`). This is the one authoritative home for payments (#439) - it's the copy with the
-  working idempotent webhook and the entitlement-granting logic for module purchases.
-- `server/` used to duplicate every one of these routes byte-for-byte-adjacent, with real drift
-  between the copies (a missing idempotency fix, a missing custom-claims sync) - #439 has the
-  history if a route here looks unfamiliar next to `server/routes/payment.js`.
-- The frontend reaches this exclusively through `portal-app/src/utils/paymentsApi.js` - never a
-  hardcoded URL or `VITE_SERVER_ORIGIN_URL` for anything under `/api/payment/*`.
+Three files decide how it runs, and the split matters:
+
+- `app.js` - builds the Express app. The only place routes and middleware are assembled.
+- `index.js` - Cloud Functions entry. Wraps `app.js`; this is what deploys.
+- `local.js` - plain-Node entry. `app.listen()` plus dotenv, env validation and the boot
+  credential check. Used by `npm start`, `start.sh` and CI. Nothing in `app.js` depends on
+  it having run.
+
+The function is still *named* `payments` even though it now serves the whole API. That name
+is load-bearing in three places outside this repo's code - the Hosting rewrite in
+`firebase.json`, the Stripe webhook endpoint registered in the Stripe dashboard, and
+`portal-app/.env.production` - so renaming it is a coordinated change, not a refactor.
+
+There were **two** backends until #439: this one for payments, and an App Engine service in
+`server/` for everything else. They shared ~1,330 lines across nine modules by copy-paste,
+and four had silently drifted - `functions/` never received #428's emulator support or
+#434's pagination fix, and each backend had its own Stripe initializer that disagreed with
+the other about TEST vs LIVE keys. Neither deploy target could require code from a sibling
+directory, so there was no shared package to extract; collapsing to one backend removed the
+problem instead of managing it. `server/` and its `app.yaml` are gone. If you find a
+reference to App Engine, `.uc.r.appspot.com`, or `server/` anywhere, it is stale.
+
+**Stripe lives in exactly one place**: `utils/stripeClient.js`. `routes/payment.js`,
+`routes/subscription.js` and the webhook all use it, and it resolves the key per call
+(defaulting to TEST unless `STRIPE_LIVEMODE` is explicitly truthy) rather than at require
+time, because Cloud Functions populates bound secrets after module load.
+
+**The webhook is `routes/stripeWebhook.js`**, registered in `app.js` *before*
+`express.json()` with a raw body parser - Stripe signature verification needs the exact
+bytes. There used to be a second webhook in `server/routes/payment.js` that wrote
+`payment_logs` with `.add()`, so a Stripe retry appended a duplicate row instead of
+updating the existing one. It was deleted in #439; this idempotent handler
+(`set(..., {merge:true})`, doc id == `checkoutSessionId`) is the only one.
 
 ### Firebase Integration
 - **Authentication**: Firebase Auth for user management
@@ -83,11 +103,13 @@ under `static/`) is deliberately CRA's, not Vite's default `dist/`+`assets/` —
 `firebase.json` serves `portal-app/build` and caches `/static/**` immutably. See the
 comments in `portal-app/vite.config.js` before changing either.
 
-### Backend (server/)
+### Backend (functions/)
 ```bash
-cd server
+cd functions
 npm install
-npm start           # Start server (http://localhost:3001)
+npm start           # Express app on http://localhost:3001 (via local.js)
+npm test            # jest
+npm run serve       # run it through the Firebase Functions emulator instead
 ```
 
 ## Key Components and Routes
@@ -103,17 +125,17 @@ npm start           # Start server (http://localhost:3001)
 - `/upgrade` - Subscription upgrade page
 
 ### Backend API Routes
-`server/` (App Engine, `VITE_SERVER_ORIGIN_URL`):
+All served by `functions/`, reached at `VITE_SERVER_ORIGIN_URL` (or same-origin via the
+Firebase Hosting rewrite of `/api/**`):
 - `/api/units` - Content management endpoints
 - `/api/lessons` - Lesson CRUD operations
 - `/api/modules` - Module management
 - `/api/user` - User profile and authentication
-- `/api/subscription` - Subscription management (status/cancel/reactivate/enterprise-contact) -
-  not payment processing, see `functions/` below
-
-`functions/` (Cloud Function `payments`, reached via `portal-app/src/utils/paymentsApi.js`):
+- `/api/subscription` - Subscription management (status/cancel/reactivate/enterprise-contact)
 - `/api/payment` - All payment processing: create-payment-intent, create-module-checkout-session,
   create-embedded-checkout-session, confirm-payment, history, and the Stripe webhook
+- `/api/health` - Liveness plus a real Firestore reachability check (503 when the Admin
+  credential is dead, so an outage like #418 shows up here instead of as 500s everywhere)
 
 ### Key Components
 - `Layout.jsx` - Main layout wrapper with navigation
@@ -254,9 +276,9 @@ sign-in flow itself).
 
 One way in, one way out. Established in #370 (transport) and #367 (reporting).
 
-**Calling the backend.** Everything under `server/` goes through
-`src/utils/apiClient.js` - never a bare `fetch` and never `axios` (removed in
-#370, it is no longer a dependency):
+**Calling the backend.** Everything goes through `src/utils/apiClient.js` -
+never a bare `fetch` and never `axios` (removed in #370, it is no longer a
+dependency):
 
 ```js
 import { api } from "@/utils/apiClient";
@@ -268,11 +290,16 @@ await api.post("/api/lesson/", lessonData);
 
 A non-2xx **throws** an `ApiError` carrying `{ status, code, details }` - there
 is no `response.ok` to check. The client does **not** unwrap a response
-envelope: only `server/routes/user.js` uses `responseHelpers.js`, the other 53
+envelope: only `functions/routes/user.js` uses `responseHelpers.js`, the other 53
 responses are raw `res.json()`, so the parsed body comes back verbatim.
 
-Payments are the one exception - they live in `functions/`, not `server/`, and
-keep using `src/utils/paymentsApi.js`.
+Payments are the one exception, and no longer for architectural reasons: since
+#439 they are on the same origin as everything else, resolved by the one
+`src/utils/apiOrigin.js`. `src/utils/paymentsApi.js` survives as a four-line
+wrapper only because its call sites read the raw `Response` (checking
+`res.ok`, pulling Stripe's `client_secret` out of the body) instead of
+apiClient's throw-on-error contract. Converting them is a change to live
+payment flows, not a consolidation.
 
 For data a component loads on mount, prefer the hook, which adds cancellation
 and a uniform shape:
@@ -344,13 +371,13 @@ blanked the entire app.
 
 2. **Backend Environment Setup**:
    ```bash
-   cd server
+   cd functions
    cp .env.example .env.development
    # Edit .env.development with your actual values
    ```
 
 3. **Firebase Service Account**:
-   - Authenticate with `gcloud auth application-default login` (do not download a service account key — see server/CREDENTIALS.md)
+   - Authenticate with `gcloud auth application-default login` (do not download a service account key — see functions/CREDENTIALS.md)
    - This file contains Firebase Admin SDK credentials
    - **NEVER** commit this file to version control
 
@@ -359,13 +386,16 @@ blanked the entire app.
 **Frontend (.env.development/.env.production in portal-app/):** read as
 `import.meta.env.VITE_*`; only the `VITE_` prefix is inlined into the bundle. The prefix
 was `REACT_APP_` before #503.
-- `VITE_SERVER_ORIGIN_URL` - Backend server URL
+- `VITE_SERVER_ORIGIN_URL` - Backend API URL. Read in exactly one place,
+  `src/utils/apiOrigin.js`, which both `apiClient.js` and `paymentsApi.js` use.
+  Blank means same-origin, relying on the Hosting rewrite of `/api/**`.
 - `VITE_HOME_PAGE` - Frontend application URL
 - `VITE_DIYA_BASE_URL` - DIYA research organization URL
 - `VITE_FIREBASE_*` - Firebase configuration keys
 - `VITE_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key (pk_test_* or pk_live_*)
 
-**Backend (.env.development/.env.production in server/):**
+**Backend (.env.development/.env.production in functions/):** local runs only -
+the deployed function reads secrets from Secret Manager and loads no .env file.
 - `NODE_ENV` - Environment (development/production)
 - `SERVER_ALLOW_ORIGIN` - CORS allowed origin
 - `PORT` - Server port (default: 3001)
@@ -440,23 +470,23 @@ Available Roles:
 
 User Lookup Pattern:
 
-server/routes/user.js's `/me` handler reads the caller's own document directly from
+functions/routes/user.js's `/me` handler reads the caller's own document directly from
 `users` via `databaseService.getUserDocument` — no fallback chain.
 
 Role Assignment Logic:
 
 - Default registration (teacher path, via POST /api/user/register): teacherDefault
-  (server/routes/user.js)
+  (functions/routes/user.js)
 - Default registration (student path, client-side signup): studentDefault
   (portal-app/src/pages/sign_up/index.jsx)
-- Subscription upgrades: Premium plans assign teacherPlus role (server/routes/payment.js)
-- Cancellations: Reset to teacherDefault role (server/routes/subscription.js)
+- Subscription upgrades: Premium plans assign teacherPlus role (functions/routes/payment.js)
+- Cancellations: Reset to teacherDefault role (functions/routes/subscription.js)
 
 Admin Functions:
 
-- Admin role verification: server/utils/ownership.js (`isAdminUser`)
+- Admin role verification: functions/utils/ownership.js (`isAdminUser`)
 - Admin-only endpoints for user management and role updates (PUT /api/user/updateRole)
-- Custom claims mirror the role into the ID token as a fast path (server/utils/customClaims.js)
+- Custom claims mirror the role into the ID token as a fast path (functions/utils/customClaims.js)
 
 Authentication Integration
 

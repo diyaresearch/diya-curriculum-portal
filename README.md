@@ -43,7 +43,7 @@ DIYA Curriculum Portal is a platform served for the educators and content creato
 Ensure you have the following installed on your local development machine:
 
 - **Node.js**: You can download and install Node.js from the [official Node.js website](https://nodejs.org/). Use an active LTS release — `portal-app/` requires Node 22.12 or newer (Vite 7 and Vitest 5 both drop older lines), and CI runs Node 22.
-- **npm**: included with Node.js, so it's installed automatically when you install Node.js. This is the package manager the repo standardizes on — CI runs `npm ci`, and only `package-lock.json` is committed in each package (`server/` and `portal-app/` used to also carry a `yarn.lock`; the two had drifted and only the npm lockfile was ever what CI/tooling actually used, so the yarn one was dropped — see #438). For more details, see the [npm documentation](https://docs.npmjs.com/).
+- **npm**: included with Node.js, so it's installed automatically when you install Node.js. This is the package manager the repo standardizes on — CI runs `npm ci`, and only `package-lock.json` is committed in each package (the backend and `portal-app/` used to also carry a `yarn.lock`; the two had drifted and only the npm lockfile was ever what CI/tooling actually used, so the yarn one was dropped — see #438). For more details, see the [npm documentation](https://docs.npmjs.com/).
 
 ### Clone the Repository
 
@@ -75,7 +75,7 @@ npm install
 
 Both tiers use `.env.example` as the template — copy it, don't write files from
 scratch: `cp portal-app/.env.example portal-app/.env.development` and
-`cp server/.env.example server/.env.development` (swap `.production` as needed).
+`cp functions/.env.example functions/.env.development` (swap `.production` as needed).
 
 #### Naming convention
 
@@ -84,7 +84,7 @@ scratch: `cp portal-app/.env.example portal-app/.env.development` and
   client bundle; anything else is invisible to the app. (The prefix was
   `REACT_APP_` until the Vite migration in #503, which is why older branches
   and any long-lived `.env.*.local` file may still use it.)
-- **Backend (`server/`):** no prefix. Node reads `process.env` directly, so
+- **Backend (`functions/`):** no prefix. Node reads `process.env` directly, so
   none is needed.
 
 #### File precedence
@@ -92,9 +92,12 @@ scratch: `cp portal-app/.env.example portal-app/.env.development` and
 The two tiers load env files differently — knowing which one wins matters when
 a value looks wrong:
 
-- **Backend:** `server/index.js` calls `dotenv.config({ path: `.env.${NODE_ENV}` })`.
+- **Backend:** `functions/local.js` calls `dotenv.config({ path: `.env.${NODE_ENV}` })`.
   Exactly one file loads, selected by `NODE_ENV` (`development` / `production` /
-  `test`) — there is no base `server/.env` and no merging between files.
+  `test`) — there is no base `functions/.env` and no merging between files. This
+  applies to local runs only: the deployed function's entry point is
+  `functions/index.js`, which never loads a `.env` file and reads its secrets
+  from Secret Manager instead.
 - **Frontend:** Vite loads several files and merges them, most specific wins:
   `.env.development.local` / `.env.production.local` → `.env.local` (skipped
   for `test`) → `.env.development` / `.env.production` → `.env`. In this repo,
@@ -154,7 +157,7 @@ curl -s http://localhost:3001/api/health
 Downloaded JSON keys are what took the API down in issue #418: they never expire
 visibly, and revoking one breaks every environment at once. Full details,
 including the production setup and how to diagnose credential failures, are in
-[server/CREDENTIALS.md](server/CREDENTIALS.md).
+[functions/CREDENTIALS.md](functions/CREDENTIALS.md).
 
 ### Start the application
 
@@ -219,7 +222,7 @@ Firestore setup (Native mode, `nam5`) and Auth setup (Email/Password only,
 nothing else enabled) but is on the free Spark plan — no Cloud Functions, so
 the Stripe webhook-dependent payment routes aren't exercised there yet.
 
-- **Backend:** create `server/.env.staging` (`FIREBASE_PROJECT_ID=curriculum-portal-staging`)
+- **Backend:** create `functions/.env.staging` (`FIREBASE_PROJECT_ID=curriculum-portal-staging`)
   and run `NODE_ENV=staging npm start`. Credentials come from the same
   `gcloud auth application-default login` account as production — no new key
   file — as long as that account has access to the staging project too.
@@ -258,7 +261,7 @@ npm start
 ## Testing
 
 Each Node.js package tests itself the normal way - `npm test` from inside
-`portal-app/`, `server/`, or `functions/`. Their dependencies live in each
+`portal-app/` or `functions/`. Their dependencies live in each
 package's own `node_modules/`, isolated per-package the same way `npm
 install` always isolates them; there's nothing extra to set up.
 
@@ -285,24 +288,33 @@ routes.
 
 To verify the currently deployed version of your application in Google Cloud:
 
-1. Log in to Google Cloud Console. Make sure you are in the curriculun-portal project.
+1. Log in to Google Cloud Console. Make sure you are in the curriculum-portal project.
 
-2. Navigate to App Engine: Search App Engine, and then go to Versions from the left-hand navigation menu.
+2. Navigate to Cloud Functions: search **Cloud Functions**, and open `payments`.
+   Despite the name it serves the whole API — see `functions/DEPLOYMENT.md`. The
+   **Revisions** tab lists deployed revisions and which one is serving traffic.
 
-3. View Current Deployment: The table will display a list of all deployed versions, with the active version marked under the Traffic column. The active version is the one currently serving traffic. 
+   (The API ran on App Engine until #439. If you are looking at an old runbook
+   that says App Engine → Versions, that service no longer exists.)
+
+3. Confirm it is actually answering:
+
+```bash
+curl -s https://us-central1-curriculum-portal-1ce8f.cloudfunctions.net/payments/api/health
+```
 
 ### Viewing Logs
 
 #### View Logs from Google Cloud Console
 
-1. Log in to Google Cloud Console. Make sure you are in the curriculun-portal project.
+1. Log in to Google Cloud Console. Make sure you are in the curriculum-portal project.
 
 2. Navigate to Logs Explorer: Search Logs Explorer then you can see the logs.
 
 3. Filter Logs:
 Use the filters to narrow down the logs:
-Resource Type: Select App Engine or the relevant resource.
-Version: Filter logs for a specific deployment version.
+Resource Type: Select **Cloud Function** (or Cloud Run Revision — Functions v2
+runs on Cloud Run, and some log entries are attributed there).
 Use the search bar to enter specific keywords or request IDs for deeper analysis.
 
 4. View Logs:
@@ -311,27 +323,29 @@ Click on a log entry to view detailed information, including stack traces, paylo
 5. Optional: Export Logs:
 Use the export functionality to save logs for further analysis or integration with third-party tools.
 
-#### View Logs Using Google Cloud SDK
+#### View Logs Using the CLI
 
-1. Open the terminal or Google Cloud SDK Shell.
+1. Open a terminal.
 
-2. To view logs for App Engine, use the following command:
+2. To view logs for the API:
 ```bash
-gcloud app logs read
+firebase functions:log --project curriculum-portal-1ce8f
 ```
 
-3. To filter logs by severity (e.g., errors or warnings):
+3. To filter by severity, use the Cloud Logging CLI instead:
 ```bash
-gcloud app logs read --severity=ERROR
+gcloud logging read 'resource.type="cloud_run_revision" AND severity>=ERROR' \
+  --project=curriculum-portal-1ce8f --limit=50
 ```
 
-4. To view logs for a specific version:
+4. To view logs for one deployed revision:
 ```bash
-gcloud app logs read --version=<VERSION_ID>
+gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.revision_name="<REVISION>"' \
+  --project=curriculum-portal-1ce8f --limit=50
 ```
-Replace <VERSION_ID> with the version name from your deployment.
+Replace `<REVISION>` with a revision name from the Cloud Functions console.
 
 5. To stream logs in real-time:
 ```bash
-gcloud app logs tail
+gcloud beta logging tail 'resource.type="cloud_run_revision"' --project=curriculum-portal-1ce8f
 ```

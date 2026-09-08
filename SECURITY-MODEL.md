@@ -105,7 +105,7 @@ the only check on that path.
 
 ### Rate limiting (#383)
 
-`server/middleware/rateLimiter.js` has two tiers:
+`functions/middleware/rateLimiter.js` has two tiers:
 
 - **General** — every `/api/*` route except `/api/health` (uptime monitoring
   polls that regularly and legitimately). `RATE_LIMIT_WINDOW_MS` /
@@ -120,22 +120,20 @@ the only check on that path.
   (`initiate-upgrade`/`complete-upgrade`). Mounted after `authenticateUser` on
   each of those routes specifically so it can key by uid.
 
-`functions/middleware/rateLimiter.js` has just the strict tier, on the same
-Stripe-calling routes in `functions/routes/payment.js` - #439 moved all
-payment processing there, so those are the routes #383's own audit worried
-about (#422/#425-adjacent concerns) in practice, not `server/`'s copies.
+There were two copies of this file until #439, and they had diverged: the
+Cloud Function's carried only the strict tier, so the general limiter covered
+every route on one backend and none on the other. Collapsing to a single
+backend leaves one limiter covering everything.
 
-Both backends key by the authenticated user (`req.user.uid`) when there is
-one, falling back to IP otherwise - a shared IP (a school network is the
-obvious case here) does not mean a shared budget. `app.set('trust proxy', 1)`
-is load-bearing for this in both `server/index.js` and `functions/index.js`:
-App Engine and Cloud Functions each terminate the request through exactly one
-proxy hop, and without trusting it every request looks like it comes from the
-same address.
+It keys by the authenticated user (`req.user.uid`) when there is one, falling
+back to IP otherwise - a shared IP (a school network is the obvious case here)
+does not mean a shared budget. `app.set('trust proxy', 1)` in `functions/app.js`
+is load-bearing for this: Cloud Functions terminates the request through
+exactly one proxy hop, and without trusting it every request looks like it
+comes from the same address.
 
-**Caveat, in both backends:** the limiter's store is in-memory, so it only
-limits per *instance*. Both App Engine (`automatic_scaling.max_instances` in
-`app.yaml`) and Cloud Functions can and do run several concurrent instances
+**Caveat:** the limiter's store is in-memory, so it only limits per
+*instance*. Cloud Functions can and does run several concurrent instances
 under load - exactly when a limit matters most - so this raises the bar
 significantly without being a hard global ceiling. A shared store (Firestore-
 or Memorystore-backed, for instance) would close that gap; out of scope here.
@@ -152,7 +150,7 @@ both:
   hold: it runs regardless of which path got the content into Firestore, or
   whether it was ever sanitized on the way in. See
   `portal-app/src/pages/__tests__/xssSanitization.test.jsx`.
-- **Write, via the API** (`server/utils/sanitizeHtml.js`) - a second layer,
+- **Write, via the API** (`functions/utils/sanitizeHtml.js`) - a second layer,
   applied to every rich-text field the content/lesson/module controllers
   write. Does **not** cover the client-SDK path: `upload-content/index.jsx`
   writes its `Instructions` field straight to Firestore
@@ -264,7 +262,7 @@ Three orderings are load-bearing, each learned the hard way:
 | Suite | Location | Covers |
 |---|---|---|
 | Rules | `tests/rules/` | emulator-backed, every rule above |
-| Server | `server/__tests__/` | auth middleware, ownership, entitlements, claims |
+| API | `functions/__tests__/` | auth middleware, ownership, entitlements, claims, payments |
 
 Both run in CI. Rules tests are checked against the *previous* rules as well:
 if a test does not fail against the version it was written to fix, it is not

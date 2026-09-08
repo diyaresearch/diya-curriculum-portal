@@ -1,62 +1,26 @@
 /**
- * Where /api/payment/* calls go, and how they get there.
+ * Where /api/payment/* calls go.
  *
- * Payment routes used to be split across two live backends by convention,
- * not architecture: module_detail's checkout call hit Firebase Functions
- * directly, PaymentPage/YearlyPaymentPage called VITE_SERVER_ORIGIN_URL
- * (App Engine - a different backend entirely), and module_builder's checkout
- * call was a bare relative fetch with no fallback at all. Each copy of the
- * origin-selection logic had drifted independently. Payments are now
- * consolidated onto functions/ (issue #439) - it owns the working, idempotent
- * Stripe webhook and the entitlement-granting logic that goes with it.
+ * This module used to carry real logic, because payments lived on a different
+ * backend from everything else: it hardcoded the Cloud Function URL, chose
+ * between that and a same-origin path by sniffing window.location.hostname,
+ * and retried against the function directly when a same-origin call came back
+ * 404/405 (the sign that Firebase Hosting had not rewritten it after all).
  *
- * Firebase Hosting rewrites /api/** to that same function (firebase.json),
- * so a same-origin relative path also works when the page is actually served
- * through a Hosting rewrite. Everywhere else - localhost (Vite's dev proxy
- * only forwards to the App Engine dev server, not Functions), an explicit
- * override, or any domain Hosting rewrites don't cover - this calls the
- * Cloud Function directly instead, so payments work regardless of how or
- * where the frontend itself ends up served.
+ * #439 collapsed the two backends into one, so all of that is gone. Payment
+ * routes are on the same origin as every other route now — see utils/apiOrigin
+ * — and this is a thin wrapper that adds the /api/payment prefix.
+ *
+ * It stays separate from apiClient.js only because its four call sites work
+ * with the Response object directly (checking res.ok, reading Stripe's
+ * client_secret out of the body) rather than apiClient's throw-on-error
+ * contract. Converting them is a change to live payment flows, not a
+ * consolidation, so it is deliberately not bundled in here.
  */
 
-const DEFAULT_FUNCTIONS_BASE = "https://us-central1-curriculum-portal-1ce8f.cloudfunctions.net/payments";
+import { apiUrl } from "@/utils/apiOrigin";
 
-function isLocalhost(hostname) {
-  return hostname === "localhost" || hostname === "127.0.0.1";
-}
-
-function isFirebaseHostingDomain(hostname) {
-  return /\.web\.app$|\.firebaseapp\.com$/i.test(hostname || "");
-}
-
-/**
- * Base URL to call the payments API on, or "" to mean same-origin (relying
- * on the Firebase Hosting rewrite).
- */
-export function paymentsOrigin() {
-  const override = String(import.meta.env.VITE_PAYMENTS_FUNCTIONS_BASE_URL || "").trim();
-  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-  const shouldUseFunctionsDirect =
-    isLocalhost(hostname) || Boolean(override) || !isFirebaseHostingDomain(hostname);
-  return shouldUseFunctionsDirect ? (override || DEFAULT_FUNCTIONS_BASE) : "";
-}
-
-/**
- * Fetch a /api/payment/<path> route. If the resolved origin is same-origin
- * and the host turns out not to actually support the Hosting rewrite (a
- * 404/405 back from what should have been the payments route), retries once
- * against the Cloud Function directly rather than failing outright.
- */
-export async function fetchPayments(path, options) {
-  const origin = paymentsOrigin();
-  const suffix = `/api/payment${path}`;
-  const endpoint = origin ? `${origin}${suffix}` : suffix;
-
-  const response = await fetch(endpoint, options);
-
-  if (!origin && (response.status === 404 || response.status === 405)) {
-    return fetch(`${DEFAULT_FUNCTIONS_BASE}${suffix}`, options);
-  }
-
-  return response;
+/** Fetch a /api/payment/<path> route. `path` starts with a slash. */
+export function fetchPayments(path, options) {
+  return fetch(apiUrl(`/api/payment${path}`), options);
 }

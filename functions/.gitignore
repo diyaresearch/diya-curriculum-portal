@@ -1,2 +1,9 @@
 node_modules/
 *.local
+
+# Never commit a downloaded Admin key (#418, #426). config/credentials.js
+# refuses to read one on a Google-managed runtime anyway, but it must not
+# reach the repo in the first place.
+serviceAccountKey.json
+.env.*
+!.env.example

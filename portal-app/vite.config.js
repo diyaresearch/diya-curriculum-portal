@@ -57,10 +57,11 @@ export default defineConfig({
     // start.sh and VITE_HOME_PAGE both assume 3000, which
     // was CRA's dev port; Vite's own default is 5173.
     port: 3000,
-    // Replaces the "proxy" field CRA read out of package.json: forwards the
-    // App Engine API (server/) to the local backend during `npm start`.
-    // Payments are NOT covered by this — they live in functions/ and are
-    // reached directly via src/utils/paymentsApi.js.
+    // Replaces the "proxy" field CRA read out of package.json: forwards /api
+    // to the local backend during `npm start`. Since #439 that is the whole
+    // API, payments included - `npm start` in functions/ serves all of it on
+    // 3001. Payment calls used to bypass this proxy and go straight to the
+    // deployed Cloud Function, because that was a different backend.
     proxy: {
       "/api": "http://localhost:3001",
     },

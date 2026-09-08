@@ -5,7 +5,7 @@
 # Runs the real integration suite (tests/test_refactored_api.py) against a
 # live server. If nothing is already listening on the target port, this
 # script boots the server itself in mock-Firebase mode (NODE_ENV=test,
-# ENABLE_MOCK_FIREBASE=true — see server/utils/firebaseMock.js) so the
+# ENABLE_MOCK_FIREBASE=true — see functions/utils/firebaseMock.js) so the
 # suite needs no real Firebase project or credentials, and tears it down
 # on exit. This mirrors the api-integration job in .github/workflows/ci.yml
 # (#436) — keep the two in sync if either changes.
@@ -60,18 +60,18 @@ if curl -s -f "$SERVER_ORIGIN/" > /dev/null 2>&1; then
     echo "✅ API server is already running at $SERVER_ORIGIN — using it as-is."
 else
     echo "⚠️  No server at $SERVER_ORIGIN — starting one in mock-Firebase mode."
-    if [ ! -d "server/node_modules" ]; then
-        echo "📥 Installing server dependencies..."
-        (cd server && npm install)
+    if [ ! -d "functions/node_modules" ]; then
+        echo "📥 Installing API dependencies..."
+        (cd functions && npm install)
     fi
 
     (
-      cd server
+      cd functions
       NODE_ENV=test \
       ENABLE_MOCK_FIREBASE=true \
       PORT="${PORT:-3001}" \
       SERVER_ALLOW_ORIGIN="${SERVER_ALLOW_ORIGIN:-http://localhost:3000}" \
-      nohup node index.js > ../server-test.log 2>&1 &
+      nohup node local.js > ../server-test.log 2>&1 &
       echo $! > ../.server_test.pid
     )
     SERVER_PID=$(cat .server_test.pid)

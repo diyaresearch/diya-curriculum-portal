@@ -27,7 +27,7 @@ function findIndex(collectionGroup, fieldPaths) {
   );
 }
 
-test("payment_logs(userId, timestamp) — server/routes/payment.js history query", () => {
+test("payment_logs(userId, timestamp) — functions/routes/payment.js history query", () => {
   const idx = findIndex("payment_logs", ["userId", "timestamp"]);
   expect(idx).toBeDefined();
   expect(idx.fields[0].order).toBe("ASCENDING");
