@@ -6,10 +6,19 @@ const {
   credentialOptions,
 } = require("./credentials");
 
-// Initialize Firebase Admin SDK.
+// The one and only admin.initializeApp() in the backend (issue #362).
 //
-// Credential selection lives in ./credentials so this module and
-// ../services/databaseService always agree on which identity is in use.
+// Everything that touches Firestore or Storage arrives here eventually:
+// controllers require { db, storage } directly, services/databaseService
+// delegates to this module for its real (non-mock) mode, and
+// routes/stripeWebhook reads .db lazily. routes/payment.js and
+// routes/stripeWebhook.js each used to call a bare admin.initializeApp() of
+// their own, so whichever module loaded first decided the credential for the
+// whole process and the precedence in ./credentials could be skipped
+// entirely.
+//
+// Credential selection lives in ./credentials, which is also what
+// ../services/databaseService consults to decide real vs mock mode.
 let app;
 if (!admin.apps.length) {
   let resolved;

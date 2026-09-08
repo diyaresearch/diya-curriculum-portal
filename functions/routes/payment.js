@@ -14,14 +14,6 @@ const { requireStripe, getFunctionsConfig } = require("../utils/stripeClient");
 
 const router = express.Router();
 
-function getDb() {
-  const admin = require("firebase-admin");
-  if (admin.apps.length === 0) {
-    admin.initializeApp();
-  }
-  return admin.firestore();
-}
-
 // Collection names (issue #428 retired the schema qualifier — dev/staging
 // and production are now separate Firebase projects, not a prefix within
 // one shared project, so every collection name is a plain literal).
@@ -173,7 +165,8 @@ router.post("/create-module-checkout-session", authenticateUser, strictLimiter, 
       const APP_BASENAME = normalizeBasename(configuredBasename, "");
       const appBaseUrl = joinDomainAndBasename(domain, APP_BASENAME);
   
-      const db = getDb();
+      await databaseService.initialize();
+      const db = databaseService.getDb();
 
       const moduleSnap = await db.collection(TABLE_MODULE).doc(moduleId).get();
 

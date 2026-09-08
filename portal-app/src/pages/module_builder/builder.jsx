@@ -8,12 +8,12 @@ import {
   doc,
   getDoc,
   getDocs,
-  getFirestore,
   query,
   serverTimestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import OverlayTileView from "@/pages/module_builder/OverlayTileView";
 import UploadContent from "@/pages/upload-content/index";
 import useUserData from "@/hooks/useUserData";
@@ -190,7 +190,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     if (!editModuleId) return;
     (async () => {
       try {
-        const db = getFirestore();
         const snap = await getDoc(doc(db, COLLECTIONS.module, editModuleId));
         if (cancelled) return;
         if (!snap.exists()) {
@@ -272,7 +271,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
 
   // --- Fetch lesson plans for overlay ---
   const fetchLessonPlans = async (userId) => {
-    const db = getFirestore();
     const lessonsQuery = query(
       collection(db, COLLECTIONS.lesson),
       where("authorId", "==", userId)
@@ -341,7 +339,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       toast.error("You must be logged in to save a draft.");
       return;
     }
-    const db = getFirestore();
     const lessonIds = selectedMaterials.map((material) => material.id);
     const lessonPlans = lessonIds.reduce((acc, id, idx) => {
       acc[idx] = id;
@@ -458,7 +455,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     }
 
     try {
-      const db = getFirestore();
       const lessonIds = selectedMaterials.map((material) => material.id);
       const lessonPlans = lessonIds.reduce((acc, id, idx) => {
         acc[idx] = id;

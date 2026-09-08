@@ -6,10 +6,7 @@
 const { handleFirebaseError } = require('../middleware/errorHandler');
 const { findUserDocument } = require('../utils/identityCollections');
 const {
-  PROJECT_ID,
-  STORAGE_BUCKET,
   resolveCredential,
-  credentialOptions,
   hasCredentialSource,
 } = require('../config/credentials');
 
@@ -72,30 +69,15 @@ class DatabaseService {
    */
   async initializeRealFirebase() {
     try {
-      const admin = require('firebase-admin');
-
-      // Check if already initialized
-      if (admin.apps.length > 0) {
-        this.admin = admin;
-        this.db = admin.firestore();
-        this.isMocked = false;
-        return;
-      }
-
-      const resolved = resolveCredential();
+      // config/firebaseConfig is the one place that calls
+      // admin.initializeApp() (issue #362). Required lazily, not at module
+      // load, so mock mode never triggers a real credential resolution.
+      const { admin, db } = require('../config/firebaseConfig');
 
       this.admin = admin;
-      admin.initializeApp({
-        ...credentialOptions(resolved),
-        projectId: PROJECT_ID,
-        storageBucket: STORAGE_BUCKET
-      });
-
-      this.db = admin.firestore();
+      this.db = db;
       this.isMocked = false;
-      this.credentialSource = resolved.source;
-
-      console.log(`✅ Real Firebase initialized with ${resolved.detail}`);
+      this.credentialSource = resolveCredential().source;
     } catch (error) {
       console.error('❌ Failed to initialize real Firebase:', error.message);
 

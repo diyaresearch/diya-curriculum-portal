@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { app as firebaseApp } from '@/firebase/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/firebase/firebaseConfig';
 import { COLLECTIONS } from '@/firebase/collectionNames';
 import Loading from "@/components/ui/Loading";
 
@@ -14,7 +14,6 @@ const LessonDetails = () => {
     let cancelled = false;
         const fetchLesson = async () => {
             try {
-                const db = getFirestore(firebaseApp);
                 const lessonDoc = await getDoc(doc(db, COLLECTIONS.lesson, id));
                 if (cancelled) return;
 
