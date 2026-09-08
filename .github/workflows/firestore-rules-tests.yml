@@ -34,12 +34,19 @@ jobs:
         with:
           node-version: "22"
 
-      # The Firestore emulator runs on the JVM.
+      # The Firestore emulator runs on the JVM. 21, not the 17 this job
+      # inherited from the pre-#501 workflow: firebase-tools already warns on
+      # every run that it "will drop support for Java version < 21 soon in
+      # firebase-tools@15". tests/rules pins ^14.0.0 today, so 17 still works
+      # — but dependabot is active on this repo, and the bump to 15 would
+      # break this job. That matters more than it used to, because this job
+      # is now the gate in front of the rules deploy: it would take rules
+      # deploys down with it.
       - name: Set up Java
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
 
       - name: Install dependencies
         working-directory: tests/rules

@@ -240,13 +240,15 @@ the Stripe webhook-dependent payment routes aren't exercised there yet.
 This is one slice of the larger #428 epic. `DATABASE_SCHEMA_QUALIFIER` and the
 split `teachers`/`students` collections it required have since been retired —
 every account now lives in one unprefixed `users` collection, in every
-environment. Firestore rules and indexes now deploy to both projects from CI
-rather than by hand; see "Deploy Firestore Rules and Indexes" in
-[functions/DEPLOYMENT.md](functions/DEPLOYMENT.md) for the pipeline and its
-one-time Workload Identity Federation setup. Remaining in the epic: a real
-staging deployment of Cloud Functions (blocked on staging being a Spark-plan
-project), and pointing the Python integration suite at staging rather than at
-mock Firebase.
+environment. Firestore rules and indexes deploy to both projects from CI
+rather than by hand — though the pipeline stays inert, warning and no-opping
+on each run, until someone with Owner on both GCP projects runs
+`./scripts/setup-ci-firestore-deploy.sh` once. See "Deploy Firestore Rules
+and Indexes" in [functions/DEPLOYMENT.md](functions/DEPLOYMENT.md).
+
+Remaining in the epic: that one-time setup, a real staging deployment of
+Cloud Functions (blocked on staging being a Spark-plan project), and pointing
+the Python integration suite at staging rather than at mock Firebase.
 
 #### Running the Backend
 

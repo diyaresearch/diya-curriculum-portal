@@ -90,59 +90,64 @@ Two things it deliberately does not do:
 
 ### One-time setup: Workload Identity Federation
 
-Until this is configured the workflow still runs on every qualifying push,
-but the deploy steps warn and no-op instead of failing — so an unconfigured
-repo does not sit permanently red.
+**This is the only thing standing between the workflow and a working
+automated deploy, and it can only be done by someone with Owner on both
+GCP projects.** Until it is done the workflow still runs on every qualifying
+push, but the deploy steps warn and no-op instead of failing — so an
+unconfigured repo does not sit permanently red.
 
-Authentication is Workload Identity Federation: GitHub mints a short-lived
-OIDC token that GCP exchanges for an access token. There is no
-service-account JSON key to store, leak, or rotate, which is the whole point
-(#426).
-
-Run once, as a project owner, substituting your own numeric project number:
+Run it once:
 
 ```bash
-# 1. A pool and a provider that trusts this repository, in the prod project.
-gcloud iam workload-identity-pools create github \
-  --project=curriculum-portal-1ce8f --location=global \
-  --display-name="GitHub Actions"
-
-gcloud iam workload-identity-pools providers create-oidc github \
-  --project=curriculum-portal-1ce8f --location=global \
-  --workload-identity-pool=github \
-  --issuer-uri=https://token.actions.githubusercontent.com \
-  --attribute-mapping=google.subject=assertion.sub,attribute.repository=assertion.repository \
-  --attribute-condition="assertion.repository == 'diyaresearch/diya-curriculum-portal'"
-
-# 2. One deploy service account per project, each with only the two roles a
-#    rules+indexes deploy needs. Repeat for curriculum-portal-staging.
-gcloud iam service-accounts create firestore-config-deployer \
-  --project=curriculum-portal-1ce8f --display-name="CI Firestore config deploy"
-
-for role in roles/firebaserules.admin roles/datastore.indexAdmin; do
-  gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
-    --member=serviceAccount:firestore-config-deployer@curriculum-portal-1ce8f.iam.gserviceaccount.com \
-    --role="$role"
-done
-
-# 3. Let the pool impersonate that account, but only from this repo.
-gcloud iam service-accounts add-iam-policy-binding \
-  firestore-config-deployer@curriculum-portal-1ce8f.iam.gserviceaccount.com \
-  --project=curriculum-portal-1ce8f \
-  --role=roles/iam.workloadIdentityUser \
-  --member="principalSet://iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github/attribute.repository/diyaresearch/diya-curriculum-portal"
+./scripts/setup-ci-firestore-deploy.sh
 ```
 
-Then set three **repository variables** (Settings → Secrets and variables →
-Actions → Variables). Variables, not secrets: a provider resource name and
-two service-account emails are public identifiers — the trust lives in the
-IAM binding above, not in keeping the strings hidden.
+It needs `gcloud` authenticated as a project Owner and `gh` authenticated
+with admin on the repo. It is safe to re-run — every create is guarded by an
+existence check and every IAM grant is additive, never a wholesale
+`set-iam-policy`.
+
+Authentication is Workload Identity Federation: GitHub mints a short-lived
+OIDC token that GCP exchanges for an access token. No service-account JSON
+key is created, downloaded, or stored — which is the point, since #426 is an
+open P0 about purging exactly that kind of key from this project.
+
+What the script sets up:
+
+- Enables `iam`, `sts` and `iamcredentials` on both projects. The OIDC
+  exchange and the impersonation call go through the last two; without them
+  the auth step fails with a bare 403.
+- A workload identity pool and OIDC provider in `curriculum-portal-1ce8f`.
+  The provider carries an attribute condition pinning it to
+  `assertion.repository == 'diyaresearch/diya-curriculum-portal'` — **this is
+  the security boundary.** Without it any GitHub repository in the world
+  could mint tokens against the pool.
+- A `firestore-config-deployer` service account in each project, holding only
+  `roles/firebaserules.admin` and `roles/datastore.indexAdmin` — what a
+  rules+indexes deploy needs and nothing more. One per project, so a
+  staging deploy cannot reach production.
+- `roles/iam.workloadIdentityUser` on each, restricted to that same
+  principalSet.
+- The three repository variables below.
+
+Variables, not secrets: a provider resource name and two service-account
+emails are public identifiers — the trust lives in the IAM bindings, not in
+keeping the strings hidden.
 
 | Variable | Value |
 |---|---|
 | `GCP_WORKLOAD_IDENTITY_PROVIDER` | `projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/github/providers/github` |
 | `GCP_DEPLOY_SA_STAGING` | `firestore-config-deployer@curriculum-portal-staging.iam.gserviceaccount.com` |
 | `GCP_DEPLOY_SA_PRODUCTION` | `firestore-config-deployer@curriculum-portal-1ce8f.iam.gserviceaccount.com` |
+
+Verify without waiting for a rules change:
+
+```bash
+gh workflow run "Deploy Firestore config" --ref main -f target=staging
+```
+
+A green run whose "Deploy rules and indexes to staging" step is no longer
+*skipped* is the proof. Repeat with `-f target=production`.
 
 Optionally create a `production` GitHub Environment with a required reviewer;
 the production job already targets it, so the gate takes effect with no
