@@ -1,6 +1,7 @@
 /**
  * Catches render-time exceptions so one broken component doesn't blank the
- * whole app (#367 - "Add error boundaries for JavaScript errors").
+ * whole app (#367 - "Add error boundaries for JavaScript errors", extended in
+ * #378 to reporting, resettable boundaries and the app chrome).
  *
  * Without this, any exception thrown during render unmounts the entire React
  * tree and leaves the user on a white page with no way forward but a manual
@@ -8,9 +9,29 @@
  *
  * Still a class component: componentDidCatch has no hook equivalent, by
  * design - React has never shipped one.
+ *
+ * Props:
+ *   name       label carried into the error report, so a log line says which
+ *              boundary caught it ("route", "navbar", "root", ...)
+ *   fallback   (error, reset) => node, for boundaries whose failure should
+ *              not look like a whole page falling over (see Layout)
+ *   resetKeys  values that, when any changes, clear the error and re-render
+ *              the children. RouteErrorBoundary passes the pathname: without
+ *              this the fallback stays up forever once a route has thrown,
+ *              because navigating with the navbar swaps the children but
+ *              leaves this component - and its error state - mounted.
+ *   onReset    called after the boundary clears, for state the parent has to
+ *              undo itself
  */
 
 import React from "react";
+
+import { reportError } from "@/utils/errorReporter";
+
+function keysChanged(prev = [], next = []) {
+  if (prev.length !== next.length) return true;
+  return next.some((key, i) => !Object.is(key, prev[i]));
+}
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -23,14 +44,21 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    // No error-reporting service is wired up in this app yet, so the console
-    // is the only sink. Keep the component stack - it is the part that
-    // actually identifies which component threw.
-    console.error("Unhandled render error:", error, info?.componentStack);
+    reportError(error, {
+      boundary: this.props.name || "app",
+      componentStack: info?.componentStack,
+    });
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.state.error && keysChanged(prevProps.resetKeys, this.props.resetKeys)) {
+      this.handleReset();
+    }
   }
 
   handleReset = () => {
     this.setState({ error: null });
+    this.props.onReset?.();
   };
 
   render() {
