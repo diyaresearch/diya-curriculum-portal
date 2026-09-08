@@ -53,7 +53,6 @@ function resolveOwnerUid(data) {
 async function isAdminUser(uid) {
   if (!uid) return false;
   try {
-    await databaseService.initialize();
     const { snap } = await databaseService.getUserDocument(uid, TABLE_USERS);
     return Boolean(snap && snap.exists && snap.data().role === "admin");
   } catch (error) {

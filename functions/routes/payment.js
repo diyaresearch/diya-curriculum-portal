@@ -11,6 +11,7 @@ const {
 } = require("../utils/entitlements");
 
 const { requireStripe, getFunctionsConfig } = require("../utils/stripeClient");
+const { serverTimestamp, timestampFromDate } = require("../utils/timestamps");
 
 const router = express.Router();
 
@@ -69,7 +70,6 @@ router.post("/create-payment-intent", authenticateUser, strictLimiter, requireSt
             return res.status(400).json({ message: "Invalid plan type" });
         }
 
-        await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
@@ -106,7 +106,7 @@ router.post("/create-payment-intent", authenticateUser, strictLimiter, requireSt
             action: 'payment_intent_created',
             fromPlan: userData.subscriptionType || 'basic',
             toPlan: planType,
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            timestamp: serverTimestamp(admin),
             status: 'payment_intent_created',
             paymentIntentId: paymentIntent.id,
             amount: amount,
@@ -124,13 +124,12 @@ router.post("/create-payment-intent", authenticateUser, strictLimiter, requireSt
 
         // Log the error
         if (req.user?.uid) {
-            await databaseService.initialize();
             const db = databaseService.getDb();
             const admin = databaseService.getAdmin();
             await db.collection(TABLE_PAYMENT_LOGS).add({
                 userId: req.user.uid,
                 action: 'payment_intent_error',
-                timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+                timestamp: serverTimestamp(admin),
                 status: 'error',
                 error: error.message
             });
@@ -165,7 +164,6 @@ router.post("/create-module-checkout-session", authenticateUser, strictLimiter, 
       const APP_BASENAME = normalizeBasename(configuredBasename, "");
       const appBaseUrl = joinDomainAndBasename(domain, APP_BASENAME);
   
-      await databaseService.initialize();
       const db = databaseService.getDb();
 
       const moduleSnap = await db.collection(TABLE_MODULE).doc(moduleId).get();
@@ -326,7 +324,6 @@ router.post("/create-embedded-checkout-session", authenticateUser, strictLimiter
         return res.status(400).json({ message: "Invalid plan type" });
       }
   
-      await databaseService.initialize();
       const db = databaseService.getDb();
   
       const { snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
@@ -387,7 +384,6 @@ router.post("/confirm-payment", authenticateUser, strictLimiter, requireStripe, 
         }
         const { paymentIntent } = verification;
 
-        await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
@@ -411,7 +407,7 @@ router.post("/confirm-payment", authenticateUser, strictLimiter, requireStripe, 
             action: 'payment_confirmed',
             fromPlan: paymentIntent.metadata.upgradeFrom,
             toPlan: targetPlan,
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            timestamp: serverTimestamp(admin),
             status: 'completed',
             paymentIntentId: paymentIntentId,
             amount: paymentIntent.amount,
@@ -433,11 +429,11 @@ router.post("/confirm-payment", authenticateUser, strictLimiter, requireStripe, 
         await userRef.update({
             subscriptionType: targetPlan,
             subscriptionStatus: 'active',
-            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            subscriptionEndDate: admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate,
+            subscriptionStartDate: serverTimestamp(admin),
+            subscriptionEndDate: timestampFromDate(admin, endDate),
             stripePaymentIntentId: paymentIntentId,
             stripeCustomerId: paymentIntent.customer || null,
-            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            lastUpdated: serverTimestamp(admin),
             role: roleForPlan(targetPlan) || userData.role
         });
 
@@ -460,13 +456,12 @@ router.post("/confirm-payment", authenticateUser, strictLimiter, requireStripe, 
         console.error("Error confirming payment:", error);
 
         // Log the error
-        await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId: req.user.uid,
             action: 'payment_confirmation_error',
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            timestamp: serverTimestamp(admin),
             status: 'error',
             paymentIntentId: req.body.paymentIntentId,
             error: error.message
@@ -481,7 +476,6 @@ router.post("/confirm-payment", authenticateUser, strictLimiter, requireStripe, 
 router.get("/history", authenticateUser, async (req, res) => {
     try {
         const userId = req.user.uid;
-        await databaseService.initialize();
         const db = databaseService.getDb();
 
         const paymentHistory = await db.collection(TABLE_PAYMENT_LOGS)

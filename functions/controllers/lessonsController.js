@@ -1,16 +1,34 @@
-const { db, storage } = require("../config/firebaseConfig");
+/**
+ * Lessons — the `lesson` collection.
+ *
+ * Two conventions arrived here with #366. Firestore comes from
+ * databaseService rather than a module-load `require("../config/firebaseConfig")`,
+ * which is what forced CI to hand this file a credential (an unstarted
+ * emulator address) just to require it; and the owner-or-admin check is
+ * canMutate() from utils/ownership, which updateLesson and deleteLessonById
+ * each used to re-implement as a local `isAdmin` closure reading the users
+ * collection directly. See controllers/README.md.
+ */
+
 const PDFDocument = require("pdfkit");
+const { databaseService } = require("../services/databaseService");
+const { canMutate } = require("../utils/ownership");
 const { sanitizeHtml, sanitizeArray } = require("../utils/sanitizeHtml");
-const { sendError } = require("../utils/responseHelpers");
+const {
+  sendError,
+  sendAuthError,
+  sendAuthorizationError,
+  sendNotFoundError,
+} = require("../utils/responseHelpers");
 
 // Define the collections
 const TABLE_CONTENT = "content";
 const TABLE_LESSON = "lesson";
-const TABLE_USERS = "users";
 
 // Get all public lessons
 const getAllLessons = async (req, res) => {
   try {
+    const db = databaseService.getDb();
     const lessonsSnapshot = await db.collection(TABLE_LESSON).get();
     if (lessonsSnapshot.empty) {
       res.status(200).json([]);
@@ -34,6 +52,7 @@ const getAllLessons = async (req, res) => {
 // Get all lessons for admin
 const getAllLessonsAdmin = async (req, res) => {
   try {
+    const db = databaseService.getDb();
     const lessonsSnapshot = await db.collection(TABLE_LESSON).get();
     if (lessonsSnapshot.empty) {
       res.status(200).json([]);
@@ -55,11 +74,12 @@ const getLessonById = async (req, res) => {
   const lessonId = req.params.lessonId;
 
   try {
+    const db = databaseService.getDb();
     const lessonRef = db.collection(TABLE_LESSON).doc(lessonId);
     const doc = await lessonRef.get();
 
     if (!doc.exists) {
-      return res.status(404).json({ message: "Lesson not found." });
+      return sendNotFoundError(res, "Lesson");
     }
 
     res.status(200).json({ id: doc.id, ...doc.data() });
@@ -72,9 +92,10 @@ const getLessonById = async (req, res) => {
 //Get current user lesson plan
 const getUserLessons = async (req, res) => {
   try {
+    const db = databaseService.getDb();
     const userId = req.user ? req.user.uid : null;
     if (!userId) {
-      return res.status(401).send("Unauthorized");
+      return sendAuthError(res, "Authentication required");
     }
 
     const lessonRef = await db.collection(TABLE_LESSON).get();
@@ -100,12 +121,13 @@ const getUserLessons = async (req, res) => {
 
 const postLesson = async (req, res) => {
   try {
+    const db = databaseService.getDb();
     const formData = req.body;
 
     const authorId = req.user ? req.user.uid : null;
 
     if (!authorId) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return sendAuthError(res, "Authentication required");
     }
     const lessonRef = db.collection(TABLE_LESSON).doc();
 
@@ -134,38 +156,28 @@ const postLesson = async (req, res) => {
 
 const updateLesson = async (req, res) => {
   try {
+    const db = databaseService.getDb();
     const lessonId = req.params.lessonId;
     const formData = req.body;
     const requesterId = req.user ? req.user.uid : null;
 
     if (!requesterId) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return sendAuthError(res, "Authentication required");
     }
 
     const lessonRef = db.collection(TABLE_LESSON).doc(lessonId);
     const lessonSnapshot = await lessonRef.get();
 
     if (!lessonSnapshot.exists) {
-      return res.status(404).json({ error: "Lesson not found" });
+      return sendNotFoundError(res, "Lesson");
     }
 
     const lessonData = lessonSnapshot.data();
 
-    const isAdmin = async (uid) => {
-      try {
-        const teacherDoc = await db.collection(TABLE_USERS).doc(uid).get();
-        if (!teacherDoc.exists) return false;
-        const data = teacherDoc.data() || {};
-        return data.role === "admin";
-      } catch (e) {
-        console.error("Error checking admin role:", e);
-        return false;
-      }
-    };
-
-    const canEdit = lessonData.authorId === requesterId || (await isAdmin(requesterId));
-    if (!canEdit) {
-      return res.status(403).json({ error: "Forbidden" });
+    // canMutate resolves the owner from `authorId` and falls back to the
+    // admin check, which is what the local isAdmin closure here did (#366).
+    if (!(await canMutate(req, lessonData))) {
+      return sendAuthorizationError(res, "You do not have permission to edit this lesson");
     }
 
     const updateData = {
@@ -198,35 +210,23 @@ const deleteLessonById = async (req, res) => {
   const lessonId = req.params.lessonId;
 
   try {
+    const db = databaseService.getDb();
     const requesterId = req.user ? req.user.uid : null;
     if (!requesterId) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return sendAuthError(res, "Authentication required");
     }
 
     const lessonRef = db.collection(TABLE_LESSON).doc(lessonId);
     const doc = await lessonRef.get();
 
     if (!doc.exists) {
-      return res.status(404).json({ message: "Lesson not found." });
+      return sendNotFoundError(res, "Lesson");
     }
 
     const lessonData = doc.data() || {};
 
-    const isAdmin = async (uid) => {
-      try {
-        const teacherDoc = await db.collection(TABLE_USERS).doc(uid).get();
-        if (!teacherDoc.exists) return false;
-        const data = teacherDoc.data() || {};
-        return data.role === "admin";
-      } catch (e) {
-        console.error("Error checking admin role:", e);
-        return false;
-      }
-    };
-
-    const canDelete = lessonData.authorId === requesterId || (await isAdmin(requesterId));
-    if (!canDelete) {
-      return res.status(403).json({ error: "Forbidden" });
+    if (!(await canMutate(req, lessonData))) {
+      return sendAuthorizationError(res, "You do not have permission to delete this lesson");
     }
 
     await lessonRef.delete();
@@ -242,11 +242,12 @@ const downloadPDF = async (req, res) => {
   const lessonId = req.params.lessonId;
 
   try {
+    const db = databaseService.getDb();
     const lessonRef = db.collection(TABLE_LESSON).doc(lessonId);
     const doc = await lessonRef.get();
 
     if (!doc.exists) {
-      return res.status(404).json({ message: "Lesson not found." });
+      return sendNotFoundError(res, "Lesson");
     }
 
     const lessonData = doc.data();

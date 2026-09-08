@@ -1,5 +1,5 @@
 const express = require("express");
-const { getAllModules, getModuleById, createModule, editModule, deleteModule, listMyEntitlements } = require("../controllers/moduleController");
+const { getAllModules, getModuleById, createModule, editModule, deleteModule, listMyEntitlements } = require("../controllers/modulesController");
 const authenticateUser = require("../middleware/authenticateUser");
 const optionalAuth = require("../middleware/optionalAuth");
 

@@ -11,6 +11,7 @@
  */
 
 const { getStripe } = require("../utils/stripeClient");
+const { serverTimestamp } = require("../utils/timestamps");
 
 // Firestore through the one Admin SDK initialization (issue #362). This used
 // to call a bare admin.initializeApp() of its own, which ignored the
@@ -24,6 +25,11 @@ const { getStripe } = require("../utils/stripeClient");
 // Firebase as a side effect.
 function getDb() {
   return require("../config/firebaseConfig").db;
+}
+
+/** Server-side write timestamp, with firebase-admin required as lazily as above. */
+function stamp() {
+  return serverTimestamp(require("firebase-admin"));
 }
 
 function getWebhookSecretCandidates() {
@@ -123,8 +129,8 @@ async function stripeWebhookHandler(req, res) {
             amountTotal,
             amountTotalCents,
             currency: session.currency || null,
-            createdAt: require("firebase-admin").firestore.FieldValue.serverTimestamp(),
-            completedAt: require("firebase-admin").firestore.FieldValue.serverTimestamp(),
+            createdAt: stamp(),
+            completedAt: stamp(),
             lastEventType: "checkout.session.completed",
           },
           { merge: true }
@@ -231,8 +237,8 @@ async function stripeWebhookHandler(req, res) {
             amount,
             amountCents,
             currency: pi.currency || null,
-            createdAt: require("firebase-admin").firestore.FieldValue.serverTimestamp(),
-            paidAt: require("firebase-admin").firestore.FieldValue.serverTimestamp(),
+            createdAt: stamp(),
+            paidAt: stamp(),
             lastEventType: "payment_intent.succeeded",
           },
           { merge: true }

@@ -3,9 +3,9 @@ const authenticateUser = require("../middleware/authenticateUser");
 const { databaseService } = require("../services/databaseService");
 const { requireAdmin } = require("../middleware/requireRole");
 const { strictLimiter } = require("../middleware/rateLimiter");
-const { findUserDocument } = require("../utils/identityCollections");
 const { syncRoleClaim } = require("../utils/customClaims");
 const { getStripe, requireStripe } = require("../utils/stripeClient");
+const { serverTimestamp, timestampFromDate } = require("../utils/timestamps");
 const {
     roleForPlan,
     subscriptionEndDate,
@@ -28,14 +28,12 @@ router.get("/test", (req, res) => {
 router.get("/status", authenticateUser, async (req, res) => {
     try {
         const userId = req.user.uid;
-        await databaseService.initialize();
-        const db = databaseService.getDb();
-        const admin = databaseService.getAdmin();
 
-        // Qualified identity collections, with an unprefixed fallback (#427).
-        const found = await findUserDocument(db, userId, TABLE_USERS);
-        const userRef = found.ref;
-        const userSnap = found.snap;
+        // One user lookup helper for the whole backend (#396). This route
+        // used to call findUserDocument(db, ...) itself, which is why it
+        // reached for a db handle at all; that handle, and the admin one
+        // beside it, were the only things it needed either of them for.
+        const { snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
 
         if (!userSnap.exists) {
             return res.status(404).json({ message: "User not found" });
@@ -70,12 +68,10 @@ router.post("/initiate-upgrade", authenticateUser, strictLimiter, async (req, re
             return res.status(400).json({ message: "Invalid target plan" });
         }
 
-        await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Qualified identity collections, with an unprefixed fallback (#427).
-        const found = await findUserDocument(db, userId, TABLE_USERS);
+        const found = await databaseService.getUserDocument(userId, TABLE_USERS);
         let userRef = found.ref;
         let userSnap = found.snap;
         let collectionName = found.collection;
@@ -93,7 +89,7 @@ router.post("/initiate-upgrade", authenticateUser, strictLimiter, async (req, re
             action: 'upgrade_initiated',
             fromPlan: currentPlan,
             toPlan: targetPlan,
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            timestamp: serverTimestamp(admin),
             status: 'initiated',
             userEmail: userData.email
         });
@@ -152,7 +148,6 @@ router.post("/complete-upgrade", authenticateUser, strictLimiter, requireStripe,
         }
         const { paymentIntent } = verification;
 
-        await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
@@ -175,7 +170,7 @@ router.post("/complete-upgrade", authenticateUser, strictLimiter, requireStripe,
             action: 'upgrade_completed',
             fromPlan: currentPlan,
             toPlan: targetPlan,
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            timestamp: serverTimestamp(admin),
             status: 'completed',
             paymentIntentId,
             upgradeSessionId: upgradeSessionId || null,
@@ -196,15 +191,15 @@ router.post("/complete-upgrade", authenticateUser, strictLimiter, requireStripe,
         const updateData = {
             subscriptionType: targetPlan,
             subscriptionStatus: 'active',
-            subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            subscriptionStartDate: serverTimestamp(admin),
+            lastUpdated: serverTimestamp(admin),
             role: roleForPlan(targetPlan) || userData.role
         };
 
         if (targetPlan === 'premium' || targetPlan === 'premiumYearly') {
             const endDate = subscriptionEndDate(targetPlan);
             updateData.subscriptionEndDate =
-                admin.firestore?.Timestamp?.fromDate?.(endDate) || endDate;
+                timestampFromDate(admin, endDate);
             updateData.stripePaymentIntentId = paymentIntentId;
             updateData.stripeCustomerId = paymentIntent.customer || null;
         }
@@ -230,12 +225,10 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
         const userId = req.user.uid;
         const { message, contactPreference } = req.body;
 
-        await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Qualified identity collections, with an unprefixed fallback (#427).
-        const found = await findUserDocument(db, userId, TABLE_USERS);
+        const found = await databaseService.getUserDocument(userId, TABLE_USERS);
         const userRef = found.ref;
         const userSnap = found.snap;
 
@@ -253,7 +246,7 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
             institution: userData.institution,
             message: message || '',
             contactPreference: contactPreference || 'email',
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            timestamp: serverTimestamp(admin),
             status: 'pending'
         });
 
@@ -263,7 +256,7 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
             action: 'enterprise_contact_requested',
             fromPlan: userData.subscriptionType || 'basic',
             toPlan: 'enterprise',
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            timestamp: serverTimestamp(admin),
             status: 'contact_requested',
             userEmail: userData.email
         });
@@ -284,7 +277,6 @@ router.post("/enterprise-contact", authenticateUser, async (req, res) => {
 // that databaseService.getUserDocument already performs.
 router.get("/admin/logs", authenticateUser, requireAdmin, async (req, res) => {
     try {
-        await databaseService.initialize();
         const db = databaseService.getDb();
 
         const logsSnapshot = await db.collection(TABLE_PAYMENT_LOGS)
@@ -312,12 +304,10 @@ router.post("/cancel", authenticateUser, async (req, res) => {
         const userId = req.user.uid;
         const { reason, feedback } = req.body; // Optional cancellation reason and feedback
 
-        await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Qualified identity collections, with an unprefixed fallback (#427).
-        const found = await findUserDocument(db, userId, TABLE_USERS);
+        const found = await databaseService.getUserDocument(userId, TABLE_USERS);
         let userRef = found.ref;
         let userSnap = found.snap;
         let collectionName = found.collection;
@@ -354,11 +344,11 @@ router.post("/cancel", authenticateUser, async (req, res) => {
         const updateData = {
             subscriptionType: 'basic', // Downgrade to basic
             subscriptionStatus: 'cancelled',
-            subscriptionEndDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(), // End immediately
-            cancelledAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            subscriptionEndDate: serverTimestamp(admin), // End immediately
+            cancelledAt: serverTimestamp(admin),
             cancellationReason: reason || null,
             cancellationFeedback: feedback || null,
-            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            lastUpdated: serverTimestamp(admin),
             role: 'teacherDefault' // Reset to default role
         };
 
@@ -370,7 +360,7 @@ router.post("/cancel", authenticateUser, async (req, res) => {
             action: 'subscription_cancelled',
             fromPlan: currentPlan,
             toPlan: 'basic',
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            timestamp: serverTimestamp(admin),
             status: 'cancelled',
             reason: reason || null,
             feedback: feedback || null,
@@ -394,12 +384,10 @@ router.post("/cancel", authenticateUser, async (req, res) => {
 router.post("/reactivate", authenticateUser, async (req, res) => {
     try {
         const userId = req.user.uid;
-        await databaseService.initialize();
         const db = databaseService.getDb();
         const admin = databaseService.getAdmin();
 
-        // Qualified identity collections, with an unprefixed fallback (#427).
-        const found = await findUserDocument(db, userId, TABLE_USERS);
+        const found = await databaseService.getUserDocument(userId, TABLE_USERS);
         const userRef = found.ref;
         const userSnap = found.snap;
 
@@ -419,8 +407,8 @@ router.post("/reactivate", authenticateUser, async (req, res) => {
         // Reactivate subscription (this would typically require a new payment)
         const updateData = {
             subscriptionStatus: 'active',
-            reactivatedAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-            lastUpdated: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date()
+            reactivatedAt: serverTimestamp(admin),
+            lastUpdated: serverTimestamp(admin)
         };
 
         await userRef.update(updateData);
@@ -429,7 +417,7 @@ router.post("/reactivate", authenticateUser, async (req, res) => {
         await db.collection(TABLE_PAYMENT_LOGS).add({
             userId,
             action: 'subscription_reactivated',
-            timestamp: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+            timestamp: serverTimestamp(admin),
             status: 'reactivated',
             userEmail: userData.email
         });

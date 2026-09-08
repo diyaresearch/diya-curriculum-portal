@@ -14,9 +14,14 @@ backend, and everything reaches Firestore or Storage through it:
 
 | Caller | How it gets a handle |
 |---|---|
-| `controllers/*` | `const { db, storage } = require("../config/firebaseConfig")` |
-| `routes/*`, `middleware/*` | `await databaseService.initialize()` then `databaseService.getDb()` — the same app, plus the mock mode below |
+| `controllers/*`, `routes/*`, `middleware/*` | `databaseService.getDb()`, inside the handler — the same app, plus the mock mode below. `middleware/ensureDatabase.js` has already initialized it (#396), so no `await databaseService.initialize()` at the call site. |
 | `routes/stripeWebhook.js` | `require("../config/firebaseConfig").db`, lazily. Never `databaseService`: a payment event must reach real Firestore or fail, and that layer can serve mock data in development. |
+
+Controllers used to require `{ db, storage }` from `config/firebaseConfig` at
+module load, which resolved a real credential the moment the file was
+required — defeating `ENABLE_MOCK_FIREBASE` and forcing CI to hand the API an
+emulator address just to boot it. #366 moved them onto `databaseService`;
+nothing in the app now loads `config/firebaseConfig` at require time.
 
 `services/databaseService.js` does not initialize anything itself; its real
 (non-mock) mode delegates to `config/firebaseConfig`. Mock mode

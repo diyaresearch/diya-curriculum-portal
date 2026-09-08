@@ -5,6 +5,7 @@
 
 const { handleFirebaseError } = require('../middleware/errorHandler');
 const { findUserDocument } = require('../utils/identityCollections');
+const { serverTimestamp } = require('../utils/timestamps');
 const {
   resolveCredential,
   hasCredentialSource,
@@ -21,16 +22,41 @@ class DatabaseService {
     this.isInitialized = false;
     this.isMocked = false;
     this.credentialSource = null;
+    this.initPromise = null;
   }
 
   /**
-   * Initialize the database service based on environment
+   * Initialize the database service based on environment.
+   *
+   * Safe to call from anywhere, any number of times, concurrently: the first
+   * call owns the work and every later one awaits the same promise. The
+   * boolean guard alone was not enough — it is only set after the async body
+   * finishes, so N requests arriving during a cold start each began their own
+   * initializeApp() race (#396). app.js calls this once at startup so the
+   * first request finds it already resolved.
+   *
+   * A failed initialization is not cached: the promise is cleared so the next
+   * caller retries rather than inheriting a permanently poisoned service.
    */
   async initialize() {
     if (this.isInitialized) {
       return;
     }
 
+    if (!this.initPromise) {
+      this.initPromise = this.performInitialization().catch((error) => {
+        this.initPromise = null;
+        throw error;
+      });
+    }
+
+    return this.initPromise;
+  }
+
+  /**
+   * The actual initialization. Call initialize(), not this.
+   */
+  async performInitialization() {
     const env = process.env.NODE_ENV || 'development';
     const mockRequested = process.env.ENABLE_MOCK_FIREBASE === 'true' || env === 'test';
     const enableMockMode = mockRequested || !this.hasValidFirebaseConfig();
@@ -247,8 +273,8 @@ class DatabaseService {
 
       const dataWithTimestamp = {
         ...userData,
-        createdAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-        updatedAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date()
+        createdAt: serverTimestamp(admin),
+        updatedAt: serverTimestamp(admin)
       };
 
       await userRef.set(dataWithTimestamp);
@@ -273,7 +299,7 @@ class DatabaseService {
 
       const dataWithTimestamp = {
         ...updateData,
-        updatedAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date()
+        updatedAt: serverTimestamp(admin)
       };
 
       await userRef.update(dataWithTimestamp);

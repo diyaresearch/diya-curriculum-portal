@@ -5,6 +5,7 @@ const { strictLimiter } = require("../middleware/rateLimiter");
 const { databaseService } = require("../services/databaseService");
 const { isAdminUser } = require("../utils/ownership");
 const { syncRoleClaim } = require("../utils/customClaims");
+const { serverTimestamp } = require("../utils/timestamps");
 const {
   sendSuccess,
   sendError,
@@ -31,9 +32,6 @@ router.get("/me", authenticateUser, asyncHandler(async (req, res) => {
   const userId = req.user.uid;
 
   try {
-    // Initialize database service if needed
-    await databaseService.initialize();
-
     // Use the database service's getUserDocument method
     const { snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
 
@@ -51,9 +49,6 @@ router.get("/me", authenticateUser, asyncHandler(async (req, res) => {
 
 // Get all users (admin only) - MUST come before /:userId route
 router.get("/users", authenticateUser, requireAdmin, asyncHandler(async (req, res) => {
-  // Initialize database service if needed
-  await databaseService.initialize();
-
   try {
     // Get pagination parameters
     const page = parseInt(req.query.page) || 1;
@@ -129,9 +124,6 @@ router.get("/:userId", authenticateUser, asyncHandler(async (req, res) => {
   }
 */
 
-
-  // Initialize database service if needed
-  await databaseService.initialize();
 
   try {
     const db = databaseService.getDb();
@@ -211,9 +203,6 @@ router.post("/register", authenticateUser, strictLimiter, asyncHandler(async (re
     return sendValidationError(res, "Registration validation failed", validationErrors);
   }
 
-  // Initialize database service if needed
-  await databaseService.initialize();
-
   try {
     const db = databaseService.getDb();
     const admin = databaseService.getAdmin();
@@ -243,8 +232,8 @@ router.post("/register", authenticateUser, strictLimiter, asyncHandler(async (re
       role,
       subscriptionType: 'basic',
       subscriptionStatus: 'active',
-      subscriptionStartDate: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
-      createdAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date()
+      subscriptionStartDate: serverTimestamp(admin),
+      createdAt: serverTimestamp(admin)
     };
 
     await userRef.set(newUser);
@@ -305,9 +294,6 @@ router.put("/update", authenticateUser, asyncHandler(async (req, res) => {
     return sendValidationError(res, "Update validation failed", validationErrors);
   }
 
-  // Initialize database service if needed
-  await databaseService.initialize();
-
   try {
     const db = databaseService.getDb();
     const admin = databaseService.getAdmin();
@@ -329,7 +315,7 @@ router.put("/update", authenticateUser, asyncHandler(async (req, res) => {
     if (subjects !== undefined) updateData.subjects = subjects;
 
     // Add update timestamp
-    updateData.updatedAt = admin.firestore?.FieldValue?.serverTimestamp?.() || new Date();
+    updateData.updatedAt = serverTimestamp(admin);
 
     await userRef.update(updateData);
 
@@ -372,9 +358,6 @@ router.put("/updateRole", authenticateUser, requireAdmin, asyncHandler(async (re
     return sendValidationError(res, "Role update validation failed", validationErrors);
   }
 
-  // Initialize database service if needed
-  await databaseService.initialize();
-
   try {
     const db = databaseService.getDb();
     const admin = databaseService.getAdmin();
@@ -409,7 +392,7 @@ router.put("/updateRole", authenticateUser, requireAdmin, asyncHandler(async (re
     // Update role with timestamp
     await targetUserRef.update({
       role: newRole,
-      roleUpdatedAt: admin.firestore?.FieldValue?.serverTimestamp?.() || new Date(),
+      roleUpdatedAt: serverTimestamp(admin),
       roleUpdatedBy: req.user.uid
     });
 

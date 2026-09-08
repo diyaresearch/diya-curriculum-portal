@@ -1,7 +1,7 @@
 /**
  * Error response consistency (issue #394).
  *
- * moduleController.js, lessonsController.js, and content_submission.js
+ * modulesController.js, lessonsController.js, and the units handlers
  * used to leak the raw error.message straight to the client via
  * `res.status(500).send(error.message)` - the same, unconditionally, in
  * every environment, unlike the standardized sendError()/createErrorResponse()
@@ -25,7 +25,7 @@ jest.mock("../services/databaseService", () => ({
   },
 }));
 
-jest.mock("../utils/ownership", () => ({ canMutate: jest.fn() }));
+jest.mock("../utils/ownership", () => ({ canMutate: jest.fn(), resolveOwnerUid: jest.fn() }));
 jest.mock("../utils/entitlements.check", () => ({
   canAccessModule: jest.fn(),
   isPaidModule: jest.fn(),
@@ -38,7 +38,7 @@ function appFor(router, mountPath = "/") {
   return a;
 }
 
-describe("#394 — moduleController error responses", () => {
+describe("#394 — modulesController error responses", () => {
   const originalEnv = process.env.NODE_ENV;
   afterEach(() => {
     process.env.NODE_ENV = originalEnv;
@@ -46,7 +46,7 @@ describe("#394 — moduleController error responses", () => {
 
   test("GET /api/module returns the standard envelope, not a leaked error.message", async () => {
     process.env.NODE_ENV = "development";
-    const { getAllModules } = require("../controllers/moduleController");
+    const { getAllModules } = require("../controllers/modulesController");
     const a = express();
     a.get("/api/module", getAllModules);
 
@@ -65,7 +65,7 @@ describe("#394 — moduleController error responses", () => {
   test("the same error hides its detail in production", async () => {
     process.env.NODE_ENV = "production";
     jest.resetModules();
-    const { getAllModules } = require("../controllers/moduleController");
+    const { getAllModules } = require("../controllers/modulesController");
     const a = express();
     a.get("/api/module", getAllModules);
 
@@ -74,6 +74,82 @@ describe("#394 — moduleController error responses", () => {
     expect(res.status).toBe(500);
     expect(res.body.error.message).toBe("Failed to fetch modules");
     expect(res.body.error.details).toBeUndefined();
+    expect(JSON.stringify(res.body)).not.toContain("secret internal detail");
+  });
+});
+
+// #366 gave the units and lessons controllers the same catch blocks. Both
+// used to answer with res.status(500).send(error.message) — the raw driver
+// error, in production too. The header above claimed all three files were
+// covered; only the module one actually was.
+describe("#366 — unitsController error responses", () => {
+  const originalEnv = process.env.NODE_ENV;
+  afterEach(() => {
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  test("GET /api/units returns the standard envelope", async () => {
+    process.env.NODE_ENV = "development";
+    const { getAllUnits } = require("../controllers/unitsController");
+    const a = express();
+    a.get("/api/units", getAllUnits);
+
+    const res = await request(a).get("/api/units");
+
+    expect(res.status).toBe(500);
+    expect(res.body).toMatchObject({
+      success: false,
+      statusCode: 500,
+      error: { code: "UNIT_FETCH_ERROR", message: "Failed to fetch units" },
+    });
+  });
+
+  test("the same error hides its detail in production", async () => {
+    process.env.NODE_ENV = "production";
+    jest.resetModules();
+    const { getAllUnits } = require("../controllers/unitsController");
+    const a = express();
+    a.get("/api/units", getAllUnits);
+
+    const res = await request(a).get("/api/units");
+
+    expect(res.status).toBe(500);
+    expect(JSON.stringify(res.body)).not.toContain("secret internal detail");
+  });
+});
+
+describe("#366 — lessonsController error responses", () => {
+  const originalEnv = process.env.NODE_ENV;
+  afterEach(() => {
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  test("GET /api/lessons returns the standard envelope", async () => {
+    process.env.NODE_ENV = "development";
+    const { getAllLessons } = require("../controllers/lessonsController");
+    const a = express();
+    a.get("/api/lessons", getAllLessons);
+
+    const res = await request(a).get("/api/lessons");
+
+    expect(res.status).toBe(500);
+    expect(res.body).toMatchObject({
+      success: false,
+      statusCode: 500,
+      error: { code: "LESSON_FETCH_ERROR", message: "Failed to fetch lessons" },
+    });
+  });
+
+  test("the same error hides its detail in production", async () => {
+    process.env.NODE_ENV = "production";
+    jest.resetModules();
+    const { getAllLessons } = require("../controllers/lessonsController");
+    const a = express();
+    a.get("/api/lessons", getAllLessons);
+
+    const res = await request(a).get("/api/lessons");
+
+    expect(res.status).toBe(500);
     expect(JSON.stringify(res.body)).not.toContain("secret internal detail");
   });
 });
