@@ -7,6 +7,35 @@ identity is chosen, set up, and diagnosed.
 Written after issue #418, where an expired downloaded key silently took down
 every Firestore-backed API route in production and locally.
 
+## Where initialization happens
+
+`config/firebaseConfig.js` holds the **only** `admin.initializeApp()` in this
+backend, and everything reaches Firestore or Storage through it:
+
+| Caller | How it gets a handle |
+|---|---|
+| `controllers/*` | `const { db, storage } = require("../config/firebaseConfig")` |
+| `routes/*`, `middleware/*` | `await databaseService.initialize()` then `databaseService.getDb()` — the same app, plus the mock mode below |
+| `routes/stripeWebhook.js` | `require("../config/firebaseConfig").db`, lazily. Never `databaseService`: a payment event must reach real Firestore or fail, and that layer can serve mock data in development. |
+
+`services/databaseService.js` does not initialize anything itself; its real
+(non-mock) mode delegates to `config/firebaseConfig`. Mock mode
+(`ENABLE_MOCK_FIREBASE=true`, or development with no credential at all) never
+touches the Admin SDK.
+
+Until #362, `routes/payment.js` and `routes/stripeWebhook.js` each called a
+bare `admin.initializeApp()` of their own. The Admin SDK keeps one default
+app, so whichever module loaded first decided the credential for the entire
+process — and a bare call ignores the precedence below entirely, which meant
+a request landing on the webhook first could bind the process to a different
+identity than every other route had resolved. `__tests__/single-firebase-init.test.js`
+fails if a second initialization site reappears.
+
+The client SDK is configured separately and shares nothing with this file —
+see `portal-app/src/firebase/firebaseConfig.js`, which reads public
+`VITE_FIREBASE_*` values out of the bundle. Admin credentials never appear in
+the frontend.
+
 ## How the credential is chosen
 
 `config/credentials.js` resolves exactly one credential, highest priority first:

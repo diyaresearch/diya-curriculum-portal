@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { getFirestore, doc, getDoc, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import DOMPurify from "dompurify";
-import { app as firebaseApp } from "@/firebase/firebaseConfig";
+import { db } from "@/firebase/firebaseConfig";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import BackButton from "@/components/ui/BackButton";
 import MetaChipsRow from "@/components/ui/MetaChipsRow";
@@ -58,7 +58,6 @@ const ContentDetails = () => {
 
     const fetchContent = async () => {
       try {
-        const db = getFirestore(firebaseApp);
         const snap = await getDoc(doc(db, COLLECTIONS.content, id));
         if (cancelled) return;
 
@@ -110,7 +109,6 @@ const ContentDetails = () => {
     try {
       if (!id) return;
       setIsDeleting(true);
-      const db = getFirestore(firebaseApp);
       await deleteDoc(doc(db, COLLECTIONS.content, id));
       setIsDeleteModalOpen(false);
 

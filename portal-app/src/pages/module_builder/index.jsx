@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "@/components/ui/Modal";
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
@@ -99,7 +100,6 @@ export const UploadContent = ({
     }
 
     try {
-      const db = getFirestore();
       const htmlDescription = formData.Abstract; // This is the HTML from ReactQuill
 
       const docRef = await addDoc(collection(db, COLLECTIONS.content), {

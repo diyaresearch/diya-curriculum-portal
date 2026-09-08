@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { getFirestore, doc, deleteDoc } from "firebase/firestore";
+import { doc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { db } from "@/firebase/firebaseConfig";
 import "react-quill-new/dist/quill.snow.css";
 import useUserData from "@/hooks/useUserData";
 import DOMPurify from "dompurify";
@@ -660,7 +661,6 @@ const ModuleDetail = () => {
   const handleDeleteModule = async () => {
     try {
       setIsDeleting(true);
-      const db = getFirestore();
       await deleteDoc(doc(db, COLLECTIONS.module, moduleId));
       setIsDeleteModalOpen(false);
 

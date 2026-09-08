@@ -5,8 +5,8 @@ import laptopImg from "@/assets/laptop.png";
 import physicsImg from "@/assets/finphysics.png";
 import textbooksImg from "@/assets/textbooks.png";
 import softwareEngImg from "@/assets/software_engineering.png";
-import { getFirestore, collection, getDocs, query, where, limit } from "firebase/firestore";
-import { app as firebaseApp } from "@/firebase/firebaseConfig";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { useLocation, useNavigate } from "react-router-dom";
 import { startGoogleRedirect } from "@/auth/googleAuth";
@@ -581,7 +581,6 @@ const ExploreModulesSection = () => {
 
   // Fetch all data on mount
   useEffect(() => {
-    const db = getFirestore(firebaseApp);
 
     // Fetch modules - FIXED VERSION
     getDocs(collection(db, COLLECTIONS.module)).then(snapshot => {
@@ -627,7 +626,6 @@ const ExploreModulesSection = () => {
   // Featured modules: load modules explicitly marked `isFeatured == true`.
   useEffect(() => {
     let cancelled = false;
-    const db = getFirestore(firebaseApp);
     (async () => {
       try {
         const q = query(

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
-import { app as firebaseApp } from "@/firebase/firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import { CAROUSEL_CONFIG } from "@/constants/testimonialData";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import useUserRole from "@/hooks/useUserRole";
@@ -699,7 +699,6 @@ const TestimonialsSection = () => {
     let cancelled = false;
     const fetchTestimonials = async () => {
       try {
-        const db = getFirestore(firebaseApp);
         const querySnapshot = await getDocs(collection(db, COLLECTIONS.testimonials));
         if (cancelled) return;
         const data = [];
