@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { app as firebaseApp } from '@/firebase/firebaseConfig';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/firebase/firebaseConfig';
 import { COLLECTIONS } from '@/firebase/collectionNames';
 
 import {
@@ -13,6 +13,7 @@ import {
 
 import laptopImg from '@/assets/laptop.png';
 import Loading from "@/components/ui/Loading";
+import { ROLES } from "@/constants/roles";
 
 function normalizeBoolean(value) {
     if (value === true) return true;
@@ -54,7 +55,7 @@ const TeacherPlusPage = () => {
         (user?.email ? user.email.split("@")[0] : "TeacherPlus User");
 
     useEffect(() => {
-        if (!loading && (!user || (role !== 'teacherPlus' && role !== 'admin'))) {
+        if (!loading && (!user || (role !== ROLES.TEACHER_PLUS && role !== ROLES.ADMIN))) {
             navigate('/');
         }
     }, [user, role, loading, navigate]);
@@ -97,7 +98,6 @@ const TeacherPlusPage = () => {
     useEffect(() => {
         if (!user) return; // Don't fetch if user is not logged in
 
-        const db = getFirestore(firebaseApp);
 
         // Fetch all modules for the filter section
         getDocs(collection(db, COLLECTIONS.module)).then(snapshot => {

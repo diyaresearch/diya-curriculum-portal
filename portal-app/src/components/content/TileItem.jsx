@@ -1,4 +1,5 @@
 import React from "react";
+import { ROLES } from "@/constants/roles";
 
 const TileItem = ({
   id,
@@ -39,7 +40,7 @@ const TileItem = ({
       onClick={handleContentClick}
     >
       <div className="absolute top-2 right-2 flex gap-2">
-        {!isLessonGenerator && userRole === "admin" && (
+        {!isLessonGenerator && userRole === ROLES.ADMIN && (
           <button
             onClick={handleDelete}
             className="text-gray-400 hover:text-red-500 transition-colors duration-200"
@@ -62,7 +63,7 @@ const TileItem = ({
           </button>
         )}
       </div>
-      {!isLessonGenerator && userRole === "admin" && (
+      {!isLessonGenerator && userRole === ROLES.ADMIN && (
         <div className="absolute top-2 left-2" onClick={(e) => e.stopPropagation()}>
           <input
             type="checkbox"

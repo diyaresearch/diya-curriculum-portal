@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import defaultProfileIcon from "@/assets/default_user_icon.png";
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
+import { ROLES } from "@/constants/roles";
 
 const UserProfile = () => {
   const toast = useToast();
@@ -70,7 +71,7 @@ const UserProfile = () => {
   }, [user]);
 
   useEffect(() => {
-    if (formData.role === "admin") {
+    if (formData.role === ROLES.ADMIN) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
       fetchAdminData();
     }
@@ -256,7 +257,7 @@ const UserProfile = () => {
       </form>
 
       {/* Admin setting */}
-      {formData.role === "admin" && (
+      {formData.role === ROLES.ADMIN && (
         <div className="mt-10">
           <h3 className="text-xl font-bold mb-4">Admin Settings</h3>
           <div className="flex space-x-4 border-b">
@@ -323,13 +324,13 @@ const UserProfile = () => {
                       <div className="space-y-2">
                         <button
                           className="w-full bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600"
-                          onClick={() => confirmRoleChange("teacherDefault")}
+                          onClick={() => confirmRoleChange(ROLES.TEACHER_DEFAULT)}
                         >
                           Set as TeacherDefault
                         </button>
                         <button
                           className="w-full bg-purple-500 text-white px-3 py-2 rounded hover:bg-purple-600"
-                          onClick={() => confirmRoleChange("teacherPlus")}
+                          onClick={() => confirmRoleChange(ROLES.TEACHER_PLUS)}
                         >
                           Set as TeacherPlus
                         </button>

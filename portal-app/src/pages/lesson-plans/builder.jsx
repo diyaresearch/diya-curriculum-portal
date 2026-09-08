@@ -2,7 +2,8 @@ import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "@/components/ui/Modal";
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, getDocs, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, setDoc, doc, serverTimestamp, deleteDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import OverlayTileView from "@/components/content/OverlayTileView";
 import UploadContent from "@/pages/upload-content/index";
 import useUserData from "@/hooks/useUserData";
@@ -19,6 +20,7 @@ import { toUserMessage } from "@/utils/errorMessage";
 import FieldError from "@/components/ui/FieldError";
 import useFormValidation from "@/hooks/useFormValidation";
 import { everyItem, required, requiredRichText } from "@/utils/validators";
+import { ROLES } from "@/constants/roles";
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -114,7 +116,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     try {
       const snap = await getDocs(collection(db, COLLECTIONS.content));
       const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      if (role === "admin") {
+      if (role === ROLES.ADMIN) {
         setPortalContent(all);
         return;
       }
@@ -131,7 +133,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
   // provider (#368) rather than a listener this page opens for itself.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-    loadNuggetsForOverlay(getFirestore(), user, userData?.role);
+    loadNuggetsForOverlay(db, user, userData?.role);
   }, [loadNuggetsForOverlay, user, userData?.role]);
 
   // Load draft from localStorage if present (skip when editing an existing lesson)
@@ -286,7 +288,6 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
       toast.error("You must be logged in to save a draft.");
       return;
     }
-    const db = getFirestore();
     const draftData = {
       ...formData,
       objectives,
@@ -390,7 +391,6 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
 
       // Remove the draft from Firestore if it exists
       if (!editLessonId && formData.id) {
-        const db = getFirestore();
         await deleteDoc(doc(db, COLLECTIONS.lesson, formData.id));
       }
 
@@ -482,7 +482,6 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
   };
 
   const reloadUserNuggets = async () => {
-    const db = getFirestore();
     const auth = getAuth();
     const user = auth.currentUser;
     await loadNuggetsForOverlay(db, user, userData?.role);

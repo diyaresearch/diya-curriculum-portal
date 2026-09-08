@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import aiExploreImg from "@/assets/ChatGPT Image Jun 13, 2025, 02_04_24 PM.png";
 import aiExploreImg3 from "@/assets/ChatGPT Image Jun 13, 2025, 02_25_51 PM.png";
 import laptopImg from "@/assets/laptop.png";
 import physicsImg from "@/assets/finphysics.png";
 import textbooksImg from "@/assets/textbooks.png";
 import softwareEngImg from "@/assets/software_engineering.png";
-import { getFirestore, collection, getDocs, query, where, limit } from "firebase/firestore";
-import { app as firebaseApp } from "@/firebase/firebaseConfig";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { useLocation, useNavigate } from "react-router-dom";
 import { startGoogleRedirect } from "@/auth/googleAuth";
 import useUserRole from "@/hooks/useUserRole";
 import { useToast } from "@/components/ui/ToastProvider";
 import Modal from "@/components/ui/Modal";
+import { ROLES, PREMIUM_ROLES } from "@/constants/roles";
 
 function isModuleVisibleToViewer(moduleItem, viewerUser) {
   if (!moduleItem || moduleItem._type !== "Module") return true;
@@ -179,6 +180,10 @@ const MODULE_CATEGORIES = [
 ];
 const MODULE_LEVELS = ["All", "Basic", "Intermediate", "Advanced"];
 
+// Resize fires continuously while a window is dragged; coalesce the burst into
+// one state update (issue #413).
+const RESIZE_DEBOUNCE_MS = 150;
+
 // Add this constant outside the component, near the top of the file:
 const MODULE_POPUP_INFO = [
   {
@@ -262,6 +267,44 @@ function buildFeaturedTileFromDoc(docSnap) {
     featuredImageUrl: String(featuredImageUrl || ""),
     featuredOrder,
     isDraft,
+  };
+}
+
+// Featured-module grid geometry. The breakpoints were repeated inline across
+// the grid container and every card, so a change had to be made in several
+// places at once (issue #413).
+const FEATURED_CARD_WIDTH = 340;
+const FEATURED_BREAKPOINT_WIDE = 1200;
+const FEATURED_BREAKPOINT_MEDIUM = 800;
+
+function getFeaturedGridStyle(screenSize) {
+  const columns = screenSize >= FEATURED_BREAKPOINT_WIDE ? 3 : screenSize >= FEATURED_BREAKPOINT_MEDIUM ? 2 : 1;
+  return {
+    display: "grid",
+    gridTemplateColumns: `repeat(${columns}, ${FEATURED_CARD_WIDTH}px)`,
+    gap: screenSize >= FEATURED_BREAKPOINT_MEDIUM ? "40px" : "20px",
+    width: "100%",
+    maxWidth: screenSize >= FEATURED_BREAKPOINT_WIDE ? "1200px" : screenSize >= FEATURED_BREAKPOINT_MEDIUM ? "800px" : "380px",
+    justifyContent: "center",
+    margin: "60px auto 0 auto",
+  };
+}
+
+function getFeaturedCardStyle(screenSize) {
+  return {
+    background: "#fff",
+    borderRadius: "12px",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+    width: screenSize >= FEATURED_BREAKPOINT_MEDIUM ? `${FEATURED_CARD_WIDTH}px` : "100%",
+    maxWidth: `${FEATURED_CARD_WIDTH}px`,
+    height: "420px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    overflow: "hidden",
+    cursor: "pointer",
+    position: "relative",
   };
 }
 
@@ -454,18 +497,32 @@ const ExploreModulesSection = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentPath = `${location.pathname}${location.search || ""}`;
-  const isTeacherDefault = role === "teacherDefault";
-  const isAdmin = role === "admin";
+  const isTeacherDefault = role === ROLES.TEACHER_DEFAULT;
+  const isAdmin = role === ROLES.ADMIN;
+  // Only premium roles get the Content Type filter. Every other role — signed
+  // out, studentDefault, teacherDefault — browses the unfiltered set, and this
+  // single flag drives both the control and the filtering so the two cannot
+  // disagree (issue #416).
+  const canFilterByContentType = PREMIUM_ROLES.includes(role);
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupModule, setPopupModule] = useState(null);
 
-  // Responsive design state
+  // Responsive design state. One debounced listener feeds every size-derived
+  // value below; there used to be a second, undebounced listener for
+  // itemsPerPage, which meant two state updates per resize event (issue #413).
   const [screenSize, setScreenSize] = useState(window.innerWidth);
 
   useEffect(() => {
-    const handleResize = () => setScreenSize(window.innerWidth);
+    let timeoutId;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => setScreenSize(window.innerWidth), RESIZE_DEBOUNCE_MS);
+    };
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
   // Filter state
   const [contentType, setContentType] = useState("All");
@@ -480,43 +537,35 @@ const ExploreModulesSection = () => {
   const [filteredItems, setFilteredItems] = useState([]);
   const [filtersApplied, setFiltersApplied] = useState(false);
 
-  // Pagination state - dynamic based on window size
+  // Pagination state - page size is derived from screenSize, always 2 full rows
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(9); // Will be calculated dynamically
 
   // Featured modules (prefer admin-curated `isFeatured == true` from Firestore)
   const [featuredTiles, setFeaturedTiles] = useState([]);
+  // Fallback tiles for the first render, before Firestore answers. Built once
+  // rather than on every render (issue #413).
+  const staticFeaturedTiles = useMemo(() => MODULE_POPUP_INFO.map(buildFeaturedTileFromStatic), []);
 
   // Admin-only: paginated view of all published modules (created by anyone)
   const [adminAllModulesOpen, setAdminAllModulesOpen] = useState(false);
   const [adminModulesPage, setAdminModulesPage] = useState(1);
   const ADMIN_PAGE_SIZE = 6;
 
-  // Update items per page based on screen size - ALWAYS 2 rows
-  useEffect(() => {
-    const updateItemsPerPage = () => {
-      const screenWidth = window.innerWidth;
-      let itemsPerRow;
+  // Items per page - ALWAYS 2 rows, derived from the debounced screen size.
+  const itemsPerPage = useMemo(() => {
+    let itemsPerRow;
 
-      if (screenWidth >= 1400) {
-        itemsPerRow = 3; // 3 cards per row on very large screens
-      } else if (screenWidth >= 1000) {
-        itemsPerRow = 3; // 3 cards per row on large screens
-      } else if (screenWidth >= 800) {
-        itemsPerRow = 2; // 2 cards per row on medium screens
-      } else {
-        itemsPerRow = 1; // 1 card per row on small screens
-      }
+    if (screenSize >= 1000) {
+      itemsPerRow = 3; // 3 cards per row on large screens
+    } else if (screenSize >= 800) {
+      itemsPerRow = 2; // 2 cards per row on medium screens
+    } else {
+      itemsPerRow = 1; // 1 card per row on small screens
+    }
 
-      // ALWAYS show exactly 2 rows
-      setItemsPerPage(itemsPerRow * 2);
-    };
-
-    updateItemsPerPage();
-    window.addEventListener('resize', updateItemsPerPage);
-
-    return () => window.removeEventListener('resize', updateItemsPerPage);
-  }, []);
+    // ALWAYS show exactly 2 rows
+    return itemsPerRow * 2;
+  }, [screenSize]);
 
   // Calculate pagination - ensure we always show 2 full rows
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
@@ -532,7 +581,6 @@ const ExploreModulesSection = () => {
 
   // Fetch all data on mount
   useEffect(() => {
-    const db = getFirestore(firebaseApp);
 
     // Fetch modules - FIXED VERSION
     getDocs(collection(db, COLLECTIONS.module)).then(snapshot => {
@@ -578,7 +626,6 @@ const ExploreModulesSection = () => {
   // Featured modules: load modules explicitly marked `isFeatured == true`.
   useEffect(() => {
     let cancelled = false;
-    const db = getFirestore(firebaseApp);
     (async () => {
       try {
         const q = query(
@@ -596,11 +643,10 @@ const ExploreModulesSection = () => {
 
         if (tiles.length > 0) {
           // If fewer than 6 are flagged, fill remaining slots with legacy static tiles.
-          const staticTiles = MODULE_POPUP_INFO.map(buildFeaturedTileFromStatic);
           const seen = new Set(tiles.map((t) => t.id));
           const filled = [
             ...tiles,
-            ...staticTiles.filter((t) => !seen.has(t.id)).slice(0, Math.max(0, 6 - tiles.length)),
+            ...staticFeaturedTiles.filter((t) => !seen.has(t.id)).slice(0, Math.max(0, 6 - tiles.length)),
           ];
 
           setFeaturedTiles(filled);
@@ -611,13 +657,13 @@ const ExploreModulesSection = () => {
       }
 
       // Fallback to legacy hardcoded list
-      setFeaturedTiles(MODULE_POPUP_INFO.map(buildFeaturedTileFromStatic));
+      setFeaturedTiles(staticFeaturedTiles);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [staticFeaturedTiles]);
 
   // Initial display should exclude drafts
   useEffect(() => {
@@ -637,8 +683,9 @@ const ExploreModulesSection = () => {
     const publishedModules = modules.filter(m => isModuleVisibleToViewer(m, user));
     const publishedLessons = lessons.filter(l => !l.isDraft);
 
-    // Content Type filtering only applies if user can see the filter (TeacherPlus/Admin)
-    if (role === "teacherDefault" || contentType === "All") {
+    // Content Type filtering only applies if the user can see the filter; for
+    // everyone else contentType stays at its "All" default and is ignored here.
+    if (!canFilterByContentType || contentType === "All") {
       items = [
         ...publishedModules,
         ...publishedLessons,
@@ -696,7 +743,7 @@ const ExploreModulesSection = () => {
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false);
 
   // --- Replace For Teachers and Testimonials section with Nugget Builder for teacherPlus ---
-  if (role === "teacherPlus") {
+  if (role === ROLES.TEACHER_PLUS) {
     return (
       <div
         style={{
@@ -725,7 +772,7 @@ const ExploreModulesSection = () => {
         gap: "40px"
       }}
     >
-      {role === "admin" && (
+      {role === ROLES.ADMIN && (
         <section
           style={{
             width: "100%",
@@ -1018,44 +1065,16 @@ const ExploreModulesSection = () => {
         </h2>
 
         {/* Six module grid (2 rows × 3 columns) */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: screenSize >= 1200 ? "repeat(3, 340px)" :
-                               screenSize >= 800 ? "repeat(2, 340px)" :
-                               "repeat(1, 340px)",
-            gap: screenSize >= 800 ? "40px" : "20px",
-            marginTop: "60px",
-            width: "100%",
-            maxWidth: screenSize >= 1200 ? "1200px" :
-                     screenSize >= 800 ? "800px" : "380px",
-            justifyContent: "center",
-            margin: "60px auto 0 auto"
-          }}
-        >
-          {(featuredTiles.length ? featuredTiles : MODULE_POPUP_INFO.map(buildFeaturedTileFromStatic)).map((module) => (
+        <div style={getFeaturedGridStyle(screenSize)}>
+          {(featuredTiles.length ? featuredTiles : staticFeaturedTiles).map((module) => (
             <div
               key={`${module._source}-${module.id}`}
-              style={{
-                background: "#fff",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                width: screenSize >= 800 ? "340px" : "100%",
-                maxWidth: "340px",
-                height: "420px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                justifyContent: "space-between",
-                overflow: "hidden",
-                cursor: "pointer",
-                position: "relative"
-              }}
+              style={getFeaturedCardStyle(screenSize)}
               onClick={() => {
                 if (!user) {
                   setPopupModule(module);
                   setPopupOpen(true);
-                } else if (["teacherDefault", "studentDefault", "admin"].includes(role)) {
+                } else if ([ROLES.TEACHER_DEFAULT, ROLES.STUDENT_DEFAULT, ROLES.ADMIN].includes(role)) {
                   navigate(`/module/${module.routeParam}`, { state: { returnTo: currentPath } });
                 }
               }}
@@ -1067,7 +1086,7 @@ const ExploreModulesSection = () => {
                   if (!user) {
                     setPopupModule(module);
                     setPopupOpen(true);
-                  } else if (["teacherDefault", "studentDefault", "admin"].includes(role)) {
+                  } else if ([ROLES.TEACHER_DEFAULT, ROLES.STUDENT_DEFAULT, ROLES.ADMIN].includes(role)) {
                     navigate(`/module/${module.routeParam}`, { state: { returnTo: currentPath } });
                   }
                 }
@@ -1417,7 +1436,7 @@ const ExploreModulesSection = () => {
               marginBottom: "18px"
             }}>
               {/* Content Type Filter - Only for TeacherPlus and Admin */}
-              {(role === "teacherPlus" || role === "admin") && (
+              {canFilterByContentType && (
                 <div>
                   <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Content Type</label>
                   <select
@@ -1560,8 +1579,8 @@ const ExploreModulesSection = () => {
                     }}
                     onClick={() => {
                       // Handle navigation based on item type and lock status
-                      const isLocked = (item.role || item.Role) === "teacherPlus";
-                      if (isLocked && role === "teacherDefault") {
+                      const isLocked = (item.role || item.Role) === ROLES.TEACHER_PLUS;
+                      if (isLocked && role === ROLES.TEACHER_DEFAULT) {
                         setUpgradePromptOpen(true);
                       } else {
                         // Navigate to appropriate page based on item type
@@ -1576,7 +1595,7 @@ const ExploreModulesSection = () => {
                     }}
                   >
                     {/* Rest of your card content remains the same */}
-                    <LockIcon isLocked={(item.role || item.Role) === "teacherPlus"} />
+                    <LockIcon isLocked={(item.role || item.Role) === ROLES.TEACHER_PLUS} />
 
                     <div style={{
                       width: "100%",

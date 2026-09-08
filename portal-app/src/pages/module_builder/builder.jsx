@@ -8,12 +8,12 @@ import {
   doc,
   getDoc,
   getDocs,
-  getFirestore,
   query,
   serverTimestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import OverlayTileView from "@/pages/module_builder/OverlayTileView";
 import UploadContent from "@/pages/upload-content/index";
 import useUserData from "@/hooks/useUserData";
@@ -28,6 +28,7 @@ import { TYPO } from "@/constants/typography";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { fetchPayments } from "@/utils/paymentsApi";
 import { useToast } from "@/components/ui/ToastProvider";
+import { ROLES } from "@/constants/roles";
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -101,7 +102,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   useEffect(() => {
     if (didInitFeaturedDefaultRef.current) return;
     if (editModuleId) return;
-    if (userData?.role !== "admin") return;
+    if (userData?.role !== ROLES.ADMIN) return;
     didInitFeaturedDefaultRef.current = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setFormData((prev) => ({ ...prev, isFeatured: true }));
@@ -190,7 +191,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     if (!editModuleId) return;
     (async () => {
       try {
-        const db = getFirestore();
         const snap = await getDoc(doc(db, COLLECTIONS.module, editModuleId));
         if (cancelled) return;
         if (!snap.exists()) {
@@ -272,7 +272,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
 
   // --- Fetch lesson plans for overlay ---
   const fetchLessonPlans = async (userId) => {
-    const db = getFirestore();
     const lessonsQuery = query(
       collection(db, COLLECTIONS.lesson),
       where("authorId", "==", userId)
@@ -341,7 +340,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       toast.error("You must be logged in to save a draft.");
       return;
     }
-    const db = getFirestore();
     const lessonIds = selectedMaterials.map((material) => material.id);
     const lessonPlans = lessonIds.reduce((acc, id, idx) => {
       acc[idx] = id;
@@ -356,7 +354,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       updatedAt: serverTimestamp(),
     };
     // Only admins should be able to set featured flag.
-    if (userData?.role !== "admin") {
+    if (userData?.role !== ROLES.ADMIN) {
       delete draftData.isFeatured;
       delete draftData.price;
     } else {
@@ -458,7 +456,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     }
 
     try {
-      const db = getFirestore();
       const lessonIds = selectedMaterials.map((material) => material.id);
       const lessonPlans = lessonIds.reduce((acc, id, idx) => {
         acc[idx] = id;
@@ -473,7 +470,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         updatedAt: serverTimestamp(),
       };
       // Only admins should be able to set featured flag.
-      if (userData?.role !== "admin") {
+      if (userData?.role !== ROLES.ADMIN) {
         delete moduleData.isFeatured;
         delete moduleData.price;
       } else {
@@ -494,7 +491,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       if (editModuleId) {
         await updateDoc(doc(db, COLLECTIONS.module, editModuleId), moduleData);
       } else {
-        const isAdminAuthor = userData?.role === "admin";
+        const isAdminAuthor = userData?.role === ROLES.ADMIN;
         await addDoc(collection(db, COLLECTIONS.module), {
           ...moduleData,
           ...(isAdminAuthor ? { isFeatured: moduleData.isFeatured === true } : {}),
@@ -872,7 +869,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               Make Public
             </label>
           </div>
-          {userData?.role === "admin" && (
+          {userData?.role === ROLES.ADMIN && (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input

@@ -4,6 +4,7 @@ import { db } from "@/firebase/firebaseConfig";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { api } from "@/utils/apiClient";
 import { signInWithPopup } from "firebase/auth";
+import { ROLES } from "@/constants/roles";
  
 const RETURN_TO_KEY = "diya_auth:returnTo";
 const ACTION_KEY = "diya_auth:action";
@@ -99,7 +100,7 @@ export async function resolveAccountByUid(uid) {
     const userSnap = await getDoc(doc(db, COLLECTIONS.users, uid));
     if (userSnap.exists()) {
       const data = userSnap.data() || {};
-      return { exists: true, role: data.role || "teacherDefault", collection: "users", data };
+      return { exists: true, role: data.role || ROLES.TEACHER_DEFAULT, collection: "users", data };
     }
 
     return { exists: false, role: null, collection: null, data: null };
@@ -179,11 +180,11 @@ export async function handleGoogleRedirectOnce(navigate) {
     return;
   }
  
-  if (account.role === "teacherPlus") {
+  if (account.role === ROLES.TEACHER_PLUS) {
     navigate("/teacher-plus", { replace: true });
     return;
   }
-  if (account.role === "admin") {
+  if (account.role === ROLES.ADMIN) {
     navigate("/", { replace: true });
     return;
   }

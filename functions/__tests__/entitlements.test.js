@@ -46,8 +46,8 @@ describe("roleForPlan", () => {
     expect(roleForPlan("premiumYearly")).toBe("teacherPlus");
   });
 
-  test("enterprise grants teacherEnterprise", () => {
-    expect(roleForPlan("enterprise")).toBe("teacherEnterprise");
+  test("enterprise also grants teacherPlus", () => {
+    expect(roleForPlan("enterprise")).toBe("teacherPlus");
   });
 
   test("an unknown plan grants nothing", () => {
