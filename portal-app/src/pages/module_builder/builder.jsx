@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "@/components/ui/Modal";
 import { getAuth } from "firebase/auth";
@@ -89,7 +89,6 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const { user, userData } = useUserData();
-  const didInitFeaturedDefaultRef = useRef(false);
 
   const editModuleId = location.state?.editModuleId || null;
   const returnTo = location.state?.returnTo || null;
@@ -103,17 +102,16 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   );
   const [editModuleAuthorUid, setEditModuleAuthorUid] = useState("");
   const [prefillLessonIds, setPrefillLessonIds] = useState(preselectedLessonIds);
-  const didPrefillLessonsRef = useRef(false);
 
-  // For admins creating a new module, default Featured to ON (so it shows for all users on homepage).
-  useEffect(() => {
-    if (didInitFeaturedDefaultRef.current) return;
-    if (editModuleId) return;
-    if (userData?.role !== ROLES.ADMIN) return;
-    didInitFeaturedDefaultRef.current = true;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
+  // For admins creating a new module, default Featured to ON (so it shows for
+  // all users on homepage). The role arrives asynchronously, so this cannot be
+  // a plain initial value - but it can be applied during render rather than one
+  // render later (#525). `featuredDefaultApplied` keeps it to once.
+  const [featuredDefaultApplied, setFeaturedDefaultApplied] = useState(false);
+  if (!featuredDefaultApplied && !editModuleId && userData?.role === ROLES.ADMIN) {
+    setFeaturedDefaultApplied(true);
     setFormData((prev) => ({ ...prev, isFeatured: true }));
-  }, [editModuleId, userData?.role]);
+  }
 
   const handleBack = () => {
     // Prefer explicit return path when editing from module detail.
@@ -161,36 +159,51 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   };
 
 
-  // Load draft from localStorage if present
-  useEffect(() => {
-    const savedDraft = localStorage.getItem("moduleDraft");
-    if (editModuleId) return;
-    if (savedDraft && portalContent.length > 0) {
-      const parsedDraft = JSON.parse(savedDraft);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      setFormData({
-        title: parsedDraft.title || "",
-        Category: parsedDraft.Category || parsedDraft.category || [],
-        Type: parsedDraft.Type || parsedDraft.type || [],
-        Level: parsedDraft.Level || parsedDraft.level || [],
-        Duration: parsedDraft.Duration || parsedDraft.duration || "",
-        description: parsedDraft.description || "",
-        requirements: parsedDraft.requirements || "",
-        learningObjectives: parsedDraft.learningObjectives || "",
-        isPublic: parsedDraft.isPublic || false,
-        isFeatured: parsedDraft.isFeatured === true,
-        price: parsedDraft.price ?? "",
-      });
-      // Restore selected lesson plans/materials if present
-      if (parsedDraft.lessons && Array.isArray(parsedDraft.lessons)) {
-        setSelectedMaterials(parsedDraft.lessons.map(id => {
-          // Try to find full lesson object from portalContent, fallback to just id
-          return portalContent.find(item => item.id === id) || { id };
-        }));
-      }
-      localStorage.removeItem("moduleDraft");
+  // A draft handed over by /module_builder/drafts. Read once, at mount; applied
+  // below once the lesson library has loaded, so its lessons resolve to real
+  // records rather than bare ids.
+  const [savedDraft] = useState(() => {
+    try {
+      const raw = localStorage.getItem("moduleDraft");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.error("Could not read the saved module draft:", e);
+      return null;
     }
-  }, [portalContent, editModuleId]);
+  });
+  const [draftApplied, setDraftApplied] = useState(false);
+
+  // Applied during render rather than from an effect (#525), and once - after
+  // that the form belongs to the user.
+  if (!draftApplied && !editModuleId && savedDraft && portalContent.length > 0) {
+    setDraftApplied(true);
+    setFormData({
+      title: savedDraft.title || "",
+      Category: savedDraft.Category || savedDraft.category || [],
+      Type: savedDraft.Type || savedDraft.type || [],
+      Level: savedDraft.Level || savedDraft.level || [],
+      Duration: savedDraft.Duration || savedDraft.duration || "",
+      description: savedDraft.description || "",
+      requirements: savedDraft.requirements || "",
+      learningObjectives: savedDraft.learningObjectives || "",
+      isPublic: savedDraft.isPublic || false,
+      isFeatured: savedDraft.isFeatured === true,
+      price: savedDraft.price ?? "",
+    });
+    // Restore selected lesson plans/materials if present
+    if (Array.isArray(savedDraft.lessons)) {
+      setSelectedMaterials(savedDraft.lessons.map(id => {
+        // Try to find full lesson object from portalContent, fallback to just id
+        return portalContent.find(item => item.id === id) || { id };
+      }));
+    }
+  }
+
+  // Clear it only once it has actually been taken up, so a reload before the
+  // lesson library arrives does not lose the draft.
+  useEffect(() => {
+    if (draftApplied) localStorage.removeItem("moduleDraft");
+  }, [draftApplied]);
 
   // Edit mode: fetch and prefill existing module
   useEffect(() => {
@@ -246,8 +259,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         });
 
         setPrefillLessonIds(lessonIds);
-        didPrefillLessonsRef.current = false;
-      } catch (err) {
+        } catch (err) {
         console.error("ModuleBuilder: failed to load module for edit", err);
         setModalMessage("Error loading module for editing");
         setModalIsOpen(true);
@@ -261,26 +273,25 @@ const ModuleBuilder = ({ onCancel } = {}) => {
 
   // Once we have portalContent (lessons) and module lesson ids, prefill selection.
   // Two sources: an existing module being edited, and a selection carried over
-  // from /my-plans when creating a new one.
-  useEffect(() => {
-    if (!editModuleId && preselectedLessonIds.length === 0) return;
-    if (didPrefillLessonsRef.current) return;
-    if (!prefillLessonIds || prefillLessonIds.length === 0) {
-      didPrefillLessonsRef.current = true;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      setSelectedMaterials([]);
-      return;
-    }
-    if (portalContent.length === 0) return;
-
-    didPrefillLessonsRef.current = true;
+  // from /my-plans when creating a new one. Applied during render rather than
+  // from an effect (#525), and once - after that the selection is the user's.
+  const [lessonsPrefilled, setLessonsPrefilled] = useState(false);
+  if (
+    !lessonsPrefilled &&
+    (editModuleId || preselectedLessonIds.length > 0) &&
+    prefillLessonIds?.length > 0 &&
+    portalContent.length > 0
+  ) {
+    setLessonsPrefilled(true);
     setSelectedMaterials(
       prefillLessonIds.map((id) => portalContent.find((item) => item.id === id) || { id })
     );
-  }, [editModuleId, portalContent, prefillLessonIds, preselectedLessonIds]);
+  }
 
   // --- Fetch lesson plans for overlay ---
-  const fetchLessonPlans = async (userId) => {
+  // Returns the lesson plans rather than writing them to state, so both callers
+  // - the mount effect and the post-save refresh - decide when to commit (#525).
+  const readLessonPlans = async (userId) => {
     const lessonsQuery = query(
       collection(db, COLLECTIONS.lesson),
       where("authorId", "==", userId)
@@ -307,18 +318,27 @@ const ModuleBuilder = ({ onCancel } = {}) => {
             : [],
       }))
       .filter(lesson => lesson.isDraft !== true);
-    setPortalContent(userLessons);
+    return userLessons;
   };
 
   // The uid comes from the shared provider (#368); this page used to open its
-  // own auth listener purely to learn who was signed in.
+  // own auth listener purely to learn who was signed in. Inlined rather than
+  // calling readLessonPlans from here, which the rule cannot see past (#525),
+  // and which had no cancellation.
   useEffect(() => {
-    if (!user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      setPortalContent([]);
-      return;
-    }
-    fetchLessonPlans(user.uid);
+    if (!user) return;
+
+    let cancelled = false;
+    const load = async () => {
+      const lessons = await readLessonPlans(user.uid);
+      if (cancelled) return;
+      setPortalContent(lessons);
+    };
+    load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const handleChange = (e) => {
@@ -1109,7 +1129,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
             const auth = getAuth();
             const user = auth.currentUser;
             if (user) {
-              await fetchLessonPlans(user.uid); // Refresh lesson plans immediately
+              setPortalContent(await readLessonPlans(user.uid)); // Refresh lesson plans immediately
             }
           }}
           onCancel={() => setShowLessonPlanBuilderModal(false)}

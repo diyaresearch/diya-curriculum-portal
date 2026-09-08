@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { doc, deleteDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
@@ -99,6 +99,22 @@ const extractBulletsFromObjectives = (value) => {
   return sentenceParts.length > 1 ? sentenceParts : [text];
 };
 
+// Did Stripe send the browser back here after a successful checkout? A fact
+// about the URL, so it is read during render rather than mirrored into state
+// by an effect (#525).
+const isCheckoutReturn = (search) => {
+  try {
+    const params = new URLSearchParams(search || "");
+    return (
+      params.get("checkout") === "success" &&
+      (params.get("redirect_status") === "succeeded" || !!params.get("session_id"))
+    );
+  } catch (e) {
+    console.error("Failed to parse checkout return params:", e);
+    return false;
+  }
+};
+
 
 const ModuleDetail = () => {
   const toast = useToast();
@@ -108,45 +124,43 @@ const ModuleDetail = () => {
   const { userData } = useUserData();
   const [checkoutClientSecret, setCheckoutClientSecret] = useState(null);
   const [checkoutStripeKey, setCheckoutStripeKey] = useState(null);
-  const [showPurchaseSuccess, setShowPurchaseSuccess] = useState(false);
+  // A page loaded *as* the return from Stripe starts with the confirmation up;
+  // arriving there by a later navigation is handled just below.
+  const [showPurchaseSuccess, setShowPurchaseSuccess] = useState(
+    () => isCheckoutReturn(location.search)
+  );
   const checkoutInitRef = useRef(null);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
 
 
   const returnTo = (location.state && location.state.returnTo) || null;
 
-  // Show confirmation after Stripe redirects back from checkout.
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(location.search || "");
-      const checkoutFlag = params.get("checkout");
-      const redirectStatus = params.get("redirect_status");
-      const sessionId = params.get("session_id");
-
-      if (checkoutFlag === "success" && (redirectStatus === "succeeded" || !!sessionId)) {
-        // If Stripe redirected back, ensure checkout modal is closed
-        // so we don't keep two modals open at once.
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-        setCheckoutClientSecret(null);
-        setCheckoutStripeKey(null);
-        checkoutInitRef.current = null;
-        setShowPurchaseSuccess(true);
-      }
-    } catch (e) {
-      console.error("Failed to parse checkout return params:", e);
+  // Show the confirmation when Stripe redirects back - on this render, not one
+  // render later.
+  const [seenCheckoutSearch, setSeenCheckoutSearch] = useState(location.search);
+  if (seenCheckoutSearch !== location.search) {
+    setSeenCheckoutSearch(location.search);
+    if (isCheckoutReturn(location.search)) {
+      // Close the embedded checkout so two modals are never open at once. The
+      // mount effect's cleanup clears checkoutInitRef when the secret goes null.
+      setCheckoutClientSecret(null);
+      setCheckoutStripeKey(null);
+      setShowPurchaseSuccess(true);
     }
-  }, [location.search]);
+  }
 
   // Ensure we start at top when navigating here
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [moduleId]);
 
-  // Module data states
-  const [moduleData, setModuleData] = useState(null);
+  // Module data states. A featured module is in the bundle, so it is available
+  // on the first render and never has a loading state; only a Firestore-backed
+  // module is fetched.
+  const [moduleData, setModuleData] = useState(() => FEATURED_MODULES[moduleId] || null);
   // True when this is a paid module the viewer has not purchased (#430).
   const [moduleLocked, setModuleLocked] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !FEATURED_MODULES[moduleId]);
   const [error, setError] = useState(null);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -154,179 +168,46 @@ const ModuleDetail = () => {
 
   const descRef = useRef(null);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
-  const [showDescMore, setShowDescMore] = useState(false);
+  // The raw measurement only. Whether to offer "more" also depends on whether
+  // the description is already expanded, and that is derived below (#525) -
+  // an effect used to write `false` into this state for the expanded case.
+  const [descOverflows, setDescOverflows] = useState(false);
+  const showDescMore = !isDescExpanded && descOverflows;
 
-  // Reset description expansion when module changes
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
+  // Reset the description back to collapsed when the route points at a
+  // different module. Adjusting state during render is React's documented
+  // alternative to an effect for this (#525).
+  const [shownModuleId, setShownModuleId] = useState(moduleId);
+  if (shownModuleId !== moduleId) {
+    setShownModuleId(moduleId);
     setIsDescExpanded(false);
-    setShowDescMore(false);
-  }, [moduleId]);
+    setDescOverflows(false);
+    // fetchModuleDetails no longer raises these itself: doing so made the fetch
+    // effect a synchronous setState, which is what the rule objects to.
+    setModuleData(FEATURED_MODULES[moduleId] || null);
+    setLoading(!FEATURED_MODULES[moduleId]);
+    setError(null);
+  }
 
-  const fetchLessonDetails = useCallback(async (ids) => {
-    try {
-      const stripHtmlToText = (html) => {
-        if (!html || typeof html !== "string") return "";
-        return html
-          .replace(/<[^>]*>/g, " ")
-          .replace(/&nbsp;/g, " ")
-          .replace(/&amp;/g, "&")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">")
-          .replace(/&quot;/g, '"')
-          .replace(/&#039;/g, "'")
-          .replace(/\s+/g, " ")
-          .trim();
-      };
-
-      // Fetch lesson plans from backend API
-      const lessonPlanRequests = ids.map(async (id) => {
-        try {
-          return await api.get(`/api/lesson/${id}`);
-        } catch (error) {
-          // A non-2xx throws now, so the old !response.ok branch folds in here.
-          console.error(`Error fetching lesson ${id}:`, error);
-          return null;
-        }
-      });
-
-      const responses = await Promise.all(lessonPlanRequests);
-      const fetchedPlans = responses.filter(plan => plan !== null);
-
-      // Transform lessons for display
-      const resources = fetchedPlans.map(lesson => ({
-        title: lesson.title || "Untitled Lesson",
-        desc: stripHtmlToText(lesson.description) || "No description",
-        type: Array.isArray(lesson.type) ? lesson.type.join(", ") : lesson.type || "Lesson Plan",
-        level: Array.isArray(lesson.level) ? lesson.level.join(", ") : lesson.level || "—",
-        duration: lesson.duration || "—",
-        sectionsCount: Array.isArray(lesson.sections) ? lesson.sections.length : 0,
-        locked: false,
-        id: lesson.id
-      }));
-
-      // Update moduleData with resources
-      setModuleData(prev => ({
-        ...prev,
-        resources: resources
-      }));
-
-    } catch (error) {
-      console.error("Error fetching lesson details:", error);
-    }
-  }, []);
 
   // Determine if the header description exceeds 3 lines (only when collapsed).
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!moduleData) return;
-    if (isDescExpanded) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      setShowDescMore(false);
-      return;
-    }
+    if (isDescExpanded) return;
     if (!descRef.current) return;
 
     const el = descRef.current;
     const raf = window.requestAnimationFrame(() => {
       try {
-        setShowDescMore(el.scrollHeight > el.clientHeight + 1);
+        setDescOverflows(el.scrollHeight > el.clientHeight + 1);
       } catch {
-        setShowDescMore(false);
+        setDescOverflows(false);
       }
     });
     return () => window.cancelAnimationFrame(raf);
   }, [moduleId, moduleData, moduleData?.subtitle, isDescExpanded]);
 
-  const fetchModuleDetails = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Check if it's a hardcoded module first
-      if (FEATURED_MODULES[moduleId]) {
-        const hardcodedData = FEATURED_MODULES[moduleId];
-        setModuleData(hardcodedData);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch through the API so the server can withhold a paid module's
-      // lessons from anyone without an entitlement (#430). The client SDK
-      // cannot make that decision. This became usable once #427 aligned the
-      // collection qualifier — before that the API looked in `prod_module`
-      // and found nothing.
-      let data;
-      try {
-        data = await api.get(`/api/module/${moduleId}`);
-      } catch (err) {
-        // "not found" stays distinguishable from every other failure, which
-        // is why this is a status check rather than one generic message.
-        setError(err?.status === 404 ? "Module not found" : "Could not load this module. Please try again.");
-        setLoading(false);
-        return;
-      }
-      const isLocked = data.locked === true;
-      setModuleLocked(isLocked);
-      const authorUid = data.author || data.authorId || "";
-      const isFeatured = data.isFeatured === true;
-      const priceRaw = data.price ?? data.Price ?? 0;
-      const price = Number.isFinite(Number(priceRaw)) ? Number(priceRaw) : 0;
-
-      // Support both schemas:
-      // - legacy/other: { lessonPlans: {0: "<lessonId>", 1: "<lessonId>" ... } }
-      // - module builder: { lessons: ["<lessonId>", "<lessonId>", ...] }
-      const lessonIdsFromLessonPlans =
-        data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
-          ? Object.values(data.lessonPlans).filter(Boolean)
-          : [];
-      const lessonIdsFromLessons = Array.isArray(data.lessons) ? data.lessons.filter(Boolean) : [];
-      const lessonPlanIds = lessonIdsFromLessonPlans.length > 0 ? lessonIdsFromLessonPlans : lessonIdsFromLessons;
-
-      const categoryRaw = data.category ?? data.Category;
-      const levelRaw = data.level ?? data.Level;
-      const typeRaw = data.type ?? data.Type;
-      const durationRaw = data.duration ?? data.Duration;
-
-      // Transform Firestore data to display format
-      const transformedData = {
-        title: data.title?.toUpperCase() || "UNTITLED MODULE",
-        subtitle: data.description || "No description available",
-        image: imageMap[data.image] || module1,
-        description: data.description || "No description available",
-        requirements: data.requirements || "No specific requirements",
-        learningObjectives: data.learningObjectives || "Objectives will be defined",
-        _meta: { id: moduleId, authorUid, isFeatured, price, locked: isLocked },
-        details: [
-          { label: "Category", value: Array.isArray(categoryRaw) ? categoryRaw.join(", ") : categoryRaw || "N/A" },
-          { label: "Level", value: Array.isArray(levelRaw) ? levelRaw.join(", ") : levelRaw || "N/A" },
-          { label: "Type", value: Array.isArray(typeRaw) ? typeRaw.join(", ") : typeRaw || "N/A" },
-          {
-            label: "Duration",
-            value: durationRaw
-              ? typeof durationRaw === "string" && durationRaw.toLowerCase().includes("minute")
-                ? durationRaw
-                : `${durationRaw} minutes`
-              : "N/A",
-          },
-        ],
-        resources: [],
-      };
-
-      setModuleData(transformedData);
-
-      // A locked module returns no lesson ids at all, so there is nothing to
-      // fetch and nothing for the page to render.
-      if (!isLocked && lessonPlanIds.length > 0) {
-        await fetchLessonDetails(lessonPlanIds);
-      }
-    } catch (error) {
-      console.error("Error fetching module:", error);
-      setError("Error loading module data: " + error.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [moduleId, fetchLessonDetails]);
 
   useEffect(() => {
     let cancelled = false;
@@ -371,10 +252,157 @@ const ModuleDetail = () => {
   }, [checkoutClientSecret, checkoutStripeKey]);
   
 
+  // One effect owns the whole load (#525). It was a pair of useCallbacks
+  // called from an effect body, which the rule cannot see past - and which
+  // had no cancellation, so moving quickly between two modules could land the
+  // first response after the second.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-    if (moduleId) fetchModuleDetails();
-  }, [moduleId, fetchModuleDetails]);
+    if (!moduleId || FEATURED_MODULES[moduleId]) return;
+
+    let cancelled = false;
+
+    const fetchLessonDetails = async (ids) => {
+      try {
+        const stripHtmlToText = (html) => {
+          if (!html || typeof html !== "string") return "";
+          return html
+            .replace(/<[^>]*>/g, " ")
+            .replace(/&nbsp;/g, " ")
+            .replace(/&amp;/g, "&")
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'")
+            .replace(/\s+/g, " ")
+            .trim();
+        };
+
+        // Fetch lesson plans from backend API
+        const lessonPlanRequests = ids.map(async (id) => {
+          try {
+            return await api.get(`/api/lesson/${id}`);
+          } catch (error) {
+            // A non-2xx throws now, so the old !response.ok branch folds in here.
+            console.error(`Error fetching lesson ${id}:`, error);
+            return null;
+          }
+        });
+
+        const responses = await Promise.all(lessonPlanRequests);
+        if (cancelled) return;
+        const fetchedPlans = responses.filter(plan => plan !== null);
+
+        // Transform lessons for display
+        const resources = fetchedPlans.map(lesson => ({
+          title: lesson.title || "Untitled Lesson",
+          desc: stripHtmlToText(lesson.description) || "No description",
+          type: Array.isArray(lesson.type) ? lesson.type.join(", ") : lesson.type || "Lesson Plan",
+          level: Array.isArray(lesson.level) ? lesson.level.join(", ") : lesson.level || "—",
+          duration: lesson.duration || "—",
+          sectionsCount: Array.isArray(lesson.sections) ? lesson.sections.length : 0,
+          locked: false,
+          id: lesson.id
+        }));
+
+        // Update moduleData with resources
+        setModuleData(prev => ({
+          ...prev,
+          resources: resources
+        }));
+
+      } catch (error) {
+        console.error("Error fetching lesson details:", error);
+      }
+    };
+
+    const loadModule = async () => {
+      try {
+        // Fetch through the API so the server can withhold a paid module's
+        // lessons from anyone without an entitlement (#430). The client SDK
+        // cannot make that decision. This became usable once #427 aligned the
+        // collection qualifier — before that the API looked in `prod_module`
+        // and found nothing.
+        let data;
+        try {
+          data = await api.get(`/api/module/${moduleId}`);
+        } catch (err) {
+          if (cancelled) return;
+          // "not found" stays distinguishable from every other failure, which
+          // is why this is a status check rather than one generic message.
+          setError(err?.status === 404 ? "Module not found" : "Could not load this module. Please try again.");
+          setLoading(false);
+          return;
+        }
+        if (cancelled) return;
+        const isLocked = data.locked === true;
+        setModuleLocked(isLocked);
+        const authorUid = data.author || data.authorId || "";
+        const isFeatured = data.isFeatured === true;
+        const priceRaw = data.price ?? data.Price ?? 0;
+        const price = Number.isFinite(Number(priceRaw)) ? Number(priceRaw) : 0;
+
+        // Support both schemas:
+        // - legacy/other: { lessonPlans: {0: "<lessonId>", 1: "<lessonId>" ... } }
+        // - module builder: { lessons: ["<lessonId>", "<lessonId>", ...] }
+        const lessonIdsFromLessonPlans =
+          data.lessonPlans && typeof data.lessonPlans === "object" && !Array.isArray(data.lessonPlans)
+            ? Object.values(data.lessonPlans).filter(Boolean)
+            : [];
+        const lessonIdsFromLessons = Array.isArray(data.lessons) ? data.lessons.filter(Boolean) : [];
+        const lessonPlanIds = lessonIdsFromLessonPlans.length > 0 ? lessonIdsFromLessonPlans : lessonIdsFromLessons;
+
+        const categoryRaw = data.category ?? data.Category;
+        const levelRaw = data.level ?? data.Level;
+        const typeRaw = data.type ?? data.Type;
+        const durationRaw = data.duration ?? data.Duration;
+
+        // Transform Firestore data to display format
+        const transformedData = {
+          title: data.title?.toUpperCase() || "UNTITLED MODULE",
+          subtitle: data.description || "No description available",
+          image: imageMap[data.image] || module1,
+          description: data.description || "No description available",
+          requirements: data.requirements || "No specific requirements",
+          learningObjectives: data.learningObjectives || "Objectives will be defined",
+          _meta: { id: moduleId, authorUid, isFeatured, price, locked: isLocked },
+          details: [
+            { label: "Category", value: Array.isArray(categoryRaw) ? categoryRaw.join(", ") : categoryRaw || "N/A" },
+            { label: "Level", value: Array.isArray(levelRaw) ? levelRaw.join(", ") : levelRaw || "N/A" },
+            { label: "Type", value: Array.isArray(typeRaw) ? typeRaw.join(", ") : typeRaw || "N/A" },
+            {
+              label: "Duration",
+              value: durationRaw
+                ? typeof durationRaw === "string" && durationRaw.toLowerCase().includes("minute")
+                  ? durationRaw
+                  : `${durationRaw} minutes`
+                : "N/A",
+            },
+          ],
+          resources: [],
+        };
+
+        setModuleData(transformedData);
+
+        // A locked module returns no lesson ids at all, so there is nothing to
+        // fetch and nothing for the page to render.
+        if (!isLocked && lessonPlanIds.length > 0) {
+          await fetchLessonDetails(lessonPlanIds);
+        }
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Error fetching module:", error);
+        setError("Error loading module data: " + error.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadModule();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [moduleId]);
 
   // (legacy layout style helpers removed; Screenshot 2 style is inlined below)
 

@@ -372,6 +372,40 @@ ever acquiring a caller.
 `useSafeTimeout` (`@/hooks/useSafeTimeout`), which clears every pending timer
 on unmount, rather than a bare `setTimeout`.
 
+**Do not set state in an effect** - `react-hooks/set-state-in-effect` is on as
+an error, and as of #525 nothing suppresses it. There were 34 such sites; they
+came in four shapes, and each has a replacement:
+
+| Shape | Instead |
+| --- | --- |
+| A value computed from other state (`setFiltered(filter(items))`) | derive it during render, `useMemo` if the work is worth caching |
+| Reset-on-change (`setPage(1)` when the list changes) | adjust state during render, guarded by a "what I last saw" state |
+| A prop or URL read into state | seed it in the `useState` initializer, plus the render-time adjustment for later changes |
+| Fetch on mount, via a `useCallback` the effect calls | inline the async function into the effect - and give it a cancellation flag while you are there |
+
+The render-time adjustment is React's documented alternative to an effect, and
+it is one render rather than two:
+
+```js
+const [pagedOver, setPagedOver] = useState(items);
+if (pagedOver !== items) {
+  setPagedOver(items);
+  setCurrentPage(1);
+}
+```
+
+The last shape is worth knowing because the rule is interprocedural-blind: it
+flags *any* call to a function that sets state, even one whose writes all sit
+behind an `await`. That is not a false positive worth suppressing - the fix
+(move the async function inside the effect) is also what gives it cancellation.
+
+Deriving rather than mirroring is not only tidier. `OverlayTileView` kept its
+filtered list in state, written by two effects - the unfiltered list, then the
+filtered one - so refetching content while a filter was active painted every
+item for a frame. `components/content/__tests__/OverlayTileView.test.jsx`
+watches every commit, not just the last, because Testing Library flushes
+effects before an assertion can see the frame in between.
+
 ### Auth and user state (portal-app/)
 
 `AuthProvider` (`@/context/AuthProvider`, mounted in `App.jsx` inside the

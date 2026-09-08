@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import useUserData from "@/hooks/useUserData";
 import logo from "@/assets/DIYA_Logo.png";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -22,20 +22,20 @@ const Navbar = () => {
     jobTitle: "",
     subjects: "",
   });
-  const [errorMsg, setErrorMsg] = useState(null);
 
   const navigate = useNavigate();
   const location = useLocation();
 
 
-  // Show popup if query param is present
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get("showSignUpPopup") === "1") {
-      // eslint-disable-next-line react-hooks/immutability, react-hooks/set-state-in-effect -- pre-existing, see #525
-      setErrorMsg(renderSignUpError());
-    }
-  }, [location.search]);
+  // The URL is the only source of truth for this popup - closing it strips the
+  // param. It used to be mirrored into state by an effect, which stored the
+  // rendered JSX itself: a stale closure that also defeated memoization (#525).
+  const showSignUpPopup =
+    new URLSearchParams(location.search).get("showSignUpPopup") === "1";
+
+  // A login failure message. A string, not the rendered element - the popup
+  // below decides how to display it.
+  const [loginError, setLoginError] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -113,7 +113,7 @@ const Navbar = () => {
 
   // Remove the query param and close popup
   const closeErrorPopup = () => {
-    setErrorMsg(null);
+    setLoginError("");
     const params = new URLSearchParams(location.search);
     params.delete("showSignUpPopup");
     navigate({ search: params.toString() }, { replace: true });
@@ -121,13 +121,13 @@ const Navbar = () => {
 
   // Google login handler with Firestore check
   const handleGoogleLogin = async () => {
-    setErrorMsg("");
+    setLoginError("");
     try {
       await startGoogleRedirect({
         returnTo: `${location.pathname}${location.search || ""}`,
       });
     } catch (error) {
-      setErrorMsg(error?.message || "Login failed. Please try again.");
+      setLoginError(error?.message || "Login failed. Please try again.");
     }
   };
 
@@ -499,7 +499,7 @@ const Navbar = () => {
         )}
       </nav>
       {/* Error Modal Popup */}
-      {errorMsg && (
+      {(showSignUpPopup || loginError) && (
         <div
           style={{
             position: "fixed",
@@ -543,7 +543,7 @@ const Navbar = () => {
               Login Error
             </h2>
             <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: 18 }}>
-              {errorMsg}
+              {showSignUpPopup ? renderSignUpError() : loginError}
             </div>
           </div>
         </div>

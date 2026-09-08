@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
 import { collection, getDocs } from 'firebase/firestore';
@@ -61,7 +61,9 @@ const TeacherPlusPage = () => {
     const [modules, setModules] = useState([]);
     const [lessons, setLessons] = useState([]);
     const [nuggets, setNuggets] = useState([]);
-    const [filteredItems, setFilteredItems] = useState([]);
+    // What "Apply Filters" produced. Until then the list is derived, not stored:
+    // an effect used to write the unfiltered set into the same state (#525).
+    const [appliedItems, setAppliedItems] = useState([]);
     const [filtersApplied, setFiltersApplied] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -144,17 +146,16 @@ const TeacherPlusPage = () => {
         });
     }, [user]); // Add user as dependency
 
-    useEffect(() => {
-        if (!filtersApplied && (modules.length > 0 || lessons.length > 0 || nuggets.length > 0)) {
-            const publishedModules = modules.filter(m => isModuleVisibleToViewer(m, user));
-            const publishedLessons = lessons.filter(l => !l.isDraft);
-            const combined = [...publishedModules, ...publishedLessons, ...nuggets].filter(
-                (item) => item?._type !== "Module" || isModuleVisibleToViewer(item, user)
-            );
-            // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-            setFilteredItems(combined);
-        }
-    }, [modules, lessons, nuggets, filtersApplied, user]);
+    // Everything published, which is what the dashboard shows before filtering.
+    const defaultItems = useMemo(() => {
+        const publishedModules = modules.filter(m => isModuleVisibleToViewer(m, user));
+        const publishedLessons = lessons.filter(l => !l.isDraft);
+        return [...publishedModules, ...publishedLessons, ...nuggets].filter(
+            (item) => item?._type !== "Module" || isModuleVisibleToViewer(item, user)
+        );
+    }, [modules, lessons, nuggets, user]);
+
+    const filteredItems = filtersApplied ? appliedItems : defaultItems;
 
     const featuredModules = (modules || [])
         .filter((m) => m?._type === "Module")
@@ -168,19 +169,22 @@ const TeacherPlusPage = () => {
     const featuredStart = (safeFeaturedPage - 1) * FEATURED_PAGE_SIZE;
     const featuredItems = featuredModules.slice(featuredStart, featuredStart + FEATURED_PAGE_SIZE);
 
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
+    // Back to page 1 whenever the list under a pager changes. Adjusting state
+    // during render is React's documented alternative to an effect here (#525).
+    const [pagedOver, setPagedOver] = useState({ modules, filteredItems, itemsPerPage });
+    if (pagedOver.modules !== modules) {
+        setPagedOver((prev) => ({ ...prev, modules }));
         setFeaturedPage(1);
-    }, [modules]);
+    }
+    if (pagedOver.filteredItems !== filteredItems || pagedOver.itemsPerPage !== itemsPerPage) {
+        setPagedOver((prev) => ({ ...prev, filteredItems, itemsPerPage }));
+        setCurrentPage(1);
+    }
 
     const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     let paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-        setCurrentPage(1);
-    }, [filteredItems, itemsPerPage]);
 
     const handleApplyFilters = () => {
         let items = [];
@@ -225,7 +229,7 @@ const TeacherPlusPage = () => {
 
 
 
-        setFilteredItems(items);
+        setAppliedItems(items);
         setFiltersApplied(true);
     };
 
@@ -234,7 +238,7 @@ const TeacherPlusPage = () => {
         setCategory("All");
         setLevel("All");
         setKeyword("");
-        setFilteredItems([]);
+        setAppliedItems([]);
         setFiltersApplied(false);
     };
 
