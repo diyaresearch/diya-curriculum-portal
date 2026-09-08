@@ -15,12 +15,14 @@ import { ApiError } from "@/utils/apiClient";
 
 const DEFAULT = "Something went wrong. Please try again.";
 
-const BY_CODE = {
+// null means "say nothing": a cancelled request is not a failure the user
+// should see. The explicit annotation is what keeps that null in the type.
+const BY_CODE: Record<string, string | null> = {
   NETWORK_ERROR: "Could not reach the server. Check your connection and try again.",
-  ABORTED: null, // a cancelled request is not a failure the user should see
+  ABORTED: null,
 };
 
-const BY_STATUS = {
+const BY_STATUS: Record<number, string> = {
   400: "That request wasn't valid. Please check the form and try again.",
   401: "Your session has expired. Please sign in again.",
   403: "You don't have permission to do that.",
@@ -31,11 +33,11 @@ const BY_STATUS = {
 };
 
 /**
- * @param {unknown} error    whatever landed in the catch
- * @param {string} fallback  what to say when nothing better is known
- * @returns {string|null}    null means "say nothing" (a cancelled request)
+ * @param error     whatever landed in the catch
+ * @param fallback  what to say when nothing better is known
+ * @returns         null means "say nothing" (a cancelled request)
  */
-export function toUserMessage(error, fallback = DEFAULT) {
+export function toUserMessage(error: unknown, fallback = DEFAULT): string | null {
   if (error instanceof ApiError) {
     if (error.code in BY_CODE) return BY_CODE[error.code];
 

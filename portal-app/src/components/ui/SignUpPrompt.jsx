@@ -15,21 +15,12 @@ const SignUpPrompt = ({ open, onClose, type }) => {
       size="small"
       title={isTeacher ? "Sign Up for Teacher Account" : "Sign Up for Student Account"}
     >
-      <div style={{ textAlign: "center" }}>
-        <p style={{ marginBottom: 24 }}>Please sign up or log in to access this page.</p>
+      <div className="text-center">
+        <p className="mb-6">Please sign up or log in to access this page.</p>
         <Link to={isTeacher ? "/teacher-signup" : "/student-signup"}>
           <button
             type="button"
-            style={{
-              background: "#162040",
-              color: "#fff",
-              border: "none",
-              borderRadius: 6,
-              padding: "12px 32px",
-              fontWeight: 600,
-              fontSize: "1rem",
-              cursor: "pointer",
-            }}
+            className="cursor-pointer rounded-md border-0 bg-navy px-8 py-3 text-base font-semibold text-white"
           >
             {isTeacher ? "Sign Up as Teacher" : "Sign Up as Student"}
           </button>

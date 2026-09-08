@@ -21,12 +21,37 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-export default function useFormValidation(schema) {
-  const [errors, setErrors] = useState({});
+import type { Rule } from "@/utils/validators";
+
+/** field name -> the rules it must pass, in order. */
+export type ValidationSchema<TField extends string = string> = Partial<Record<TField, Rule[]>>;
+
+/** field name -> the first message that failed. Absent means the field is fine. */
+export type ValidationErrors<TField extends string = string> = Partial<Record<TField, string>>;
+
+export interface FormValidation<TField extends string = string> {
+  errors: ValidationErrors<TField>;
+  hasErrors: boolean;
+  /** Check every field. True when the form may be submitted. */
+  validateAll: (values: Partial<Record<TField, unknown>>) => boolean;
+  /** Re-check one field. No-op before the first submit. */
+  revalidate: (field: TField, value: unknown) => void;
+  clear: () => void;
+}
+
+/**
+ * `TField` is inferred from the schema object's own keys, so `form.errors`
+ * and `form.revalidate` only accept fields the schema declares - a typo in a
+ * field name is a build error rather than an error that never displays.
+ */
+export default function useFormValidation<TField extends string>(
+  schema: ValidationSchema<TField>
+): FormValidation<TField> {
+  const [errors, setErrors] = useState<ValidationErrors<TField>>({});
   const [submitted, setSubmitted] = useState(false);
 
   const runField = useCallback(
-    (field, value) => {
+    (field: TField, value: unknown): string | null => {
       const rules = schema[field] || [];
       for (const rule of rules) {
         const message = rule(value);
@@ -39,9 +64,9 @@ export default function useFormValidation(schema) {
 
   /** Check every field. Returns true when the form may be submitted. */
   const validateAll = useCallback(
-    (values) => {
-      const next = {};
-      for (const field of Object.keys(schema)) {
+    (values: Partial<Record<TField, unknown>>) => {
+      const next: ValidationErrors<TField> = {};
+      for (const field of Object.keys(schema) as TField[]) {
         const message = runField(field, values[field]);
         if (message) next[field] = message;
       }
@@ -57,7 +82,7 @@ export default function useFormValidation(schema) {
    * is not flagged while the user is still in it.
    */
   const revalidate = useCallback(
-    (field, value) => {
+    (field: TField, value: unknown) => {
       if (!submitted) return;
       setErrors((current) => {
         const message = runField(field, value);

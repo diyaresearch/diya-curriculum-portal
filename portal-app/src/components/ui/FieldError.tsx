@@ -11,18 +11,20 @@
  *   <FieldError id="Title" message={form.errors.Title} />
  */
 
-export default function FieldError({ id, message }) {
+export interface FieldErrorProps {
+  /** The field's own id. The message element becomes `${id}-error`. */
+  id: string;
+  /** Nothing is rendered when this is absent, so callers can pass through. */
+  message?: string | null;
+}
+
+export default function FieldError({ id, message }: FieldErrorProps) {
   if (!message) return null;
   return (
     <p
       id={`${id}-error`}
       role="alert"
-      style={{
-        color: "#b91c1c",
-        fontSize: "0.9rem",
-        margin: "4px 0 0",
-        lineHeight: 1.35,
-      }}
+      className="mt-1 mb-0 text-[0.9rem] leading-[1.35] text-danger"
     >
       {message}
     </p>
@@ -33,7 +35,7 @@ export default function FieldError({ id, message }) {
  * The matching props for the input itself, so the two cannot drift apart.
  * Spread onto the field: <input {...fieldErrorProps("Title", errors.Title)} />
  */
-export function fieldErrorProps(id, message) {
+export function fieldErrorProps(id: string, message?: string | null) {
   return message
     ? { "aria-invalid": true, "aria-describedby": `${id}-error` }
     : { "aria-invalid": undefined, "aria-describedby": undefined };

@@ -12,16 +12,25 @@
  * a POST to a log route) without touching a single boundary.
  */
 
-/** @type {((report: {error: unknown, boundary: string, componentStack: string|null}) => void)|null} */
-let sink = null;
+/** What a boundary hands over when it catches. */
+export interface ErrorReport {
+  error: unknown;
+  /** Which boundary caught it: "root", "route", "navbar", "footer", ... */
+  boundary: string;
+  /** React's component stack - the part that names the component that threw. */
+  componentStack: string | null;
+}
+
+export type ErrorSink = (report: ErrorReport) => void;
+
+let sink: ErrorSink | null = null;
 
 /**
  * Register the destination for reported errors. Replaces any previous sink.
  *
- * @param {((report: object) => void)|null} fn
- * @returns {() => void} removes this sink again (handy in tests)
+ * @returns a function that removes this sink again (handy in tests)
  */
-export function setErrorSink(fn) {
+export function setErrorSink(fn: ErrorSink | null | undefined): () => void {
   sink = typeof fn === "function" ? fn : null;
   const registered = sink;
   return () => {
@@ -32,13 +41,12 @@ export function setErrorSink(fn) {
 /**
  * Report a crash. Never throws: it runs inside componentDidCatch, where an
  * exception would take down the boundary that was meant to contain one.
- *
- * @param {unknown} error
- * @param {{boundary?: string, componentStack?: string|null}} context
- * @returns {{error: unknown, boundary: string, componentStack: string|null}}
  */
-export function reportError(error, context = {}) {
-  const report = {
+export function reportError(
+  error: unknown,
+  context: { boundary?: string; componentStack?: string | null } = {}
+): ErrorReport {
+  const report: ErrorReport = {
     error,
     boundary: context.boundary || "unknown",
     componentStack: context.componentStack ?? null,

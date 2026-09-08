@@ -20,23 +20,47 @@
  * lacked.
  */
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { getAuth, onAuthStateChanged, signOut, type User } from "firebase/auth";
+import { doc, onSnapshot, type Unsubscribe } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 import { db } from "@/firebase/firebaseConfig";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { normalizeRole } from "@/constants/roles";
+import type { UserDocument } from "@/types/models";
 
-const AuthContext = createContext(null);
+/** The three values the listener writes, always together. */
+interface AuthState {
+  user: User | null;
+  userData: UserDocument | null;
+  loading: boolean;
+}
 
-export function AuthProvider({ children }) {
-  const [state, setState] = useState({ user: null, userData: null, loading: true });
+export interface AuthContextValue extends AuthState {
+  /** The stored role mapped onto a current one; null when signed out. */
+  role: string | null;
+  logout: () => Promise<void>;
+}
+
+// null is the "no provider above me" sentinel that useAuth() throws on - it
+// is not a valid context value, which is why the type includes it.
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<AuthState>({ user: null, userData: null, loading: true });
   const navigate = useNavigate();
 
   useEffect(() => {
-    let unsubscribeUserDoc = null;
+    let unsubscribeUserDoc: Unsubscribe | null = null;
 
     const stopWatchingUserDoc = () => {
       if (typeof unsubscribeUserDoc === "function") {
@@ -61,7 +85,11 @@ export function AuthProvider({ children }) {
         (snapshot) => {
           setState({
             user: firebaseUser,
-            userData: snapshot.exists() ? snapshot.data() : null,
+            // Firestore hands back DocumentData; UserDocument is this app's
+            // claim about what those fields are (see @/types/models), and
+            // every one of them is optional because the collection has no
+            // schema.
+            userData: snapshot.exists() ? (snapshot.data() as UserDocument) : null,
             loading: false,
           });
         },

@@ -13,16 +13,19 @@
 
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
-import { TYPO } from "@/constants/typography";
-
 const ToastContext = createContext(null);
 
 const AUTO_DISMISS_MS = 5000;
 
+// Held as class strings rather than hex, so a tone is applied the same way
+// every other colour in the app now is (#360). The hexes are spelled out
+// instead of using Tailwind's own red-500/emerald-500/blue-500: those were
+// the v3 values, and Tailwind 4 redefined its default palette in OKLCH, so
+// the named utilities would shift these three toasts a shade.
 const TONE = {
-  success: { bg: "#ecfdf5", border: "#10b981", fg: "#065f46", icon: "✓" },
-  error: { bg: "#fef2f2", border: "#ef4444", fg: "#991b1b", icon: "!" },
-  info: { bg: "#eff6ff", border: "#3b82f6", fg: "#1e40af", icon: "i" },
+  success: { skin: "bg-[#ecfdf5] border-[#10b981] text-[#065f46]", icon: "✓" },
+  error: { skin: "bg-[#fef2f2] border-[#ef4444] text-[#991b1b]", icon: "!" },
+  info: { skin: "bg-[#eff6ff] border-[#3b82f6] text-[#1e40af]", icon: "i" },
 };
 
 export function ToastProvider({ children }) {
@@ -78,55 +81,24 @@ export function ToastProvider({ children }) {
         // was doing by force.
         role="status"
         aria-live="polite"
-        style={{
-          position: "fixed",
-          top: 16,
-          right: 16,
-          zIndex: 5000,
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-          maxWidth: "min(420px, calc(100vw - 32px))",
-          pointerEvents: "none",
-        }}
+        className="pointer-events-none fixed top-4 right-4 z-[5000] flex max-w-[min(420px,calc(100vw-32px))] flex-col gap-2"
       >
         {toasts.map((toast) => {
           const tone = TONE[toast.tone] || TONE.info;
           return (
             <div
               key={toast.id}
-              style={{
-                pointerEvents: "auto",
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 10,
-                background: tone.bg,
-                border: `1px solid ${tone.border}`,
-                borderLeft: `4px solid ${tone.border}`,
-                color: tone.fg,
-                borderRadius: 8,
-                padding: "12px 14px",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
-                fontSize: TYPO?.body ?? "1rem",
-              }}
+              className={`pointer-events-auto flex items-start gap-2.5 rounded-lg border border-l-4 px-3.5 py-3 text-body shadow-[0_4px_16px_rgba(0,0,0,0.12)] ${tone.skin}`}
             >
-              <span aria-hidden="true" style={{ fontWeight: 700, lineHeight: 1.4 }}>
+              <span aria-hidden="true" className="font-bold leading-[1.4]">
                 {tone.icon}
               </span>
-              <span style={{ flex: 1, lineHeight: 1.4 }}>{toast.message}</span>
+              <span className="flex-1 leading-[1.4]">{toast.message}</span>
               <button
                 type="button"
                 onClick={() => dismiss(toast.id)}
                 aria-label="Dismiss notification"
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "inherit",
-                  cursor: "pointer",
-                  fontSize: "1.1rem",
-                  lineHeight: 1,
-                  padding: 0,
-                }}
+                className="cursor-pointer border-0 bg-transparent p-0 text-[1.1rem] leading-none text-inherit"
               >
                 ×
               </button>

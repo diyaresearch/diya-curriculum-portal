@@ -21,6 +21,6 @@
 import { apiUrl } from "@/utils/apiOrigin";
 
 /** Fetch a /api/payment/<path> route. `path` starts with a slash. */
-export function fetchPayments(path, options) {
+export function fetchPayments(path: string, options?: RequestInit): Promise<Response> {
   return fetch(apiUrl(`/api/payment${path}`), options);
 }

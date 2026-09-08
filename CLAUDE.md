@@ -17,7 +17,8 @@ DIYA Curriculum Portal is a full-stack educational platform built with React fro
 ### Frontend (portal-app/)
 - **Framework**: React 18, built with Vite (`vite.config.js`) — react-scripts/CRA and the
   `@craco/craco` patch it needed were removed in #503
-- **Styling**: Tailwind CSS
+- **Language**: JavaScript and TypeScript side by side — see "TypeScript" below
+- **Styling**: Tailwind CSS, from the `@theme` tokens in `src/index.css`
 - **Routing**: React Router DOM
 - **State Management**: React hooks, Firebase context
 - **Key Dependencies**: Firebase SDK, React Quill, jsPDF, React Modal
@@ -110,7 +111,7 @@ values and are set up in exactly one file apiece:
 
 | | Client SDK (`firebase`) | Admin SDK (`firebase-admin`) |
 | --- | --- | --- |
-| Configured in | `portal-app/src/firebase/firebaseConfig.js` | `functions/config/firebaseConfig.js` |
+| Configured in | `portal-app/src/firebase/firebaseConfig.ts` | `functions/config/firebaseConfig.js` |
 | From | `VITE_FIREBASE_*`, inlined into the bundle | a Google Cloud credential resolved by `functions/config/credentials.js` |
 | Secret? | No — public project identifiers. Firestore rules and the backend's token checks are what protect data. | Yes. Never in the bundle, never in git; see `functions/CREDENTIALS.md`. |
 
@@ -130,7 +131,7 @@ as `auth/invalid-api-key` on the sign-in button.
 
 `getAuth()` is deliberately left alone by all of this: it initializes nothing,
 so which spelling a file uses is not an initialization question. Where it is
-legitimate — `utils/apiClient.js` for a fresh ID token per request, and
+legitimate — `utils/apiClient.ts` for a fresh ID token per request, and
 `auth/googleAuth.js` for the sign-in flow itself — it stays. The component
 call sites that still exist are "Auth and user state" below (#368) left to
 finish, not a second config.
@@ -166,6 +167,7 @@ npm run preview     # Serve that build locally, as Firebase Hosting would
 npm test            # Run tests once (vitest run)
 npm run test:watch  # Watch mode
 npm run lint        # ESLint, zero-warnings
+npm run typecheck   # tsc --noEmit (the build does NOT type-check; see below)
 ```
 
 Requires Node 22.12+ (Vite 7 / Vitest 5). The build output directory (`build/`, assets
@@ -286,6 +288,103 @@ cached user/subscription data right after a mutation (see the comments around th
 `pages/lesson-plans/builder.jsx`) - don't replace those with `navigate()`, which wouldn't
 force the same reset. Reading `window.location.origin/hostname/pathname` (no navigation
 involved) is unaffected by any of this.
+
+### Styling (portal-app/)
+
+**Tailwind utilities are the default.** The design tokens are the `@theme`
+block in `src/index.css` — Tailwind 4 has no `tailwind.config.js`, that block
+*is* the theme. Every token there is emitted as a CSS custom property on
+`:root` *and* generates utilities by namespace:
+
+```
+--color-navy: #162040    ->  bg-navy   text-navy   border-navy
+--text-body: 1.05rem     ->  text-body
+```
+
+Use the token name, not the hex. `navy` / `accent` / `success` / `danger` /
+`link`, `ink-strong` → `ink` → `ink-muted` → `ink-faint` for text,
+`surface` / `surface-subtle` / `surface-sunken` / `rule` / `rule-strong`,
+and the `text-page-title` … `text-helper` scale. Before #360 the app carried
+three yellows, four reds and six off-whites for what are visually one colour
+each, because nothing named them.
+
+**Inline `style` is for runtime-computed values only.** A class cannot take a
+value that is not known until render. `Loading.tsx` is the reference: its
+spinner ring is derived from a `size` prop, so *that* stays inline and
+everything else about the component is a class list. A `style` prop the
+component exposes to callers (`SectionCard`, `MetaChipsRow`) also stays — the
+component's own appearance is in its classes, the prop spreads on top. A
+library's `style` prop is that library's API, not a DOM inline style, so
+`Modal.jsx`'s `react-modal` config stays as an object.
+
+**Repeated appearance is a named constant** (`NAV_LINK` in `Navbar.jsx`,
+`FOOTER_LINK`, `CHIP`), never a copied class list. The navbar is why: its link
+style was inlined six times and the copies had drifted apart.
+
+**Don't reach for Tailwind's named palette for a brand value** — Tailwind 4
+redefined its defaults in OKLCH, so `red-500` is no longer `#ef4444`.
+
+`src/App.css` is not the place for new rules. It holds exactly two kinds:
+styles for markup this app does not render (`.react-pdf__*`) and
+descendant/state selectors over a shared block (`.multi-select*`).
+
+`src/constants/typography.js` (`TYPO`) is the **old** system — style objects
+that could only be applied by spreading them into `style={{}}`. It survives
+only for pages not yet migrated. Use the `text-*` utilities instead; do not
+add a `TYPO` spread to a new component.
+
+The audit, the remaining work (775 sites across `pages/` and
+`components/home/`), and the full rationale are in `docs/STYLING.md`.
+
+### TypeScript (portal-app/)
+
+The app is **mid-migration** (#365): 18 files are TypeScript, ~82 are still
+JavaScript, and both compile in the same build. `tsconfig.json` is what makes
+that work — `allowJs: true` with `checkJs: false` means tsc resolves the
+`.js`/`.jsx` files so a converted module can import one, without reporting
+errors inside them.
+
+`strict` is on and applies to the converted files. That is the point: a file
+arrives fully typed when it moves, rather than arriving as implicit `any`.
+
+**`npm run build` does not type-check.** Vite transpiles with esbuild, which
+strips types without looking at them, so a type error compiles and ships. Only
+`npm run typecheck` (`tsc --noEmit`) catches it, and CI runs it as a step of
+the required `portal-app` job.
+
+Converted so far — the priority list from the issue: `firebase/`, the API
+utilities (`apiClient`, `apiOrigin`, `errorMessage`, `errorReporter`,
+`validators`, `paymentsApi`), `constants/roles`, all four `hooks/`,
+`context/AuthProvider`, and `components/ui/{FieldError,Loading}`.
+
+Two files carry the shared types:
+
+- `src/types/models.ts` — the Firestore document shapes (`UserDocument`,
+  `UnitDocument`, `LessonDocument`, `ModuleDocument`). Almost every field is
+  optional *on purpose*: these collections have no schema and predate any
+  validation, so a document written before a field existed simply lacks it.
+  Note the `content` collection uses `Capitalized` keys while `lesson` and
+  `module` use camelCase — that is real, and these types are what stop a
+  caller guessing. Keep them in step with `functions/controllers/`.
+- `src/vite-env.d.ts` — the `VITE_*` variables, all optional (Vite only
+  inlines what the current mode's .env defines). Keep in sync with
+  `.env.example`.
+
+`api.get()` and friends are generic, defaulting to `unknown`:
+
+```ts
+const lesson = await api.get<Lesson>(`/api/lesson/${id}`);
+```
+
+The default is `unknown` rather than `any` because the client deliberately
+does not unwrap a response envelope — the body is whatever the route sent, so
+a caller that does not say what it expects is made to narrow it.
+
+When converting a file: `git mv` it (so history follows), type it properly
+rather than reaching for `any` — `@typescript-eslint/no-explicit-any` is an
+error — and check whether any *test* hardcodes its `.js` path or globs only
+`js|jsx`. `firebase/__tests__/firebaseConfig.test.js` did both, and a scan
+that only looks at `.js` silently stops covering each file as it moves.
 
 ### Modals (portal-app/)
 
@@ -424,7 +523,7 @@ same document, and two components could disagree about the current role
 depending on which read finished first.
 
 Never call `getAuth()` in a component to learn who is signed in - use the
-context. `getAuth()` is still correct in exactly two places: `utils/apiClient.js`
+context. `getAuth()` is still correct in exactly two places: `utils/apiClient.ts`
 (it needs a fresh ID token per request) and `auth/googleAuth.js` (it runs the
 sign-in flow itself).
 
@@ -432,7 +531,7 @@ sign-in flow itself).
 
 One way in, one way out. Established in #370 (transport) and #367 (reporting).
 
-**Calling the backend.** Everything goes through `src/utils/apiClient.js` -
+**Calling the backend.** Everything goes through `src/utils/apiClient.ts` -
 never a bare `fetch` and never `axios` (removed in #370, it is no longer a
 dependency):
 
@@ -451,7 +550,7 @@ responses are raw `res.json()`, so the parsed body comes back verbatim.
 
 Payments are the one exception, and no longer for architectural reasons: since
 #439 they are on the same origin as everything else, resolved by the one
-`src/utils/apiOrigin.js`. `src/utils/paymentsApi.js` survives as a four-line
+`src/utils/apiOrigin.ts`. `src/utils/paymentsApi.ts` survives as a four-line
 wrapper only because its call sites read the raw `Response` (checking
 `res.ok`, pulling Stripe's `client_secret` out of the body) instead of
 apiClient's throw-on-error contract. Converting them is a change to live
@@ -538,7 +637,7 @@ backend has no client-log route, so the console is the only destination today;
 `import.meta.env.VITE_*`; only the `VITE_` prefix is inlined into the bundle. The prefix
 was `REACT_APP_` before #503.
 - `VITE_SERVER_ORIGIN_URL` - Backend API URL. Read in exactly one place,
-  `src/utils/apiOrigin.js`, which both `apiClient.js` and `paymentsApi.js` use.
+  `src/utils/apiOrigin.ts`, which both `apiClient.ts` and `paymentsApi.ts` use.
   Blank means same-origin, relying on the Hosting rewrite of `/api/**`.
 - `VITE_HOME_PAGE` - Frontend application URL
 - `VITE_DIYA_BASE_URL` - DIYA research organization URL

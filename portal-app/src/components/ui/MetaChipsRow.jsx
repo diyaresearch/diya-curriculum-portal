@@ -28,38 +28,21 @@ function toDisplayValue(value) {
   return s || "—";
 }
 
-const MetaChipsRow = ({ items = [], align = "center", style }) => {
-  const chipBase = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 6,
-    padding: "8px 14px",
-    borderRadius: 999,
-    border: "1px solid #cbd5e1",
-    background: "#e2e8f0",
-    color: "#111",
-    fontWeight: 600,
-    fontSize: "0.95rem",
-    lineHeight: 1,
-    whiteSpace: "nowrap",
-  };
+const CHIP =
+  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border " +
+  "border-rule-strong bg-surface-sunken px-3.5 py-2 text-meta font-semibold leading-none text-ink-strong";
 
+const MetaChipsRow = ({ items = [], align = "center", style }) => {
   return (
     <div
-      style={{
-        display: "flex",
-        justifyContent: align === "left" ? "flex-start" : "center",
-        flexWrap: "wrap",
-        gap: 12,
-        ...style,
-      }}
+      className={`flex flex-wrap gap-3 ${align === "left" ? "justify-start" : "justify-center"}`}
+      style={style}
     >
       {items
         .filter((x) => x && x.label && hasValue(x.value))
         .map(({ label, value }, idx) => (
-          <span key={`${label}-${idx}`} style={chipBase}>
-            <span style={{ opacity: 0.85 }}>{label}:</span>{" "}
-            <span>{toDisplayValue(value)}</span>
+          <span key={`${label}-${idx}`} className={CHIP}>
+            <span className="opacity-85">{label}:</span> <span>{toDisplayValue(value)}</span>
           </span>
         ))}
     </div>

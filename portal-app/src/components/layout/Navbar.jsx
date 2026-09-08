@@ -8,6 +8,28 @@ import { startGoogleRedirect } from "@/auth/googleAuth";
 import { useToast } from "@/components/ui/ToastProvider";
 import { ROLES } from "@/constants/roles";
 
+// The navbar's shared item box, written once (#360).
+//
+// This declaration block was inlined SIX times - as a `navLinkStyle` object
+// for two links, and character-for-character as a literal for the other four
+// - so changing the navbar's type scale meant six edits and reliably got
+// five. The two spellings had already drifted: only the literal copies set
+// `cursor: pointer`, so the Profile and Admin links did not show a pointer.
+const NAV_ITEM =
+  "flex h-14 items-center px-5 font-sans text-[15px] font-semibold tracking-[1.5px] text-ink";
+
+// A clickable item adds the affordances. The resets matter because this class
+// lands on both <button> and <Link>: without them a button would keep the
+// user agent's border and background and render a hair differently from the
+// links beside it.
+// The two choices in the "no account exists" popup differ only in colour.
+const SIGNUP_CHOICE =
+  "w-full rounded-md border-0 py-3 text-base font-semibold text-white cursor-pointer";
+
+const NAV_LINK =
+  `${NAV_ITEM} bg-transparent border-0 outline-none cursor-pointer ` +
+  "[text-underline-offset:20px] hover:underline";
+
 const Navbar = () => {
   const toast = useToast();
   const { userData, logout } = useUserData();
@@ -70,41 +92,12 @@ const Navbar = () => {
     return (
       <div>
         No account exists for this Google account.
-        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-          <Link to="/student-signup" style={{ textDecoration: "none" }}>
-            <button
-              style={{
-                width: "100%",
-                background: "#2563eb",
-                color: "#fff",
-                border: "none",
-                borderRadius: 6,
-                padding: "12px 0",
-                fontWeight: 600,
-                fontSize: "1rem",
-                cursor: "pointer",
-                marginBottom: 8
-              }}
-            >
-              Sign Up as Student
-            </button>
+        <div className="mt-6 flex flex-col gap-3">
+          <Link to="/student-signup" className="no-underline">
+            <button className={`${SIGNUP_CHOICE} bg-[#2563eb] mb-2`}>Sign Up as Student</button>
           </Link>
-          <Link to="/teacher-signup" style={{ textDecoration: "none" }}>
-            <button
-              style={{
-                width: "100%",
-                background: "#162040",
-                color: "#fff",
-                border: "none",
-                borderRadius: 6,
-                padding: "12px 0",
-                fontWeight: 600,
-                fontSize: "1rem",
-                cursor: "pointer"
-              }}
-            >
-              Sign Up as Teacher
-            </button>
+          <Link to="/teacher-signup" className="no-underline">
+            <button className={`${SIGNUP_CHOICE} bg-navy`}>Sign Up as Teacher</button>
           </Link>
         </div>
       </div>
@@ -144,52 +137,19 @@ const Navbar = () => {
   const isTeacherPlus = role === ROLES.TEACHER_PLUS;
   const isAdmin = role === ROLES.ADMIN;
   const homeTo = isTeacherPlus ? "/teacherplus" : "/";
-  const navLinkStyle = {
-    fontSize: "15px",
-    fontWeight: "600",
-    fontFamily: "Open Sans, sans-serif",
-    letterSpacing: "1.5px",
-    textUnderlineOffset: "20px",
-    padding: "0px 20px",
-    color: "#222",
-    background: "none",
-    border: "none",
-    outline: "none",
-    cursor: "pointer",
-    height: "56px",
-    display: "flex",
-    alignItems: "center"
-  };
 
   return (
     <>
-      <nav
-        style={{ width: "100%", backgroundColor: "#fff", minHeight: "80px", height: "80px" }}
-        className="px-4 flex justify-between items-center shadow"
-      >
-        <div className="flex items-center" style={{ gap: "20px" }}>
+      <nav className="w-full h-20 min-h-20 bg-surface px-4 flex justify-between items-center shadow">
+        <div className="flex items-center gap-5">
           <a href={import.meta.env.VITE_DIYA_BASE_URL} target="_blank" rel="noopener noreferrer">
             <img
               src={logo}
               alt="Logo"
-              style={{
-                height: "65px",
-                width: "55px",
-                borderRadius: "10%",
-                objectFit: "contain",
-                border: "1px solid #eee"
-              }}
+              className="h-[65px] w-[55px] rounded-[10%] object-contain border border-rule"
             />
           </a>
-          <span
-            style={{
-              fontSize: "1.6rem",
-              fontWeight: "600",
-              color: "#000",
-              fontFamily: "Open Sans, sans-serif",
-              letterSpacing: "1px"
-            }}
-          >
+          <span className="font-sans text-[1.6rem] font-semibold tracking-[1px] text-black">
             DIYA Ed Portal
           </span>
         </div>
@@ -197,35 +157,19 @@ const Navbar = () => {
         <div className="flex items-center space-x-0 ml-auto">
           <Link
             to={homeTo}
-            className="hover:underline"
-            style={{
-              fontSize: "15px",
-              fontWeight: "600",
-              fontFamily: "Open Sans, sans-serif",
-              letterSpacing: "1.5px",
-              textUnderlineOffset: "20px",
-              padding: "0px 20px",
-              color: "#222",
-              background: "none",
-              border: "none",
-              outline: "none",
-              cursor: "pointer",
-              height: "56px",
-              display: "flex",
-              alignItems: "center"
-            }}
+            className={NAV_LINK}
           >
             Home
           </Link>
 
           {/* #443: the only admin user-management UI (/user-profile) had no inbound link */}
           {user && (
-            <Link to="/user-profile" className="hover:underline" style={navLinkStyle}>
+            <Link to="/user-profile" className={NAV_LINK}>
               Profile
             </Link>
           )}
           {isAdmin && (
-            <Link to="/user-profile" className="hover:underline" style={navLinkStyle}>
+            <Link to="/user-profile" className={NAV_LINK}>
               Admin
             </Link>
           )}
@@ -234,23 +178,7 @@ const Navbar = () => {
           {isTeacherDefault && (
             <Link
               to="/upgrade"
-              className="hover:underline"
-              style={{
-                fontSize: "15px",
-                fontWeight: "600",
-                fontFamily: "Open Sans, sans-serif",
-                letterSpacing: "1.5px",
-                textUnderlineOffset: "20px",
-                padding: "0px 20px",
-                color: "#222",
-                background: "none",
-                border: "none",
-                outline: "none",
-                cursor: "pointer",
-                height: "56px",
-                display: "flex",
-                alignItems: "center"
-              }}
+              className={NAV_LINK}
             >
               Upgrade
             </Link>
@@ -260,23 +188,7 @@ const Navbar = () => {
           {isTeacherPlus && (
             <button
               onClick={() => navigate('/cancel-subscription')}
-              className="hover:underline"
-              style={{
-                fontSize: "15px",
-                fontWeight: "600",
-                fontFamily: "Open Sans, sans-serif",
-                letterSpacing: "1.5px",
-                textUnderlineOffset: "20px",
-                padding: "0px 20px",
-                color: "#222",
-                background: "none",
-                border: "none",
-                outline: "none",
-                cursor: "pointer",
-                height: "56px",
-                display: "flex",
-                alignItems: "center"
-              }}
+              className={NAV_LINK}
             >
               Cancel Subscription
             </button>
@@ -289,23 +201,7 @@ const Navbar = () => {
               href={import.meta.env.VITE_DIYA_BASE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:underline"
-              style={{
-                fontSize: "15px",
-                fontWeight: "600",
-                fontFamily: "Open Sans, sans-serif",
-                letterSpacing: "1.5px",
-                textUnderlineOffset: "20px",
-                padding: "0px 20px",
-                color: "#222",
-                background: "none",
-                border: "none",
-                outline: "none",
-                cursor: "pointer",
-                height: "56px",
-                display: "flex",
-                alignItems: "center"
-              }}
+              className={NAV_LINK}
             >
               About
             </a>
@@ -314,60 +210,24 @@ const Navbar = () => {
           {!user ? (
             <button
               onClick={handleGoogleLogin}
-              className="hover:underline"
-              style={{
-                fontSize: "15px",
-                fontWeight: "600",
-                fontFamily: "Open Sans, sans-serif",
-                letterSpacing: "1.5px",
-                textUnderlineOffset: "20px",
-                padding: "0px 20px",
-                color: "#222",
-                background: "none",
-                border: "none",
-                outline: "none",
-                cursor: "pointer",
-                height: "56px",
-                display: "flex",
-                alignItems: "center"
-              }}
+              className={NAV_LINK}
             >
               Log in
             </button>
           ) : (
             <>
               <div
-                className="flex items-center space-x-2"
-                style={{
-                  fontSize: "15px",
-                  fontWeight: "600",
-                  fontFamily: "Open Sans, sans-serif",
-                  letterSpacing: "1.5px",
-                  textUnderlineOffset: "20px",
-                  padding: "0px 20px",
-                  color: "#222",
-                  background: "none",
-                  border: "none",
-                  outline: "none",
-                  height: "56px",
-                  display: "flex",
-                  alignItems: "center"
-                }}
+                className={`${NAV_ITEM} space-x-2`}
               >
                 <img
                   src={defaultUserIcon}
                   alt="User Profile"
-                  className="w-9 h-9 rounded-full border-2 border-black shadow-md mr-3"
-                  style={{
-                    objectFit: "cover",
-                    background: "#e3e8f0",
-                    padding: "2px"
-                  }}
+                  className="w-9 h-9 rounded-full border-2 border-black shadow-md mr-3 object-cover bg-surface-sunken p-0.5"
                 />
                 <span className="font-semibold">
                   {userData?.fullName || "Profile"}
                   {userData?.role && (
-                    <span style={{ fontWeight: 400, fontSize: "0.95em" }}>
+                    <span className="font-normal text-[0.95em]">
                       {" "}({userData.role})
                     </span>
                   )}
@@ -375,23 +235,7 @@ const Navbar = () => {
               </div>
               <button
                 onClick={handleSignOut}
-                className="hover:underline"
-                style={{
-                  fontSize: "15px",
-                  fontWeight: "600",
-                  fontFamily: "Open Sans, sans-serif",
-                  letterSpacing: "1.5px",
-                  textUnderlineOffset: "20px",
-                  padding: "0px 20px",
-                  color: "#222",
-                  background: "none",
-                  border: "none",
-                  outline: "none",
-                  cursor: "pointer",
-                  height: "56px",
-                  display: "flex",
-                  alignItems: "center"
-                }}
+                className={NAV_LINK}
               >
                 Logout
               </button>
@@ -399,7 +243,7 @@ const Navbar = () => {
           )}
         </div>
         {isSignUpModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-800/50">
             <div className="bg-white p-6 rounded-lg shadow-md max-w-lg w-full relative">
               {/* X button in the top-right corner */}
               <button
@@ -500,49 +344,17 @@ const Navbar = () => {
       </nav>
       {/* Error Modal Popup */}
       {(showSignUpPopup || loginError) && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.45)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 16,
-              padding: "40px 32px",
-              minWidth: 340,
-              maxWidth: 400,
-              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-              textAlign: "center",
-              position: "relative"
-            }}
-          >
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45">
+          <div className="relative bg-surface rounded-2xl px-8 py-10 min-w-[340px] max-w-[400px] text-center shadow-[0_8px_32px_rgba(0,0,0,0.18)]">
             <button
               onClick={closeErrorPopup}
-              style={{
-                position: "absolute",
-                top: 12,
-                right: 18,
-                background: "none",
-                border: "none",
-                fontSize: "1.7rem",
-                color: "#888",
-                cursor: "pointer"
-              }}
+              className="absolute top-3 right-[18px] bg-transparent border-0 text-[1.7rem] text-ink-faint cursor-pointer"
               aria-label="Close"
             >
               ×
             </button>
-            <h2 style={{ color: "#c00", marginBottom: 18, fontWeight: 700, fontSize: "1.4rem" }}>
-              Login Error
-            </h2>
-            <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: 18 }}>
+            <h2 className="mb-[18px] text-[1.4rem] font-bold text-danger">Login Error</h2>
+            <div className="mb-[18px] text-[1.08rem] text-ink">
               {showSignUpPopup ? renderSignUpError() : loginError}
             </div>
           </div>

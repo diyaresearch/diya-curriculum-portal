@@ -13,13 +13,7 @@ function ChromeUnavailable() {
   return (
     <div
       role="alert"
-      style={{
-        padding: "10px 16px",
-        background: "#fff7ed",
-        borderBottom: "1px solid #fed7aa",
-        color: "#7c2d12",
-        fontSize: "0.9rem",
-      }}
+      className="border-b border-[#fed7aa] bg-[#fff7ed] px-4 py-2.5 text-[0.9rem] text-[#7c2d12]"
     >
       The navigation bar didn&apos;t load. <a href="/">Go to home</a> to get it back.
     </div>
@@ -44,11 +38,11 @@ const Layout = ({ children }) => {
   }, [navigate]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className="flex min-h-screen flex-col">
       <ErrorBoundary name="navbar" fallback={() => <ChromeUnavailable />}>
         <Navbar />
       </ErrorBoundary>
-      <main style={{ flex: 1 }}>{children}</main>
+      <main className="flex-1">{children}</main>
       {/* A footer that fails is worth logging but not worth telling the user
           about - there is nothing in it they need to finish what they came
           for, and an alert about it would only be noise. */}

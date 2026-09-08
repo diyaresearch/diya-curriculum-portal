@@ -2,6 +2,7 @@ import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import testingLibrary from "eslint-plugin-testing-library";
+import tseslint from "typescript-eslint";
 
 // Replaces CRA's bundled `react-app` / `react-app/jest` shareable configs,
 // which shipped inside react-scripts and disappeared with it (#503).
@@ -19,6 +20,42 @@ export default [
   },
   js.configs.recommended,
   reactHooks.configs.flat.recommended,
+
+  // TypeScript (#365). Scoped to .ts/.tsx so the ~90 remaining .js/.jsx files
+  // keep the exact rule set they had - this migration is incremental, and a
+  // lint config that changed underneath every file at once would be the
+  // opposite of that.
+  //
+  // `recommended`, not `recommendedTypeChecked`: the type-aware rules need a
+  // full program per lint run, which roughly triples lint time, and
+  // `npm run typecheck` already runs the compiler over the same files.
+  ...tseslint.configs.recommended.map((config) => ({
+    ...config,
+    files: ["**/*.{ts,tsx}"],
+  })),
+  {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      // The TS-aware replacement for the core rule below, with identical
+      // options. typescript-eslint's preset turns the core one off, because
+      // it cannot see type-only imports or parameter properties.
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          args: "none",
+          caughtErrors: "none",
+          ignoreRestSiblings: true,
+          varsIgnorePattern: "^React$",
+        },
+      ],
+    },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+      },
+    },
+  },
+
   {
     files: ["**/*.{js,jsx}"],
     rules: {
@@ -68,7 +105,7 @@ export default [
     },
   },
   {
-    files: ["src/**/*.{test,spec}.{js,jsx}", "src/setupTests.js"],
+    files: ["src/**/*.{test,spec}.{js,jsx,ts,tsx}", "src/setupTests.js"],
     ...testingLibrary.configs["flat/react"],
     languageOptions: {
       globals: {

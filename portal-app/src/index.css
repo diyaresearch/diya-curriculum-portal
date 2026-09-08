@@ -1,10 +1,64 @@
 @import "tailwindcss";
 
-:root {
+/* ---------------------------------------------------------------------------
+ * Design tokens (#360).
+ *
+ * Tailwind 4 has no tailwind.config.js - the theme IS this block. Every
+ * custom property declared here does two things at once:
+ *
+ *   1. it is emitted as a real CSS custom property on :root, so existing
+ *      `var(--text-page-title)` / `var(--font-sans)` references keep working;
+ *   2. Tailwind generates utilities from it by namespace, so `--color-navy`
+ *      gives `bg-navy` / `text-navy` / `border-navy`, and `--text-page-title`
+ *      gives `text-page-title`.
+ *
+ * That is why the tokens moved out of the plain `:root` block below and into
+ * `@theme`: a `:root` variable is only reachable through `style={{}}`, which
+ * is the thing #360 exists to remove. Add a token here rather than a hex
+ * literal at a call site.
+ *
+ * The palette is the one the app already had, deduplicated. The audit that
+ * produced it is in docs/STYLING.md; the short version is that the codebase
+ * carried three yellows (#f9c74f, #ffc940, #fdcb58), four reds (#e74c3c,
+ * #dc3545, #b91c1c, #c00) and six near-identical off-whites for what are
+ * visually one colour each. One name per role, so a fourth yellow cannot be
+ * introduced by accident.
+ * ------------------------------------------------------------------------- */
+@theme {
   --font-sans: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 
-  /* Module Builder baseline */
+  /* Brand. `navy` is the primary - ~100 call sites used #162040 directly. */
+  --color-navy: #162040;
+  --color-navy-deep: #111c44;
+  --color-navy-soft: #242b42;
+
+  /* Accent. The three yellows collapse to one; #f9c74f was the most used. */
+  --color-accent: #f9c74f;
+  --color-accent-strong: #ffc940;
+
+  /* Feedback. */
+  --color-success: #28a745;
+  --color-danger: #b91c1c;
+  --color-link: #1a73e8;
+
+  /* Text. `ink` is body copy, `ink-strong` headings, `ink-muted` secondary,
+     `ink-faint` helper text. Replaces bare #111/#222/#666/#888. */
+  --color-ink-strong: #111111;
+  --color-ink: #222222;
+  --color-ink-muted: #666666;
+  --color-ink-faint: #888888;
+
+  /* Surfaces and rules. */
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f6f8fa;
+  --color-surface-sunken: #e2e8f0;
+  --color-rule: #e5e7eb;
+  --color-rule-strong: #cbd5e1;
+
+  /* Typography scale (baseline: the Module Builder page). Generates
+     text-page-title, text-body, text-meta, ... alongside Tailwind's own
+     text-sm/text-lg, which stay available. */
   --text-page-title: 2.5rem;
   --text-page-subtitle: 1.18rem;
   --text-section-title: 1.25rem;
@@ -13,7 +67,7 @@
   --text-label: 1.08rem;
   --text-helper: 0.92rem;
 
-  /* Rich-text heading scale */
+  /* Rich-text heading scale, consumed by .rich-text-content below. */
   --text-rich-h1: 2rem;
   --text-rich-h2: 1.5rem;
   --text-rich-h3: 1.25rem;
@@ -98,7 +152,7 @@ code {
 }
 
 .rich-text-content a {
-  color: #1a73e8;
+  color: var(--color-link);
   text-decoration: underline;
 }
 
@@ -116,17 +170,27 @@ code {
   font-style: italic;
 }
 
-/* Spinner keyframes for components/ui/Loading.jsx (#369). Kept in CSS rather
-   than inline style so prefers-reduced-motion can switch it off - an inline
-   animation cannot be media-queried. */
+/* Spinner for components/ui/Loading.tsx (#369). Both halves live here because
+   an inline animation cannot be media-queried, and prefers-reduced-motion has
+   to be able to switch this one off.
+ *
+ * The selector is `.diya-spin` rather than the `[style*="diya-spin"]` it was
+ * until #360. That attribute selector worked only while the animation was
+ * written in the element's inline `style`; moving the spinner's static styles
+ * into a class list would have left it matching nothing, silently taking the
+ * reduced-motion escape hatch away from the users who need it. */
 @keyframes diya-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
+.diya-spin {
+  animation: diya-spin 0.7s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  [style*="diya-spin"] {
-    animation: none !important;
+  .diya-spin {
+    animation: none;
   }
 }
