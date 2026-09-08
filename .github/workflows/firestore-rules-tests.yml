@@ -1,0 +1,52 @@
+name: Firestore Rules Tests
+
+# Security rules are the only thing standing between the client SDK and the
+# database — the frontend reads Firestore directly (#419, #420, #382).
+#
+# This workflow is `workflow_call`-only: it never triggers on its own, so it
+# adds no scheduled or path-triggered Actions volume of its own. It exists so
+# that the two places that need the rules suite run the *same* steps:
+#
+#   - ci.yml's `firestore-rules` job, on every PR and push to main
+#   - deploy-firestore-config.yml, as the gate in front of a real deploy
+#
+# A previous standalone version of this file was deleted in #501 to cut
+# Actions volume, which left `portal-app/firestore.rules` with no automated
+# coverage at all (#500 recorded that tradeoff explicitly). #428's last
+# acceptance criterion — "rules deployed from source, with tests, in CI" —
+# is the revisit: rules that deploy automatically must be tested
+# automatically, so the coverage comes back as a called workflow rather than
+# as another independently-triggered one.
+
+on:
+  workflow_call:
+
+jobs:
+  rules-tests:
+    name: rules-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      # The Firestore emulator runs on the JVM.
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install dependencies
+        working-directory: tests/rules
+        run: npm ci --no-audit --no-fund
+
+      # `npm test` here is `firebase emulators:exec --only firestore`, so the
+      # suite runs against a real Firestore emulator, not a mock.
+      - name: Run rules tests
+        working-directory: tests/rules
+        run: npm test

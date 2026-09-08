@@ -22,6 +22,14 @@ name: CI
 # swapped react-scripts/CRA for Vite: that migration took it from 40
 # advisories (1 critical, 10 high) to 2 low.
 #
+# `firestore-rules` calls the reusable firestore-rules-tests.yml workflow,
+# which boots a real Firestore emulator against `portal-app/firestore.rules`.
+# It restores the coverage #501 removed with the standalone workflow — #428's
+# last acceptance criterion makes the rules deploy automatic, and an
+# automatic deploy needs an automatic test in front of it. The same called
+# workflow gates deploy-firestore-config.yml, so the tested rules and the
+# deployed rules are checked by identical steps.
+#
 # Both api-integration and dependency-audit still need a repo admin to
 # actually add them to branch protection's required-checks list — this
 # workflow file can't do that part.
@@ -203,3 +211,15 @@ jobs:
       - name: API log (always, for debugging)
         if: always()
         run: cat functions/api.log || true
+
+  # Firestore security rules are the frontend's only protection — it talks to
+  # Firestore directly with the client SDK. The suite boots a real Firestore
+  # emulator, so it lives in a called workflow shared with
+  # deploy-firestore-config.yml (see firestore-rules-tests.yml for why).
+  #
+  # Unconditional, like every other job here: `portal-app/firestore.rules` is
+  # not the only input to a rules regression — a query or a collection rename
+  # elsewhere in the PR can invalidate a rule without touching the rules file.
+  firestore-rules:
+    name: firestore-rules
+    uses: ./.github/workflows/firestore-rules-tests.yml
