@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import DOMPurify from "dompurify";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import Loading from "@/components/ui/Loading";
@@ -12,7 +13,6 @@ const NuggetDetails = () => {
   useEffect(() => {
     let cancelled = false;
     const fetchNugget = async () => {
-      const db = getFirestore();
       const docRef = doc(db, COLLECTIONS.content, id);
       const docSnap = await getDoc(docRef);
       if (cancelled) return;

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
-import { getFirestore, doc, updateDoc } from 'firebase/firestore';
-import { app as firebaseApp } from '@/firebase/firebaseConfig';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/firebase/firebaseConfig';
 import { COLLECTIONS } from '@/firebase/collectionNames';
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
@@ -27,7 +27,6 @@ const CancelSubscriptionPage = () => {
 
         try {
             // Update user role directly in Firestore
-            const db = getFirestore(firebaseApp);
             const userDocRef = doc(db, COLLECTIONS.users, user.uid);
 
             await updateDoc(userDocRef, {

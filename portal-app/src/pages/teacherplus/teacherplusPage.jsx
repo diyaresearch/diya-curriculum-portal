@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
-import { app as firebaseApp } from '@/firebase/firebaseConfig';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/firebase/firebaseConfig';
 import { COLLECTIONS } from '@/firebase/collectionNames';
 
 import {
@@ -97,7 +97,6 @@ const TeacherPlusPage = () => {
     useEffect(() => {
         if (!user) return; // Don't fetch if user is not logged in
 
-        const db = getFirestore(firebaseApp);
 
         // Fetch all modules for the filter section
         getDocs(collection(db, COLLECTIONS.module)).then(snapshot => {

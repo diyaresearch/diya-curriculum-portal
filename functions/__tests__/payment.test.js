@@ -12,6 +12,9 @@
  */
 
 process.env.STRIPE_SECRET_KEY_TEST = "sk_test_dummy";
+// /create-module-checkout-session returns the publishable key alongside the
+// client secret, so it needs one configured to answer at all.
+process.env.STRIPE_PUBLISHABLE_KEY_TEST = "pk_test_dummy";
 
 const mockStripeClient = {
   paymentIntents: {
@@ -53,7 +56,14 @@ const mockLogsCollection = {
   add: jest.fn().mockResolvedValue({ id: "log-1" }),
   doc: jest.fn(() => ({ create: jest.fn().mockResolvedValue(undefined) })),
 };
-const mockDb = { collection: jest.fn(() => mockLogsCollection) };
+// The `module` collection, read by /create-module-checkout-session to price
+// the purchase server-side. Everything else in this router talks to
+// payment_logs.
+const mockModuleSnap = { exists: true, data: () => ({ title: "Intro to AI", price: 12.5 }) };
+const mockModuleCollection = { doc: jest.fn(() => ({ get: jest.fn(async () => mockModuleSnap) })) };
+const mockDb = {
+  collection: jest.fn((name) => (name === "module" ? mockModuleCollection : mockLogsCollection)),
+};
 const mockAdmin = {
   firestore: {
     FieldValue: { serverTimestamp: () => "TIMESTAMP" },
@@ -116,9 +126,51 @@ describe("#432 — payment endpoints use req.stripe, not an undefined `stripe`",
   });
 
   // /create-module-checkout-session already used req.stripe correctly (the
-  // one endpoint the issue said still worked) and reads Firestore through its
-  // own module-scope getDb() via the real firebase-admin SDK rather than the
-  // mockable databaseService, so it isn't a fit for this mock-based suite.
+  // one endpoint the issue said still worked). It could not be covered here
+  // until #362, because it read Firestore through a module-scope getDb() that
+  // reached for the real firebase-admin SDK instead of the mockable
+  // databaseService. It now uses databaseService like its six siblings, so it
+  // has a test of its own below.
+});
+
+describe("#362 — /create-module-checkout-session reads Firestore through databaseService", () => {
+  test("prices the module from Firestore and reaches Stripe", async () => {
+    process.env.DOMAIN = "https://example.test";
+    mockDb.collection.mockClear();
+    mockStripeClient.checkout.sessions.create.mockClear();
+
+    const app = buildApp();
+    const res = await request(app)
+      .post("/create-module-checkout-session")
+      .set("Authorization", "Bearer test-uid")
+      .send({ moduleId: "mod-1" });
+
+    expect(res.status).toBe(200);
+    // The point of the issue: this route no longer initializes its own
+    // Firebase app, so the injected test double is what it reads.
+    expect(mockDb.collection).toHaveBeenCalledWith("module");
+    // $12.50 from the module document, charged in cents — never taken from
+    // the request body.
+    const [args] = mockStripeClient.checkout.sessions.create.mock.calls[0];
+    expect(args.line_items[0].price_data.unit_amount).toBe(1250);
+  });
+
+  test("a module that does not exist is a 404, not a Stripe call", async () => {
+    process.env.DOMAIN = "https://example.test";
+    mockModuleCollection.doc.mockImplementationOnce(() => ({
+      get: jest.fn(async () => ({ exists: false })),
+    }));
+    mockStripeClient.checkout.sessions.create.mockClear();
+
+    const app = buildApp();
+    const res = await request(app)
+      .post("/create-module-checkout-session")
+      .set("Authorization", "Bearer test-uid")
+      .send({ moduleId: "missing" });
+
+    expect(res.status).toBe(404);
+    expect(mockStripeClient.checkout.sessions.create).not.toHaveBeenCalled();
+  });
 });
 
 describe("#439 — /confirm-payment idempotency, ported from server/", () => {
