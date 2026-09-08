@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
 
@@ -78,7 +78,13 @@ describe("ToastProvider", () => {
       fireEvent.click(screen.getByRole("button", { name: "brief" }));
       expect(screen.getByText("temporary")).toBeInTheDocument();
 
-      await vi.advanceTimersByTimeAsync(1001);
+      // React 19 no longer flushes an update scheduled from a bare timer
+      // callback synchronously, so advancing the clock has to happen inside
+      // act() for the re-render to be observable here. The provider itself is
+      // unchanged - this is the test driving React, not a behaviour change.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1001);
+      });
       expect(screen.queryByText("temporary")).not.toBeInTheDocument();
     } finally {
       vi.useRealTimers();
