@@ -4,6 +4,7 @@ import { FaEllipsisV } from "react-icons/fa";
 import DOMPurify from "dompurify";
 import useUserData from "@/hooks/useUserData";
 import { useToast } from "@/components/ui/ToastProvider";
+import { ROLES } from "@/constants/roles";
 
 const Overlay = ({ content, onClose }) => {
   const toast = useToast();
@@ -44,14 +45,14 @@ const Overlay = ({ content, onClose }) => {
                 <hr />
                 <button
                   onClick={() => {
-                    if (userData?.role === "admin") {
+                    if (userData?.role === ROLES.ADMIN) {
                       navigate(`/edit-content/${content.id}`);
                     }
                   }}
                   className={`block px-4 py-2 ${
-                    userData?.role !== "admin" ? "cursor-not-allowed opacity-50" : ""
+                    userData?.role !== ROLES.ADMIN ? "cursor-not-allowed opacity-50" : ""
                   }`}
-                  disabled={userData?.role !== "admin"}
+                  disabled={userData?.role !== ROLES.ADMIN}
                 >
                   Edit the Content
                 </button>

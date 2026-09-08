@@ -4,6 +4,7 @@ import { getAuth } from "firebase/auth";
 import useUserData from "@/hooks/useUserData";
 import { api } from "@/utils/apiClient";
 import Loading from "@/components/ui/Loading";
+import { ROLES } from "@/constants/roles";
 
 const categories = ["Python", "Physics", "Chemistry", "Biology", "Economics", "Earth Science"];
 const types = ["Lectures", "Assignments", "Quiz", "Projects", "Case studies", "Data sets"];
@@ -18,7 +19,7 @@ export const MyPlans = () => {
   const navigate = useNavigate();
   const { userData } = useUserData();
   const userRole = userData?.role; // Extract user role
-  const [planType, setPlanType] = useState(userRole === "admin" ? "all" : "myPlans");
+  const [planType, setPlanType] = useState(userRole === ROLES.ADMIN ? "all" : "myPlans");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -37,7 +38,7 @@ export const MyPlans = () => {
           return;
         }
 
-        if (userRole === "admin") {
+        if (userRole === ROLES.ADMIN) {
           // /api/lessons/admin is now admin-gated and needs the token (#424).
           const lessons = await api.get("/api/lessons/admin");
           if (cancelled) return;
@@ -160,7 +161,7 @@ export const MyPlans = () => {
               setCurrentPage(1);
             }}
           >
-            {userData?.role === "admin" ? (
+            {userData?.role === ROLES.ADMIN ? (
               <>
                 <option value="all">All Plans</option>
                 <option value="public">Public Plans</option>
@@ -183,7 +184,7 @@ export const MyPlans = () => {
         </div>
 
         <h2 className="text-2xl mb-4 text-center">
-          {userData?.role === "admin"
+          {userData?.role === ROLES.ADMIN
             ? planType === "public"
               ? "Public Plans"
               : planType === "private"
@@ -252,7 +253,7 @@ export const MyPlans = () => {
               className="border p-4 rounded-md shadow-sm flex items-center space-x-2"
             >
               {/* ✅ Checkbox for admins */}
-              {userRole === "admin" && (
+              {userRole === ROLES.ADMIN && (
                 <input
                   type="checkbox"
                   checked={selectedPlans.has(plan.id)}

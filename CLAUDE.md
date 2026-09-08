@@ -72,10 +72,49 @@ updating the existing one. It was deleted in #439; this idempotent handler
 (`set(..., {merge:true})`, doc id == `checkoutSessionId`) is the only one.
 
 ### Firebase Integration
+
 - **Authentication**: Firebase Auth for user management
 - **Database**: Firestore for content, lessons, modules, and user data
 - **Storage**: Firebase Storage for file uploads
-- **Configuration**: Environment variables for Firebase config
+
+**Two SDKs, two configs, one initialization each** (#362). They share no
+values and are set up in exactly one file apiece:
+
+| | Client SDK (`firebase`) | Admin SDK (`firebase-admin`) |
+| --- | --- | --- |
+| Configured in | `portal-app/src/firebase/firebaseConfig.js` | `functions/config/firebaseConfig.js` |
+| From | `VITE_FIREBASE_*`, inlined into the bundle | a Google Cloud credential resolved by `functions/config/credentials.js` |
+| Secret? | No — public project identifiers. Firestore rules and the backend's token checks are what protect data. | Yes. Never in the bundle, never in git; see `functions/CREDENTIALS.md`. |
+
+In the frontend, import the instances rather than re-deriving them:
+
+```js
+import { db, storage } from "@/firebase/firebaseConfig";   // not getFirestore()/getStorage()
+```
+
+`getFirestore()` and `getFirestore(firebaseApp)` return that same default app,
+so the scattered calls they replaced were fragile rather than wrong: a module
+calling `getFirestore()` without importing the config worked only because
+something else had imported it first, and the emulator wiring (#428) lives on
+the exported instances. The client config also fails at load with the missing
+variable names if a `VITE_FIREBASE_*` key is absent, instead of surfacing later
+as `auth/invalid-api-key` on the sign-in button.
+
+`getAuth()` is deliberately left alone by all of this: it initializes nothing,
+so which spelling a file uses is not an initialization question. Where it is
+legitimate — `utils/apiClient.js` for a fresh ID token per request, and
+`auth/googleAuth.js` for the sign-in flow itself — it stays. The component
+call sites that still exist are "Auth and user state" below (#368) left to
+finish, not a second config.
+
+In the backend, `config/firebaseConfig.js` holds the only
+`admin.initializeApp()`; `services/databaseService.js` delegates its real mode
+to it, and controllers require `{ db, storage }` from it. `routes/payment.js`
+and `routes/stripeWebhook.js` used to call a bare `admin.initializeApp()`
+each, which skipped the credential precedence in `config/credentials.js`
+entirely. Two tests fail if either consolidation regresses:
+`functions/__tests__/single-firebase-init.test.js` and
+`portal-app/src/firebase/__tests__/firebaseConfig.test.js`.
 
 ## Development Commands
 

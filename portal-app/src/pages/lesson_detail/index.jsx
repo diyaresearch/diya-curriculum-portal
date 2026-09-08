@@ -13,6 +13,7 @@ import DOMPurify from "dompurify";
 import { TYPO } from "@/constants/typography";
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
+import { ROLES } from "@/constants/roles";
 
 export const LessonDetail = () => {
   const toast = useToast();
@@ -37,7 +38,7 @@ export const LessonDetail = () => {
   const returnTo = (location.state && location.state.returnTo) || null;
   const moduleReturnTo = (location.state && location.state.moduleReturnTo) || null;
 
-  const isAdmin = userData?.role === "admin";
+  const isAdmin = userData?.role === ROLES.ADMIN;
   const isAuthor = !!user && !!authorId && user.uid === authorId;
   const canManage = isAdmin || isAuthor;
 

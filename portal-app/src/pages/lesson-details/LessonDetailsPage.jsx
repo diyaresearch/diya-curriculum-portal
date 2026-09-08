@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import DOMPurify from "dompurify";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import Loading from "@/components/ui/Loading";
@@ -14,7 +15,6 @@ const LessonDetailsPage = () => {
   useEffect(() => {
     let cancelled = false;
     const fetchLesson = async () => {
-      const db = getFirestore();
       const lessonRef = doc(db, COLLECTIONS.lesson, id);
       const lessonSnap = await getDoc(lessonRef);
       if (cancelled) return;
@@ -33,7 +33,6 @@ const LessonDetailsPage = () => {
   useEffect(() => {
     // Fetch all nuggets referenced in sections
     if (lesson && Array.isArray(lesson.sections)) {
-      const db = getFirestore();
       const allContentIds = lesson.sections.flatMap(sec => sec.contentIds || []);
       if (allContentIds.length === 0) return;
       Promise.all(
