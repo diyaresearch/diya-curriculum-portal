@@ -10,10 +10,16 @@
 const PREMIUM_PLANS = ['premium', 'premiumYearly'];
 const VALID_PLANS = [...PREMIUM_PLANS, 'enterprise'];
 
-/** Role a plan entitles the holder to; null means "leave the role alone". */
+/**
+ * Role a plan entitles the holder to; null means "leave the role alone".
+ *
+ * Enterprise grants `teacherPlus` as well. There is no separate
+ * `teacherEnterprise` role: nothing ever distinguished the two beyond being
+ * listed side by side in every premium check, and the extra value only
+ * created a role the frontend had no branch for.
+ */
 function roleForPlan(planType) {
-  if (PREMIUM_PLANS.includes(planType)) return 'teacherPlus';
-  if (planType === 'enterprise') return 'teacherEnterprise';
+  if (VALID_PLANS.includes(planType)) return 'teacherPlus';
   return null;
 }
 

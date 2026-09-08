@@ -7,6 +7,7 @@ import { COLLECTIONS } from '@/firebase/collectionNames';
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
 import Loading from "@/components/ui/Loading";
+import { ROLES } from "@/constants/roles";
 
 const CancelSubscriptionPage = () => {
   const toast = useToast();
@@ -17,7 +18,7 @@ const CancelSubscriptionPage = () => {
 
     // Redirect if not authenticated or not teacherPlus
     useEffect(() => {
-        if (!loading && (!user || userData?.role !== 'teacherPlus')) {
+        if (!loading && (!user || userData?.role !== ROLES.TEACHER_PLUS)) {
             navigate('/');
         }
     }, [user, userData, loading, navigate]);
@@ -31,7 +32,7 @@ const CancelSubscriptionPage = () => {
             const userDocRef = doc(db, COLLECTIONS.users, user.uid);
 
             await updateDoc(userDocRef, {
-                role: 'teacherDefault',
+                role: ROLES.TEACHER_DEFAULT,
                 subscriptionType: 'basic',
                 subscriptionStatus: 'cancelled',
                 cancelledAt: new Date().toISOString()

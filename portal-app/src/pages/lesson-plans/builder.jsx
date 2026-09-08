@@ -19,6 +19,7 @@ import { toUserMessage } from "@/utils/errorMessage";
 import FieldError from "@/components/ui/FieldError";
 import useFormValidation from "@/hooks/useFormValidation";
 import { everyItem, required, requiredRichText } from "@/utils/validators";
+import { ROLES } from "@/constants/roles";
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -114,7 +115,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     try {
       const snap = await getDocs(collection(db, COLLECTIONS.content));
       const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      if (role === "admin") {
+      if (role === ROLES.ADMIN) {
         setPortalContent(all);
         return;
       }

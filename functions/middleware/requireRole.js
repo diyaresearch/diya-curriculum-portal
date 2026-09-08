@@ -4,6 +4,7 @@
  */
 
 const { databaseService } = require("../services/databaseService");
+const { normalizeRole } = require("../utils/customClaims");
 const { sendAuthorizationError, sendNotFoundError, handleDatabaseError } = require("../utils/responseHelpers");
 
 const TABLE_USERS = "users";
@@ -37,7 +38,7 @@ function requireRole(requiredRoles) {
       }
 
       const userData = userSnap.data();
-      const userRole = userData.role || 'teacherDefault'; // Default role
+      const userRole = normalizeRole(userData.role) || 'teacherDefault'; // Default role
 
       // Check if user has required role
       if (!allowedRoles.includes(userRole)) {
@@ -65,12 +66,12 @@ const requireAdmin = requireRole('admin');
 /**
  * Middleware to require teacher roles (any level)
  */
-const requireTeacher = requireRole(['teacherDefault', 'teacherPlus', 'teacherEnterprise']);
+const requireTeacher = requireRole(['teacherDefault', 'teacherPlus']);
 
 /**
  * Middleware to require premium teacher roles
  */
-const requirePremiumTeacher = requireRole(['teacherPlus', 'teacherEnterprise']);
+const requirePremiumTeacher = requireRole(['teacherPlus']);
 
 /**
  * Middleware to require any authenticated user (no specific role required)
@@ -98,7 +99,7 @@ const requireValidUser = async (req, res, next) => {
 
     // Attach user data to request
     req.userData = userData;
-    req.userRole = userData.role || 'teacherDefault';
+    req.userRole = normalizeRole(userData.role) || 'teacherDefault';
 
     next();
   } catch (error) {

@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from "@/context/AuthProvider";
+import { ROLES } from "@/constants/roles";
 
 
 const HeroSection = () => {
@@ -13,13 +14,13 @@ const HeroSection = () => {
 
     useEffect(() => {
         // ONLY redirect if user is teacherPlus AND on home page
-        if (role === "teacherPlus" && window.location.pathname === "/") {
+        if (role === ROLES.TEACHER_PLUS && window.location.pathname === "/") {
             navigate("/teacher-plus");
         }
     }, [role, navigate]);
 
     // ONLY hide the component for teacherPlus users (they get redirected)
-    if (role === "teacherPlus") {
+    if (role === ROLES.TEACHER_PLUS) {
         return null; // Don't render anything, redirect will happen
     }
 
@@ -75,7 +76,7 @@ const HeroSection = () => {
                     >
                         Access educational content and enhance your classroom experience.
                     </p>
-                    {role === "teacherDefault" && (
+                    {role === ROLES.TEACHER_DEFAULT && (
                         <button
                             style={{
                                 background: "#FFC940",

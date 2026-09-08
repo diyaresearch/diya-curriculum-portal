@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 
 import { db } from "@/firebase/firebaseConfig";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import { normalizeRole } from "@/constants/roles";
 
 const AuthContext = createContext(null);
 
@@ -96,7 +97,7 @@ export function AuthProvider({ children }) {
     () => ({
       user: state.user,
       userData: state.userData,
-      role: state.userData?.role ?? null,
+      role: normalizeRole(state.userData?.role),
       loading: state.loading,
       logout,
     }),

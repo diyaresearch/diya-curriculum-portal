@@ -5,6 +5,7 @@ import { CAROUSEL_CONFIG } from "@/constants/testimonialData";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import useUserRole from "@/hooks/useUserRole";
 import useSafeTimeout from "@/hooks/useSafeTimeout";
+import { ROLES } from "@/constants/roles";
 
 // Helper function to truncate text to approximately 5 lines
 const truncateToLines = (text, maxCharactersPerLine = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_CHARS_PER_LINE, maxLines = CAROUSEL_CONFIG.TEXT_TRUNCATION.MAX_LINES) => {
@@ -686,7 +687,7 @@ const TestimonialsCarousel = ({ testimonials }) => {
 
 const TestimonialsSection = () => {
   const { role } = useUserRole();
-  const isTeacherDefault = role === "teacherDefault";
+  const isTeacherDefault = role === ROLES.TEACHER_DEFAULT;
 
   const [testimonials, setTestimonials] = useState([]);
   const [loaded, setLoaded] = useState(false);

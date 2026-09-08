@@ -8,6 +8,7 @@ import "react-quill-new/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
 import MultiCheckboxDropdown from "@/components/ui/MultiCheckboxDropdown";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import { ROLES } from "@/constants/roles";
 
 
 export const UploadContent = ({
@@ -112,7 +113,7 @@ export const UploadContent = ({
         Author: authorName,
         User: user.uid, // <-- Add this line to store the user ID
         createdAt: serverTimestamp(),
-        Role: "teacherPlus", // <-- Added static Role field
+        Role: ROLES.TEACHER_PLUS, // <-- Added static Role field
       });
       const savedDoc = await getDoc(docRef);
       const newNugget = { id: docRef.id, ...savedDoc.data() };
