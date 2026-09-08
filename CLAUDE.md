@@ -324,10 +324,25 @@ Never use `!data` as the loading test - "still fetching" and "there is nothing
 here" are different states, and conflating them showed a permanent spinner for
 records that simply did not exist.
 
-**Render-time crashes.** `ErrorBoundary` wraps the routed content in `App.jsx`,
-so a component that throws loses its page but keeps the navbar, with a "Try
-again" that resets it. Before #367 there were none, and any render exception
-blanked the entire app.
+**Render-time crashes.** Before #367 there were no boundaries at all and any
+render exception blanked the entire app. There are now three, each with a
+`name` that identifies it in the log (#378):
+
+| Boundary | Where | On a crash |
+| --- | --- | --- |
+| `root` | `index.jsx`, outside every provider | last resort - catches a throw in ToastProvider/AuthProvider/Layout itself |
+| `route` | `RouteErrorBoundary` in `App.jsx` | loses the page, keeps the navbar; "Try again" resets it |
+| `navbar` / `footer` | `Layout.jsx` | page survives its own chrome; the footer fails silently |
+
+`RouteErrorBoundary` passes the pathname as a `resetKey`, so navigating away
+clears the crash. A plain boundary does not: the router swaps the children but
+the boundary stays mounted, so one broken page used to poison every page
+reached from the navbar until a full reload.
+
+Boundaries report through `reportError` (`@/utils/errorReporter`) rather than
+calling `console.error` themselves. No reporting service is wired up and the
+backend has no client-log route, so the console is the only destination today;
+`setErrorSink` is the one seam to add one later.
 
 ## Environment Configuration
 

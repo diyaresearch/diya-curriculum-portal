@@ -11,7 +11,7 @@ import LessonDetail from "./pages/lesson_detail";
 import LessonDetailNew from "./pages/lesson_detail/LessonDetail";
 import Layout from "@/components/layout/Layout";
 import { AuthProvider } from "@/context/AuthProvider";
-import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import RouteErrorBoundary from "@/components/ui/RouteErrorBoundary";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import UserProfile from "./pages/profile_detail";
 import ModuleDetail from "./pages/module_detail"; // This one fetches from Firestore
@@ -38,9 +38,12 @@ function App() {
   return (
     // ToastProvider sits ABOVE the router so a toast raised right before a
     // navigate() survives the transition instead of unmounting with the page
-    // that raised it. ErrorBoundary wraps only the routed content, so a
+    // that raised it. RouteErrorBoundary wraps only the routed content, so a
     // component that throws during render loses that page but keeps the
-    // navbar - the user can always get somewhere else (#367).
+    // navbar - the user can always get somewhere else (#367), and reaching
+    // another page clears the error rather than carrying it along (#378).
+    // index.jsx holds a second boundary above all of this, for a throw in the
+    // providers themselves.
     <ToastProvider>
       <BrowserRouter>
         {/* AuthProvider is inside the router (its logout navigates) and
@@ -48,7 +51,7 @@ function App() {
             auth listener and the same one user document (#368). */}
         <AuthProvider>
           <Layout>
-            <ErrorBoundary>
+            <RouteErrorBoundary>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/upload-content" element={<UploadContent />} />
@@ -85,7 +88,7 @@ function App() {
                 {/* Catch-all: render a real 404 rather than an empty page (#421) */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </ErrorBoundary>
+            </RouteErrorBoundary>
           </Layout>
         </AuthProvider>
       </BrowserRouter>
