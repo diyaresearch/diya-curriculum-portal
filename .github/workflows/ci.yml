@@ -177,11 +177,11 @@ jobs:
         env:
           NODE_ENV: test
           ENABLE_MOCK_FIREBASE: "true"
-          # Legacy controllers initialize Firebase Admin at require time
-          # regardless of ENABLE_MOCK_FIREBASE (see #362). Pointing them at
-          # the (unstarted) emulator address satisfies credential resolution
-          # without touching real Firestore, since these tests never
-          # exercise those routes.
+          # Nothing loads config/firebaseConfig at require time any more
+          # (#366 moved the last controllers onto databaseService), so this is
+          # no longer needed to boot. It is kept so that the paths which do
+          # resolve a credential lazily — local.js's boot check, /api/health —
+          # point at an unstarted emulator rather than at real Firestore.
           FIRESTORE_EMULATOR_HOST: "localhost:8080"
           PORT: "3001"
           SERVER_ALLOW_ORIGIN: "http://localhost:3000"

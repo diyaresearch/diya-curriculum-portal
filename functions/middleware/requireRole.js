@@ -27,9 +27,6 @@ function requireRole(requiredRoles) {
 
       const userId = req.user.uid;
 
-      // Initialize database service if needed
-      await databaseService.initialize();
-
       // Get user document with fallback collections
       const { snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);
 
@@ -84,9 +81,6 @@ const requireValidUser = async (req, res, next) => {
     }
 
     const userId = req.user.uid;
-
-    // Initialize database service if needed
-    await databaseService.initialize();
 
     // Use the database service's getUserDocument method
     const { snap: userSnap } = await databaseService.getUserDocument(userId, TABLE_USERS);

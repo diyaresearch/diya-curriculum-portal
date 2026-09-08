@@ -8,8 +8,6 @@ const authenticateUser = async (req, res, next) => {
   }
 
   try {
-    // Initialize database service if needed
-    await databaseService.initialize();
     const admin = databaseService.getAdmin();
 
     const decodedToken = await admin.auth().verifyIdToken(token);

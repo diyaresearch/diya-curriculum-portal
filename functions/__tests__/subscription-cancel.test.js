@@ -54,6 +54,13 @@ jest.mock("../services/databaseService", () => ({
       }),
     })),
     getAdmin: jest.fn(() => mockAdmin),
+    // The route looks the user up through the service layer rather than
+    // reaching for findUserDocument(db, ...) itself (#396).
+    getUserDocument: jest.fn(async (userId, table) => ({
+      ref: { update: mockUserRef.update },
+      snap: { exists: true, data: () => mockUserData },
+      collection: table,
+    })),
   },
 }));
 

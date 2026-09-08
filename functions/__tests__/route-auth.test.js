@@ -36,7 +36,7 @@ jest.mock("../middleware/requireRole", () => ({
 // middleware chain, not about what the handler then does.
 const reached = jest.fn((_req, res) => res.status(200).json({ ok: true }));
 
-jest.mock("../controllers/moduleController", () => ({
+jest.mock("../controllers/modulesController", () => ({
   getAllModules: (_q, r) => r.json([]),
   getModuleById: (_q, r) => r.json({}),
   createModule: (_q, r) => r.status(200).json({ ok: true }),
@@ -60,12 +60,11 @@ jest.mock("../controllers/unitsController", () => ({
   getAllUnits: (_q, r) => r.json([]),
   getUnitById: (_q, r) => r.json({}),
   getUserUnits: (_q, r) => r.json([]),
-  deleteUnit: (_q, r) => r.status(200).json({ ok: true }),
-}));
-
-jest.mock("../controllers/content_submission", () => ({ createUnit: (_q, r) => r.json({}) }));
-jest.mock("../controllers/update_submission", () => ({
+  // createUnit and updateUnitById moved here from content_submission.js and
+  // update_submission.js when #366 gave the units resource one controller.
+  createUnit: (_q, r) => r.json({}),
   updateUnitById: (_q, r) => r.status(200).json({ ok: true }),
+  deleteUnit: (_q, r) => r.status(200).json({ ok: true }),
 }));
 
 function app(mountPath, routerPath) {

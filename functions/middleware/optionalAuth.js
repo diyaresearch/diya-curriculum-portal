@@ -16,7 +16,6 @@ const optionalAuth = async (req, _res, next) => {
   if (!token) return next();
 
   try {
-    await databaseService.initialize();
     const admin = databaseService.getAdmin();
     req.user = await admin.auth().verifyIdToken(token);
   } catch (error) {

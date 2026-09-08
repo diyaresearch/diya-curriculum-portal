@@ -36,11 +36,25 @@ const subscriptionRoutes = require("./routes/subscription");
 const paymentRoutes = require("./routes/payment");
 const { stripeWebhookHandler } = require("./routes/stripeWebhook");
 const { generalLimiter } = require("./middleware/rateLimiter");
+const { ensureDatabase } = require("./middleware/ensureDatabase");
 const { globalErrorHandler, notFoundHandler } = require("./middleware/errorHandler");
+const { databaseService } = require("./services/databaseService");
 
 function buildApp() {
   const env = process.env.NODE_ENV || "development";
   const app = express();
+
+  // Resolve the Firebase credential once, here, rather than on every request
+  // (#396). This is fire-and-forget on purpose: buildApp() is synchronous
+  // because index.js passes its return value straight to onRequest(), and a
+  // credential problem must not stop the app from being built — /api/health
+  // has to stay answerable so the outage is reportable. The middleware below
+  // awaits this same promise, so a request that arrives mid-cold-start waits
+  // for it instead of starting a second initialization, and one that arrives
+  // after a failure gets a 503 that says so.
+  databaseService.initialize().catch((error) => {
+    console.error("Database initialization failed at startup:", error.message);
+  });
 
   // Both runtimes sit exactly one proxy hop behind Google's front end, which
   // sets X-Forwarded-For to the real client IP. Without this, req.ip is that
@@ -130,16 +144,12 @@ function buildApp() {
 
   app.use("/api", generalLimiter);
 
-  app.use("/api", unitsRoutes);
-  app.use("/api", lessonsRoutes);
-  app.use("/api", modulesRoutes);
-  app.use("/api/user", userRoutes);
-  app.use("/api/subscription", subscriptionRoutes);
-  app.use("/api/payment", paymentRoutes);
-
   // Liveness + Firestore reachability. Returns 503 when the Admin credential
   // is dead, so an outage like issue #418 is visible to a health check
   // instead of only surfacing as 500s on every data route.
+  //
+  // Registered ahead of ensureDatabase deliberately: this route's whole job is
+  // to describe a broken database, so it must not be short-circuited by one.
   app.get("/api/health", async (req, res) => {
     const { db } = require("./config/firebaseConfig");
     const { verifyCredential } = require("./config/credentials");
@@ -159,6 +169,20 @@ function buildApp() {
   app.get("/", (req, res) => {
     res.send("Welcome to the Curriculum Portal API");
   });
+
+  // Everything below this line reads or writes Firestore. One await on the
+  // startup promise above, per request, replacing the ~60 per-handler
+  // initialize() calls that used to do the same thing unsupervised (#396).
+  // Handlers past this point can call databaseService.getDb()/getAdmin()
+  // directly; they cannot be reached before the service is ready.
+  app.use(ensureDatabase);
+
+  app.use("/api", unitsRoutes);
+  app.use("/api", lessonsRoutes);
+  app.use("/api", modulesRoutes);
+  app.use("/api/user", userRoutes);
+  app.use("/api/subscription", subscriptionRoutes);
+  app.use("/api/payment", paymentRoutes);
 
   // The payment routes are also reachable without the /api/payment prefix, at
   // the bare function URL (<function-url>/create-module-checkout-session).

@@ -1,18 +1,28 @@
+/**
+ * Modules — the `module` collection, and the entitlements that unlock them.
+ *
+ * Renamed from moduleController.js in #366: one controller per resource,
+ * named for the resource in its plural route form, matching lessonsController
+ * and unitsController. See controllers/README.md.
+ */
+
 const { databaseService } = require('../services/databaseService');
 const { canMutate } = require('../utils/ownership');
-const { canAccessModule, isPaidModule } = require('../utils/entitlements.check');
+const { canAccessModule } = require('../utils/entitlements.check');
 const { sanitizeHtml } = require('../utils/sanitizeHtml');
-const { sendError } = require('../utils/responseHelpers');
+const {
+  sendError,
+  sendAuthorizationError,
+  sendNotFoundError,
+} = require('../utils/responseHelpers');
 
 // Define the collections
 const TABLE_MODULE = "module";
-const TABLE_LESSON = "lesson";
 const TABLE_ENTITLEMENTS = "entitlements";
 
 // Get all modules
 const getAllModules = async (req, res) => {
   try {
-    await databaseService.initialize();
     const db = databaseService.getDb();
     const modulesSnapshot = await db.collection(TABLE_MODULE).get();
     if (modulesSnapshot.empty) {
@@ -35,13 +45,12 @@ const getAllModules = async (req, res) => {
 // Get a specific module by ID
 const getModuleById = async (req, res) => {
   try {
-    await databaseService.initialize();
     const db = databaseService.getDb();
     const moduleId = req.params.id;
     const moduleDoc = await db.collection(TABLE_MODULE).doc(moduleId).get();
 
     if (!moduleDoc.exists) {
-      return res.status(404).send('Module not found');
+      return sendNotFoundError(res, 'Module');
     }
 
     const moduleData = moduleDoc.data();
@@ -78,7 +87,6 @@ const getModuleById = async (req, res) => {
 // Create a new module
 const createModule = async (req, res) => {
   try {
-    await databaseService.initialize();
     const db = databaseService.getDb();
     const { title, description, tags, lessonPlans, image } = req.body;
 
@@ -105,7 +113,6 @@ const createModule = async (req, res) => {
 // Edit an existing module
 const editModule = async (req, res) => {
   try {
-    await databaseService.initialize();
     const db = databaseService.getDb();
     const moduleId = req.params.id;
     const { title, description, tags, lessonPlans, image } = req.body;
@@ -114,13 +121,13 @@ const editModule = async (req, res) => {
     const moduleDoc = await moduleRef.get();
 
     if (!moduleDoc.exists) {
-      return res.status(404).send("Module not found");
+      return sendNotFoundError(res, 'Module');
     }
 
     const moduleData = moduleDoc.data();
 
     if (!(await canMutate(req, moduleData))) {
-      return res.status(403).send("You do not have permission to edit this module");
+      return sendAuthorizationError(res, "You do not have permission to edit this module");
     }
 
     const updatedModule = {
@@ -142,18 +149,17 @@ const editModule = async (req, res) => {
 // Delete a module
 const deleteModule = async (req, res) => {
   try {
-    await databaseService.initialize();
     const db = databaseService.getDb();
     const moduleId = req.params.id;
     const moduleRef = db.collection(TABLE_MODULE).doc(moduleId);
     const moduleDoc = await moduleRef.get();
 
     if (!moduleDoc.exists) {
-      return res.status(404).send("Module not found");
+      return sendNotFoundError(res, 'Module');
     }
 
     if (!(await canMutate(req, moduleDoc.data()))) {
-      return res.status(403).send("You do not have permission to delete this module");
+      return sendAuthorizationError(res, "You do not have permission to delete this module");
     }
 
     await moduleRef.delete();
@@ -167,7 +173,6 @@ const deleteModule = async (req, res) => {
 // List the modules this user is entitled to.
 const listMyEntitlements = async (req, res) => {
   try {
-    await databaseService.initialize();
     const db = databaseService.getDb();
 
     const snap = await db

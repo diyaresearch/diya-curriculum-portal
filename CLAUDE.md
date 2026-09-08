@@ -64,6 +64,34 @@ reference to App Engine, `.uc.r.appspot.com`, or `server/` anywhere, it is stale
 (defaulting to TEST unless `STRIPE_LIVEMODE` is explicitly truthy) rather than at require
 time, because Cloud Functions populates bound secrets after module load.
 
+**Firestore is initialized once, at startup.** `app.js` calls
+`databaseService.initialize()` when it builds the app and mounts
+`middleware/ensureDatabase.js` ahead of every router, so a handler can call
+`databaseService.getDb()` / `.getAdmin()` directly — it cannot be reached
+before the service is ready. Do not reintroduce `await
+databaseService.initialize()` at the top of a controller or route; there were
+~35 of those before #396, none of them awaited anywhere the failure could be
+handled, so a dead credential surfaced as an unhandled rejection plus
+"DatabaseService not initialized" from every route after it. `/api/health` is
+registered *before* that gate on purpose: its job is to report a broken
+database, so it must not be short-circuited by one. Timestamps go through
+`utils/timestamps.js` (`serverTimestamp(admin)`), not a hand-written
+`admin.firestore?.FieldValue?.serverTimestamp?.() || new Date()`, and user
+lookups go through `databaseService.getUserDocument()`, not `findUserDocument`
+directly.
+
+**One controller per resource**, named `<resource>Controller.js` in the plural form its
+routes use: `unitsController.js`, `lessonsController.js`, `modulesController.js`. Handlers
+are exported `async (req, res) => {}` functions, never classes; Firestore comes from
+`databaseService.getDb()` inside the handler; errors go through `utils/responseHelpers`
+with a resource-scoped code, never `res.send(error.message)`; owner-or-admin checks are
+`canMutate()` from `utils/ownership.js`. `functions/controllers/README.md` has the full
+convention and a template, and `functions/__tests__/controller-conventions.test.js` fails
+if a new controller drifts from it. Before #366 the directory held `content_submission.js`,
+`update_submission.js`, `moduleController.js`, `lessonsController.js` and
+`unitsController.js` — the units resource spread across three files in two naming styles,
+each with its own idea of how to report an error.
+
 **The webhook is `routes/stripeWebhook.js`**, registered in `app.js` *before*
 `express.json()` with a raw body parser - Stripe signature verification needs the exact
 bytes. There used to be a second webhook in `server/routes/payment.js` that wrote
@@ -109,7 +137,10 @@ finish, not a second config.
 
 In the backend, `config/firebaseConfig.js` holds the only
 `admin.initializeApp()`; `services/databaseService.js` delegates its real mode
-to it, and controllers require `{ db, storage }` from it. `routes/payment.js`
+to it, and everything else — controllers, routes, middleware — goes through
+`databaseService.getDb()`. Nothing loads `config/firebaseConfig` at require
+time any more (#366): doing so resolved a real credential the moment the file
+was imported, which defeated `ENABLE_MOCK_FIREBASE`. `routes/payment.js`
 and `routes/stripeWebhook.js` used to call a bare `admin.initializeApp()`
 each, which skipped the credential precedence in `config/credentials.js`
 entirely. Two tests fail if either consolidation regresses:

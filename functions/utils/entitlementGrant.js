@@ -9,6 +9,8 @@
  * document instead of a second one.
  */
 
+const { serverTimestamp } = require('./timestamps');
+
 /**
  * Does the amount Stripe charged match what the module claimed at checkout?
  *
@@ -61,7 +63,7 @@ async function grantModuleEntitlement(db, admin, table, { userId, moduleId, chec
       amountCents: typeof amountCents === 'number' ? amountCents : null,
       priceAtPurchase: priceAtPurchase === undefined ? null : priceAtPurchase,
       livemode: Boolean(livemode),
-      grantedAt: admin.firestore.FieldValue.serverTimestamp(),
+      grantedAt: serverTimestamp(admin),
     },
     { merge: true }
   );

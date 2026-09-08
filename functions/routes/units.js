@@ -1,7 +1,12 @@
 const express = require("express");
-const { getAllUnits, getUnitById, getUserUnits, deleteUnit } = require("../controllers/unitsController");
-const { createUnit } = require("../controllers/content_submission");
-const { updateUnitById } = require("../controllers/update_submission");
+const {
+  getAllUnits,
+  getUnitById,
+  getUserUnits,
+  createUnit,
+  updateUnitById,
+  deleteUnit,
+} = require("../controllers/unitsController");
 const authenticateUser = require("../middleware/authenticateUser");
 
 const router = express.Router();
