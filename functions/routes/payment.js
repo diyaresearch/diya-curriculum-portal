@@ -10,8 +10,9 @@ const {
     claimPaymentIntent,
 } = require("../utils/entitlements");
 
+const { requireStripe, getFunctionsConfig } = require("../utils/stripeClient");
+
 const router = express.Router();
-const functions = require("firebase-functions");
 
 function getDb() {
   const admin = require("firebase-admin");
@@ -19,15 +20,6 @@ function getDb() {
     admin.initializeApp();
   }
   return admin.firestore();
-}
-
-function getFunctionsConfig(path, fallback = "") {
-  try {
-    const cfg = functions.config?.() || {};
-    return path.split(".").reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), cfg) ?? fallback;
-  } catch (_) {
-    return fallback;
-  }
 }
 
 // Collection names (issue #428 retired the schema qualifier — dev/staging
@@ -51,65 +43,13 @@ function joinDomainAndBasename(domain, basename) {
 }
 
 
-// Validate and initialize Stripe with secret key from environment
-function isTruthy(value) {
-  const v = String(value || "").trim().toLowerCase();
-  return v === "true" || v === "1" || v === "yes";
-}
-
-function getStripeSecretKey() {
-  // Default to TEST unless explicitly forced to LIVE.
-  // You can set this via:
-  // - functions config: firebase functions:config:set stripe.livemode=true
-  // - environment: STRIPE_LIVEMODE=true
-  const forceLive = isTruthy(getFunctionsConfig("stripe.livemode", process.env.STRIPE_LIVEMODE || ""));
-
-  const key =
-    (forceLive
-      ? process.env.STRIPE_SECRET_KEY_LIVE || process.env.STRIPE_SECRET_KEY
-      : process.env.STRIPE_SECRET_KEY_TEST || process.env.STRIPE_SECRET_KEY) ||
-    // fallback
-    process.env.STRIPE_SECRET_KEY_LIVE ||
-    process.env.STRIPE_SECRET_KEY_TEST ||
-    "";
-
-  return String(key || "").trim();
-}
-
-const stripeClientCache = new Map();
-function getStripeClient() {
-  const key = getStripeSecretKey();
-  if (!key) return null;
-  if (stripeClientCache.has(key)) return stripeClientCache.get(key);
-  try {
-    const client = require("stripe")(key);
-    stripeClientCache.set(key, client);
-    return client;
-  } catch (error) {
-    console.error("❌ Failed to initialize Stripe:", error.message);
-    return null;
-  }
-}
+// Stripe now lives in utils/stripeClient.js so this router, the webhook that
+// settles what it creates, and routes/subscription.js all resolve the same
+// key with the same TEST/LIVE precedence (#439). `requireStripe` attaches the
+// client as req.stripe, which is how every handler below reaches it.
 
 // NOTE: Do not compute schema qualifiers at module load time.
 // We resolve per-request to correctly support localhost dev and prod in the same deployed function.
-
-// Middleware to check if Stripe is available
-const requireStripe = (req, res, next) => {
-    const stripe = getStripeClient();
-    if (!stripe) {
-        return res.status(503).json({
-            success: false,
-            error: {
-                code: 'PAYMENT_SERVICE_UNAVAILABLE',
-                message: 'Payment service is currently unavailable. Please contact support.',
-                details: 'Stripe is not configured on this server.'
-            }
-        });
-    }
-    req.stripe = stripe;
-    next();
-};
 
 // Test endpoint for payment system
 router.get("/test", (req, res) => {
@@ -471,7 +411,8 @@ router.post("/confirm-payment", authenticateUser, strictLimiter, requireStripe, 
         // Claim the payment before granting. A replayed confirmation used to
         // re-extend the subscription window every time it was sent (#422) -
         // this route was missing that fix entirely until #439 ported it over
-        // from the maintained copy in server/routes/payment.js.
+        // from the App Engine backend's copy, which had it. That copy is
+        // gone now; this is the only one.
         const claimed = await claimPaymentIntent(db, TABLE_PAYMENT_LOGS, paymentIntentId, {
             userId,
             action: 'payment_confirmed',
@@ -510,7 +451,8 @@ router.post("/confirm-payment", authenticateUser, strictLimiter, requireStripe, 
         // Entitlement role into claims (#382), best-effort. This route was
         // missing this call entirely - confirming a subscription upgrade
         // here updated the Firestore document but never synced the custom
-        // claim, unlike the server/ copy - until #439 ported it over.
+        // claim, unlike the App Engine backend's copy - until #439 ported
+        // it over and deleted that copy.
         await syncRoleClaim(admin, userId, roleForPlan(targetPlan) || userData.role);
 
         // The success log was written above as the idempotency claim.

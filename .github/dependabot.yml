@@ -22,32 +22,6 @@ updates:
           - "patch"
 
   - package-ecosystem: "npm"
-    directory: "/server"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    groups:
-      npm-minor-patch:
-        applies-to: version-updates
-        update-types:
-          - "minor"
-          - "patch"
-    ignore:
-      # v14 removed the root-namespace API (admin.apps/.app()/.firestore()/
-      # .storage()) this codebase depends on throughout — confirmed breaks
-      # server boot (#465, re-confirmed #481). Needs a real migration to
-      # the modular API before revisiting, not a routine bump.
-      - dependency-name: "firebase-admin"
-        versions: [">=14.0.0"]
-      # >=2.17.2 bumps its htmlparser2 dependency past v8, to an ESM-only
-      # release (v9+) — confirmed breaks `npm test` outright: Jest's default
-      # CommonJS transform can't require() it (#381). Revisit once either
-      # this project's Jest setup transforms ESM node_modules, or Node here
-      # is >=24.9 (native require(esm) support).
-      - dependency-name: "sanitize-html"
-        versions: [">=2.17.2"]
-
-  - package-ecosystem: "npm"
     directory: "/functions"
     schedule:
       interval: "weekly"
@@ -61,9 +35,24 @@ updates:
     ignore:
       # v14 conflicts with firebase-functions-test@3.5.0's peer range
       # (^8..^13), which broke `npm ci` after #460 bumped this to 14.3.0.
-      # Revisit once firebase-functions-test supports v14, or drop it.
+      # It also removed the root-namespace API (admin.apps/.app()/
+      # .firestore()/.storage()) this codebase depends on throughout —
+      # confirmed to break boot (#465, re-confirmed #481). Needs a real
+      # migration to the modular API, not a routine bump.
       - dependency-name: "firebase-admin"
         versions: [">=14.0.0"]
+      # >=2.17.2 bumps its htmlparser2 dependency past v8, to an ESM-only
+      # release (v9+) — confirmed breaks `npm test` outright: Jest's default
+      # CommonJS transform can't require() it (#381). Revisit once either
+      # this project's Jest setup transforms ESM node_modules, or Node here
+      # is >=24.9 (native require(esm) support).
+      #
+      # package.json pins the exact version too, not just a range: #439's
+      # merge of server/ into this package resolved the range fresh, with
+      # no server/package-lock.json left to hold it down, and landed on
+      # 2.17.7 — breaking two suites exactly as described above.
+      - dependency-name: "sanitize-html"
+        versions: [">=2.17.2"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

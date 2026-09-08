@@ -6,8 +6,11 @@ name: CI
 # status — a path-filtered workflow can leave a required check stuck on
 # "Expected" forever for PRs that don't touch that path.
 #
-# `portal-app`, `server`, and `functions` are REQUIRED checks in main's
-# branch protection.
+# `portal-app` and `functions` are REQUIRED checks in main's branch
+# protection. There used to be a third, `server`, for the App Engine backend;
+# #439 collapsed that into `functions` (one backend, one deploy target), so a
+# repo admin needs to drop `server` from the required-checks list or PRs will
+# block on a check that can never report again.
 #
 # `api-integration` no longer sets continue-on-error (#436 fixed the 3
 # tests that were failing against current auth behavior, deleted the
@@ -64,59 +67,6 @@ jobs:
         env:
           CI: true
 
-  server:
-    name: server
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v7
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-
-      - name: Install dependencies
-        working-directory: server
-        run: npm ci --no-audit --no-fund
-
-      - name: Test
-        working-directory: server
-        run: npm test
-
-      # `npm test` never boots the app - it only ever unit-tests modules in
-      # isolation. index.js registers `app.options("*", cors())` in the
-      # `if (env === 'production')` branch specifically, and Express 5's
-      # router throws synchronously at *registration* time on a bare "*"
-      # wildcard, before app.listen() ever runs - a hard crash on every
-      # production boot that neither this job nor api-integration (which
-      # only ever boots with NODE_ENV=test) could have caught. Confirmed
-      # missed in exactly this way: the bug shipped and sat undetected until
-      # a manual production-mode boot surfaced it locally (#393's PR).
-      - name: Boot in production mode (catches route-registration crashes npm test can't)
-        working-directory: server
-        env:
-          NODE_ENV: production
-          ENABLE_MOCK_FIREBASE: "true"
-          FIRESTORE_EMULATOR_HOST: "localhost:8080"
-          PORT: "3001"
-          SERVER_ALLOW_ORIGIN: "https://learn.diyaresearch.org"
-          STRIPE_SECRET_KEY: "sk_test_ci_placeholder"
-          FIREBASE_PROJECT_ID: "test-project-id"
-        run: |
-          nohup node index.js > server-prod-boot.log 2>&1 &
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:3001/ > /dev/null && exit 0
-            sleep 1
-          done
-          echo "Server did not become healthy in production mode" >&2
-          cat server-prod-boot.log
-          exit 1
-
-      - name: Production boot log (always, for debugging)
-        if: always()
-        run: cat server/server-prod-boot.log || true
-
   functions:
     name: functions
     runs-on: ubuntu-latest
@@ -137,12 +87,50 @@ jobs:
         working-directory: functions
         run: npm test
 
+      # `npm test` never boots the app - it only ever unit-tests modules in
+      # isolation. app.js registers `app.options("*", cors())` in the
+      # `if (env === 'production')` branch specifically, and Express 5's
+      # router throws synchronously at *registration* time on a bare "*"
+      # wildcard, before the app serves anything - a hard crash on every
+      # production boot that neither this job's unit tests nor api-integration
+      # (which only ever boots with NODE_ENV=test) could have caught.
+      # Confirmed missed in exactly this way: the bug shipped and sat
+      # undetected until a manual production-mode boot surfaced it locally
+      # (#393's PR).
+      #
+      # local.js is the plain-Node entry point around the same app.js the
+      # deployed function wraps, so booting it exercises the real middleware
+      # and route registration.
+      - name: Boot in production mode (catches route-registration crashes npm test can't)
+        working-directory: functions
+        env:
+          NODE_ENV: production
+          ENABLE_MOCK_FIREBASE: "true"
+          FIRESTORE_EMULATOR_HOST: "localhost:8080"
+          PORT: "3001"
+          SERVER_ALLOW_ORIGIN: "https://learn.diyaresearch.org"
+          STRIPE_SECRET_KEY: "sk_test_ci_placeholder"
+          FIREBASE_PROJECT_ID: "test-project-id"
+        run: |
+          nohup node local.js > api-prod-boot.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3001/ > /dev/null && exit 0
+            sleep 1
+          done
+          echo "API did not become healthy in production mode" >&2
+          cat api-prod-boot.log
+          exit 1
+
+      - name: Production boot log (always, for debugging)
+        if: always()
+        run: cat functions/api-prod-boot.log || true
+
   dependency-audit:
     name: dependency-audit
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package: [portal-app, server, functions]
+        package: [portal-app, functions]
     steps:
       - name: Check out code
         uses: actions/checkout@v7
@@ -177,15 +165,15 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install server dependencies
-        working-directory: server
+      - name: Install API dependencies
+        working-directory: functions
         run: npm ci --no-audit --no-fund
 
       - name: Install pytest dependencies
         run: pip install -r tests/requirements.txt
 
-      - name: Boot server (mock Firebase, no real credentials required)
-        working-directory: server
+      - name: Boot API (mock Firebase, no real credentials required)
+        working-directory: functions
         env:
           NODE_ENV: test
           ENABLE_MOCK_FIREBASE: "true"
@@ -198,13 +186,13 @@ jobs:
           PORT: "3001"
           SERVER_ALLOW_ORIGIN: "http://localhost:3000"
         run: |
-          nohup node index.js > server.log 2>&1 &
+          nohup node local.js > api.log 2>&1 &
           for i in $(seq 1 30); do
             curl -sf http://localhost:3001/ > /dev/null && exit 0
             sleep 1
           done
-          echo "Server did not become healthy in time" >&2
-          cat server.log
+          echo "API did not become healthy in time" >&2
+          cat api.log
           exit 1
 
       - name: Run integration tests
@@ -212,6 +200,6 @@ jobs:
           API_BASE_URL: http://localhost:3001/api
         run: pytest -v
 
-      - name: Server log (always, for debugging)
+      - name: API log (always, for debugging)
         if: always()
-        run: cat server/server.log || true
+        run: cat functions/api.log || true

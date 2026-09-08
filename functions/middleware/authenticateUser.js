@@ -1,3 +1,4 @@
+const { databaseService } = require("../services/databaseService");
 const { sendAuthError } = require("../utils/responseHelpers");
 
 const authenticateUser = async (req, res, next) => {
@@ -7,11 +8,9 @@ const authenticateUser = async (req, res, next) => {
   }
 
   try {
-    // In Cloud Functions, use firebase-admin default credentials (do NOT rely on local serviceAccount files).
-    const admin = require("firebase-admin");
-    if (admin.apps.length === 0) {
-      admin.initializeApp();
-    }
+    // Initialize database service if needed
+    await databaseService.initialize();
+    const admin = databaseService.getAdmin();
 
     const decodedToken = await admin.auth().verifyIdToken(token);
     req.user = decodedToken;

@@ -9,6 +9,7 @@ const {
   PROJECT_ID,
   STORAGE_BUCKET,
   resolveCredential,
+  credentialOptions,
   hasCredentialSource,
 } = require('../config/credentials');
 
@@ -58,9 +59,9 @@ class DatabaseService {
   /**
    * Check if a Firebase Admin credential source is configured.
    *
-   * This used to test only for serviceAccountKey.json, which never exists in
-   * a deployed Cloud Function - so the payments API silently ran on mock
-   * Firebase instead of the runtime service account (issue #418).
+   * This used to test only for serviceAccountKey.json, which meant that
+   * deleting the key file - the recommended fix for issue #418 - silently
+   * demoted the service to mock data instead of using ADC.
    */
   hasValidFirebaseConfig() {
     return hasCredentialSource();
@@ -85,7 +86,7 @@ class DatabaseService {
 
       this.admin = admin;
       admin.initializeApp({
-        credential: resolved.credential,
+        ...credentialOptions(resolved),
         projectId: PROJECT_ID,
         storageBucket: STORAGE_BUCKET
       });
@@ -147,8 +148,9 @@ class DatabaseService {
     // but object spread only copies own enumerable properties - .auth and
     // .firestore live on the class prototype, so the spread silently
     // dropped .auth entirely and replaced .firestore with a non-callable
-    // stand-in. That broke admin.auth() for every caller in mock mode
-    // (ported from the identical server/ fix, #436).
+    // stand-in. That broke admin.auth() for every caller (authenticateUser,
+    // optionalAuth) whenever the service ran in mock mode, i.e. every local
+    // dev run without real Firebase credentials and the whole test suite.
     return this.admin;
   }
 
@@ -219,15 +221,19 @@ class DatabaseService {
       const totalSnapshot = await countQuery.count().get();
       const totalUsers = totalSnapshot.data().count;
 
-      // Get paginated users
-      let query = db.collection(tableUsers)
-        .orderBy(orderBy, orderDirection)
-        .offset(offset)
-        .limit(limit);
+      // Get paginated users. The filter must be applied before offset/limit
+      // are added — chaining it on afterward (as this used to) left the
+      // query definition technically equivalent but out of step with the
+      // count query above and with the users(role, createdAt) composite
+      // index declared in firestore.indexes.json (#434), whose field order
+      // this now mirrors.
+      let query = db.collection(tableUsers);
 
       if (role) {
         query = query.where('role', '==', role);
       }
+
+      query = query.orderBy(orderBy, orderDirection).offset(offset).limit(limit);
 
       const usersSnapshot = await query.get();
 

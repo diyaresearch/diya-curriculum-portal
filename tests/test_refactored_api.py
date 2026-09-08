@@ -4,7 +4,7 @@ Tests the actual API responses against our new standardized format
 
 These run against a live server started in mock-Firebase mode (see
 run_tests.sh / .env.test, ENABLE_MOCK_FIREBASE=true). In that mode,
-server/utils/firebaseMock.js's MockAuth accepts a fixed set of bearer
+functions/utils/firebaseMock.js's MockAuth accepts a fixed set of bearer
 tokens - VALID_ADMIN_TOKEN / VALID_USER_TOKEN below - in place of real
 Firebase ID tokens, so these tests can exercise authenticated routes
 without a real Firebase project.
@@ -13,7 +13,7 @@ without a real Firebase project.
 import requests
 import pytest
 
-# Recognized by MockAuth.verifyIdToken (server/utils/firebaseMock.js) when
+# Recognized by MockAuth.verifyIdToken (functions/utils/firebaseMock.js) when
 # the server is running with ENABLE_MOCK_FIREBASE=true. Not real tokens -
 # they only work in mock mode.
 VALID_ADMIN_TOKEN = "valid-admin-token"

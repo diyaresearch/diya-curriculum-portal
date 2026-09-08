@@ -12,9 +12,9 @@ Run these from `portal-app/`. Node 22.12 or newer is required (Vite 7, Vitest 5)
 ### `npm start` (alias: `npm run dev`)
 
 Starts the Vite dev server on [http://localhost:3000](http://localhost:3000)
-with hot module replacement. `/api/*` is proxied to the local `server/` backend
-on port 3001 — payments are *not* covered by that proxy; they go straight to
-Cloud Functions via `src/utils/paymentsApi.js`.
+with hot module replacement. `/api/*` is proxied to the local `functions/`
+backend on port 3001 — payments included, since #439 made that one backend
+rather than two.
 
 ### `npm run build`
 

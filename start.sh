@@ -41,12 +41,16 @@ npm install
 echo "Starting React application..."
 npm start &
 
-# Navigate to the server directory, install dependencies, and start the Express server
-cd ../server
-echo "Installing dependencies for Express server..."
+# Navigate to the API directory, install dependencies, and start it.
+#
+# functions/ is the whole backend since #439 - it deploys as a Cloud Function
+# but `npm start` runs local.js, the same Express app on a plain port, which is
+# what the Vite dev proxy expects. Payments are served by this too now; they
+# used to need the Functions emulator running separately.
+cd ../functions
+echo "Installing dependencies for the API..."
 npm install
-npm install cors
-echo "Starting Express server..."
+echo "Starting the API..."
 npm start &
 
 # Wait for all background jobs to finish

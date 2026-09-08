@@ -1,11 +1,11 @@
 # API Test Suite for DIYA Curriculum Portal
 
 This directory contains the real integration tests for the user management endpoints in
-`server/routes/user.js`: `tests/test_refactored_api.py`. They run as HTTP requests against
+`functions/routes/user.js`: `tests/test_refactored_api.py`. They run as HTTP requests against
 a live server started in mock-Firebase mode — nothing here mocks the server itself.
 
 For unit-level coverage (roles, payments, pagination, ownership checks, custom claims, etc.)
-see `server/__tests__/` (Jest) and `functions/__tests__/` (Jest). Firestore security rules
+see `functions/__tests__/` (Jest). Firestore security rules
 have their own suite under `tests/rules/`, run against the Firebase emulator — see
 `tests/rules/package.json`.
 
@@ -70,7 +70,7 @@ cd server && npm start &                       # or however you normally run it
 API_BASE_URL=http://localhost:3001/api pytest -v
 ```
 
-Mock mode matters here beyond convenience: `server/utils/firebaseMock.js`'s `MockAuth`
+Mock mode matters here beyond convenience: `functions/utils/firebaseMock.js`'s `MockAuth`
 accepts a fixed set of bearer tokens (`valid-admin-token`, `valid-user-token`, ...) in
 place of real Firebase ID tokens, which is how these tests exercise authenticated routes
 without minting real tokens. Run against a server in real-Firebase mode and every
@@ -99,5 +99,5 @@ tests/
 ## Adding a test
 
 Give it a bearer token from the fixed set `MockAuth.verifyIdToken` accepts (see
-`server/utils/firebaseMock.js`) rather than mocking the response — that's what makes these
+`functions/utils/firebaseMock.js`) rather than mocking the response — that's what makes these
 tests worth having.

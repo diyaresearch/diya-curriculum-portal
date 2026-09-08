@@ -14,14 +14,14 @@ every Firestore-backed API route in production and locally.
 | # | Source | When it applies |
 |---|---|---|
 | 1 | `FIREBASE_SERVICE_ACCOUNT` | Set to service account JSON, or its base64 encoding. For CI and secret managers. |
-| 2 | Runtime service account | Automatic on App Engine, Cloud Run, and Cloud Functions. |
+| 2 | Runtime service account | Automatic on Cloud Functions, Cloud Run, and App Engine. |
 | 3 | `GOOGLE_APPLICATION_CREDENTIALS` | Set to the path of a credential file. |
 | 4 | gcloud ADC | `~/.config/gcloud/application_default_credentials.json` exists. |
 | 5 | `serviceAccountKey.json` | Local only, and only with `FIREBASE_ALLOW_KEY_FILE=true`. |
 
 Downloaded JSON keys are last and opt-in on purpose. They do not expire in any
 visible way, they are easy to leak, and revoking one takes the service down with
-no warning — which is precisely what happened in #418. On App Engine and Cloud
+no warning — which is precisely what happened in #418. On Cloud Functions and Cloud
 Run the resolver refuses to read one at all, because those runtimes already have
 an identity.
 
@@ -49,74 +49,64 @@ To use a downloaded key anyway (discouraged, and never in a deploy):
 FIREBASE_ALLOW_KEY_FILE=true npm start
 ```
 
-## Production (App Engine)
+## Production (Cloud Functions)
 
-App Engine runs as `appengine-default@curriculum-portal-1ce8f.iam.gserviceaccount.com`. Grant
-it Firestore access once, then deploy with no key material at all:
+The deployed function runs as the project's default compute service account,
+`curriculum-portal-1ce8f@appspot.gserviceaccount.com`, and reaches Firestore
+through the metadata server. There is no key material in the deploy at all.
 
-`app.yaml` pins the identity with `service_account:`, which the org policy
-`constraints/appengine.enforceServiceAccountActAsCheck` requires. The
-application also needs an app-level default service account set once:
+> The API ran on App Engine until #439, as
+> `appengine-default@curriculum-portal-1ce8f.iam.gserviceaccount.com` pinned by
+> `app.yaml`'s `service_account:`. That service and its `app.yaml` are gone;
+> the IAM grants below are the Cloud Functions equivalents.
 
-```bash
-gcloud app update --project=curriculum-portal-1ce8f \
-  --service-account=appengine-default@curriculum-portal-1ce8f.iam.gserviceaccount.com
-```
-
-The service account started with **no roles at all**. These are the ones the
-deploy and the running app actually need (verified 2026-08-28):
+Grant the runtime identity Firestore access once per project:
 
 ```bash
-SA=serviceAccount:appengine-default@curriculum-portal-1ce8f.iam.gserviceaccount.com
+SA=serviceAccount:curriculum-portal-1ce8f@appspot.gserviceaccount.com
 
 # Runtime: read and write Firestore
 gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
   --member=$SA --role=roles/datastore.user --condition=None
 
-# Build: push and pull the container image, write build logs
+# Runtime: read the Stripe secrets bound in index.js
 gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
-  --member=$SA --role=roles/artifactregistry.writer --condition=None
-gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
-  --member=$SA --role=roles/cloudbuild.builds.builder --condition=None
-gcloud projects add-iam-policy-binding curriculum-portal-1ce8f \
-  --member=$SA --role=roles/logging.logWriter --condition=None
+  --member=$SA --role=roles/secretmanager.secretAccessor --condition=None
 
-# Buckets: Cloud Build staging, and the app's own storage bucket.
-# Scoped to the buckets rather than granting project-wide storage.admin.
-for B in staging.curriculum-portal-1ce8f.appspot.com curriculum-portal-1ce8f.appspot.com; do
-  gcloud storage buckets add-iam-policy-binding gs://$B \
-    --member=$SA --role=roles/storage.admin --project=curriculum-portal-1ce8f
-done
+# The app's own storage bucket, scoped rather than project-wide storage.admin
+gcloud storage buckets add-iam-policy-binding gs://curriculum-portal-1ce8f.appspot.com \
+  --member=$SA --role=roles/storage.admin --project=curriculum-portal-1ce8f
 ```
 
-Then deploy:
+Then deploy from the repo root:
 
 ```bash
-cd server && gcloud app deploy app.yaml --project=curriculum-portal-1ce8f --quiet
+firebase deploy --only functions --project curriculum-portal-1ce8f
 ```
 
 Confirm the runtime identity in the logs — it must name the metadata server,
 never a key file:
 
 ```bash
-gcloud app logs read --project=curriculum-portal-1ce8f --limit=50 | grep "Firebase initialized"
+firebase functions:log --project curriculum-portal-1ce8f | grep "Firebase initialized"
 # Firebase initialized with attached runtime service account (metadata server)
 ```
 
-`.gcloudignore` excludes `serviceAccountKey.json`, so the key cannot ride along
-in the deployed artifact even if it is still sitting in the directory.
+`firebase.json`'s functions `ignore` list excludes `serviceAccountKey.json`
+(and every `.env*` file, which hold live Stripe keys), so neither can ride
+along in the deployed artifact even if still sitting in the directory.
 
 ## Checking whether credentials work
 
 ```bash
-curl -s https://curriculum-portal-1ce8f.uc.r.appspot.com/api/health
+curl -s https://us-central1-curriculum-portal-1ce8f.cloudfunctions.net/payments/api/health
 ```
 
 - `200 {"status":"ok","firestore":"reachable"}` — credential is valid.
 - `503 {"status":"degraded",...}` — the Admin credential cannot reach Firestore.
-  The response body and the server log both carry the underlying error.
+  The response body and the function log both carry the underlying error.
 
-The same check runs once at startup, so the server log names the problem and the
+The same check runs once at local startup, so the log names the problem and the
 fix instead of leaving every route to fail with an opaque 500.
 
 ## Failure modes and what they mean
@@ -135,7 +125,7 @@ The key `firebase-adminsdk-2jl7h@curriculum-portal-1ce8f.iam.gserviceaccount.com
 the local file and the key itself so it cannot be confused for a live credential:
 
 ```bash
-rm server/serviceAccountKey.json
+rm functions/serviceAccountKey.json
 gcloud iam service-accounts keys list \
   --iam-account=firebase-adminsdk-2jl7h@curriculum-portal-1ce8f.iam.gserviceaccount.com
 # then, for each stale key id:

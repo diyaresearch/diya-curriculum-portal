@@ -1,26 +1,27 @@
 /**
- * One way to call the App Engine backend (server/).
+ * One way to call the backend.
  *
  * Before this, ~43 call sites each did their own version of: build a URL from
  * VITE_SERVER_ORIGIN_URL, grab a Firebase ID token, set an Authorization
  * header, check response.ok (or not), parse JSON (or not), and report the
  * failure (console.error, alert, or silence). This centralizes all of it.
  *
- * Deliberately NOT included: unwrapping a response envelope. server/ has
+ * Deliberately NOT included: unwrapping a response envelope. The backend has
  * `responseHelpers.js` ({ success, data } / { success:false, error }), but
  * only routes/user.js actually uses it - the other 53 responses are raw
  * res.json(). So this returns the parsed body verbatim and lets callers keep
  * reading the shape their endpoint actually sends. Unwrapping here would
- * silently break every non-user route. (Making the server consistent is a
+ * silently break every non-user route. (Making the backend consistent is a
  * separate job; see the note in the #370 PR.)
  *
- * Payments are NOT routed through this - they live in functions/, not
- * server/, and go through utils/paymentsApi.js. See CLAUDE.md.
+ * Payment routes are on the same origin as everything else since #439, but
+ * still go through utils/paymentsApi.js - its call sites work with the raw
+ * Response rather than this module's throw-on-error contract. See CLAUDE.md.
  */
 
 import { getAuth } from "firebase/auth";
 
-const API_ORIGIN = String(import.meta.env.VITE_SERVER_ORIGIN_URL || "").replace(/\/+$/, "");
+import { API_ORIGIN } from "@/utils/apiOrigin";
 
 /**
  * A failed API call. Carries enough for a caller to branch on the cause
