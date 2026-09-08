@@ -1039,7 +1039,10 @@ const ExploreModulesSection = () => {
           </div>
         </section>
       )}
+      {/* Anchor target for the "Browse modules" cards in the audience
+          sections above, which used to link at routes that do not exist (#442). */}
       <section
+        id="explore-modules"
         style={{
           width: "100%",
           padding: "60px 0 60px 0",

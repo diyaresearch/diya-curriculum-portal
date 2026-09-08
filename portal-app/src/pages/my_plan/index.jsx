@@ -31,12 +31,11 @@ export const MyPlans = () => {
     let cancelled = false;
     const fetchPlans = async () => {
       try {
+        // ProtectedRoute (App.jsx, #444) has already bounced a signed-out
+        // visitor, so there is a user by the time this runs.
         const auth = getAuth();
         const user = auth.currentUser;
-        if (!user) {
-          navigate("/lesson-generator");
-          return;
-        }
+        if (!user) return;
 
         if (userRole === ROLES.ADMIN) {
           // /api/lessons/admin is now admin-gated and needs the token (#424).
@@ -137,10 +136,12 @@ export const MyPlans = () => {
     setSelectedPlans(updatedSelection);
   };
 
-  // ✅ Handle "Create Module" button click
+  // Handle "Create Module" button click. This used to go to /module/create,
+  // which matched /module/:moduleId and rendered an empty stub form (#444); the
+  // real builder is /module-builder, and it preselects what was ticked here.
   const handleCreateModule = () => {
     if (selectedPlans.size > 0) {
-      navigate("/module/create", { state: { selectedPlans: Array.from(selectedPlans) } });
+      navigate("/module-builder", { state: { selectedPlans: Array.from(selectedPlans) } });
     }
   };
 

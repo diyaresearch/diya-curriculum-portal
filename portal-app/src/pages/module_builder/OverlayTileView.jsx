@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 
 const categories = ["AI Principles", "Data Science", "Machine Learning", "Statistics", "Other"];
 const types = ["Lecture", "Assignment", "Dataset"];
@@ -296,8 +297,8 @@ const OverlayTileView = ({
                         >
                           {isSelected ? "Selected" : "Select"}
                         </button>
-                        <a
-                          href={`/lesson-details/${item.id}`}
+                        <Link
+                          to={`/lesson-details/${item.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
@@ -314,7 +315,7 @@ const OverlayTileView = ({
                           }}
                         >
                           View
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   );

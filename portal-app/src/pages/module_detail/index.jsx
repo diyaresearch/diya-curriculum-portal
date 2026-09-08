@@ -17,7 +17,6 @@ import module2 from "@/assets/modules/module2.png";
 import module3 from "@/assets/modules/module3.png";
 import module4 from "@/assets/modules/module4.png";
 import module5 from "@/assets/modules/module5.png";
-import OverlayTileView from "@/components/content/OverlayTileView";
 import { loadStripe } from "@stripe/stripe-js";
 import { fetchPayments } from "@/utils/paymentsApi";
 import { api } from "@/utils/apiClient";
@@ -26,13 +25,13 @@ import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
 import Loading from "@/components/ui/Loading";
 import { ROLES } from "@/constants/roles";
+import { FEATURED_MODULES } from "@/constants/featuredModules";
 
 
 // Level chip coloring intentionally not used on module page
 
 // Import default images for fallback - using module images instead since AI images don't exist
 // If you have these AI images in a different location, update the paths accordingly
-const aiExplorationImg = module1; // Fallback to module1 image
 
 const fallbackStripeKey = String(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "").trim();
 if (!fallbackStripeKey) {
@@ -100,123 +99,6 @@ const extractBulletsFromObjectives = (value) => {
   return sentenceParts.length > 1 ? sentenceParts : [text];
 };
 
-// Hardcoded modules for fallback (kept outside component for stable hooks deps)
-const HARDCODED_MODULES = {
-  "python-for-ai": {
-    title: "PYTHON FOR AI",
-    subtitle: "Master Python basics for AI: variables, functions, and essential libraries like NumPy and Pandas for data manipulation and analysis.",
-    image: module4,
-    description: "Learn Python programming fundamentals specifically for AI applications. This module covers essential programming concepts, data structures, and libraries used in artificial intelligence development.",
-    requirements: "No prior programming experience required.",
-    learningObjectives: "By the end of this module, students will be comfortable writing basic Python programs and using NumPy and Pandas for simple data manipulation and analysis tasks.",
-    details: [
-      { label: "Category", value: "Artificial Intelligence" },
-      { label: "Level", value: "Beginner" },
-      { label: "Type", value: "Interactive Course" },
-      { label: "Duration", value: "120 minutes" },
-    ],
-    resources: [
-      { title: "Python Basics", desc: "Variables, functions, and control flow, the building blocks used throughout the rest of the module.", type: "Lesson Plan", locked: false },
-      { title: "NumPy and Pandas Primer", desc: "Hands-on introduction to the two libraries used across the AI curriculum for data manipulation.", type: "Lesson Plan", locked: false },
-      { title: "Data Wrangling Exercise", desc: "Practice cleaning and analyzing a small dataset end to end.", type: "Assignment", locked: false },
-    ],
-  },
-  "ai-exploration": {
-    title: "AI EXPLORATION",
-    subtitle: "Explore the fundamentals of artificial intelligence and discover how AI is transforming our world.",
-    image: aiExplorationImg,
-    description: "This comprehensive module introduces students to the exciting world of artificial intelligence. Learn about machine learning, neural networks, and real-world AI applications.",
-    requirements: "Basic computer literacy and curiosity about technology.",
-    learningObjectives: "By the end of this module, students will understand core AI concepts, be able to identify AI applications in daily life, and have hands-on experience with simple AI tools.",
-    details: [
-      { label: "Category", value: "Artificial Intelligence" },
-      { label: "Level", value: "Beginner" },
-      { label: "Type", value: "Interactive Course" },
-      { label: "Duration", value: "120 minutes" },
-    ],
-    resources: [
-      { title: "Introduction to AI Fundamentals", desc: "Learn the core ideas behind AI and where it shows up in everyday life.", type: "Lesson Plan", locked: false },
-      { title: "AI Applications Quiz", desc: "Test your understanding of real-world AI applications.", type: "Assignment", locked: false },
-      { title: "Build Your First AI Tool", desc: "A hands-on project to explore simple AI tooling and workflows.", type: "Project", locked: false }
-    ]
-  },
-  "ai-insights": {
-    title: "AI INSIGHTS",
-    subtitle: "Dive deeper into advanced AI concepts and their practical applications in various industries.",
-    image: module2,
-    description: "Building on foundational knowledge, this module explores advanced AI techniques, ethical considerations, and industry applications.",
-    requirements: "Completion of AI Exploration module or equivalent background knowledge.",
-    learningObjectives: "Students will master intermediate AI concepts, understand ethical implications of AI, and be able to evaluate AI solutions for real-world problems.",
-    details: [
-      { label: "Category", value: "Artificial Intelligence" },
-      { label: "Level", value: "Intermediate" },
-      { label: "Type", value: "Advanced Course" },
-      { label: "Duration", value: "180 minutes" },
-    ],
-    resources: [
-      { title: "Deep Learning Concepts", desc: "Understand neural networks, training, and evaluation at a high level.", type: "Lecture", duration: 60, locked: false },
-      { title: "AI Ethics Discussion", desc: "Explore bias, fairness, and responsible AI design with examples.", type: "Discussion", duration: 30, locked: false },
-      { title: "AI Healthcare Project Plan", desc: "Apply AI reasoning to a healthcare-style scenario and present findings.", type: "Project", duration: 90, locked: false },
-    ],
-  },
-  "ai-physics": {
-    title: "AI & PHYSICS",
-    subtitle: "Discover how artificial intelligence is revolutionizing physics research and scientific discovery.",
-    image: module3,
-    description: "Explore the fascinating intersection of AI and physics, from particle physics simulations to astronomical data analysis.",
-    requirements: "Basic understanding of physics concepts and familiarity with AI fundamentals.",
-    learningObjectives: "Learn how AI accelerates physics research, understand machine learning applications in scientific discovery, and explore career opportunities at the intersection of AI and physics.",
-    details: [
-      { label: "Category", value: "Physics, AI" },
-      { label: "Level", value: "Intermediate" },
-      { label: "Type", value: "Specialized Course" },
-      { label: "Duration", value: "150 minutes" },
-    ],
-    resources: [
-      { title: "AI in Physics Research", desc: "Survey where AI is used in modern physics workflows.", type: "Lesson Plan", locked: false },
-      { title: "Physics Simulation Lab", desc: "Hands-on activity exploring simulations and interpretation.", type: "Assignment", locked: false },
-      { title: "Quantum Computing & AI", desc: "Project: compare how AI can help analyze complex physics data.", type: "Project", locked: false },
-    ],
-  },
-  "chemistry-ai": {
-    title: "CHEMISTRY & AI",
-    subtitle: "AI-driven chemistry: molecular prediction, drug discovery processes, and automated chemical analysis using machine learning.",
-    image: module5,
-    description: "Explore how artificial intelligence revolutionizes chemistry through molecular modeling, drug discovery, and chemical analysis. Learn how AI accelerates research and development in chemical sciences.",
-    requirements: "Basic chemistry knowledge and familiarity with AI fundamentals.",
-    learningObjectives: "Students will understand how machine learning models are applied to molecular prediction and drug discovery, and evaluate AI-assisted chemical analysis workflows.",
-    details: [
-      { label: "Category", value: "Chemistry, AI" },
-      { label: "Level", value: "Intermediate" },
-      { label: "Type", value: "Specialized Course" },
-      { label: "Duration", value: "150 minutes" },
-    ],
-    resources: [
-      { title: "AI in Chemistry Research", desc: "Survey where machine learning is used in modern chemistry workflows.", type: "Lesson Plan", locked: false },
-      { title: "Molecular Modeling Lab", desc: "Hands-on activity exploring computational molecular prediction.", type: "Assignment", locked: false },
-      { title: "Drug Discovery Case Study", desc: "Project: examine how AI accelerates a real drug discovery pipeline.", type: "Project", locked: false },
-    ],
-  },
-  "biology-ai": {
-    title: "BIOLOGY & AI",
-    subtitle: "Advanced bioinformatics: genomic analysis, protein folding prediction, and medical AI applications in modern healthcare.",
-    image: module1,
-    description: "Dive into bioinformatics and computational biology. This advanced module covers AI applications in genomics, protein structure prediction, and medical diagnostics using cutting-edge machine learning techniques.",
-    requirements: "Completion of AI Insights module or equivalent background in AI and basic biology.",
-    learningObjectives: "Students will understand how AI is applied to genomic analysis and protein structure prediction, and evaluate its role in medical diagnostics.",
-    details: [
-      { label: "Category", value: "Biology, AI" },
-      { label: "Level", value: "Advanced" },
-      { label: "Type", value: "Specialized Course" },
-      { label: "Duration", value: "180 minutes" },
-    ],
-    resources: [
-      { title: "Genomics and AI", desc: "Introduction to how machine learning is applied to genomic data.", type: "Lecture", duration: 60, locked: false },
-      { title: "Protein Folding Prediction", desc: "Explore how AI models predict protein structure.", type: "Discussion", duration: 30, locked: false },
-      { title: "Medical Diagnostics Project", desc: "Project: evaluate an AI-assisted diagnostic scenario.", type: "Project", duration: 90, locked: false },
-    ],
-  },
-};
 
 const ModuleDetail = () => {
   const toast = useToast();
@@ -260,10 +142,6 @@ const ModuleDetail = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [moduleId]);
 
-  // Determine if this is for editing/creating or just viewing
-  const [mode, setMode] = useState("view");
-  const [isEditMode, setIsEditMode] = useState(false);
-
   // Module data states
   const [moduleData, setModuleData] = useState(null);
   // True when this is a paid module the viewer has not purchased (#430).
@@ -271,8 +149,6 @@ const ModuleDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [lessonPlans, setLessonPlans] = useState([]);
-  const [showOverlay, setShowOverlay] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -329,8 +205,6 @@ const ModuleDetail = () => {
         id: lesson.id
       }));
 
-      setLessonPlans(fetchedPlans);
-
       // Update moduleData with resources
       setModuleData(prev => ({
         ...prev,
@@ -345,7 +219,6 @@ const ModuleDetail = () => {
   // Determine if the header description exceeds 3 lines (only when collapsed).
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (isEditMode || mode === "create") return;
     if (!moduleData) return;
     if (isDescExpanded) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
@@ -363,7 +236,7 @@ const ModuleDetail = () => {
       }
     });
     return () => window.cancelAnimationFrame(raf);
-  }, [moduleId, moduleData, moduleData?.subtitle, isDescExpanded, isEditMode, mode]);
+  }, [moduleId, moduleData, moduleData?.subtitle, isDescExpanded]);
 
   const fetchModuleDetails = useCallback(async () => {
     try {
@@ -371,8 +244,8 @@ const ModuleDetail = () => {
       setError(null);
 
       // Check if it's a hardcoded module first
-      if (HARDCODED_MODULES[moduleId]) {
-        const hardcodedData = HARDCODED_MODULES[moduleId];
+      if (FEATURED_MODULES[moduleId]) {
+        const hardcodedData = FEATURED_MODULES[moduleId];
         setModuleData(hardcodedData);
         setLoading(false);
         return;
@@ -455,26 +328,6 @@ const ModuleDetail = () => {
     }
   }, [moduleId, fetchLessonDetails]);
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- pre-existing, see #525
-  const fetchLessonPlans = useCallback(async () => {
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const selectedPlanIds = location.state?.selectedPlans || [];
-
-      const lessonPlanRequests = selectedPlanIds.map((id) => api.get(`/api/lesson/${id}`));
-
-      const responses = await Promise.all(lessonPlanRequests);
-      const fetchedPlans = responses;
-
-      setLessonPlans(fetchedPlans);
-    } catch (error) {
-      console.error("Error fetching lesson plans:", error);
-    }
-  }, [location.state?.selectedPlans]);
-
   useEffect(() => {
     let cancelled = false;
     if (!checkoutClientSecret) return;
@@ -519,17 +372,9 @@ const ModuleDetail = () => {
   
 
   useEffect(() => {
-    if (moduleId === "create") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      setMode("create");
-      setIsEditMode(true);
-      fetchLessonPlans();
-    } else if (moduleId) {
-      setMode("view");
-      setIsEditMode(false);
-      fetchModuleDetails();
-    }
-  }, [moduleId, fetchLessonPlans, fetchModuleDetails]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
+    if (moduleId) fetchModuleDetails();
+  }, [moduleId, fetchModuleDetails]);
 
   // (legacy layout style helpers removed; Screenshot 2 style is inlined below)
 
@@ -626,38 +471,13 @@ const ModuleDetail = () => {
     );
   }
 
-  // If in edit/create mode, show the old form layout
-  if (isEditMode || mode === "create") {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-blue-100">
-        <div className="bg-white shadow-md rounded-lg px-8 py-6 w-full max-w-5xl">
-          {/* Your existing edit/create form JSX goes here */}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl text-center mb-6">
-              {mode === "create" ? "Create Module" : "Edit Module"}
-            </h1>
-            <button
-              type="button"
-              className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100 ml-4"
-              onClick={() => navigate("/")}
-            >
-              Exit
-            </button>
-          </div>
-          {/* Add all your existing form fields here... */}
-          {/* For brevity, I'm not copying the entire form, but you should include all the existing form JSX */}
-        </div>
-      </div>
-    );
-  }
-
   // New beautiful layout for view mode
   const module = moduleData;
   const authUser = getAuth().currentUser;
   const isAdmin = userData?.role === ROLES.ADMIN;
   const isAuthor =
     !!authUser && !!moduleData?._meta?.authorUid && authUser.uid === moduleData._meta.authorUid;
-  const canEdit = !HARDCODED_MODULES[moduleId] && (isAdmin || isAuthor);
+  const canEdit = !FEATURED_MODULES[moduleId] && (isAdmin || isAuthor);
   const handleDeleteModule = async () => {
     try {
       setIsDeleting(true);
@@ -1183,19 +1003,6 @@ const ModuleDetail = () => {
         </div>
       </div>
 
-      {/* Show Overlay if showOverlay is true */}
-      {showOverlay && (
-        <OverlayTileView
-          content={lessonPlans}
-          onClose={() => setShowOverlay(false)}
-          onSelectMaterial={() => { }}
-          initialSelectedTiles={lessonPlans.map((lesson) => lesson.id)}
-          type={""}
-          category={""}
-          level={""}
-          contentType={"lessonPlan"}
-        />
-      )}
       {checkoutClientSecret && (
         <Modal
           open={true}

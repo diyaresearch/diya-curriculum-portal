@@ -44,11 +44,8 @@ export const EditLesson = () => {
     let cancelled = false;
     const fetchData = async () => {
       try {
-        if (!loading && !user) {
-          navigate("/my-plans");
-          return;
-        }
-
+        // ProtectedRoute (App.jsx, #444) has already bounced a signed-out
+        // visitor; this only waits for the provider to settle.
         if (loading || !user) return;
 
         setPortalContent(await api.get("/api/units/user"));

@@ -283,8 +283,12 @@ const Navbar = () => {
           )}
 
           {!isTeacherDefault && !isTeacherPlus && (
-            <Link
-              to="/about"
+            // "About" is about DIYA the organisation, and lives on the
+            // organisation's own site - /about never existed here (#442).
+            <a
+              href={import.meta.env.VITE_DIYA_BASE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="hover:underline"
               style={{
                 fontSize: "15px",
@@ -304,7 +308,7 @@ const Navbar = () => {
               }}
             >
               About
-            </Link>
+            </a>
           )}
 
           {!user ? (

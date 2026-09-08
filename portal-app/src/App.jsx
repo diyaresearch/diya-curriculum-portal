@@ -4,7 +4,6 @@ import "./index.css";
 import { EditContent } from "./pages/edit_content";
 import Home from "./pages/home";
 import { UploadContent } from "./pages/upload-content";
-import LessonGenerator from "./pages/lesson_generator";
 import EditLesson from "./pages/edit_lesson";
 import MyPlans from "./pages/my_plan";
 import LessonDetail from "./pages/lesson_detail";
@@ -16,8 +15,10 @@ import { ToastProvider } from "@/components/ui/ToastProvider";
 import UserProfile from "./pages/profile_detail";
 import ModuleDetail from "./pages/module_detail"; // This one fetches from Firestore
 import NotFound from "./pages/not_found";
+import ComingSoon from "./pages/coming_soon";
+import ProtectedRoute from "@/components/ui/ProtectedRoute";
+import { ROLES } from "@/constants/roles";
 // Import the editing component with a different name
-import AllLessonPlans from "./pages/all_lesson_plans";
 import { TeacherSignup, StudentSignup } from './pages/sign_up';
 import UpgradePage from './pages/upgrade_page/UpgradePage.jsx';
 import PaymentPage from './pages/payment/PaymentPage';
@@ -28,7 +29,6 @@ import ModuleDrafts from "./pages/module_builder/drafts";
 import LessonDetailsPage from "./pages/lesson-details/LessonDetailsPage";
 import NuggetBuilderPage from "./pages/nugget-builder";
 import TeacherPlusPage from "./pages/teacherplus/teacherplusPage";
-import LessonDetails from '@/components/content/LessonDetails';
 import ContentDetails from '@/components/content/ContentDetails';
 import CancelSubscriptionPage from './pages/cancel-subscription/CancelSubscriptionPage';
 import YearlyPaymentPage from './pages/payment/YearlyPaymentPage';
@@ -56,18 +56,24 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/upload-content" element={<UploadContent />} />
                 <Route path="/edit-content/:id" element={<EditContent />} />
-                <Route path="/payment" element={<PaymentPage />} />
-                <Route path="/payment/premium" element={<PaymentPage />} />
-                <Route path="/payment/yearly" element={<YearlyPaymentPage />} />
-                <Route path="/lesson-generator" element={<LessonGenerator />} />
-                <Route path="/edit-lesson/:lessonId" element={<EditLesson />} />
-                <Route path="/my-plans" element={<MyPlans />} />
-                <Route path="/lesson/:lessonId" element={<LessonDetail />} />
+
+                {/* Signed-in-only. The guard lives here rather than in each page
+                    (#444): every one of these used to redirect from its own
+                    useEffect, after rendering a frame of signed-in-only UI. */}
+                <Route path="/payment" element={<ProtectedRoute requireAuth><PaymentPage /></ProtectedRoute>} />
+                <Route path="/payment/premium" element={<ProtectedRoute requireAuth><PaymentPage /></ProtectedRoute>} />
+                <Route path="/payment/yearly" element={<ProtectedRoute requireAuth><YearlyPaymentPage /></ProtectedRoute>} />
+                <Route path="/edit-lesson/:lessonId" element={<ProtectedRoute requireAuth redirectTo="/my-plans"><EditLesson /></ProtectedRoute>} />
+                <Route path="/my-plans" element={<ProtectedRoute requireAuth><MyPlans /></ProtectedRoute>} />
+                <Route path="/lesson/:lessonId" element={<ProtectedRoute requireAuth><LessonDetail /></ProtectedRoute>} />
+                <Route path="/user-profile" element={<ProtectedRoute requireAuth><UserProfile /></ProtectedRoute>} />
+
+                {/* A featured module's lesson: those modules live in code, so
+                    their resources have no lesson id to route by. */}
                 <Route path="/lesson/:moduleId/:lessonIndex" element={<LessonDetailNew />} />
-                <Route path="/user-profile" element={<UserProfile />} />
+
                 {/* Use the correct component for viewing modules */}
                 <Route path="/module/:moduleId" element={<ModuleDetail />} />
-                <Route path="/all-lesson-plans/:moduleId" element={<AllLessonPlans />} />
                 <Route path="/teacher-signup" element={<TeacherSignup />} />
                 <Route path="/student-signup" element={<StudentSignup />} />
                 <Route path="/upgrade" element={<UpgradePage />} />
@@ -79,12 +85,37 @@ function App() {
                 {/* #442: component already existed, was never wired to a route */}
                 <Route path="/module_builder/drafts" element={<ModuleDrafts />} />
                 <Route path="/lesson-details/:id" element={<LessonDetailsPage />} />
-                <Route path="/teacher-plus" element={<TeacherPlusPage />} />
-                <Route path="/teacherplus" element={<TeacherPlusPage />} />
-                <Route path="/lesson/:id" element={<LessonDetails />} />
+
+                {/* TeacherPlus dashboard, under both spellings that exist in links */}
+                <Route
+                  path="/teacher-plus"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.TEACHER_PLUS, ROLES.ADMIN]}>
+                      <TeacherPlusPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/teacherplus"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.TEACHER_PLUS, ROLES.ADMIN]}>
+                      <TeacherPlusPage />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/content/:id" element={<ContentDetails />} />
-                <Route path="/cancel-subscription" element={<CancelSubscriptionPage />} />
+                <Route
+                  path="/cancel-subscription"
+                  element={
+                    <ProtectedRoute allowedRoles={[ROLES.TEACHER_PLUS]}>
+                      <CancelSubscriptionPage />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/module-builder" element={<ModuleBuilder />} />
+                {/* Advertised on the home page but not built yet (#442) - better
+                    than a 404, which reads as broken rather than unfinished. */}
+                <Route path="/coming-soon" element={<ComingSoon />} />
                 {/* Catch-all: render a real 404 rather than an empty page (#421) */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

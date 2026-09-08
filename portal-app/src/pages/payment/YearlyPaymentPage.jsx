@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
@@ -17,13 +17,6 @@ const PaymentForm = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState(null);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
-
-    // Redirect if user is not authenticated
-    useEffect(() => {
-        if (!loading && !user) {
-            navigate('/');
-        }
-    }, [user, loading, navigate]);
 
     const handlePayment = async (e) => {
         e.preventDefault();

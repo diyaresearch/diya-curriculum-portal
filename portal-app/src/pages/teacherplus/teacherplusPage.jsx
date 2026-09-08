@@ -13,7 +13,6 @@ import {
 
 import laptopImg from '@/assets/laptop.png';
 import Loading from "@/components/ui/Loading";
-import { ROLES } from "@/constants/roles";
 
 function normalizeBoolean(value) {
     if (value === true) return true;
@@ -48,17 +47,10 @@ const TeacherPlusPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, userData, loading } = useUserData();
-    const role = userData?.role;
     const displayName =
         userData?.fullName ||
         user?.displayName ||
         (user?.email ? user.email.split("@")[0] : "TeacherPlus User");
-
-    useEffect(() => {
-        if (!loading && (!user || (role !== ROLES.TEACHER_PLUS && role !== ROLES.ADMIN))) {
-            navigate('/');
-        }
-    }, [user, role, loading, navigate]);
 
     const [userModules, setUserModules] = useState([]);
     const [contentType, setContentType] = useState("All");
@@ -296,7 +288,7 @@ const TeacherPlusPage = () => {
                         Access advanced tools to enhance your teaching experience.
                     </p>
                     <button
-                        onClick={() => navigate("/classroom-management")}
+                        onClick={() => navigate("/coming-soon?feature=Classroom%20Management")}
                         style={{
                             background: "#fbbf24",
                             color: "#1a202c",

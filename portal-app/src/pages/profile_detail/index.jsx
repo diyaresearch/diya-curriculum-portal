@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import useUserData from "@/hooks/useUserData";
 import { api } from "@/utils/apiClient";
-import { useNavigate } from "react-router-dom";
 import defaultProfileIcon from "@/assets/default_user_icon.png";
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
@@ -9,8 +8,7 @@ import { ROLES } from "@/constants/roles";
 
 const UserProfile = () => {
   const toast = useToast();
-  const { user, loading } = useUserData();
-  const navigate = useNavigate();
+  const { user } = useUserData();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -30,12 +28,6 @@ const UserProfile = () => {
   const [notifications] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/");
-    }
-  }, [user, loading, navigate]);
 
   useEffect(() => {
     let cancelled = false;

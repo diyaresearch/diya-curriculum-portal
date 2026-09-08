@@ -94,8 +94,15 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   const editModuleId = location.state?.editModuleId || null;
   const returnTo = location.state?.returnTo || null;
   const moduleReturnTo = location.state?.moduleReturnTo || null;
+  // "Create Module" on /my-plans arrives here with the lesson plans the user
+  // ticked there. It used to go to /module/create and lose them in a stub form (#444).
+  // Read once at mount: the selection travels in navigation state, and a later
+  // state change should not re-tick boxes the user has since cleared.
+  const [preselectedLessonIds] = useState(() =>
+    Array.isArray(location.state?.selectedPlans) ? location.state.selectedPlans : []
+  );
   const [editModuleAuthorUid, setEditModuleAuthorUid] = useState("");
-  const [prefillLessonIds, setPrefillLessonIds] = useState([]);
+  const [prefillLessonIds, setPrefillLessonIds] = useState(preselectedLessonIds);
   const didPrefillLessonsRef = useRef(false);
 
   // For admins creating a new module, default Featured to ON (so it shows for all users on homepage).
@@ -253,8 +260,10 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   }, [editModuleId]);
 
   // Once we have portalContent (lessons) and module lesson ids, prefill selection.
+  // Two sources: an existing module being edited, and a selection carried over
+  // from /my-plans when creating a new one.
   useEffect(() => {
-    if (!editModuleId) return;
+    if (!editModuleId && preselectedLessonIds.length === 0) return;
     if (didPrefillLessonsRef.current) return;
     if (!prefillLessonIds || prefillLessonIds.length === 0) {
       didPrefillLessonsRef.current = true;
@@ -268,7 +277,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
     setSelectedMaterials(
       prefillLessonIds.map((id) => portalContent.find((item) => item.id === id) || { id })
     );
-  }, [editModuleId, portalContent, prefillLessonIds]);
+  }, [editModuleId, portalContent, prefillLessonIds, preselectedLessonIds]);
 
   // --- Fetch lesson plans for overlay ---
   const fetchLessonPlans = async (userId) => {
