@@ -533,6 +533,13 @@ Frontend testing uses Vitest and React Testing Library, configured in the `test`
 Vitest's globals (`describe`/`test`/`expect`) plus `vi` for mocking — there is no `jest`
 global. No specific test scripts are configured for the backend.
 
+Firestore security rules are tested separately, in `tests/rules/` (Jest +
+`@firebase/rules-unit-testing`, run by `firebase emulators:exec` against a real Firestore
+emulator, so it needs Java). `cd tests/rules && npm test`. This suite is what gates the
+automated rules deploy — `.github/workflows/firestore-rules-tests.yml` is `workflow_call`
+only, and both `ci.yml` and `deploy-firestore-config.yml` call it, so a PR check and a
+deploy gate can never diverge (#428).
+
 ## Code Documentation
 
 ## User Roles Storage

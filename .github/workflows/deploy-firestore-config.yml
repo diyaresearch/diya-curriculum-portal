@@ -1,0 +1,181 @@
+name: Deploy Firestore config
+
+# #428's last acceptance criterion: "rules deployed from source, with tests,
+# in CI." Before this, `portal-app/firestore.rules` and
+# `portal-app/firestore.indexes.json` lived in source but reached a real
+# project only when someone remembered to run `firebase deploy` by hand — the
+# production deploy recorded on #428 was exactly that, manual. Source and
+# live rules could silently disagree, and nothing would say so.
+#
+# What this does: on a push to main that touches the rules, the indexes, or
+# the Firebase config that points at them, run the rules suite and then deploy
+# to staging and production, in that order. `workflow_dispatch` can target one
+# project on its own — use it to re-sync a project without an empty commit.
+#
+# Deliberately narrow: firestore:rules and firestore:indexes only. Hosting and
+# Cloud Functions are still deployed by hand (functions/DEPLOYMENT.md), and
+# broadening this workflow to cover them is a separate decision — the rules
+# are safe to automate precisely because the emulator suite can prove them
+# correct first, which is not true of the function.
+#
+# Credentials come from Workload Identity Federation, so the repo holds no
+# long-lived service-account key (see #426, which is about getting exactly
+# that kind of key out of this project). Until an admin configures the three
+# repository variables below, both jobs run, warn, and no-op rather than
+# failing red — see the "Deploy Firestore Rules and Indexes" section of
+# functions/DEPLOYMENT.md for the one-time setup.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "portal-app/firestore.rules"
+      - "portal-app/firestore.indexes.json"
+      - "firebase.json"
+      - ".firebaserc"
+      - "tests/rules/**"
+      - ".github/workflows/deploy-firestore-config.yml"
+      - ".github/workflows/firestore-rules-tests.yml"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which project to deploy to"
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+
+# `id-token: write` is what lets google-github-actions/auth mint the OIDC
+# token that Workload Identity Federation exchanges for a GCP access token.
+# Without it the auth step fails; nothing else here needs write access.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # The gate. Same steps that run on every PR (ci.yml's `firestore-rules`
+  # job), re-run here so a deploy can never outrun its tests — a push to main
+  # is not necessarily a merge of a PR that passed.
+  rules-tests:
+    uses: ./.github/workflows/firestore-rules-tests.yml
+
+  staging:
+    name: deploy-staging
+    needs: rules-tests
+    if: github.event_name == 'push' || inputs.target == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      # Repository variables, not secrets: none of these three values is
+      # sensitive (a WIF provider resource name and two service-account
+      # emails are all public identifiers — the trust lives in the IAM
+      # binding, not in knowing the strings).
+      - name: Check deploy credentials are configured
+        id: preflight
+        env:
+          PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SA_STAGING }}
+        run: |
+          if [ -n "$PROVIDER" ] && [ -n "$SERVICE_ACCOUNT" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Firestore config not deployed::Set the GCP_WORKLOAD_IDENTITY_PROVIDER and GCP_DEPLOY_SA_STAGING repository variables to enable automatic deploys. See functions/DEPLOYMENT.md."
+          fi
+
+      - name: Authenticate to Google Cloud
+        if: steps.preflight.outputs.configured == 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA_STAGING }}
+
+      # `staging` is the alias declared in .firebaserc, so the project id
+      # stays in exactly one place in the repo.
+      #
+      # No --force: without it the CLI refuses to *delete* indexes that are
+      # live but absent from firestore.indexes.json, and unattended index
+      # deletion is not something this workflow should ever do. Removing an
+      # index stays a deliberate manual step.
+      - name: Deploy rules and indexes to staging
+        if: steps.preflight.outputs.configured == 'true'
+        run: |
+          npx --yes firebase-tools@15 deploy \
+            --only firestore:rules,firestore:indexes \
+            --project staging \
+            --non-interactive
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.preflight.outputs.configured }}" = "true" ]; then
+            echo "Deployed firestore rules + indexes to **curriculum-portal-staging**." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Skipped: no Workload Identity Federation config for staging." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  production:
+    name: deploy-production
+    needs: [rules-tests, staging]
+    # `always()` because on a manual production-only run the `staging` job is
+    # skipped, and a skipped dependency would otherwise skip this job too.
+    # The explicit result checks keep the real ordering: tests must pass, and
+    # on a push staging must have succeeded before production is touched.
+    if: >-
+      always()
+      && needs.rules-tests.result == 'success'
+      && (
+        (github.event_name == 'push' && needs.staging.result == 'success')
+        || (github.event_name == 'workflow_dispatch' && inputs.target == 'production')
+      )
+    runs-on: ubuntu-latest
+    # A GitHub Environment, so a repo admin can require a reviewer before
+    # anything reaches the live project. With no protection rules configured
+    # it simply runs, so this costs nothing until someone wants the gate.
+    environment: production
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Check deploy credentials are configured
+        id: preflight
+        env:
+          PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          SERVICE_ACCOUNT: ${{ vars.GCP_DEPLOY_SA_PRODUCTION }}
+        run: |
+          if [ -n "$PROVIDER" ] && [ -n "$SERVICE_ACCOUNT" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Firestore config not deployed::Set the GCP_WORKLOAD_IDENTITY_PROVIDER and GCP_DEPLOY_SA_PRODUCTION repository variables to enable automatic deploys. See functions/DEPLOYMENT.md."
+          fi
+
+      - name: Authenticate to Google Cloud
+        if: steps.preflight.outputs.configured == 'true'
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA_PRODUCTION }}
+
+      # `default` is the production alias in .firebaserc
+      # (curriculum-portal-1ce8f).
+      - name: Deploy rules and indexes to production
+        if: steps.preflight.outputs.configured == 'true'
+        run: |
+          npx --yes firebase-tools@15 deploy \
+            --only firestore:rules,firestore:indexes \
+            --project default \
+            --non-interactive
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.preflight.outputs.configured }}" = "true" ]; then
+            echo "Deployed firestore rules + indexes to **curriculum-portal-1ce8f**." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Skipped: no Workload Identity Federation config for production." >> "$GITHUB_STEP_SUMMARY"
+          fi

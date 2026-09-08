@@ -187,11 +187,14 @@ Or you can start the frontend and backend separately.
 
 #### Local dev without touching production data
 
-By default, dev and production are two collection prefixes in the **same**
-Firebase project (`curriculum-portal-1ce8f`) — see [Environment
-variables](#environment-variables) above. `./start.sh --emulator` instead
-runs the Firebase emulator suite (Firestore + Auth) locally and points both
-the frontend and backend at it:
+By default a local run points at the **real** production project
+(`curriculum-portal-1ce8f`) — see [Environment
+variables](#environment-variables) above. Dev and production used to be two
+collection prefixes inside that one project; #428 retired the prefixes, so
+nothing separates a default local run from production data any more except
+which project you point at. `./start.sh --emulator` instead runs the Firebase
+emulator suite (Firestore + Auth) locally and points both the frontend and
+backend at it:
 
 ```sh
 ./start.sh --emulator
@@ -237,8 +240,13 @@ the Stripe webhook-dependent payment routes aren't exercised there yet.
 This is one slice of the larger #428 epic. `DATABASE_SCHEMA_QUALIFIER` and the
 split `teachers`/`students` collections it required have since been retired —
 every account now lives in one unprefixed `users` collection, in every
-environment. Remaining in the epic: a real staging deployment of Cloud
-Functions, and pointing CI at staging for integration tests.
+environment. Firestore rules and indexes now deploy to both projects from CI
+rather than by hand; see "Deploy Firestore Rules and Indexes" in
+[functions/DEPLOYMENT.md](functions/DEPLOYMENT.md) for the pipeline and its
+one-time Workload Identity Federation setup. Remaining in the epic: a real
+staging deployment of Cloud Functions (blocked on staging being a Spark-plan
+project), and pointing the Python integration suite at staging rather than at
+mock Firebase.
 
 #### Running the Backend
 
@@ -281,6 +289,19 @@ never installed globally. See [tests/README.md](tests/README.md) for what
 the suite covers, how to point it at a server you're already running
 yourself, and the mock-mode bearer tokens it uses to exercise authenticated
 routes.
+
+Firestore security rules have their own suite, `tests/rules/`, which runs
+against a real Firestore emulator rather than a mock:
+
+```bash
+cd tests/rules && npm install && npm test
+```
+
+It needs Java, since the emulator runs on the JVM. The same suite runs in CI
+on every pull request (`firestore-rules` in `.github/workflows/ci.yml`) and
+again as the gate in front of every automated rules deploy — the frontend
+talks to Firestore directly with the client SDK, so these rules are the only
+thing between it and the database.
 
 ## Checking Deployment Version and Viewing Logs
 
