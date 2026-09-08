@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "@/components/ui/Modal";
 import { getAuth } from "firebase/auth";
@@ -47,7 +47,23 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     Type: [required("Type")],
   });
   const location = useLocation();
-  const [formData, setFormData] = useState({
+  const editLessonId = location?.state?.editLessonId || null;
+
+  // A draft handed over by /lesson-plans/drafts. Read once, at mount, and used
+  // to seed the initial state - the idiomatic form of what was an effect that
+  // wrote it in one render later (#525).
+  const [restoredDraft] = useState(() => {
+    if (editLessonId) return null;
+    try {
+      const saved = localStorage.getItem("lessonPlanDraft");
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.error("Could not read the saved lesson plan draft:", e);
+      return null;
+    }
+  });
+
+  const [formData, setFormData] = useState(() => restoredDraft || {
     title: "",
     Category: [],
     Type: [],
@@ -57,14 +73,26 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     description: "",
     isPublic: false,
   });
-  const [objectives, setObjectives] = useState([""]);
+  const [objectives, setObjectives] = useState(
+    () => restoredDraft?.objectives || [""]
+  );
   const [showOverlay, setShowOverlay] = useState(false);
   const [selectedSectionIndex, setSelectedSectionIndex] = useState(null);
   const [portalContent, setPortalContent] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [sections, setSections] = useState([{ intro: "", contentIds: [] }]);
-  const [selectedMaterials, setSelectedMaterials] = useState({});
+  const [sections, setSections] = useState(
+    () => restoredDraft?.sections || [{ intro: "", contentIds: [] }]
+  );
+  const [selectedMaterials, setSelectedMaterials] = useState(() =>
+    (restoredDraft?.sections || []).reduce((acc, section, index) => {
+      // The nugget library has not loaded at mount, so these are id-only
+      // placeholders - which is what the effect produced too, because it
+      // cleared the draft on its first run and never saw the loaded library.
+      acc[index] = section.contentIds || [];
+      return acc;
+    }, {})
+  );
   const [showNuggetBuilderModal, setShowNuggetBuilderModal] = useState(false);
   const [nuggetBuilderSectionIndex, setNuggetBuilderSectionIndex] = useState(null);
   const navigate = useNavigate();
@@ -72,7 +100,6 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
   const [showUploadModal, setShowUploadModal] = useState(false);
   const { user, userData } = useUserData();
 
-  const editLessonId = useMemo(() => location?.state?.editLessonId || null, [location?.state?.editLessonId]);
   const returnTo = useMemo(() => location?.state?.returnTo || null, [location?.state?.returnTo]);
   const lessonReturnTo = useMemo(
     () => location?.state?.lessonReturnTo || null,
@@ -108,58 +135,44 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
     navigate("/");
   };
 
-  const loadNuggetsForOverlay = useCallback(async (db, user, role) => {
-    if (!user) {
-      setPortalContent([]);
-      return;
-    }
+  // Returns the nuggets rather than writing them to state, so both callers -
+  // the mount effect and the post-upload refresh - decide when to commit (#525).
+  const readNuggetsForOverlay = async (db, user, role) => {
+    if (!user) return [];
     try {
       const snap = await getDocs(collection(db, COLLECTIONS.content));
       const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      if (role === ROLES.ADMIN) {
-        setPortalContent(all);
-        return;
-      }
+      if (role === ROLES.ADMIN) return all;
       const uid = user.uid;
-      const filtered = all.filter((n) => normalizeBoolean(n?.isPublic) || n?.User === uid);
-      setPortalContent(filtered);
+      return all.filter((n) => normalizeBoolean(n?.isPublic) || n?.User === uid);
     } catch (e) {
       console.error("Failed to load nuggets for overlay:", e);
-      setPortalContent([]);
+      return [];
     }
-  }, []);
+  };
 
   // Load nuggets for overlay (role-based). The user comes from the shared
-  // provider (#368) rather than a listener this page opens for itself.
+  // provider (#368) rather than a listener this page opens for itself. Inlined
+  // rather than calling the useCallback from here, which the rule cannot see
+  // past (#525).
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-    loadNuggetsForOverlay(db, user, userData?.role);
-  }, [loadNuggetsForOverlay, user, userData?.role]);
+    let cancelled = false;
+    const load = async () => {
+      const nuggets = await readNuggetsForOverlay(db, user, userData?.role);
+      if (cancelled) return;
+      setPortalContent(nuggets);
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, userData?.role]);
 
-  // Load draft from localStorage if present (skip when editing an existing lesson)
+  // The draft above was consumed into this builder's initial state; clear it so
+  // reopening the builder starts blank.
   useEffect(() => {
-    if (editLessonId) return;
-    const savedDraft = localStorage.getItem("lessonPlanDraft");
-    if (savedDraft) {
-      const parsedDraft = JSON.parse(savedDraft);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      setFormData(parsedDraft);
-      setSections(parsedDraft.sections || [{ intro: "", contentIds: [] }]);
-      setObjectives(parsedDraft.objectives || [""]);
-      const restoredMaterials = {};
-      if (parsedDraft.sections) {
-        parsedDraft.sections.forEach((section, index) => {
-          restoredMaterials[index] = section.contentIds
-            ? section.contentIds.map(
-                (contentId) => portalContent.find((item) => item.id === contentId) || { id: contentId }
-              )
-            : [];
-        });
-      }
-      setSelectedMaterials(restoredMaterials);
-      localStorage.removeItem("lessonPlanDraft");
-    }
-  }, [portalContent, editLessonId]);
+    if (restoredDraft) localStorage.removeItem("lessonPlanDraft");
+  }, [restoredDraft]);
 
   // Prefill from an existing lesson when editing
   useEffect(() => {
@@ -484,7 +497,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
   const reloadUserNuggets = async () => {
     const auth = getAuth();
     const user = auth.currentUser;
-    await loadNuggetsForOverlay(db, user, userData?.role);
+    setPortalContent(await readNuggetsForOverlay(db, user, userData?.role));
   };
 
   return (

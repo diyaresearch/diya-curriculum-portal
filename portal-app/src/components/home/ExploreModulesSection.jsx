@@ -534,7 +534,9 @@ const ExploreModulesSection = () => {
   const [modules, setModules] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [nuggets, setNuggets] = useState([]);
-  const [filteredItems, setFilteredItems] = useState([]);
+  // What "Apply Filters" produced. Until then the list is derived, not stored:
+  // an effect used to write the unfiltered set into the same state (#525).
+  const [appliedItems, setAppliedItems] = useState([]);
   const [filtersApplied, setFiltersApplied] = useState(false);
 
   // Pagination state - page size is derived from screenSize, always 2 full rows
@@ -568,16 +570,27 @@ const ExploreModulesSection = () => {
   }, [screenSize]);
 
   // Calculate pagination - ensure we always show 2 full rows
+  // Everything published, which is what the section shows before anyone filters.
+  const defaultItems = useMemo(() => {
+    const publishedModules = modules.filter((m) => isModuleVisibleToViewer(m, user));
+    const publishedLessons = lessons.filter((l) => !l.isDraft);
+    return [...publishedModules, ...publishedLessons, ...nuggets];
+  }, [modules, lessons, nuggets, user]);
+
+  const filteredItems = filtersApplied ? appliedItems : defaultItems;
+
+  // Go back to page 1 when the list under the pager changes. Adjusting state
+  // during render is React's documented alternative to an effect for this (#525).
+  const [pagedOver, setPagedOver] = useState({ filteredItems, itemsPerPage });
+  if (pagedOver.filteredItems !== filteredItems || pagedOver.itemsPerPage !== itemsPerPage) {
+    setPagedOver({ filteredItems, itemsPerPage });
+    setCurrentPage(1);
+  }
+
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   let paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
-
-  // Reset to page 1 when filters change or items per page changes
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-    setCurrentPage(1);
-  }, [filteredItems, itemsPerPage]);
 
   // Fetch all data on mount
   useEffect(() => {
@@ -665,17 +678,6 @@ const ExploreModulesSection = () => {
     };
   }, [staticFeaturedTiles]);
 
-  // Initial display should exclude drafts
-  useEffect(() => {
-    if (!filtersApplied && (modules.length > 0 || lessons.length > 0 || nuggets.length > 0)) {
-      const publishedModules = modules.filter(m => isModuleVisibleToViewer(m, user));
-
-      const publishedLessons = lessons.filter(l => !l.isDraft);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      setFilteredItems([...publishedModules, ...publishedLessons, ...nuggets]);
-    }
-  }, [modules, lessons, nuggets, filtersApplied, user]);
-
   // Filtering logic, only runs when Apply Filters is clicked
   const handleApplyFilters = () => {
     let items = [];
@@ -726,7 +728,7 @@ const ExploreModulesSection = () => {
     }
 
 
-    setFilteredItems(items);
+    setAppliedItems(items);
     setFiltersApplied(true);
   };
 
@@ -736,7 +738,7 @@ const ExploreModulesSection = () => {
     setCategory("All");
     setLevel("All");
     setKeyword("");
-    setFilteredItems([]);
+    setAppliedItems([]);
     setFiltersApplied(false);
   };
 
@@ -1039,7 +1041,10 @@ const ExploreModulesSection = () => {
           </div>
         </section>
       )}
+      {/* Anchor target for the "Browse modules" cards in the audience
+          sections above, which used to link at routes that do not exist (#442). */}
       <section
+        id="explore-modules"
         style={{
           width: "100%",
           padding: "60px 0 60px 0",

@@ -39,8 +39,10 @@ const ContentDetails = () => {
   const { userData } = useUserData();
 
   const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  // Seeded from the param rather than corrected by the effect afterwards (#525):
+  // with no id there is nothing to fetch, so it is neither loading nor blank.
+  const [loading, setLoading] = useState(!!id);
+  const [error, setError] = useState(id ? "" : "Missing id in URL.");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCheckingUsage, setIsCheckingUsage] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -49,12 +51,7 @@ const ContentDetails = () => {
 
   useEffect(() => {
     let cancelled = false;
-    if (!id) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      setError("Missing id in URL.");
-      setLoading(false);
-      return;
-    }
+    if (!id) return;
 
     const fetchContent = async () => {
       try {

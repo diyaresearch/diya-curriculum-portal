@@ -25,11 +25,11 @@ export default [
       // The plugin's flat/recommended preset above brings the full React
       // Compiler rule set (set-state-in-effect, immutability,
       // static-components, ...) on top of the two rules CRA's `react-app`
-      // config enforced. It is on as errors, which means new code is held to
-      // it. The 34 sites that already violated it when the rules went on
-      // carry a targeted eslint-disable pointing at #525 - the ratchet stops
-      // the count growing while that backlog is worked down deliberately,
-      // rather than rewriting state logic across 18 files in one pass.
+      // config enforced. It is on as errors, and there are no suppressions
+      // left: the 34 sites that violated it when the rules went on were
+      // grandfathered behind eslint-disable comments pointing at #525 and
+      // have all been worked down (#525 closed; a few disappeared with the
+      // dead code removed in #444).
       // exhaustive-deps stays a warning, as it was under `react-app`; lint
       // runs at --max-warnings=0, so it still fails the build.
       "react-hooks/exhaustive-deps": "warn",

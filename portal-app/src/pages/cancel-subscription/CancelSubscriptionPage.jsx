@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -12,16 +12,9 @@ import { ROLES } from "@/constants/roles";
 const CancelSubscriptionPage = () => {
   const toast = useToast();
     const navigate = useNavigate();
-    const { user, userData, loading } = useUserData();
+    const { user, loading } = useUserData();
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-
-    // Redirect if not authenticated or not teacherPlus
-    useEffect(() => {
-        if (!loading && (!user || userData?.role !== ROLES.TEACHER_PLUS)) {
-            navigate('/');
-        }
-    }, [user, userData, loading, navigate]);
 
     const handleCancelSubscription = async () => {
         setIsProcessing(true);

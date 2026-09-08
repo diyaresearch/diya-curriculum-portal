@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import useUserData from "@/hooks/useUserData";
@@ -13,7 +13,6 @@ const levels = ["Basic", "Intermediate", "Advanced"];
 export const MyPlans = () => {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filteredPlans, setFilteredPlans] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
   const navigate = useNavigate();
@@ -31,12 +30,11 @@ export const MyPlans = () => {
     let cancelled = false;
     const fetchPlans = async () => {
       try {
+        // ProtectedRoute (App.jsx, #444) has already bounced a signed-out
+        // visitor, so there is a user by the time this runs.
         const auth = getAuth();
         const user = auth.currentUser;
-        if (!user) {
-          navigate("/lesson-generator");
-          return;
-        }
+        if (!user) return;
 
         if (userRole === ROLES.ADMIN) {
           // /api/lessons/admin is now admin-gated and needs the token (#424).
@@ -51,14 +49,12 @@ export const MyPlans = () => {
             setPlans(lessons.filter((lesson) => lesson.isPublic === false));
           }
 
-          setFilteredPlans(lessons);
         } else {
           const lessons = await api.get(
             planType === "public" ? "/api/lessons" : "/api/lesson/myLessons"
           );
 
           setPlans(lessons);
-          setFilteredPlans(lessons);
         }
       } catch (error) {
         console.error("Error fetching plans:", error);
@@ -74,8 +70,10 @@ export const MyPlans = () => {
     };
   }, [navigate, planType, userRole]);
 
-  // Filter plans based on search and selected filters
-  useEffect(() => {
+  // Filter plans based on search and selected filters. Derived during render
+  // rather than mirrored into state by an effect (#525); the fetch above also
+  // used to seed it, with the admin branch seeding the *unfiltered* list.
+  const filteredPlans = useMemo(() => {
     let filtered = plans;
 
     if (searchTerm) {
@@ -96,10 +94,15 @@ export const MyPlans = () => {
       filtered = filtered.filter((plan) => plan.level === selectedLevel);
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-    setFilteredPlans(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    return filtered;
   }, [searchTerm, selectedCategory, selectedType, selectedLevel, plans]);
+
+  // Reset to first page when the filtered list changes.
+  const [pagedOver, setPagedOver] = useState(filteredPlans);
+  if (pagedOver !== filteredPlans) {
+    setPagedOver(filteredPlans);
+    setCurrentPage(1);
+  }
 
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
@@ -137,10 +140,12 @@ export const MyPlans = () => {
     setSelectedPlans(updatedSelection);
   };
 
-  // ✅ Handle "Create Module" button click
+  // Handle "Create Module" button click. This used to go to /module/create,
+  // which matched /module/:moduleId and rendered an empty stub form (#444); the
+  // real builder is /module-builder, and it preselects what was ticked here.
   const handleCreateModule = () => {
     if (selectedPlans.size > 0) {
-      navigate("/module/create", { state: { selectedPlans: Array.from(selectedPlans) } });
+      navigate("/module-builder", { state: { selectedPlans: Array.from(selectedPlans) } });
     }
   };
 

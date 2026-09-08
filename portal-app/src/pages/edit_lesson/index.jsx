@@ -44,11 +44,8 @@ export const EditLesson = () => {
     let cancelled = false;
     const fetchData = async () => {
       try {
-        if (!loading && !user) {
-          navigate("/my-plans");
-          return;
-        }
-
+        // ProtectedRoute (App.jsx, #444) has already bounced a signed-out
+        // visitor; this only waits for the provider to settle.
         if (loading || !user) return;
 
         setPortalContent(await api.get("/api/units/user"));
@@ -83,25 +80,33 @@ export const EditLesson = () => {
     };
   }, [lessonId, navigate, user, loading]);
 
-  useEffect(() => {
-    if (sections.length > 0 && portalContent.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      setSelectedMaterials(
-        sections.reduce((acc, section, index) => {
-          const contentIdsArray = Array.isArray(section.contentIds)
-            ? section.contentIds
-            : [section.contentIds]; // Ensure `contentIds` is an array
+  // Re-seed the per-section material lists from the lesson whenever `sections`
+  // or the content library changes. Adjusting state during render is React's
+  // documented alternative to an effect for this (#525); the trigger and the
+  // value written are unchanged.
+  const [seededMaterialsFrom, setSeededMaterialsFrom] = useState(null);
+  if (
+    sections.length > 0 &&
+    portalContent.length > 0 &&
+    (seededMaterialsFrom?.sections !== sections ||
+      seededMaterialsFrom?.portalContent !== portalContent)
+  ) {
+    setSeededMaterialsFrom({ sections, portalContent });
+    setSelectedMaterials(
+      sections.reduce((acc, section, index) => {
+        const contentIdsArray = Array.isArray(section.contentIds)
+          ? section.contentIds
+          : [section.contentIds]; // Ensure `contentIds` is an array
 
-          acc[index] = contentIdsArray.map((contentId) => {
-            const materialDetails = portalContent.find((item) => item.id === contentId);
-            return materialDetails || { id: contentId }; // Avoid undefined
-          });
+        acc[index] = contentIdsArray.map((contentId) => {
+          const materialDetails = portalContent.find((item) => item.id === contentId);
+          return materialDetails || { id: contentId }; // Avoid undefined
+        });
 
-          return acc;
-        }, {})
-      );
-    }
-  }, [sections, portalContent]);
+        return acc;
+      }, {})
+    );
+  }
 
   const handleExit = () => {
     navigate("/my-plans");

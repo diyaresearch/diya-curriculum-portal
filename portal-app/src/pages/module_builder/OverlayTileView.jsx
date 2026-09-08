@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 
 const categories = ["AI Principles", "Data Science", "Machine Learning", "Statistics", "Other"];
 const types = ["Lecture", "Assignment", "Dataset"];
@@ -16,7 +17,6 @@ const OverlayTileView = ({
   typeOptions = [],
   categoryOptions = [],
 }) => {
-  const [filteredContent, setFilteredContent] = useState(content);
   const [selectedCategory, setSelectedCategory] = useState(category || "");
   const [selectedType, setSelectedType] = useState(type || "");
   const [selectedLevel, setSelectedLevel] = useState(level || "");
@@ -25,7 +25,10 @@ const OverlayTileView = ({
   const itemsPerPage = 6;
   const [selectedTiles, setSelectedTiles] = useState(initialSelectedTiles || []);
 
-  const filterContent = useCallback(() => {
+  // Derived during render, not mirrored into state (#525). As two effects -
+  // one writing `content` unfiltered, one writing the filtered result - a
+  // refetch while a filter was active rendered the full list for a frame first.
+  const filteredContent = useMemo(() => {
     let filtered = [...content];
 
     if (selectedCategory) {
@@ -54,25 +57,24 @@ const OverlayTileView = ({
         (item.title || "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    setFilteredContent(filtered);
+    return filtered;
   }, [selectedCategory, selectedType, selectedLevel, searchTerm, content]);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-    setFilteredContent(content);
-  }, [content]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
+  // Re-seed the dropdowns when the parent hands down different starting
+  // filters. React's documented way to adjust state on a prop change is during
+  // render, not in an effect (#525): the effect re-rendered once with the stale
+  // selection before correcting it.
+  const [seededFrom, setSeededFrom] = useState({ category, type, level });
+  if (
+    seededFrom.category !== category ||
+    seededFrom.type !== type ||
+    seededFrom.level !== level
+  ) {
+    setSeededFrom({ category, type, level });
     setSelectedCategory(category || "");
     setSelectedType(type || "");
     setSelectedLevel(level || "");
-  }, [category, type, level]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-    filterContent();
-  }, [filterContent]);
+  }
 
   const handlePageChange = (direction) => {
     if (direction === "prev" && currentPage > 1) {
@@ -296,8 +298,8 @@ const OverlayTileView = ({
                         >
                           {isSelected ? "Selected" : "Select"}
                         </button>
-                        <a
-                          href={`/lesson-details/${item.id}`}
+                        <Link
+                          to={`/lesson-details/${item.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={{
@@ -314,7 +316,7 @@ const OverlayTileView = ({
                           }}
                         >
                           View
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   );

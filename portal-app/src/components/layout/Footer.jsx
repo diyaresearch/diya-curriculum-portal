@@ -23,7 +23,16 @@ const Footer = () => {
       }}>
         <span>© 2023 DIYA Ed Portal</span>
         <Link to="/" style={{ color: "#fff", textDecoration: "none" }}>Home</Link>
-        <Link to="/about" style={{ color: "#fff", textDecoration: "none" }}>About</Link>
+        {/* "About" is about DIYA the organisation, and that page is on the
+            organisation's own site - /about never existed here (#442). */}
+        <a
+          href={import.meta.env.VITE_DIYA_BASE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#fff", textDecoration: "none" }}
+        >
+          About
+        </a>
         <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>Twitter</a>
         <a href="https://facebook.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>Facebook</a>
         <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "none" }}>Instagram</a>

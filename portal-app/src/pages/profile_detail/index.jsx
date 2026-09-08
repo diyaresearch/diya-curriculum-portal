@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import useUserData from "@/hooks/useUserData";
 import { api } from "@/utils/apiClient";
-import { useNavigate } from "react-router-dom";
 import defaultProfileIcon from "@/assets/default_user_icon.png";
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
@@ -9,8 +8,7 @@ import { ROLES } from "@/constants/roles";
 
 const UserProfile = () => {
   const toast = useToast();
-  const { user, loading } = useUserData();
-  const navigate = useNavigate();
+  const { user } = useUserData();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -32,12 +30,6 @@ const UserProfile = () => {
   const [confirmation, setConfirmation] = useState(null);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/");
-    }
-  }, [user, loading, navigate]);
-
-  useEffect(() => {
     let cancelled = false;
     const fetchUserProfile = async () => {
       if (user) {
@@ -57,25 +49,32 @@ const UserProfile = () => {
     };
   }, [user]);
 
-  const fetchAdminData = useCallback(async () => {
-    if (!user) return;
-    try {
-      setUsers(await api.get("/api/user/users"));
-
-      // /api/admin/notifications was never implemented server-side (#443) —
-      // the Notifications tab already says "coming soon"; this just stopped
-      // that tab's data fetch from 404ing and failing the whole admin load.
-    } catch (error) {
-      console.error("Failed to fetch admin data:", error);
-    }
-  }, [user]);
-
+  // Inline rather than a useCallback called from the effect (#525): the rule
+  // cannot see past the call, and this had no cancellation either.
   useEffect(() => {
-    if (formData.role === ROLES.ADMIN) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
-      fetchAdminData();
-    }
-  }, [formData.role, fetchAdminData]);
+    if (!user) return;
+    if (formData.role !== ROLES.ADMIN) return;
+
+    let cancelled = false;
+    const fetchAdminData = async () => {
+      try {
+        const adminUsers = await api.get("/api/user/users");
+        if (cancelled) return;
+        setUsers(adminUsers);
+
+        // /api/admin/notifications was never implemented server-side (#443) —
+        // the Notifications tab already says "coming soon"; this just stopped
+        // that tab's data fetch from 404ing and failing the whole admin load.
+      } catch (error) {
+        console.error("Failed to fetch admin data:", error);
+      }
+    };
+    fetchAdminData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.role, user]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

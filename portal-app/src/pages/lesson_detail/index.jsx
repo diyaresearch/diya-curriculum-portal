@@ -106,11 +106,8 @@ export const LessonDetail = () => {
     let cancelled = false;
     const fetchLesson = async () => {
       try {
-        if (!loading && !user) {
-          navigate("/lesson-generator");
-          return;
-        }
-
+        // ProtectedRoute (App.jsx, #444) has already bounced a signed-out
+        // visitor; this only waits for the provider to settle.
         if (loading || !user) return;
 
         const lessonData = await api.get(`/api/lesson/${lessonId}`);

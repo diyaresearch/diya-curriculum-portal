@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import textbooksImg from "@/assets/textbooks.png";
 import microscopeImg from "@/assets/microscope.png";
 import useUserRole from "@/hooks/useUserRole";
@@ -7,7 +6,9 @@ import SignUpPrompt from "@/components/ui/SignUpPrompt";
 import { ROLES } from "@/constants/roles";
 
 // --- SquareSection Component ---
-const SquareSection = ({ title, description, buttonText, buttonLink, children }) => (
+// buttonText/buttonLink were never passed by any caller, and the button they
+// rendered navigated with window.location.href (#442). Both removed.
+const SquareSection = ({ title, description, children }) => (
   <section
     style={{
       width: "100%",
@@ -46,26 +47,6 @@ const SquareSection = ({ title, description, buttonText, buttonLink, children })
         {description}
       </p>
     )}
-    {buttonText && (
-      <button
-        style={{
-          marginTop: "32px",
-          background: "#162040",
-          color: "#fff",
-          border: "2px solid #162040",
-          borderRadius: "6px",
-          padding: "14px 48px",
-          fontSize: "1.08rem",
-          fontWeight: "600",
-          cursor: "pointer",
-          transition: "background 0.2s, color 0.2s, border 0.2s",
-          minWidth: "260px",
-        }}
-        onClick={() => window.location.href = buttonLink || "#"}
-      >
-        {buttonText}
-      </button>
-    )}
     {children}
   </section>
 );
@@ -100,7 +81,7 @@ const StudentRectangles = () => {
     }}
     >
       {/* Rectangle 1 */}
-      <Link to="/learning-modules" style={{ textDecoration: "none" }} onClick={handleClick}>
+      <a href="#explore-modules" style={{ textDecoration: "none" }} onClick={handleClick}>
         <div
           style={{
             background: "#f3f3f1",
@@ -148,9 +129,9 @@ const StudentRectangles = () => {
             </div>
           </div>
         </div>
-      </Link>
+      </a>
       {/* Rectangle 2 */}
-      <Link to="/project-ideas" style={{ textDecoration: "none" }} onClick={handleClick}>
+      <a href="#explore-modules" style={{ textDecoration: "none" }} onClick={handleClick}>
         <div
           style={{
             background: "#f3f3f1",
@@ -198,7 +179,7 @@ const StudentRectangles = () => {
             </div>
           </div>
         </div>
-      </Link>
+      </a>
       <SignUpPrompt open={showPrompt} onClose={() => setShowPrompt(false)} type="student" />
     </div>
   );

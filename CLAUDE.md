@@ -185,14 +185,47 @@ npm run serve       # run it through the Firebase Functions emulator instead
 ## Key Components and Routes
 
 ### Frontend Routes
+
+`App.jsx` holds the whole table. Every path a link in the UI points at is in it -
+before #442/#444 twelve were not, and each rendered a blank page.
+
 - `/` - Home page with module exploration
 - `/upload-content` - Content upload for producers
-- `/lesson-generator` - AI lesson plan generation
-- `/modules/:moduleId` - Module detail view
-- `/lesson/:lessonId` - Lesson detail view
+- `/lesson-plans/builder` - Lesson plan builder (`/lesson-generator`, a second
+  older builder, was removed in #444)
+- `/module-builder` - Module builder. `/module/create` used to reach a stub form
+  in `module_detail` containing the comment "For brevity, I'm not copying the
+  entire form"; it is gone, and "Create Module" on `/my-plans` comes here with
+  the selected lesson plans in navigation state.
+- `/module/:moduleId` - Module detail view
+- `/lesson/:lessonId` - Lesson detail view, from Firestore
+- `/lesson/:moduleId/:lessonIndex` - a lesson of a *featured* module. Those
+  modules live in `constants/featuredModules.js` rather than Firestore, so their
+  resources have no lesson id to route by.
+- `/lesson-plans/drafts`, `/module_builder/drafts` - both render `pages/drafts/DraftsPage`
 - `/user-profile` - User profile management
 - `/nugget-builder` - Content nugget creation tool
 - `/upgrade` - Subscription upgrade page
+- `/coming-soon?feature=<Name>` - honest destination for a link the home page
+  advertises but the product has not built (Classroom Management, Community)
+- `*` - `NotFound` (#421)
+
+**Route guards live on the route, not in the page.** `ProtectedRoute`
+(`@/components/ui/ProtectedRoute`) reads the shared auth context and renders
+`Loading` until it settles:
+
+```jsx
+<Route path="/my-plans" element={<ProtectedRoute requireAuth><MyPlans /></ProtectedRoute>} />
+<Route path="/cancel-subscription" element={
+  <ProtectedRoute allowedRoles={[ROLES.TEACHER_PLUS]}><CancelSubscriptionPage /></ProtectedRoute>
+} />
+```
+
+`redirectTo` (default `/`) sets where a rejected visitor lands. Before #444 the
+component existed but was never rendered, and eight pages each carried their own
+`useEffect(() => { if (!loading && !user) navigate("/") })` - so each painted a
+frame of signed-in-only UI first, two of them redirected a signed-out visitor to
+a *builder* page, and the role checks disagreed about which roles counted.
 
 ### Backend API Routes
 All served by `functions/`, reached at `VITE_SERVER_ORIGIN_URL` (or same-origin via the
@@ -210,9 +243,24 @@ Firebase Hosting rewrite of `/api/**`):
 ### Key Components
 - `Layout.jsx` - Main layout wrapper with navigation
 - `Navbar.jsx` - Navigation component
-- `Module.jsx` - Module display component
 - `LessonDetail.jsx` - Lesson viewing component
 - `ExploreModulesSection.jsx` - Module exploration interface
+- `ProtectedRoute.jsx` - the one route guard; see "Frontend Routes" above
+
+**One implementation per feature.** #444 removed ~2,100 lines that nothing
+imported, plus a set of near-duplicates where it was not obvious which copy was
+live: a second nugget form (`module_builder/index.jsx`), a second nugget detail
+(`view-content/`, `module_builder/lesson-details.jsx`), a second lesson builder
+(`lesson_generator/`), a third and fourth lesson detail (`components/content/LessonDetails.jsx`,
+which sat behind an unreachable `/lesson/:id` route shadowed by `/lesson/:lessonId`),
+and two 240-line drafts pages differing in six values, now `pages/drafts/DraftsPage`
+plus two configs. Before adding a screen, check whether one of these already exists.
+
+One duplicate pair deliberately survives: `components/content/OverlayTileView.jsx`
+and `pages/module_builder/OverlayTileView.jsx`. They are not a copy - one renders
+the capitalized nugget fields and links to `/content/:id`, the other the lowercase
+lesson-plan fields and links to `/lesson-details/:id` - so merging them is a
+behaviour change to content selection, not a deletion.
 
 ### Navigation Patterns (portal-app/)
 
@@ -224,6 +272,10 @@ Use React Router for anything that goes to another in-app route:
 Plain `<a href="...">` is reserved for external links (`target="_blank"`, e.g. social links in
 `Footer.jsx`, the DIYA base URL in `Navbar.jsx`) - React Router's `Link` is only meaningful for
 routes this app itself serves.
+
+The two remaining `<a href="/">` links to an in-app route are deliberate:
+`ErrorBoundary.jsx` and `Layout.jsx`'s navbar fallback. Both render *because*
+something above them threw, so a full reload is the recovery, not a regression.
 
 `window.location.reload()` / `window.location.href = ...` are not a substitute for `navigate()` -
 they force a full page reload, discarding in-memory state (React context, Firebase auth
@@ -312,13 +364,47 @@ useEffect(() => {
 ```
 
 Without it, moving quickly between two records lets the first response land
-after the second and render the wrong one. `useApi` (#370) does this for you -
-prefer it for plain API reads; the manual form is for Firestore reads and
-multi-value loads.
+after the second and render the wrong one. This manual form is the pattern -
+`useApi`, a hook that wrapped it, was added in #370 and removed in #444 without
+ever acquiring a caller.
 
 **A timer started in a handler is not covered by an effect's cleanup.** Use
 `useSafeTimeout` (`@/hooks/useSafeTimeout`), which clears every pending timer
 on unmount, rather than a bare `setTimeout`.
+
+**Do not set state in an effect** - `react-hooks/set-state-in-effect` is on as
+an error, and as of #525 nothing suppresses it. There were 34 such sites; they
+came in four shapes, and each has a replacement:
+
+| Shape | Instead |
+| --- | --- |
+| A value computed from other state (`setFiltered(filter(items))`) | derive it during render, `useMemo` if the work is worth caching |
+| Reset-on-change (`setPage(1)` when the list changes) | adjust state during render, guarded by a "what I last saw" state |
+| A prop or URL read into state | seed it in the `useState` initializer, plus the render-time adjustment for later changes |
+| Fetch on mount, via a `useCallback` the effect calls | inline the async function into the effect - and give it a cancellation flag while you are there |
+
+The render-time adjustment is React's documented alternative to an effect, and
+it is one render rather than two:
+
+```js
+const [pagedOver, setPagedOver] = useState(items);
+if (pagedOver !== items) {
+  setPagedOver(items);
+  setCurrentPage(1);
+}
+```
+
+The last shape is worth knowing because the rule is interprocedural-blind: it
+flags *any* call to a function that sets state, even one whose writes all sit
+behind an `await`. That is not a false positive worth suppressing - the fix
+(move the async function inside the effect) is also what gives it cancellation.
+
+Deriving rather than mirroring is not only tidier. `OverlayTileView` kept its
+filtered list in state, written by two effects - the unfiltered list, then the
+filtered one - so refetching content while a filter was active painted every
+item for a frame. `components/content/__tests__/OverlayTileView.test.jsx`
+watches every commit, not just the last, because Testing Library flushes
+effects before an assertion can see the frame in between.
 
 ### Auth and user state (portal-app/)
 
@@ -371,16 +457,6 @@ wrapper only because its call sites read the raw `Response` (checking
 apiClient's throw-on-error contract. Converting them is a change to live
 payment flows, not a consolidation.
 
-For data a component loads on mount, prefer the hook, which adds cancellation
-and a uniform shape:
-
-```js
-const { data, loading, error, refetch } = useApi(
-  (signal) => api.get(`/api/lesson/${lessonId}`, { signal }),
-  [lessonId]
-);
-```
-
 **Telling the user.** `alert()` is not used anywhere any more; there were 32 and
 they are all gone. Use the toast channel, mounted once above the router:
 
@@ -402,20 +478,10 @@ need to guard that case.
 `aria-live="polite"`; the ten hand-rolled `<div>Loading...</div>`s it replaced
 announced nothing. The spin honours `prefers-reduced-motion`.
 
-For actions rather than reads, `useAsyncAction` (`@/hooks/useAsyncAction`)
-gives `{ run, pending, error, reset }` and **drops a second call while one is
-in flight**, which is what stops a double-clicked submit firing twice:
-
-```js
-const save = useAsyncAction(async () => {
-  await api.post("/api/lesson/", lessonData);
-  toast.success("Saved");
-});
-
-<button onClick={save.run} disabled={save.pending}>
-  {save.pending ? <Loading variant="button" message="Saving..." /> : "Save"}
-</button>
-```
+Guard a submit against a double click with an `isSubmitting` flag that the
+button's `disabled` reads, set before the await and cleared in `finally`.
+(`useAsyncAction` packaged this up in #370 and was removed unused in #444,
+alongside `useApi`.)
 
 Never use `!data` as the loading test - "still fetching" and "there is nothing
 here" are different states, and conflating them showed a permanent spinner for

@@ -28,9 +28,11 @@ export const UploadContent = ({
   const location = useLocation();
   const [formData, setFormData] = useState({
     Title: "",
-    Category: [],
-    Type: [],
-    Level: [],
+    // Seeded from the opener's suggestion rather than written in by an effect
+    // after the first render (#525).
+    Category: category || [],
+    Type: type || [],
+    Level: level || [],
     Duration: "",
     isPublic: isPublic || false,
     Abstract: "",
@@ -111,15 +113,23 @@ export const UploadContent = ({
     navigate("/");
   };
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
+  // Adopt the category/type/level the opener suggested. Adjusting state during
+  // render is React's documented alternative to an effect for a prop change
+  // (#525): the effect rendered the form once with the old values first.
+  const [suggestedFrom, setSuggestedFrom] = useState({ category, type, level });
+  if (
+    suggestedFrom.category !== category ||
+    suggestedFrom.type !== type ||
+    suggestedFrom.level !== level
+  ) {
+    setSuggestedFrom({ category, type, level });
     setFormData((prev) => ({
       ...prev,
       Category: category || prev.Category,
       Type: type || prev.Type,
       Level: level || prev.Level,
     }));
-  }, [category, type, level]);
+  }
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });

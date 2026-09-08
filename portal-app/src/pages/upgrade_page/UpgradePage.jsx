@@ -21,15 +21,10 @@ const UpgradePage = () => {
             return;
         }
 
-        // Navigate directly to the appropriate payment page
-        if (planType === 'premium') {
-            navigate('/payment/premium');
-        } else if (planType === 'premiumYearly') {
-            navigate('/payment/yearly');
-        } else {
-            // Fallback for any other plan types
-            navigate(`/payment/${planType}`);
-        }
+        // Navigate directly to the appropriate payment page. There is no
+        // fallback branch: the only two callers pass these two values, and the
+        // `/payment/${planType}` fallback that used to be here matched no route (#442).
+        navigate(planType === 'premiumYearly' ? '/payment/yearly' : '/payment/premium');
     };
 
     const handleContactSales = async () => {
