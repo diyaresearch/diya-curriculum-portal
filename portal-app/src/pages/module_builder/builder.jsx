@@ -28,6 +28,7 @@ import { TYPO } from "@/constants/typography";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { fetchPayments } from "@/utils/paymentsApi";
 import { useToast } from "@/components/ui/ToastProvider";
+import { ROLES } from "@/constants/roles";
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -101,7 +102,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
   useEffect(() => {
     if (didInitFeaturedDefaultRef.current) return;
     if (editModuleId) return;
-    if (userData?.role !== "admin") return;
+    if (userData?.role !== ROLES.ADMIN) return;
     didInitFeaturedDefaultRef.current = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- pre-existing, see #525
     setFormData((prev) => ({ ...prev, isFeatured: true }));
@@ -353,7 +354,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       updatedAt: serverTimestamp(),
     };
     // Only admins should be able to set featured flag.
-    if (userData?.role !== "admin") {
+    if (userData?.role !== ROLES.ADMIN) {
       delete draftData.isFeatured;
       delete draftData.price;
     } else {
@@ -469,7 +470,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         updatedAt: serverTimestamp(),
       };
       // Only admins should be able to set featured flag.
-      if (userData?.role !== "admin") {
+      if (userData?.role !== ROLES.ADMIN) {
         delete moduleData.isFeatured;
         delete moduleData.price;
       } else {
@@ -490,7 +491,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       if (editModuleId) {
         await updateDoc(doc(db, COLLECTIONS.module, editModuleId), moduleData);
       } else {
-        const isAdminAuthor = userData?.role === "admin";
+        const isAdminAuthor = userData?.role === ROLES.ADMIN;
         await addDoc(collection(db, COLLECTIONS.module), {
           ...moduleData,
           ...(isAdminAuthor ? { isFeatured: moduleData.isFeatured === true } : {}),
@@ -868,7 +869,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               Make Public
             </label>
           </div>
-          {userData?.role === "admin" && (
+          {userData?.role === ROLES.ADMIN && (
             <>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <input

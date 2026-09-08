@@ -10,6 +10,7 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css"; // Import Quill CSS
 import { useToast } from "@/components/ui/ToastProvider";
 import Loading from "@/components/ui/Loading";
+import { ROLES } from "@/constants/roles";
 
 
 export const LessonGenerator = () => {
@@ -151,7 +152,7 @@ export const LessonGenerator = () => {
       return;
     }
 
-    if (userRole === "teacherPlus" || userRole === "admin") {
+    if (userRole === ROLES.TEACHER_PLUS || userRole === ROLES.ADMIN) {
       if (selectedSectionIndex === null) {
         setSelectedSectionIndex(0);
       }

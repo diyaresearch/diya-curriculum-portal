@@ -25,6 +25,7 @@ import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/ToastProvider";
 import { toUserMessage } from "@/utils/errorMessage";
 import Loading from "@/components/ui/Loading";
+import { ROLES } from "@/constants/roles";
 
 
 // Level chip coloring intentionally not used on module page
@@ -653,7 +654,7 @@ const ModuleDetail = () => {
   // New beautiful layout for view mode
   const module = moduleData;
   const authUser = getAuth().currentUser;
-  const isAdmin = userData?.role === "admin";
+  const isAdmin = userData?.role === ROLES.ADMIN;
   const isAuthor =
     !!authUser && !!moduleData?._meta?.authorUid && authUser.uid === moduleData._meta.authorUid;
   const canEdit = !HARDCODED_MODULES[moduleId] && (isAdmin || isAuthor);

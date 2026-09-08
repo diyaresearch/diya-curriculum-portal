@@ -14,6 +14,7 @@ import DeleteButton from "@/components/ui/DeleteButton";
 import useUserData from "@/hooks/useUserData";
 import { api } from "@/utils/apiClient";
 import Loading from "@/components/ui/Loading";
+import { ROLES } from "@/constants/roles";
 
 const toSlidesEmbedUrl = (url) => {
   // Example input: https://docs.google.com/presentation/d/<ID>/edit#slide=id....
@@ -100,7 +101,7 @@ const ContentDetails = () => {
   if (!content) return <div style={{ padding: 40 }}>Content not found.</div>;
 
   const authUser = getAuth().currentUser;
-  const isAdmin = userData?.role === "admin";
+  const isAdmin = userData?.role === ROLES.ADMIN;
   const isAuthor = !!authUser && !!content?.User && authUser.uid === content.User;
   const canManage = isAdmin || isAuthor;
 

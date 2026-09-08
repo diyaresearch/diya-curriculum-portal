@@ -9,6 +9,7 @@ import "react-quill-new/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
 import MultiCheckboxDropdown from "@/components/ui/MultiCheckboxDropdown";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import { ROLES } from "@/constants/roles";
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -229,7 +230,7 @@ export const UploadContent = ({
         Author: authorName,
         User: user.uid, // <-- Add this line to store the user ID
         createdAt: serverTimestamp(),
-        Role: "teacherPlus", // <-- Added static Role field,
+        Role: ROLES.TEACHER_PLUS, // <-- Added static Role field,
         attachmentsToSave,
       });
       const savedDoc = await getDoc(docRef);

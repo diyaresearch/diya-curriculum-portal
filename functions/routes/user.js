@@ -360,7 +360,7 @@ router.put("/updateRole", authenticateUser, requireAdmin, asyncHandler(async (re
   }
 
   // Validate role value
-  const validRoles = ['admin', 'teacherDefault', 'teacherPlus', 'teacherEnterprise', 'studentDefault'];
+  const validRoles = ['admin', 'teacherDefault', 'teacherPlus', 'studentDefault'];
   if (newRole && !validRoles.includes(newRole)) {
     validationErrors.push({
       field: 'newRole',

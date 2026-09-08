@@ -13,6 +13,7 @@ import {
 
 import laptopImg from '@/assets/laptop.png';
 import Loading from "@/components/ui/Loading";
+import { ROLES } from "@/constants/roles";
 
 function normalizeBoolean(value) {
     if (value === true) return true;
@@ -54,7 +55,7 @@ const TeacherPlusPage = () => {
         (user?.email ? user.email.split("@")[0] : "TeacherPlus User");
 
     useEffect(() => {
-        if (!loading && (!user || (role !== 'teacherPlus' && role !== 'admin'))) {
+        if (!loading && (!user || (role !== ROLES.TEACHER_PLUS && role !== ROLES.ADMIN))) {
             navigate('/');
         }
     }, [user, role, loading, navigate]);
