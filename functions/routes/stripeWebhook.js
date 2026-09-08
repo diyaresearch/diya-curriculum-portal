@@ -12,12 +12,18 @@
 
 const { getStripe } = require("../utils/stripeClient");
 
+// Firestore through the one Admin SDK initialization (issue #362). This used
+// to call a bare admin.initializeApp() of its own, which ignored the
+// credential precedence in config/credentials.js — whichever module happened
+// to initialize first won, so an emulator or FIREBASE_SERVICE_ACCOUNT setup
+// could be silently bypassed here.
+//
+// Deliberately not databaseService: that layer can fall back to mock Firebase
+// in development, and a payment event must be written to real Firestore or
+// not at all. Required lazily so importing this router never initializes
+// Firebase as a side effect.
 function getDb() {
-  const admin = require("firebase-admin");
-  if (admin.apps.length === 0) {
-    admin.initializeApp();
-  }
-  return admin.firestore();
+  return require("../config/firebaseConfig").db;
 }
 
 function getWebhookSecretCandidates() {

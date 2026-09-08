@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthProvider";
 import defaultUserIcon from "@/assets/default_user_icon.png";
 import { startGoogleRedirect } from "@/auth/googleAuth";
 import { useToast } from "@/components/ui/ToastProvider";
+import { ROLES } from "@/constants/roles";
 
 const Navbar = () => {
   const toast = useToast();
@@ -139,9 +140,9 @@ const Navbar = () => {
   };
 
   const role = userData?.role;
-  const isTeacherDefault = role === "teacherDefault";
-  const isTeacherPlus = role === "teacherPlus";
-  const isAdmin = role === "admin";
+  const isTeacherDefault = role === ROLES.TEACHER_DEFAULT;
+  const isTeacherPlus = role === ROLES.TEACHER_PLUS;
+  const isAdmin = role === ROLES.ADMIN;
   const homeTo = isTeacherPlus ? "/teacherplus" : "/";
   const navLinkStyle = {
     fontSize: "15px",

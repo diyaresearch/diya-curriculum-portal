@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Modal from "@/components/ui/Modal";
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getDoc, doc, updateDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
 import MultiCheckboxDropdown from "@/components/ui/MultiCheckboxDropdown";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import { ROLES } from "@/constants/roles";
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
@@ -55,7 +57,6 @@ export const UploadContent = ({
     const loadForEdit = async () => {
       try {
         if (!editContentId) return;
-        const db = getFirestore();
         const snap = await getDoc(doc(db, COLLECTIONS.content, editContentId));
         if (cancelled) return;
         if (!snap.exists()) return;
@@ -179,7 +180,6 @@ export const UploadContent = ({
     }
 
     try {
-      const db = getFirestore();
       const htmlDescription = formData.Abstract; // This is the HTML from ReactQuill
       const now = new Date();
 
@@ -230,7 +230,7 @@ export const UploadContent = ({
         Author: authorName,
         User: user.uid, // <-- Add this line to store the user ID
         createdAt: serverTimestamp(),
-        Role: "teacherPlus", // <-- Added static Role field,
+        Role: ROLES.TEACHER_PLUS, // <-- Added static Role field,
         attachmentsToSave,
       });
       const savedDoc = await getDoc(docRef);

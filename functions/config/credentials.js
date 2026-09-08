@@ -4,7 +4,9 @@
  * One place decides *which* credential the Admin SDK uses, so that
  * config/firebaseConfig.js and services/databaseService.js can never drift
  * apart (they did: one silently preferred a stale JSON key, the other fell
- * back to mock data when that key was missing).
+ * back to mock data when that key was missing). Since #362 they cannot drift
+ * at all — databaseService delegates its real mode to config/firebaseConfig,
+ * which holds the process's only admin.initializeApp() call.
  *
  * Precedence, highest first:
  *   0. FIRESTORE_EMULATOR_HOST         - Firestore emulator; no credential needed at all

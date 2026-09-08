@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Modal from "@/components/ui/Modal";
 import { getAuth } from "firebase/auth";
-import { getFirestore, collection, addDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, getDoc } from "firebase/firestore";
+import { db } from "@/firebase/firebaseConfig";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { CATEGORY_OPTIONS, LEVEL_OPTIONS, TYPE_OPTIONS } from "@/constants/formOptions";
 import MultiCheckboxDropdown from "@/components/ui/MultiCheckboxDropdown";
 import { COLLECTIONS } from "@/firebase/collectionNames";
+import { ROLES } from "@/constants/roles";
 
 
 export const UploadContent = ({
@@ -98,7 +100,6 @@ export const UploadContent = ({
     }
 
     try {
-      const db = getFirestore();
       const htmlDescription = formData.Abstract; // This is the HTML from ReactQuill
 
       const docRef = await addDoc(collection(db, COLLECTIONS.content), {
@@ -112,7 +113,7 @@ export const UploadContent = ({
         Author: authorName,
         User: user.uid, // <-- Add this line to store the user ID
         createdAt: serverTimestamp(),
-        Role: "teacherPlus", // <-- Added static Role field
+        Role: ROLES.TEACHER_PLUS, // <-- Added static Role field
       });
       const savedDoc = await getDoc(docRef);
       const newNugget = { id: docRef.id, ...savedDoc.data() };

@@ -4,6 +4,7 @@ import textbooksImg from "@/assets/textbooks.png";
 import microscopeImg from "@/assets/microscope.png";
 import useUserRole from "@/hooks/useUserRole";
 import SignUpPrompt from "@/components/ui/SignUpPrompt";
+import { ROLES } from "@/constants/roles";
 
 // --- SquareSection Component ---
 const SquareSection = ({ title, description, buttonText, buttonLink, children }) => (
@@ -77,7 +78,7 @@ const StudentRectangles = () => {
   const handleClick = (e) => {
     if (
       !user ||
-      !["studentDefault", "consumer"].includes(role)
+      ![ROLES.STUDENT_DEFAULT, ROLES.CONSUMER].includes(role)
     ) {
       e.preventDefault();
       setShowPrompt(true);
@@ -207,7 +208,7 @@ const ForStudentsSection = () => {
   const { role } = useUserRole();
 
   // Only show For Students if NOT a teacher
-  if (!role || !["teacherDefault", "teacherPlus", "admin"].includes(role)) {
+  if (!role || ![ROLES.TEACHER_DEFAULT, ROLES.TEACHER_PLUS, ROLES.ADMIN].includes(role)) {
     return (
       <div style={{ width: "100%" }}>
         <SquareSection

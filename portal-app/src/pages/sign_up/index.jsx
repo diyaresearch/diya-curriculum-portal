@@ -8,6 +8,7 @@ import SignupSuccess from "@/components/ui/SignupSuccess";
 import { startGoogleRedirect, signInForSignup } from "@/auth/googleAuth";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { useAuth } from "@/context/AuthProvider";
+import { ROLES } from "@/constants/roles";
 
 const SUBJECT_OPTIONS = [
   "CS",
@@ -113,7 +114,7 @@ export function TeacherSignup() {
         school,
         subjects,
         grades,
-        role: "teacherDefault",
+        role: ROLES.TEACHER_DEFAULT,
         createdAt: new Date(),
       });
 
@@ -471,7 +472,7 @@ export function StudentSignup() {
         fullName,
         email: cleanEmail,
         grade,
-        role: "studentDefault",
+        role: ROLES.STUDENT_DEFAULT,
         createdAt: new Date(),
       });
 

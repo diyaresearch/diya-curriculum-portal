@@ -8,6 +8,7 @@ import UploadContent from "@/pages/upload-content/index";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { useToast } from "@/components/ui/ToastProvider";
+import { ROLES } from "@/constants/roles";
 
 export const EditLesson = () => {
   const toast = useToast();
@@ -177,7 +178,7 @@ export const EditLesson = () => {
       return;
     }
 
-    if (userData.role !== "admin" && user.uid !== authorId) {
+    if (userData.role !== ROLES.ADMIN && user.uid !== authorId) {
       console.error("No permissions to update lesson");
       toast.error("Contact the Admin to update the lesson plan.");
       return;

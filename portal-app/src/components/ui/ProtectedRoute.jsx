@@ -2,6 +2,7 @@ import { Navigate } from 'react-router-dom';
 
 import Loading from "@/components/ui/Loading";
 import { useAuth } from "@/context/AuthProvider";
+import { ROLES } from "@/constants/roles";
 
 /**
  * Reads auth from the shared provider (#368) instead of running its own
@@ -17,7 +18,7 @@ const ProtectedRoute = ({ children, redirectTeacherPlus = false }) => {
     }
 
     // Redirect TeacherPlus users to their dashboard
-    if (redirectTeacherPlus && user && role === "teacherPlus") {
+    if (redirectTeacherPlus && user && role === ROLES.TEACHER_PLUS) {
         return <Navigate to="/teacher-plus" replace />;
     }
 

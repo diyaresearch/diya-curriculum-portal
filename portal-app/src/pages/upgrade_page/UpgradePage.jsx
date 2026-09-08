@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
 import { api } from '@/utils/apiClient';
 import { useToast } from "@/components/ui/ToastProvider";
+import { ROLES } from "@/constants/roles";
 
 const UpgradePage = () => {
   const toast = useToast();
@@ -301,7 +302,7 @@ const UpgradePage = () => {
                             onClick={() => handleUpgradeClick('premium')}
                             disabled={(() => {
                                 const userRole = userData?.role;
-                                const isTeacherDefault = userRole === 'teacherDefault';
+                                const isTeacherDefault = userRole === ROLES.TEACHER_DEFAULT;
                                 const isPremium = currentPlan === 'premium';
                                 return isPremium && !isTeacherDefault;
                             })()}
@@ -309,7 +310,7 @@ const UpgradePage = () => {
                                 width: '100%',
                                 background: (() => {
                                     const userRole = userData?.role;
-                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isTeacherDefault = userRole === ROLES.TEACHER_DEFAULT;
                                     const isPremium = currentPlan === 'premium';
                                     if (isPremium && !isTeacherDefault) {
                                         return '#F9C74F';
@@ -318,7 +319,7 @@ const UpgradePage = () => {
                                 })(),
                                 color: (() => {
                                     const userRole = userData?.role;
-                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isTeacherDefault = userRole === ROLES.TEACHER_DEFAULT;
                                     const isPremium = currentPlan === 'premium';
                                     if (isPremium && !isTeacherDefault) {
                                         return '#000';
@@ -331,7 +332,7 @@ const UpgradePage = () => {
                                 fontWeight: '600',
                                 cursor: (() => {
                                     const userRole = userData?.role;
-                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isTeacherDefault = userRole === ROLES.TEACHER_DEFAULT;
                                     const isPremium = currentPlan === 'premium';
                                     if (isPremium && !isTeacherDefault) {
                                         return 'not-allowed';
@@ -358,7 +359,7 @@ const UpgradePage = () => {
                         >
                             {(() => {
                                 const userRole = userData?.role;
-                                const isTeacherDefault = userRole === 'teacherDefault';
+                                const isTeacherDefault = userRole === ROLES.TEACHER_DEFAULT;
                                 const isPremium = currentPlan === 'premium';
                                 if (isTeacherDefault) {
                                     return 'Upgrade Now';
@@ -476,7 +477,7 @@ const UpgradePage = () => {
                             onClick={() => handleUpgradeClick('premiumYearly')}
                             disabled={(() => {
                                 const userRole = userData?.role;
-                                const isTeacherDefault = userRole === 'teacherDefault';
+                                const isTeacherDefault = userRole === ROLES.TEACHER_DEFAULT;
                                 const isPremiumYearly = currentPlan === 'premiumYearly';
                                 return isPremiumYearly && !isTeacherDefault;
                             })()}
@@ -484,7 +485,7 @@ const UpgradePage = () => {
                                 width: '100%',
                                 background: (() => {
                                     const userRole = userData?.role;
-                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isTeacherDefault = userRole === ROLES.TEACHER_DEFAULT;
                                     const isPremiumYearly = currentPlan === 'premiumYearly';
                                     if (isPremiumYearly && !isTeacherDefault) {
                                         return '#F9C74F';
@@ -498,7 +499,7 @@ const UpgradePage = () => {
                                 fontWeight: '600',
                                 cursor: (() => {
                                     const userRole = userData?.role;
-                                    const isTeacherDefault = userRole === 'teacherDefault';
+                                    const isTeacherDefault = userRole === ROLES.TEACHER_DEFAULT;
                                     const isPremiumYearly = currentPlan === 'premiumYearly';
                                     if (isPremiumYearly && !isTeacherDefault) {
                                         return 'not-allowed';
@@ -525,7 +526,7 @@ const UpgradePage = () => {
                         >
                             {(() => {
                                 const userRole = userData?.role;
-                                const isTeacherDefault = userRole === 'teacherDefault';
+                                const isTeacherDefault = userRole === ROLES.TEACHER_DEFAULT;
                                 const isPremiumYearly = currentPlan === 'premiumYearly';
                                 if (isTeacherDefault) {
                                     return 'Upgrade Now';

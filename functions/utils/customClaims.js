@@ -19,7 +19,23 @@
  * it. That is what makes rolling this out safe.
  */
 
-const VALID_ROLES = ["admin", "teacherDefault", "teacherPlus", "teacherEnterprise", "studentDefault"];
+const VALID_ROLES = ["admin", "teacherDefault", "teacherPlus", "studentDefault"];
+
+/**
+ * Roles that no longer exist, mapped to what replaces them.
+ *
+ * `teacherEnterprise` was removed: it only ever appeared next to `teacherPlus`
+ * in premium checks and nothing distinguished the two. Profiles written before
+ * the removal still carry the old value, so it is translated on read instead
+ * of silently failing every role check.
+ */
+const LEGACY_ROLE_ALIASES = { teacherEnterprise: "teacherPlus" };
+
+/** Map a stored role onto a current one. */
+function normalizeRole(role) {
+  if (!role) return role;
+  return LEGACY_ROLE_ALIASES[role] || role;
+}
 
 /**
  * Mirror a user's role into their custom claims.
@@ -54,4 +70,4 @@ async function syncRoleClaim(admin, uid, role) {
   }
 }
 
-module.exports = { syncRoleClaim, VALID_ROLES };
+module.exports = { syncRoleClaim, normalizeRole, VALID_ROLES };
