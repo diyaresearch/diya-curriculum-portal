@@ -57,9 +57,17 @@ collection name below is likewise a plain literal, not a qualified one.
 
 ### Content
 
-`module`, `lesson`, `content` are publicly readable: the landing page and
-module list read them directly, unauthenticated. Any signed-in user may
-write them.
+`module` and `content` are publicly readable: the landing page and module list
+read them directly, unauthenticated. Any signed-in user may write them.
+
+**`lesson` is not.** A lesson is readable only when it is explicitly published
+(`isPublic == true`), by its own author, or by an admin (#430). It used to be
+`allow read: if true`, which let any anonymous client read - and list - every
+lesson in the project straight from the SDK, contents included, whatever the
+API did. A browse listing must now constrain its query (`where('isPublic', '==',
+true)`, or `where('authorId', '==', uid)` for an author's own); rules are not
+filters, so an unconstrained `getDocs(collection(db, 'lesson'))` is refused
+outright rather than quietly returning everything.
 
 **Pricing fields are the exception.** `price`, `Price` and `isFeatured` may only
 be changed by an admin, because the Stripe charge is computed from `price` read
@@ -101,7 +109,29 @@ the only check on that path.
 - `optionalAuth` — attaches a user when a token is present, proceeds when not.
   Used where a route is public but behaves differently for a signed-in user: a
   paid module returns storefront metadata to anonymous callers and full
-  contents to an entitled one.
+  contents to an entitled one, and a lesson inside a paid module is refused to
+  anyone without an entitlement (#430).
+
+### Entitlements (#430)
+
+Paid content is gated in two places, because neither alone is sufficient.
+
+- **`utils/entitlements.check.js` is where the real decision is made.**
+  `canAccessModule` gates a module's contents; `canAccessLesson` gates the
+  lessons inside it. A lesson carries no back reference to its module, so the
+  question is asked in reverse - which modules list this lesson id in
+  `lessonPlans`, and is any of them paid? Access then requires an entitlement
+  document (written only by the Stripe webhook), authorship of the lesson or of
+  a gating module, or admin.
+- **Rules are the blunt half.** Security rules cannot run that query - there
+  are no queries in rules - so `lesson` is restricted to published documents
+  plus your own, and the API carries the entitlement logic. This is why the
+  lesson routes take `optionalAuth`: the check needs to know who is asking.
+
+Both lesson read paths are gated, not just the JSON one - `GET /api/lesson/:id`
+and `GET /api/lessons/:id/download` serve the same content, and the PDF route
+checks before a single byte is piped, since a half-written response cannot be
+turned back into a 403.
 
 ### Rate limiting (#383)
 
@@ -248,14 +278,15 @@ Three orderings are load-bearing, each learned the hard way:
 
 ## Known gaps
 
-- **Lesson-level entitlement is not enforced in rules.** Lesson documents carry
-  no `moduleId`, so no rule can express "this lesson belongs to a paid module".
-  Gating them naively would also break listing: Firestore evaluates list rules
-  per document and fails the whole query if any document fails, so the first
-  paid lesson would break the module browser for everyone. The real fix is
-  splitting public metadata from paid content (#430).
-- **Rules are deployed by hand.** They should be deployed from source in CI
-  (#435). The test suite runs in CI today; the deploy does not.
+- **A published lesson inside a paid module is still readable directly.** The
+  rule can only see `isPublic`; it cannot run the reverse lookup that decides
+  whether a paid module contains the lesson, so a document marked
+  `isPublic: true` that is *also* listed in a paid module's `lessonPlans` is
+  readable from the SDK. Every path the app itself uses goes through the API,
+  which checks properly, so this needs someone to craft a direct SDK read of an
+  id they already know. Closing it for real means denormalising the gating
+  module onto the lesson document - a schema change plus a backfill - or
+  splitting public metadata from paid content into separate collections.
 
 ## Testing
 

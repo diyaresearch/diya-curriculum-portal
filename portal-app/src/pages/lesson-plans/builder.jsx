@@ -24,7 +24,7 @@ import { ROLES } from "@/constants/roles";
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
-  <span style={{ color: "red", marginLeft: 4 }}>*</span>
+  <span className="[color:red] ml-1">*</span>
 );
 
 const normalizeBoolean = (value) => {
@@ -511,7 +511,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
         color: "#111",
       }}
     >
-      <div style={{ width: "100%", maxWidth: 700, marginBottom: 32, textAlign: "center" }}>
+      <div className="w-full max-w-175 mb-8 text-center">
         <h2
           style={{
             ...TYPO.pageTitle,
@@ -530,26 +530,13 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
         </p>
       </div>
       <div
-        className="w-full max-w-3xl relative"
-        style={{
-          background: "#fff",
-          border: "2px solid #e5e7eb",
-          borderRadius: "12px",
-          boxShadow: "0 4px 24px rgba(22,32,64,0.10)",
-          padding: "48px 40px 40px 40px",
-          marginBottom: "32px",
-          color: "#111",
-        }}
+        className="w-full max-w-3xl relative bg-surface border-2 border-rule rounded-xl shadow-[0_4px_24px_rgba(22,32,64,0.10)] pt-12 pr-10 pb-10 pl-10 mb-8 text-ink-strong"
       >
         <div className="absolute top-4 right-4 flex space-x-2">
           {showDrafts !== false && (
             <button
               type="button"
-              className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
-              style={{
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif"
-              }}
+              className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100 text-ink-strong font-sans"
               onClick={() => navigate("/lesson-plans/drafts")}
             >
               Drafts
@@ -558,31 +545,14 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
         </div>
         <form
           onSubmit={handleSubmit}
-          style={{
-            width: "100%",
-            maxWidth: 600,
-            margin: "0 auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px",
-            color: "#111",
-            fontFamily: "Open Sans, sans-serif"
-          }}
+          className="w-full max-w-150 my-0 mx-auto flex flex-col gap-6 text-ink-strong font-sans"
         >
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+            <label className="font-semibold text-ink-strong mb-1.5 block text-label">
               Title <RequiredAsterisk />
             </label>
             <input
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: 6,
-                border: "1px solid #bbb",
-                fontSize: "1.08rem",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif"
-              }}
+              className="w-full p-3 rounded-md border border-[#bbb] text-label text-ink-strong font-sans"
               id="title"
               type="text"
               placeholder="Lesson Plan on..."
@@ -592,7 +562,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
             />
           </div>
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+            <label className="font-semibold text-ink-strong mb-1.5 block text-label">
               Description <RequiredAsterisk />
             </label>
             <ReactQuill
@@ -600,7 +570,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
               theme="snow"
               value={formData.description}
               onChange={handleDescriptionChange}
-              style={{ background: "#fff", borderRadius: 6, color: "#111", fontFamily: "Open Sans, sans-serif" }}
+              className="bg-surface rounded-md text-ink-strong font-sans"
             />
             <FieldError id="description" message={form.errors.description} />
           </div>
@@ -646,19 +616,11 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
             <FieldError id="Type" message={form.errors.Type} />
           </div>
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+            <label className="font-semibold text-ink-strong mb-1.5 block text-label">
               Lesson Duration (minutes) <RequiredAsterisk />
             </label>
             <input
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: 6,
-                border: "1px solid #bbb",
-                fontSize: "1.08rem",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif"
-              }}
+              className="w-full p-3 rounded-md border border-[#bbb] text-label text-ink-strong font-sans"
               id="Duration"
               type="text"
               placeholder="Duration"
@@ -668,7 +630,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
             />
           </div>
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+            <label className="font-semibold text-ink-strong mb-1.5 block text-label">
               Learning Objectives <RequiredAsterisk />
             </label>
             <ReactQuill
@@ -679,12 +641,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                 setObjectives([value]);
                 form.revalidate("objectives", value);
               }}
-              style={{
-                background: "#fff",
-                borderRadius: 6,
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif"
-              }}
+              className="bg-surface rounded-md text-ink-strong font-sans"
             />
             <FieldError id="objectives" message={form.errors.objectives} />
           </div>
@@ -692,18 +649,9 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
             {sections.map((section, index) => (
               <div
                 key={index}
-                style={{
-                  marginBottom: 24,
-                  padding: "18px",
-                  border: "1px solid #eee",
-                  borderRadius: 8,
-                  background: "#fafbfc",
-                  position: "relative",
-                  color: "#111",
-                  fontFamily: "Open Sans, sans-serif"
-                }}
+                className="mb-6 p-4.5 border border-[#eee] rounded-lg bg-[#fafbfc] relative text-ink-strong font-sans"
               >
-                <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+                <label className="font-semibold text-ink-strong mb-1.5 block text-label">
                   Section #{index + 1} <RequiredAsterisk />
                 </label>
                 <input
@@ -716,26 +664,11 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                     setSections(updatedSections);
                     setFormData({ ...formData, sections: updatedSections });
                   }}
-                  style={{
-                    width: "100%",
-                    padding: "10px",
-                    borderRadius: 6,
-                    border: "1px solid #bbb",
-                    fontSize: "1.08rem",
-                    color: "#111",
-                    fontFamily: "Open Sans, sans-serif",
-                    marginBottom: 10,
-                  }}
+                  className="w-full p-2.5 rounded-md border border-[#bbb] text-label text-ink-strong font-sans mb-2.5"
                   required
                 />
                 <label
-                  style={{
-                    fontWeight: 600,
-                    color: "#111",
-                    marginBottom: 6,
-                    display: "block",
-                    fontSize: "1.08rem"
-                  }}
+                  className="font-semibold text-ink-strong mb-1.5 block text-label"
                 >
                   Description <RequiredAsterisk />
                 </label>
@@ -749,27 +682,12 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                     setSections(updatedSections);
                     setFormData({ ...formData, sections: updatedSections });
                   }}
-                  style={{
-                    background: "#fff",
-                    borderRadius: 6,
-                    color: "#111",
-                    fontFamily: "Open Sans, sans-serif",
-                    marginBottom: 10,
-                  }}
+                  className="bg-surface rounded-md text-ink-strong font-sans mb-2.5"
                 />
-                <div style={{ marginTop: 12, display: "flex", gap: 12 }}>
+                <div className="mt-3 flex gap-3">
                   <button
                     type="button"
-                    style={{
-                      background: "#fff",
-                      color: "#111",
-                      border: "1px solid #111",
-                      borderRadius: "6px",
-                      padding: "8px 18px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      fontFamily: "Open Sans, sans-serif"
-                    }}
+                    className="bg-surface text-ink-strong border border-ink-strong rounded-md py-2 px-4.5 font-semibold cursor-pointer font-sans"
                     onClick={() => {
                       setSelectedSectionIndex(index);
                       setShowOverlay(true);
@@ -779,17 +697,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                   </button>
                   <button
                     type="button"
-                    style={{
-                      background: "#111C44",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "6px",
-                      padding: "8px 18px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      fontFamily: "Open Sans, sans-serif",
-                      fontSize: "1.08rem"
-                    }}
+                    className="bg-navy-deep text-white border-0 rounded-md py-2 px-4.5 font-semibold cursor-pointer font-sans text-label"
                     onClick={() => handleCreateNewNugget(index)}
                   >
                     + Create New Nugget
@@ -797,16 +705,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                   {sections.length > 1 && (
                     <button
                       type="button"
-                      style={{
-                        background: "none",
-                        color: "#e74c3c",
-                        border: "none",
-                        fontWeight: 700,
-                        marginLeft: "auto",
-                        cursor: "pointer",
-                        fontFamily: "Open Sans, sans-serif",
-                        fontSize: "1.08rem",
-                      }}
+                      className="bg-none text-[#e74c3c] border-0 font-bold ml-auto cursor-pointer font-sans text-label"
                       onClick={() => deleteSection(index)}
                       title="Delete Section"
                     >
@@ -815,68 +714,20 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                   )}
                 </div>
                 <div
-                  style={{
-                    display: "flex",           // changed from grid to flex
-                    flexWrap: "wrap",
-                    gap: "2px",                // minimal gap between nuggets
-                    marginTop: 6,
-                  }}
+                  className="flex flex-wrap gap-0.5 mt-1.5"
                 >
                   {selectedMaterials[index]?.map((material) => {
                     const fullNugget = portalContent.find((n) => n.id === material.id) || material;
                     return (
                       <div
                         key={material.id}
-                        style={{
-                          background: "#fafbfc",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "10px",
-                          padding: "4px 6px",
-                          color: "#111",
-                          fontFamily: "Open Sans, sans-serif",
-                          boxShadow: "0 2px 8px rgba(22,32,64,0.06)",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          width: "fit-content",
-                          maxWidth: "100%",
-                          position: "relative",
-                          margin: 0,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
+                        className="bg-[#fafbfc] border border-rule rounded-[10px] py-1 px-1.5 text-ink-strong font-sans shadow-[0_2px_8px_rgba(22,32,64,0.06)] inline-flex items-center gap-1 w-fit max-w-full relative m-0 whitespace-nowrap overflow-hidden text-ellipsis"
                       >
-                        <span style={{
-                          fontWeight: 700,
-                          fontSize: "1.02rem",
-                          color: "#111",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          maxWidth: 120
-                        }}>
+                        <span className="font-bold text-[1.02rem] text-ink-strong flex items-center gap-1 overflow-hidden text-ellipsis max-w-30">
                           <button
                             type="button"
                             onClick={() => navigate(`/content/${material.id}`)}
-                            style={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              display: "inline-block",
-                              maxWidth: 90,
-                              color: "#1a73e8",
-                              textDecoration: "underline",
-                              fontWeight: 700,
-                              fontSize: "1.02rem",
-                              background: "none",
-                              border: "none",
-                              padding: 0,
-                              margin: 0,
-                              cursor: "pointer",
-                            }}
+                            className="overflow-hidden text-ellipsis whitespace-nowrap inline-block max-w-22.5 text-link underline font-bold text-[1.02rem] bg-none border-0 p-0 m-0 cursor-pointer"
                             title="View Nugget"
                           >
                             {fullNugget.Title || "Untitled Nugget"}
@@ -884,17 +735,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
                         </span>
                         <button
                           onClick={() => removeMaterial(material.id, index)}
-                          style={{
-                            background: "none",
-                            color: "#e74c3c",
-                            border: "none",
-                            fontWeight: 700,
-                            fontSize: "1.1rem",
-                            marginLeft: 4,
-                            cursor: "pointer",
-                            fontFamily: "Open Sans, sans-serif",
-                            alignSelf: "center"
-                          }}
+                          className="bg-none text-[#e74c3c] border-0 font-bold text-[1.1rem] ml-1 cursor-pointer font-sans self-center"
                           title="Remove"
                         >
                           &times;
@@ -907,50 +748,30 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
             ))}
             <button
               type="button"
-              style={{
-                background: "#fff",
-                color: "#111",
-                border: "1px solid #111",
-                borderRadius: "6px",
-                padding: "10px 28px",
-                fontWeight: 600,
-                cursor: "pointer",
-                marginTop: 8,
-                fontFamily: "Open Sans, sans-serif"
-              }}
+              className="bg-surface text-ink-strong border border-ink-strong rounded-md py-2.5 px-7 font-semibold cursor-pointer mt-2 font-sans"
               onClick={addSection}
             >
               Add another Section
             </button>
           </div>
           {/* Make Public checkbox at the bottom */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="flex items-center gap-2">
             <input
               type="checkbox"
               id="isPublic"
               checked={formData.isPublic}
               onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-              style={{ width: 18, height: 18 }}
+              className="w-4.5 h-4.5"
             />
-            <label htmlFor="isPublic" style={{ color: "#111", fontWeight: 600 , fontSize: "1.08rem"}}>
+            <label htmlFor="isPublic" className="text-ink-strong font-semibold text-label">
               Make Public
             </label>
           </div>
-          <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
+          <div className="flex gap-4 mt-4">
             <button
               type="button"
               onClick={handleCancel}
-              style={{
-                background: "#fff",
-                color: "#111",
-                border: "1px solid #111",
-                borderRadius: "6px",
-                padding: "8px 18px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "Open Sans, sans-serif",
-                fontSize: "1.08rem"
-              }}
+              className="bg-surface text-ink-strong border border-ink-strong rounded-md py-2 px-4.5 font-semibold cursor-pointer font-sans text-label"
             >
               Cancel
             </button>
@@ -958,17 +779,7 @@ const LessonPlanBuilder = ({ showSaveAsDraft, showDrafts, onSave, onCancel }) =>
               <button
                 type="button"
                 onClick={handleSaveSession}
-                style={{
-                  background: "#fff",
-                  color: "#111",
-                  border: "1px solid #111",
-                  borderRadius: "6px",
-                  padding: "8px 18px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "Open Sans, sans-serif",
-                  fontSize: "1.08rem"
-                }}
+                className="bg-surface text-ink-strong border border-ink-strong rounded-md py-2 px-4.5 font-semibold cursor-pointer font-sans text-label"
               >
                 Save as Draft
               </button>

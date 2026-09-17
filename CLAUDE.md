@@ -93,6 +93,23 @@ if a new controller drifts from it. Before #366 the directory held `content_subm
 `unitsController.js` — the units resource spread across three files in two naming styles,
 each with its own idea of how to report an error.
 
+**Paid content is gated in `utils/entitlements.check.js`** (#430), not at the
+call sites. `canAccessModule` gates a module's contents; `canAccessLesson` gates
+the lessons inside it. A lesson holds no reference to its module, so the check
+runs the question backwards - which modules list this lesson id in
+`lessonPlans`, and is any of them paid? Access needs an entitlement document
+(webhook-written only), authorship of the lesson or a gating module, or admin.
+
+Two consequences worth knowing before touching these routes. Any route serving
+lesson contents mounts `optionalAuth` and calls the check - that means **both**
+`GET /api/lesson/:id` and `GET /api/lessons/:id/download`, which serve the same
+content; the PDF route checks before piping, because a part-written response
+cannot become a 403. And `firestore.rules` restricts `lesson` reads to published
+documents plus your own, so any client query over that collection must be
+constrained (`where('isPublic', '==', true)`, or `where('authorId', '==', uid)`)
+- rules are not filters, and an unconstrained read of the collection is refused
+entirely rather than quietly returning everything.
+
 **The webhook is `routes/stripeWebhook.js`**, registered in `app.js` *before*
 `express.json()` with a raw body parser - Stripe signature verification needs the exact
 bytes. There used to be a second webhook in `server/routes/payment.js` that wrote

@@ -48,64 +48,24 @@ const UpgradePage = () => {
     };
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: '#F6F8FA',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '40px 20px'
-        }}>
+        <div className="min-h-screen bg-surface-subtle flex flex-col items-center py-10 px-5">
             {/* Header Section */}
-            <div style={{
-                textAlign: 'center',
-                marginBottom: '60px',
-                maxWidth: '600px'
-            }}>
-                <h1 style={{
-                    fontSize: '2.5rem',
-                    fontWeight: '700',
-                    color: '#111',
-                    fontFamily: 'Open Sans, sans-serif',
-                    margin: '0 0 20px 0',
-                    letterSpacing: '1px'
-                }}>
+            <div className="text-center mb-15 max-w-150">
+                <h1 className="text-page-title font-bold text-ink-strong font-sans mt-0 mr-0 mb-5 ml-0 tracking-[1px]">
                     Choose Your Plan
                 </h1>
-                <p style={{
-                    fontSize: '1.15rem',
-                    color: '#222',
-                    lineHeight: 1.6,
-                    marginBottom: '30px'
-                }}>
+                <p className="text-[1.15rem] text-ink leading-[1.6] mb-7.5">
                     The Teacher Default account offers access to core teaching resources and standard features for effective lesson delivery. The Teacher Premium account adds the ability to create custom modules, lessons, and nuggets, plus full access to all locked and unlocked content. This makes it ideal for educators seeking maximum flexibility and creative control in their teaching.
                 </p>
             </div>
 
             {/* Subscription Plans Section */}
-            <div style={{
-                width: '100%',
-                maxWidth: '1400px',
-                marginBottom: '40px'
-            }}>
-                <h2 style={{
-                    fontSize: '2rem',
-                    fontWeight: '700',
-                    color: '#111',
-                    textAlign: 'center',
-                    marginBottom: '40px',
-                    fontFamily: 'Open Sans, sans-serif'
-                }}>
+            <div className="w-full max-w-350 mb-10">
+                <h2 className="text-[2rem] font-bold text-ink-strong text-center mb-10 font-sans">
                     Subscription Plans
                 </h2>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: '25px',
-                    padding: '0 20px',
-                    alignItems: 'stretch'
-                }}>
+                <div className="grid [grid-template-columns:repeat(auto-fit,_minmax(280px,_1fr))] gap-[25px] py-0 px-5 items-stretch">
                     {/* Basic Plan */}
                     <div style={{
                         background: '#fff',
@@ -119,66 +79,28 @@ const UpgradePage = () => {
                         flexDirection: 'column'
                     }}>
                         {currentPlan === 'basic' && (
-                            <div style={{
-                                position: 'absolute',
-                                top: '-10px',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                background: '#F9C74F',
-                                color: '#000',
-                                padding: '5px 20px',
-                                borderRadius: '20px',
-                                fontSize: '0.9rem',
-                                fontWeight: '600'
-                            }}>
+                            <div className="absolute top-[-10px] left-[50%] [transform:translateX(-50%)] bg-accent text-black py-[5px] px-5 rounded-[20px] text-[0.9rem] font-semibold">
                                 CURRENT PLAN
                             </div>
                         )}
-                        <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{
-                                background: '#f0f0f0',
-                                borderRadius: '8px',
-                                padding: '20px',
-                                marginBottom: '20px',
-                                minHeight: '120px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
+                        <div className="flex-[1] flex flex-col">
+                            <div className="bg-[#f0f0f0] rounded-lg p-5 mb-5 min-h-30 flex items-center justify-center">
                                 <img
                                     src="https://cdn-icons-png.flaticon.com/512/167/167707.png"
                                     alt="Basic Plan"
-                                    style={{ width: '48px', height: '48px', opacity: 0.7 }}
+                                    className="w-12 h-12 opacity-70"
                                 />
                             </div>
-                            <h3 style={{
-                                fontSize: '1.5rem',
-                                fontWeight: '700',
-                                color: '#162040',
-                                marginBottom: '15px'
-                            }}>
+                            <h3 className="text-[1.5rem] font-bold text-navy mb-[15px]">
                                 Basic
                             </h3>
-                            <ul style={{
-                                color: '#666',
-                                lineHeight: 1.6,
-                                marginBottom: '20px',
-                                minHeight: '140px',
-                                textAlign: 'left',
-                                paddingLeft: '20px',
-                                flex: '1'
-                            }}>
+                            <ul className="text-ink-muted leading-[1.6] mb-5 min-h-35 text-left pl-5 flex-[1]">
                                 <li>Access to selected free modules</li>
                                 <li>Basic lesson viewing</li>
                                 <li>Community access</li>
                                 <li>Basic support</li>
                             </ul>
-                            <div style={{
-                                fontSize: '1.2rem',
-                                fontWeight: '600',
-                                color: '#162040',
-                                marginBottom: '20px'
-                            }}>
+                            <div className="text-[1.2rem] font-semibold text-navy mb-5">
                                 Free
                             </div>
                         </div>
@@ -214,82 +136,33 @@ const UpgradePage = () => {
                         flexDirection: 'column'
                     }}>
                         {currentPlan === 'premium' ? (
-                            <div style={{
-                                position: 'absolute',
-                                top: '-10px',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                background: '#F9C74F',
-                                color: '#000',
-                                padding: '5px 20px',
-                                borderRadius: '20px',
-                                fontSize: '0.9rem',
-                                fontWeight: '600'
-                            }}>
+                            <div className="absolute top-[-10px] left-[50%] [transform:translateX(-50%)] bg-accent text-black py-[5px] px-5 rounded-[20px] text-[0.9rem] font-semibold">
                                 CURRENT PLAN
                             </div>
                         ) : (
-                            <div style={{
-                                position: 'absolute',
-                                top: '-10px',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                background: '#162040',
-                                color: '#fff',
-                                padding: '5px 20px',
-                                borderRadius: '20px',
-                                fontSize: '0.9rem',
-                                fontWeight: '600'
-                            }}>
+                            <div className="absolute top-[-10px] left-[50%] [transform:translateX(-50%)] bg-navy text-white py-[5px] px-5 rounded-[20px] text-[0.9rem] font-semibold">
                                 POPULAR
                             </div>
                         )}
-                        <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{
-                                background: '#f0f0f0',
-                                borderRadius: '8px',
-                                padding: '20px',
-                                marginBottom: '20px',
-                                minHeight: '120px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
+                        <div className="flex-[1] flex flex-col">
+                            <div className="bg-[#f0f0f0] rounded-lg p-5 mb-5 min-h-30 flex items-center justify-center">
                                 <img
                                     src="https://cdn-icons-png.flaticon.com/512/1828/1828884.png"
                                     alt="Monthly Premium Plan"
-                                    style={{ width: '48px', height: '48px', opacity: 0.7 }}
+                                    className="w-12 h-12 opacity-70"
                                 />
                             </div>
-                            <h3 style={{
-                                fontSize: '1.5rem',
-                                fontWeight: '700',
-                                color: '#162040',
-                                marginBottom: '15px'
-                            }}>
+                            <h3 className="text-[1.5rem] font-bold text-navy mb-[15px]">
                                 Monthly Premium
                             </h3>
-                            <ul style={{
-                                color: '#666',
-                                lineHeight: 1.6,
-                                marginBottom: '20px',
-                                minHeight: '140px',
-                                textAlign: 'left',
-                                paddingLeft: '20px',
-                                flex: '1'
-                            }}>
+                            <ul className="text-ink-muted leading-[1.6] mb-5 min-h-35 text-left pl-5 flex-[1]">
                                 <li>All Free features</li>
                                 <li>Comprehensive lesson module creation</li>
                                 <li>Community sharing</li>
                                 <li>Advanced lesson generator</li>
                                 <li>Priority support</li>
                             </ul>
-                            <div style={{
-                                fontSize: '1.2rem',
-                                fontWeight: '600',
-                                color: '#162040',
-                                marginBottom: '20px'
-                            }}>
+                            <div className="text-[1.2rem] font-semibold text-navy mb-5">
                                 $9.99/month
                             </div>
                         </div>
@@ -380,91 +253,37 @@ const UpgradePage = () => {
                         flexDirection: 'column'
                     }}>
                         {currentPlan === 'premiumYearly' ? (
-                            <div style={{
-                                position: 'absolute',
-                                top: '-10px',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                background: '#F9C74F',
-                                color: '#000',
-                                padding: '5px 20px',
-                                borderRadius: '20px',
-                                fontSize: '0.9rem',
-                                fontWeight: '600'
-                            }}>
+                            <div className="absolute top-[-10px] left-[50%] [transform:translateX(-50%)] bg-accent text-black py-[5px] px-5 rounded-[20px] text-[0.9rem] font-semibold">
                                 CURRENT PLAN
                             </div>
                         ) : (
-                            <div style={{
-                                position: 'absolute',
-                                top: '-10px',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                background: '#28a745',
-                                color: '#fff',
-                                padding: '5px 20px',
-                                borderRadius: '20px',
-                                fontSize: '0.9rem',
-                                fontWeight: '600'
-                            }}>
+                            <div className="absolute top-[-10px] left-[50%] [transform:translateX(-50%)] bg-success text-white py-[5px] px-5 rounded-[20px] text-[0.9rem] font-semibold">
                                 SAVE 17%
                             </div>
                         )}
-                        <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{
-                                background: '#f0f0f0',
-                                borderRadius: '8px',
-                                padding: '20px',
-                                marginBottom: '20px',
-                                minHeight: '120px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
+                        <div className="flex-[1] flex flex-col">
+                            <div className="bg-[#f0f0f0] rounded-lg p-5 mb-5 min-h-30 flex items-center justify-center">
                                 <img
                                     src="https://cdn-icons-png.flaticon.com/512/3039/3039393.png"
                                     alt="Yearly Premium Plan"
-                                    style={{ width: '48px', height: '48px', opacity: 0.7 }}
+                                    className="w-12 h-12 opacity-70"
                                 />
                             </div>
-                            <h3 style={{
-                                fontSize: '1.5rem',
-                                fontWeight: '700',
-                                color: '#162040',
-                                marginBottom: '15px'
-                            }}>
+                            <h3 className="text-[1.5rem] font-bold text-navy mb-[15px]">
                                 Yearly Premium
                             </h3>
-                            <ul style={{
-                                color: '#666',
-                                lineHeight: 1.6,
-                                marginBottom: '20px',
-                                minHeight: '140px',
-                                textAlign: 'left',
-                                paddingLeft: '20px',
-                                flex: '1'
-                            }}>
+                            <ul className="text-ink-muted leading-[1.6] mb-5 min-h-35 text-left pl-5 flex-[1]">
                                 <li>All Premium features</li>
                                 <li>Comprehensive lesson module creation</li>
                                 <li>Community sharing</li>
                                 <li>Advanced lesson generator</li>
                                 <li>Priority support</li>
-                                <li style={{ color: '#28a745', fontWeight: '600' }}>Save $20 per year</li>
+                                <li className="text-success font-semibold">Save $20 per year</li>
                             </ul>
-                            <div style={{
-                                fontSize: '1.2rem',
-                                fontWeight: '600',
-                                color: '#162040',
-                                marginBottom: '5px'
-                            }}>
+                            <div className="text-[1.2rem] font-semibold text-navy mb-[5px]">
                                 $100.00/year
                             </div>
-                            <div style={{
-                                fontSize: '0.9rem',
-                                color: '#28a745',
-                                fontWeight: '600',
-                                marginBottom: '20px'
-                            }}>
+                            <div className="text-[0.9rem] text-success font-semibold mb-5">
                                 ($8.33/month)
                             </div>
                         </div>
@@ -547,67 +366,29 @@ const UpgradePage = () => {
                         flexDirection: 'column'
                     }}>
                         {currentPlan === 'enterprise' && (
-                            <div style={{
-                                position: 'absolute',
-                                top: '-10px',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                background: '#F9C74F',
-                                color: '#000',
-                                padding: '5px 20px',
-                                borderRadius: '20px',
-                                fontSize: '0.9rem',
-                                fontWeight: '600'
-                            }}>
+                            <div className="absolute top-[-10px] left-[50%] [transform:translateX(-50%)] bg-accent text-black py-[5px] px-5 rounded-[20px] text-[0.9rem] font-semibold">
                                 CURRENT PLAN
                             </div>
                         )}
-                        <div style={{ flex: '1', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{
-                                background: '#f0f0f0',
-                                borderRadius: '8px',
-                                padding: '20px',
-                                marginBottom: '20px',
-                                minHeight: '120px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                            }}>
+                        <div className="flex-[1] flex flex-col">
+                            <div className="bg-[#f0f0f0] rounded-lg p-5 mb-5 min-h-30 flex items-center justify-center">
                                 <img
                                     src="https://cdn-icons-png.flaticon.com/512/684/684809.png"
                                     alt="Enterprise Plan"
-                                    style={{ width: '48px', height: '48px', opacity: 0.7 }}
+                                    className="w-12 h-12 opacity-70"
                                 />
                             </div>
-                            <h3 style={{
-                                fontSize: '1.5rem',
-                                fontWeight: '700',
-                                color: '#162040',
-                                marginBottom: '15px'
-                            }}>
+                            <h3 className="text-[1.5rem] font-bold text-navy mb-[15px]">
                                 Enterprise
                             </h3>
-                            <ul style={{
-                                color: '#666',
-                                lineHeight: 1.6,
-                                marginBottom: '20px',
-                                minHeight: '140px',
-                                textAlign: 'left',
-                                paddingLeft: '20px',
-                                flex: '1'
-                            }}>
+                            <ul className="text-ink-muted leading-[1.6] mb-5 min-h-35 text-left pl-5 flex-[1]">
                                 <li>All Premium features</li>
                                 <li>Tailored pricing</li>
                                 <li>Dedicated onboarding</li>
                                 <li>Custom integrations</li>
                                 <li>24/7 dedicated support</li>
                             </ul>
-                            <div style={{
-                                fontSize: '1.2rem',
-                                fontWeight: '600',
-                                color: '#162040',
-                                marginBottom: '20px'
-                            }}>
+                            <div className="text-[1.2rem] font-semibold text-navy mb-5">
                                 Contact Us
                             </div>
                         </div>
@@ -646,75 +427,24 @@ const UpgradePage = () => {
 
             {/* Contact Sales Modal */}
             {showContactModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 1000
-                }}>
-                    <div style={{
-                        background: '#fff',
-                        borderRadius: '12px',
-                        padding: '40px',
-                        maxWidth: '500px',
-                        width: '90%',
-                        textAlign: 'center',
-                        position: 'relative'
-                    }}>
+                <div className="fixed top-0 left-0 right-0 bottom-0 [background:rgba(0,0,0,0.5)] flex items-center justify-center z-[1000]">
+                    <div className="bg-surface rounded-xl p-10 max-w-125 w-[90%] text-center relative">
                         <button
                             onClick={closeContactModal}
-                            style={{
-                                position: 'absolute',
-                                top: '15px',
-                                right: '20px',
-                                background: 'none',
-                                border: 'none',
-                                fontSize: '1.5rem',
-                                cursor: 'pointer',
-                                color: '#666'
-                            }}
+                            className="absolute top-[15px] right-5 bg-none border-0 text-[1.5rem] cursor-pointer text-ink-muted"
                         >
                             ×
                         </button>
-                        <h3 style={{
-                            fontSize: '1.8rem',
-                            fontWeight: '700',
-                            color: '#162040',
-                            marginBottom: '20px'
-                        }}>
+                        <h3 className="text-[1.8rem] font-bold text-navy mb-5">
                             Contact Sales
                         </h3>
-                        <p style={{
-                            color: '#666',
-                            marginBottom: '30px',
-                            lineHeight: 1.6
-                        }}>
+                        <p className="text-ink-muted mb-7.5 leading-[1.6]">
                             Ready to transform your educational experience? Our sales team is here to help you find the perfect Enterprise solution.
                         </p>
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'center'
-                        }}>
+                        <div className="flex justify-center">
                             <a
                                 href="mailto:sales@diya.education?subject=Enterprise%20Plan%20Inquiry"
-                                style={{
-                                    background: '#162040',
-                                    color: '#fff',
-                                    padding: '12px 24px',
-                                    borderRadius: '6px',
-                                    textDecoration: 'none',
-                                    fontWeight: '600',
-                                    transition: 'background 0.2s',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '8px'
-                                }}
+                                className="bg-navy text-white py-3 px-6 rounded-md no-underline font-semibold [transition:background_0.2s] inline-flex items-center gap-2"
                                 onMouseOver={(e) => e.target.style.background = '#0f1530'}
                                 onMouseOut={(e) => e.target.style.background = '#162040'}
                             >

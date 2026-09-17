@@ -94,8 +94,8 @@ const ContentDetails = () => {
   };
 
   if (loading) return <Loading variant="page" message="Loading content..." />;
-  if (error) return <div style={{ padding: 40, color: "crimson" }}>{error}</div>;
-  if (!content) return <div style={{ padding: 40 }}>Content not found.</div>;
+  if (error) return <div className="p-10 [color:crimson]">{error}</div>;
+  if (!content) return <div className="p-10">Content not found.</div>;
 
   const authUser = getAuth().currentUser;
   const isAdmin = userData?.role === ROLES.ADMIN;
@@ -180,22 +180,14 @@ const ContentDetails = () => {
   };
 
   return (
-    <div style={{ background: "#fff", minHeight: "100vh" }}>
+    <div className="bg-surface min-h-screen">
       {/* Back control (match module page spacing) */}
       <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "18px 20px 0 20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
+        className="max-w-275 my-0 mx-auto pt-4.5 pr-5 pb-0 pl-5 flex items-center justify-between gap-3"
       >
         <BackButton onClick={() => navigate(-1)} />
         {canManage && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="flex items-center gap-2.5">
             <EditButton
               label="Edit"
               onClick={() =>
@@ -217,16 +209,11 @@ const ContentDetails = () => {
 
       {/* Header (match module page) */}
       <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "10px 20px 0 20px",
-          textAlign: "center",
-        }}
+        className="max-w-275 my-0 mx-auto pt-2.5 pr-5 pb-0 pl-5 text-center"
       >
         <h1 style={TYPO.pageTitle}>{content.Title}</h1>
         <MetaChipsRow
-          style={{ marginTop: 18 }}
+          className="mt-4.5"
           items={[
             { label: "Author", value: content.Author || "—" },
             { label: "Category", value: content.Category },
@@ -241,8 +228,8 @@ const ContentDetails = () => {
       </div>
 
       {/* Main content cards */}
-      <div style={{ maxWidth: 1100, margin: "28px auto 0 auto", padding: "0 20px 80px 20px" }}>
-        <SectionCard title="Description" style={{ marginTop: 0 }}>
+      <div className="max-w-275 mt-7 mr-auto mb-0 ml-auto pt-0 pr-5 pb-20 pl-5">
+        <SectionCard title="Description" className="mt-0">
           <div
             className="rich-text-content text-gray-700"
             style={TYPO.body}
@@ -264,7 +251,7 @@ const ContentDetails = () => {
           {attachments.length === 0 ? (
             <div style={{ ...TYPO.body, color: "#666", fontStyle: "italic" }}>No links attached.</div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div className="flex flex-col gap-4">
               {attachments.map((a) => {
             const title = a.title || (a.linkType === "slides" ? "Google Slides" : "Link");
             const url = a.url || "";
@@ -273,23 +260,11 @@ const ContentDetails = () => {
             return (
               <div
                 key={a.id || url}
-                style={{
-                  backgroundColor: "#fafafa",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                  padding: "20px",
-                }}
+                className="bg-[#fafafa] border border-rule rounded-lg p-5"
               >
                 {/* Enhanced Title */}
                 <div
-                  style={{
-                    fontSize: "1.1rem",
-                    fontWeight: 600,
-                    color: "#111",
-                    marginBottom: "12px",
-                    paddingBottom: "12px",
-                    borderBottom: "1px solid #e5e7eb",
-                  }}
+                  className="text-[1.1rem] font-semibold text-ink-strong mb-3 pb-3 [border-bottom:1px_solid_#e5e7eb]"
                 >
                   {title}
                 </div>
@@ -301,7 +276,7 @@ const ContentDetails = () => {
                     src={slidesEmbed}
                     width="100%"
                     height="480"
-                    style={{ border: 0, borderRadius: 8 }}
+                    className="[border:0px] rounded-lg"
                     allowFullScreen
                   />
                 ) : (
@@ -309,17 +284,7 @@ const ContentDetails = () => {
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{
-                      display: "inline-block",
-                      padding: "12px 16px",
-                      backgroundColor: "#fff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "6px",
-                      color: "#1a73e8",
-                      textDecoration: "none",
-                      fontWeight: 500,
-                      transition: "all 0.2s ease",
-                    }}
+                    className="inline-block py-3 px-4 bg-surface border border-rule rounded-md text-link no-underline font-medium [transition:all_0.2s_ease]"
                     onMouseEnter={(e) => {
                       e.target.style.backgroundColor = "#f9fafb";
                       e.target.style.borderColor = "#1a73e8";
@@ -342,42 +307,22 @@ const ContentDetails = () => {
 
       {canManage && isDeleteModalOpen && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.45)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
-          }}
+          className="fixed top-0 left-0 right-0 bottom-0 [background:rgba(0,0,0,0.45)] z-[9999] flex items-center justify-center p-5"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget && !isDeleting) setIsDeleteModalOpen(false);
           }}
         >
           <div
-            style={{
-              width: "100%",
-              maxWidth: 520,
-              background: "#fff",
-              borderRadius: 16,
-              padding: "24px 22px",
-              boxShadow: "0 18px 60px rgba(0,0,0,0.2)",
-              border: "1px solid #e5e7eb",
-            }}
+            className="w-full max-w-130 bg-surface rounded-2xl py-6 px-5.5 shadow-[0_18px_60px_rgba(0,0,0,0.2)] border border-rule"
           >
             <div style={{ ...TYPO.sectionTitle, fontSize: "1.2rem", fontWeight: 900, color: "#111" }}>
               Are you sure you want to delete this nugget?
             </div>
-            <div style={{ marginTop: 10, color: "#444", lineHeight: 1.5 }}>
+            <div className="mt-2.5 text-[#444] leading-[1.5]">
               This action cannot be undone.
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+            <div className="flex justify-end gap-2.5 mt-4.5">
               <button
                 type="button"
                 disabled={isDeleting}
@@ -419,50 +364,22 @@ const ContentDetails = () => {
 
       {isInfoModalOpen && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.45)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
-          }}
+          className="fixed top-0 left-0 right-0 bottom-0 [background:rgba(0,0,0,0.45)] z-[9999] flex items-center justify-center p-5"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) setIsInfoModalOpen(false);
           }}
         >
           <div
-            style={{
-              width: "100%",
-              maxWidth: 520,
-              background: "#fff",
-              borderRadius: 16,
-              padding: "24px 22px",
-              boxShadow: "0 18px 60px rgba(0,0,0,0.2)",
-              border: "1px solid #e5e7eb",
-            }}
+            className="w-full max-w-130 bg-surface rounded-2xl py-6 px-5.5 shadow-[0_18px_60px_rgba(0,0,0,0.2)] border border-rule"
           >
-            <div style={{ marginTop: 10, color: "#444", lineHeight: 1.5 }}>
+            <div className="mt-2.5 text-[#444] leading-[1.5]">
               {infoModalMessage || "This action cannot be completed."}
             </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+            <div className="flex justify-end gap-2.5 mt-4.5">
               <button
                 type="button"
                 onClick={() => setIsInfoModalOpen(false)}
-                style={{
-                  background: "#162040",
-                  color: "#fff",
-                  border: "2px solid #162040",
-                  borderRadius: 10,
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  fontWeight: 900,
-                }}
+                className="bg-navy text-white border-2 border-navy rounded-[10px] py-2.5 px-3.5 cursor-pointer font-black"
               >
                 OK
               </button>

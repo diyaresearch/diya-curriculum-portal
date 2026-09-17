@@ -64,16 +64,7 @@ const LockIcon = ({ isLocked }) => (
     height="24" // Increased from 20
     viewBox="0 0 24 24"
     fill="none"
-    style={{
-      position: "absolute",
-      top: "16px", // Increased from 12px
-      left: "16px", // Increased from 12px
-      zIndex: 10,
-      background: "rgba(255,255,255,0.95)", // More opaque
-      borderRadius: "6px", // Less rounded
-      padding: "4px", // Increased padding
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)" // Added shadow
-    }}
+    className="absolute top-4 left-4 z-[10] [background:rgba(255,255,255,0.95)] rounded-md p-1 shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
   >
     {isLocked ? (
       <>
@@ -129,34 +120,21 @@ function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
   
 
   return (
-    <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-      background: "rgba(0,0,0,0.3)", zIndex: 3000,
-      display: "flex", alignItems: "center", justifyContent: "center"
-    }}>
-      <div style={{
-        background: "#fff", borderRadius: 12, padding: 32, minWidth: 100, maxWidth: 400, width: "90%",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.18)", textAlign: "center", position: "relative"
-      }}>
-        <button onClick={onClose} style={{
-          position: "absolute", top: 10, right: 16, background: "none", border: "none",
-          fontSize: "1.5rem", cursor: "pointer", color: "#888"
-        }}>×</button>
-        <div style={{ fontWeight: "700", fontSize: "1.4rem", marginBottom: 16 }}>
+    <div className="fixed top-0 left-0 right-0 bottom-0 [background:rgba(0,0,0,0.3)] z-[3000] flex items-center justify-center">
+      <div className="bg-surface rounded-xl p-8 min-w-25 max-w-100 w-[90%] shadow-[0_4px_24px_rgba(0,0,0,0.18)] text-center relative">
+        <button onClick={onClose} className="absolute top-2.5 right-4 bg-none border-0 text-[1.5rem] cursor-pointer text-ink-faint">×</button>
+        <div className="font-bold text-[1.4rem] mb-4">
           {moduleTitle}
         </div>
-        <div style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
+        <div className="mb-6 text-body text-ink">
           {summary}
         </div>
-        <div style={{ marginBottom: 24, fontWeight: 500 }}>
+        <div className="mb-6 font-medium">
           Sign up or login to see more!
         </div>
         <button
           onClick={handleGoogleLogin}
-          style={{
-            background: "#162040", color: "#fff", border: "none", borderRadius: 6,
-            padding: "12px 32px", fontWeight: 600, fontSize: "1rem", cursor: "pointer"
-          }}
+          className="bg-navy text-white border-0 rounded-md py-3 px-8 font-semibold text-[1rem] cursor-pointer"
         >
           Login with Google
         </button>
@@ -336,55 +314,20 @@ const NuggetBuilderSection = () => {
   const navigate = useNavigate();
   return (
   <section
-    style={{
-      width: "100%",
-      background: "#F6F8FA",
-      padding: "60px 0 0 0",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "flex-start"
-    }}
+    className="w-full bg-surface-subtle pt-15 pr-0 pb-0 pl-0 flex flex-col items-center justify-start"
   >
     <h2
-      style={{
-        fontSize: "2.5rem",
-        fontWeight: "700",
-        color: "#111",
-        fontFamily: "Open Sans, sans-serif",
-        textAlign: "center",
-        margin: 0,
-        letterSpacing: "1px"
-      }}
+      className="text-page-title font-bold text-ink-strong font-sans text-center m-0 tracking-[1px]"
     >
       Nugget Builder
     </h2>
     <p
-      style={{
-        marginTop: "18px",
-        fontSize: "1.15rem",
-        color: "#222",
-        textAlign: "center",
-        maxWidth: "600px",
-        fontWeight: 500,
-      }}
+      className="mt-4.5 text-[1.15rem] text-ink text-center max-w-150 font-medium"
     >
       Create your own learning nuggets and share them with your class or the community.
     </p>
     <button
-      style={{
-        marginTop: "32px",
-        background: "#162040",
-        color: "#fff",
-        border: "2px solid #162040",
-        borderRadius: "6px",
-        padding: "14px 48px",
-        fontSize: "1.08rem",
-        fontWeight: "600",
-        cursor: "pointer",
-        transition: "background 0.2s, color 0.2s, border 0.2s",
-        minWidth: "260px",
-      }}
+      className="mt-8 bg-navy text-white border-2 border-navy rounded-md py-3.5 px-12 text-label font-semibold cursor-pointer [transition:background_0.2s,_color_0.2s,_border_0.2s] min-w-65"
       onClick={() => navigate("/nugget-builder")}
     >
       Go to Nugget Builder
@@ -399,38 +342,15 @@ function ModuleBuilderPromo() {
 
   return (
     <section
-      style={{
-        width: "100%",
-        padding: "60px 0 0 0",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        background: "#F6F8FA"
-      }}
+      className="w-full pt-15 pr-0 pb-0 pl-0 flex flex-col items-center justify-start bg-surface-subtle"
     >
       <h2
-        style={{
-          fontSize: "2.5rem",
-          fontWeight: "700",
-          color: "#111",
-          fontFamily: "Open Sans, sans-serif",
-          textAlign: "center",
-          margin: 0,
-          letterSpacing: "1px"
-        }}
+        className="text-page-title font-bold text-ink-strong font-sans text-center m-0 tracking-[1px]"
       >
         Module Builder
       </h2>
       <p
-        style={{
-          marginTop: "18px",
-          fontSize: "1.15rem",
-          color: "#222",
-          textAlign: "center",
-          maxWidth: "600px",
-          fontWeight: 500,
-        }}
+        className="mt-4.5 text-[1.15rem] text-ink text-center max-w-150 font-medium"
       >
         Create and organize modules. Add lesson plans to build a comprehensive learning experience.
       </p>
@@ -438,19 +358,7 @@ function ModuleBuilderPromo() {
         onClick={() => {
           navigate("/module-builder");
         }}
-        style={{
-          marginTop: "32px",
-          background: "#162040",
-          color: "#fff",
-          border: "2px solid #162040",
-          borderRadius: "6px",
-          padding: "14px 48px",
-          fontSize: "1.08rem",
-          fontWeight: "600",
-          cursor: "pointer",
-          transition: "background 0.2s, color 0.2s, border 0.2s",
-          minWidth: "260px",
-        }}
+        className="mt-8 bg-navy text-white border-2 border-navy rounded-md py-3.5 px-12 text-label font-semibold cursor-pointer [transition:background_0.2s,_color_0.2s,_border_0.2s] min-w-65"
       >
         Go to Module Builder
       </button>
@@ -467,23 +375,14 @@ function UpgradePrompt({ open, onClose }) {
   const navigate = useNavigate();
   return (
     <Modal open={open} onClose={onClose} size="small" title="Upgrade Required">
-      <div style={{ textAlign: "center" }}>
-        <p style={{ marginBottom: 24, fontSize: "1.05rem", color: "#222" }}>
+      <div className="text-center">
+        <p className="mb-6 text-body text-ink">
           You need to upgrade to Teacher Plus to access this course.
         </p>
         <button
           type="button"
           onClick={() => navigate("/upgrade")}
-          style={{
-            background: "#162040",
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            padding: "12px 32px",
-            fontWeight: 600,
-            fontSize: "1rem",
-            cursor: "pointer",
-          }}
+          className="bg-navy text-white border-0 rounded-md py-3 px-8 font-semibold text-[1rem] cursor-pointer"
         >
           Go to Upgrade Page
         </button>
@@ -620,8 +519,12 @@ const ExploreModulesSection = () => {
       console.error("Error fetching modules:", error);
     });
 
-    // Fetch lessons
-    getDocs(collection(db, COLLECTIONS.lesson)).then(snapshot => {
+    // Fetch lessons. Constrained to published ones because the rules now
+    // require it (#430): an unfiltered read of this collection returned every
+    // lesson's full contents to anyone, including the ones a paid module
+    // sells. This matches what GET /api/lessons has always returned, so the
+    // browse list shows the same set the API would have given it.
+    getDocs(query(collection(db, COLLECTIONS.lesson), where("isPublic", "==", true))).then(snapshot => {
       setLessons(snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -748,14 +651,7 @@ const ExploreModulesSection = () => {
   if (role === ROLES.TEACHER_PLUS) {
     return (
       <div
-        style={{
-          width: "100%",
-          background: "#F6F8FA",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "40px"
-        }}
+        className="w-full bg-surface-subtle flex flex-col items-center gap-10"
       >
         <NuggetBuilderSection />
         <ModuleBuilderPromo />
@@ -765,82 +661,28 @@ const ExploreModulesSection = () => {
 
   return (
     <div
-      style={{
-        width: "100%",
-        background: "#F6F8FA",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "40px"
-      }}
+      className="w-full bg-surface-subtle flex flex-col items-center gap-10"
     >
       {role === ROLES.ADMIN && (
         <section
-          style={{
-            width: "100%",
-            padding: "80px 0 20px 0",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
+          className="w-full pt-20 pr-0 pb-5 pl-0 flex flex-col items-center"
         >
           <h2
-            style={{
-              fontSize: "2.5rem",
-              fontWeight: "700",
-              color: "#111",
-              textAlign: "center",
-              margin: 0,
-              letterSpacing: "1px",
-              fontFamily: "Open Sans, sans-serif",
-            }}
+            className="text-page-title font-bold text-ink-strong text-center m-0 tracking-[1px] font-sans"
           >
             Create New
           </h2>
           <p
-            style={{
-              marginTop: "18px",
-              fontSize: "1.15rem",
-              color: "#222",
-              textAlign: "center",
-              maxWidth: "600px",
-              fontWeight: 500,
-              marginBottom: "60px",
-              fontFamily: "Open Sans, sans-serif",
-            }}
+            className="mt-4.5 text-[1.15rem] text-ink text-center max-w-150 font-medium mb-15 font-sans"
           >
             Start creating your content now!
           </p>
 
           <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "40px",
-              width: "100%",
-              maxWidth: "1100px",
-              flexWrap: "nowrap",
-              overflowX: "auto",
-              padding: "0 16px",
-              boxSizing: "border-box",
-            }}
+            className="flex justify-center gap-10 w-full max-w-275 flex-nowrap overflow-x-auto py-0 px-4 box-border"
           >
             <div
-              style={{
-                background: "#fff",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                width: "340px",
-                height: "320px",
-                flex: "0 0 340px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                border: "2px solid transparent",
-              }}
+              className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-85 h-80 flex-[0_0_340px] flex flex-col items-center justify-center cursor-pointer [transition:transform_0.2s,_box-shadow_0.2s] border-2 border-transparent"
               onClick={() => navigate("/module-builder")}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-4px)";
@@ -854,16 +696,7 @@ const ExploreModulesSection = () => {
               tabIndex={0}
             >
               <div
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  background: "#000",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "24px",
-                }}
+                className="w-20 h-20 bg-black rounded-full flex items-center justify-center mb-6"
               >
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
                   <rect x="3" y="3" width="18" height="18" rx="2" stroke="white" strokeWidth="2" />
@@ -872,46 +705,19 @@ const ExploreModulesSection = () => {
                 </svg>
               </div>
               <h3
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "700",
-                  color: "#222",
-                  marginBottom: "12px",
-                  textAlign: "center",
-                }}
+                className="text-[1.5rem] font-bold text-ink mb-3 text-center"
               >
                 Create Module
               </h3>
               <p
-                style={{
-                  fontSize: "1rem",
-                  color: "#666",
-                  textAlign: "center",
-                  maxWidth: "280px",
-                  lineHeight: "1.5",
-                  margin: 0,
-                }}
+                className="text-[1rem] text-ink-muted text-center max-w-70 leading-[1.5] m-0"
               >
                 Build a new module to teach.
               </p>
             </div>
 
             <div
-              style={{
-                background: "#fff",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                width: "340px",
-                height: "320px",
-                flex: "0 0 340px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                border: "2px solid transparent",
-              }}
+              className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-85 h-80 flex-[0_0_340px] flex flex-col items-center justify-center cursor-pointer [transition:transform_0.2s,_box-shadow_0.2s] border-2 border-transparent"
               onClick={() => navigate("/lesson-plans/builder")}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-4px)";
@@ -925,16 +731,7 @@ const ExploreModulesSection = () => {
               tabIndex={0}
             >
               <div
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  background: "#162040",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "24px",
-                }}
+                className="w-20 h-20 bg-navy rounded-full flex items-center justify-center mb-6"
               >
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="white" strokeWidth="2" />
@@ -945,46 +742,19 @@ const ExploreModulesSection = () => {
                 </svg>
               </div>
               <h3
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "700",
-                  color: "#222",
-                  marginBottom: "12px",
-                  textAlign: "center",
-                }}
+                className="text-[1.5rem] font-bold text-ink mb-3 text-center"
               >
                 Create Lesson Plan
               </h3>
               <p
-                style={{
-                  fontSize: "1rem",
-                  color: "#666",
-                  textAlign: "center",
-                  maxWidth: "280px",
-                  lineHeight: "1.5",
-                  margin: 0,
-                }}
+                className="text-[1rem] text-ink-muted text-center max-w-70 leading-[1.5] m-0"
               >
                 Design a lesson plan for your classes.
               </p>
             </div>
 
             <div
-              style={{
-                background: "#fff",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                width: "340px",
-                height: "320px",
-                flex: "0 0 340px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                border: "2px solid transparent",
-              }}
+              className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-85 h-80 flex-[0_0_340px] flex flex-col items-center justify-center cursor-pointer [transition:transform_0.2s,_box-shadow_0.2s] border-2 border-transparent"
               onClick={() => navigate("/nugget-builder")}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "translateY(-4px)";
@@ -998,16 +768,7 @@ const ExploreModulesSection = () => {
               tabIndex={0}
             >
               <div
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  background: "#fbbf24",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: "24px",
-                }}
+                className="w-20 h-20 bg-[#fbbf24] rounded-full flex items-center justify-center mb-6"
               >
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="3" stroke="white" strokeWidth="2" />
@@ -1015,25 +776,12 @@ const ExploreModulesSection = () => {
                 </svg>
               </div>
               <h3
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "700",
-                  color: "#222",
-                  marginBottom: "12px",
-                  textAlign: "center",
-                }}
+                className="text-[1.5rem] font-bold text-ink mb-3 text-center"
               >
                 Create Nugget
               </h3>
               <p
-                style={{
-                  fontSize: "1rem",
-                  color: "#666",
-                  textAlign: "center",
-                  maxWidth: "280px",
-                  lineHeight: "1.5",
-                  margin: 0,
-                }}
+                className="text-[1rem] text-ink-muted text-center max-w-70 leading-[1.5] m-0"
               >
                 Share concise learning nuggets.
               </p>
@@ -1045,26 +793,10 @@ const ExploreModulesSection = () => {
           sections above, which used to link at routes that do not exist (#442). */}
       <section
         id="explore-modules"
-        style={{
-          width: "100%",
-          padding: "60px 0 60px 0",
-          minHeight: "700px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "flex-start"
-        }}
+        className="w-full pt-15 pr-0 pb-15 pl-0 min-h-175 flex flex-col items-center justify-start"
       >
         <h2
-          style={{
-            fontSize: "2.5rem",
-            fontWeight: "700",
-            color: "#111",
-            fontFamily: "Open Sans, sans-serif",
-            textAlign: "center",
-            margin: 0,
-            letterSpacing: "1px"
-          }}
+          className="text-page-title font-bold text-ink-strong font-sans text-center m-0 tracking-[1px]"
         >
           Featured Modules
         </h2>
@@ -1098,76 +830,28 @@ const ExploreModulesSection = () => {
               }}
             >
               {/* Image section */}
-              <div style={{
-                width: "100%",
-                height: "240px",
-                display: "flex",
-                alignItems: "stretch",
-                justifyContent: "center"
-              }}>
+              <div className="w-full h-60 flex items-stretch justify-center">
                 <img
                   src={resolveFeaturedTileImage(module)}
                   alt={module.title}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block"
-                  }}
+                  className="w-full h-full object-cover block"
                 />
               </div>
 
               {/* Content section */}
-              <div style={{
-                width: "100%",
-                height: "180px",
-                padding: "20px",
-                background: "#fff",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between"
-              }}>
+              <div className="w-full h-45 p-5 bg-surface flex flex-col justify-between">
                 {/* Title - Left aligned */}
-                <h3 style={{
-                  margin: 0,
-                  fontWeight: "700",
-                  fontSize: "1.4rem",
-                  color: "#222",
-                  textAlign: "left",
-                  marginBottom: "8px"
-                }}>
+                <h3 className="m-0 font-bold text-[1.4rem] text-ink text-left mb-2">
                   {module.title}
                 </h3>
 
                 {/* Description - Left aligned, 3 lines with ellipsis */}
-                <p style={{
-                  margin: 0,
-                  fontSize: "0.95rem",
-                  color: "#666",
-                  textAlign: "left",
-                  lineHeight: "1.4",
-                  height: "4.2rem", // 3 lines at 1.4 line-height
-                  overflow: "hidden",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: "vertical",
-                  marginBottom: "auto"
-                }}>
+                <p className="m-0 text-meta text-ink-muted text-left leading-[1.4] h-[4.2rem] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:3] [-webkit-box-orient:vertical] mb-auto">
                   {module.description}
                 </p>
 
                 {/* Difficulty level - Left aligned at bottom */}
-                <div style={{
-                  display: "inline-block",
-                  background: "#162040",
-                  color: "#fff",
-                  padding: "6px 12px",
-                  borderRadius: "4px",
-                  fontSize: "0.85rem",
-                  fontWeight: "600",
-                  textAlign: "center",
-                  alignSelf: "flex-start"
-                }}>
+                <div className="inline-block bg-navy text-white py-1.5 px-3 rounded-sm text-[0.85rem] font-semibold text-center self-start">
                   {module.level}
                 </div>
               </div>
@@ -1194,19 +878,7 @@ const ExploreModulesSection = () => {
               document.querySelector('[data-section="filter-search"]')?.scrollIntoView({ behavior: 'smooth' });
             }
           }}
-          style={{
-            marginTop: "40px",
-            background: "#162040",
-            color: "#fff",
-            border: "2px solid #162040",
-            borderRadius: "6px",
-            padding: "12px 32px",
-            fontSize: "1.1rem",
-            fontWeight: "600",
-            cursor: "pointer",
-            transition: "all 0.2s",
-            boxShadow: "0 2px 8px rgba(22, 32, 64, 0.2)"
-          }}
+          className="mt-10 bg-navy text-white border-2 border-navy rounded-md py-3 px-8 text-[1.1rem] font-semibold cursor-pointer [transition:all_0.2s] shadow-[0_2px_8px_rgba(22,_32,_64,_0.2)]"
           onMouseOver={(e) => {
             e.target.style.background = "#fff";
             e.target.style.color = "#162040";
@@ -1223,36 +895,19 @@ const ExploreModulesSection = () => {
         {isAdmin && adminAllModulesOpen && (
           <div
             data-section="admin-all-modules"
-            style={{
-              width: "100%",
-              maxWidth: 1200,
-              marginTop: 36,
-              background: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: 12,
-              padding: "28px 24px",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-            }}
+            className="w-full max-w-300 mt-9 bg-surface border border-rule rounded-xl py-7 px-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)]"
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, flexWrap: "wrap" }}>
+            <div className="flex justify-between items-baseline gap-4 flex-wrap">
               <div>
-                <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "#111" }}>All Modules</div>
-                <div style={{ color: "#666", marginTop: 6 }}>
+                <div className="text-[1.8rem] font-extrabold text-ink-strong">All Modules</div>
+                <div className="text-ink-muted mt-1.5">
                   Showing published modules created by everyone.
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setAdminAllModulesOpen(false)}
-                style={{
-                  background: "#f8fafc",
-                  color: "#111",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: 8,
-                  padding: "10px 14px",
-                  cursor: "pointer",
-                  fontWeight: 700,
-                }}
+                className="bg-[#f8fafc] text-ink-strong border border-rule rounded-lg py-2.5 px-3.5 cursor-pointer font-bold"
               >
                 Close
               </button>
@@ -1274,54 +929,30 @@ const ExploreModulesSection = () => {
               return (
                 <>
                   <div
-                    className="admin-grid"
-                    style={{
-                      marginTop: 18,
-                      display: "grid",
-                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                      gap: 18,
-                    }}
+                    className="admin-grid mt-4.5 grid [grid-template-columns:repeat(3,_minmax(0,_1fr))] gap-4.5"
                   >
                     {pageItems.map((m) => (
                       <div
                         key={m.id}
                         onClick={() => navigate(`/module/${m.id}`, { state: { returnTo: currentPath } })}
-                        style={{
-                          border: "2px solid #9ca3af",
-                          borderRadius: 12,
-                          padding: 16,
-                          cursor: "pointer",
-                          background: "#f8fafc",
-                          display: "flex",
-                          flexDirection: "column",
-                          minHeight: 170,
-                        }}
+                        className="border-2 border-[#9ca3af] rounded-xl p-4 cursor-pointer bg-[#f8fafc] flex flex-col min-h-42.5"
                       >
-                        <div style={{ fontWeight: 800, color: "#111", fontSize: "1.1rem", marginBottom: 8 }}>
+                        <div className="font-extrabold text-ink-strong text-[1.1rem] mb-2">
                           {m.title || "Untitled Module"}
                         </div>
                         <div
-                          style={{
-                            color: "#555",
-                            fontSize: "0.95rem",
-                            lineHeight: 1.45,
-                            overflow: "hidden",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: "vertical",
-                            marginBottom: 12,
-                          }}
+                          className="text-[#555] text-meta leading-[1.45] overflow-hidden [display:-webkit-box] [-webkit-line-clamp:3] [-webkit-box-orient:vertical] mb-3"
                         >
                           {stripHtmlToText(m.description) || "—"}
                         </div>
-                        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: "auto" }}>
+                        <div className="flex gap-2.5 flex-wrap mt-auto">
                           {m.category && (
-                            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a", background: "#cbd5e1", border: "2px solid #000", borderRadius: 999, padding: "6px 10px" }}>
+                            <span className="text-[0.85rem] font-bold text-[#0f172a] bg-rule-strong border-2 border-black rounded-full py-1.5 px-2.5">
                               {Array.isArray(m.category) ? m.category.join(", ") : m.category}
                             </span>
                           )}
                           {m.level && (
-                            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#0f172a", background: "#cbd5e1", border: "2px solid #000", borderRadius: 999, padding: "6px 10px" }}>
+                            <span className="text-[0.85rem] font-bold text-[#0f172a] bg-rule-strong border-2 border-black rounded-full py-1.5 px-2.5">
                               {m.level}
                             </span>
                           )}
@@ -1330,11 +961,11 @@ const ExploreModulesSection = () => {
                     ))}
                   </div>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18, gap: 12, flexWrap: "wrap" }}>
-                    <div style={{ color: "#666", fontWeight: 600 }}>
+                  <div className="flex justify-between items-center mt-4.5 gap-3 flex-wrap">
+                    <div className="text-ink-muted font-semibold">
                       Page {page} of {totalPagesAdmin} • {allPublishedModules.length} modules
                     </div>
-                    <div style={{ display: "flex", gap: 10 }}>
+                    <div className="flex gap-2.5">
                       <button
                         type="button"
                         disabled={!canPrev}
@@ -1402,57 +1033,32 @@ const ExploreModulesSection = () => {
         {/* --- Filter and Search Section for teacherDefault --- */}
         {isTeacherDefault && (
           <>
-            <div style={{ height: "100px" }} />
+            <div className="h-25" />
             <h2
               data-section="filter-search"
-              style={{
-                fontSize: "2.5rem",
-                fontWeight: "700",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif",
-                textAlign: "center",
-                margin: 0,
-                letterSpacing: "1px"
-              }}
+              className="text-page-title font-bold text-ink-strong font-sans text-center m-0 tracking-[1px]"
             >
               Filter and Search
             </h2>
             {/* Keyword Filter */}
-            <div style={{ marginBottom: "18px", width: "100%", maxWidth: 400 }}>
+            <div className="mb-4.5 w-full max-w-100">
               <input
                 type="text"
                 value={keyword || ""}
                 onChange={e => setKeyword(e.target.value)}
                 placeholder="Type a keyword to search..."
-                style={{
-                  width: "100%",
-                  padding: "8px 16px",
-                  borderRadius: 6,
-                  border: "1px solid #bbb",
-                  fontSize: "1rem",
-                  marginTop: 8
-                }}
+                className="w-full py-2 px-4 rounded-md border border-[#bbb] text-[1rem] mt-2"
               />
             </div>
-            <div style={{
-              display: "flex",
-              gap: "32px",
-              flexWrap: "wrap",
-              marginBottom: "18px"
-            }}>
+            <div className="flex gap-8 flex-wrap mb-4.5">
               {/* Content Type Filter - Only for TeacherPlus and Admin */}
               {canFilterByContentType && (
                 <div>
-                  <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Content Type</label>
+                  <label className="font-semibold text-navy mr-2">Content Type</label>
                   <select
                     value={contentType}
                     onChange={e => setContentType(e.target.value)}
-                    style={{
-                      padding: "8px 16px",
-                      borderRadius: 6,
-                      border: "1px solid #bbb",
-                      fontSize: "1rem"
-                    }}
+                    className="py-2 px-4 rounded-md border border-[#bbb] text-[1rem]"
                   >
                     {["All", ...MODULE_CONTENT_TYPES].map(opt => (
                       <option key={opt} value={opt}>{opt}</option>
@@ -1462,16 +1068,11 @@ const ExploreModulesSection = () => {
               )}
               {/* Category Filter */}
               <div>
-                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Category</label>
+                <label className="font-semibold text-navy mr-2">Category</label>
                 <select
                   value={category}
                   onChange={e => setCategory(e.target.value)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 6,
-                    border: "1px solid #bbb",
-                    fontSize: "1rem"
-                  }}
+                  className="py-2 px-4 rounded-md border border-[#bbb] text-[1rem]"
                 >
                   {MODULE_CATEGORIES.map(opt => (
                     <option key={opt} value={opt}>{opt}</option>
@@ -1480,16 +1081,11 @@ const ExploreModulesSection = () => {
               </div>
               {/* Level Filter */}
               <div>
-                <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Level</label>
+                <label className="font-semibold text-navy mr-2">Level</label>
                 <select
                   value={level}
                   onChange={e => setLevel(e.target.value)}
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 6,
-                    border: "1px solid #bbb",
-                    fontSize: "1rem"
-                  }}
+                  className="py-2 px-4 rounded-md border border-[#bbb] text-[1rem]"
                 >
                   {MODULE_LEVELS.map(opt => (
                     <option key={opt} value={opt}>{opt}</option>
@@ -1498,90 +1094,34 @@ const ExploreModulesSection = () => {
               </div>
             </div>
             {/* Filter Actions */}
-            <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+            <div className="flex gap-4 mb-6">
               <button
                 type="button"
                 onClick={handleResetFilters}
-                style={{
-                  padding: "8px 28px",
-                  borderRadius: 6,
-                  border: "1px solid #bbb",
-                  background: "#fff",
-                  color: "#222",
-                  fontWeight: "600",
-                  fontSize: "1rem",
-                  cursor: "pointer"
-                }}
+                className="py-2 px-7 rounded-md border border-[#bbb] bg-surface text-ink font-semibold text-[1rem] cursor-pointer"
               >
                 Reset Filters
               </button>
               <button
                 type="button"
                 onClick={handleApplyFilters}
-                style={{
-                  padding: "8px 28px",
-                  borderRadius: 6,
-                  border: "none",
-                  background: "#162040",
-                  color: "#fff",
-                  fontWeight: "600",
-                  fontSize: "1rem",
-                  cursor: "pointer"
-                }}
+                className="py-2 px-7 rounded-md border-0 bg-navy text-white font-semibold text-[1rem] cursor-pointer"
               >
                 Apply Filters
               </button>
             </div>
             <div
-              style={{
-                width: "100%",
-                minHeight: "60px",
-                background: "#f6f8fa",
-                borderRadius: "8px",
-                border: "1px dashed #bbb",
-                display: "grid", // Changed from flex to grid
-                gridTemplateColumns: "repeat(3, 380px)", // Exactly 3 columns of 380px each
-                gridTemplateRows: "repeat(2, 380px)", // Exactly 2 rows of 380px each
-                gap: "40px",
-                padding: "40px",
-                justifyContent: "center",
-                alignItems: "start",
-                color: "#888",
-                fontSize: "1.05rem",
-                fontStyle: "italic",
-                marginBottom: "16px",
-                boxSizing: "border-box",
-                maxWidth: "1300px", // Limit container width
-                margin: "0 auto" // Center the container
-              }}
+              className="w-full min-h-15 bg-surface-subtle rounded-lg [border:1px_dashed_#bbb] grid [grid-template-columns:repeat(3,_380px)] [grid-template-rows:repeat(2,_380px)] gap-10 p-10 justify-center items-start text-ink-faint text-body italic mb-4 box-border max-w-325 my-0 mx-auto"
             >
               {paginatedItems.length === 0 ? (
-                <div style={{
-                  gridColumn: "1 / -1", // Span all columns
-                  width: "100%",
-                  textAlign: "center"
-                }}>
+                <div className="[grid-column:1_/_-1] w-full text-center">
                   No modules found.
                 </div>
               ) : (
                 paginatedItems.map((item) => (
                   <div
                     key={item.id}
-                    style={{
-                      background: "#fff",
-                      borderRadius: "12px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                      width: "380px",
-                      height: "380px",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
-                      overflow: "hidden",
-                      cursor: "pointer",
-                      position: "relative",
-                      transition: "box-shadow 0.2s"
-                    }}
+                    className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-95 h-95 flex flex-col items-center justify-end overflow-hidden cursor-pointer relative [transition:box-shadow_0.2s]"
                     onClick={() => {
                       // Handle navigation based on item type and lock status
                       const isLocked = (item.role || item.Role) === ROLES.TEACHER_PLUS;
@@ -1602,73 +1142,27 @@ const ExploreModulesSection = () => {
                     {/* Rest of your card content remains the same */}
                     <LockIcon isLocked={(item.role || item.Role) === ROLES.TEACHER_PLUS} />
 
-                    <div style={{
-                      width: "100%",
-                      height: "calc(100% - 70px)",
-                      display: "flex",
-                      alignItems: "stretch",
-                      justifyContent: "center",
-                      background: "#f0f0f0"
-                    }}>
+                    <div className="w-full h-[calc(100%_-_70px)] flex items-stretch justify-center bg-[#f0f0f0]">
                       <img
                         src={laptopImg} // <-- Always use laptop image
                         alt="Laptop"
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          display: "block"
-                        }}
+                        className="w-full h-full object-cover block"
                       />
                     </div>
 
-                    <div style={{
-                      width: "100%",
-                      height: "100px", // <-- increase from 70px to 90px
-                      padding: "12px 0 0 0",
-                      textAlign: "center",
-                      background: "#fff"
-                    }}>
+                    <div className="w-full h-25 pt-3 pr-0 pb-0 pl-0 text-center bg-surface">
                       <span
-                        style={{
-                          display: "block",
-                          fontWeight: "700",
-                          fontSize: "1.15rem",
-                          color: "#222",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden"
-                        }}
+                        className="block font-bold text-[1.15rem] text-ink text-ellipsis whitespace-nowrap overflow-hidden"
                       >
                         {item.title || item.Title}
                       </span>
                       <span
-                        style={{
-                          display: "block",
-                          fontWeight: "600",
-                          fontSize: "1rem",
-                          color: "#162040",
-                          letterSpacing: "1px",
-                          marginTop: "2px",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden"
-                        }}
+                        className="block font-semibold text-[1rem] text-navy tracking-[1px] mt-0.5 text-ellipsis whitespace-nowrap overflow-hidden"
                       >
                         {capitalizeWords(item.level || item.Level || "N/A")}
                       </span>
                       <span
-                        style={{
-                          display: "block",
-                          fontWeight: "600",
-                          fontSize: "1rem",
-                          color: "#162040",
-                          letterSpacing: "1px",
-                          marginTop: "2px",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden"
-                        }}
+                        className="block font-semibold text-[1rem] text-navy tracking-[1px] mt-0.5 text-ellipsis whitespace-nowrap overflow-hidden"
                       >
                         {typeLabel[item._type] || item._type}
                       </span>
@@ -1680,7 +1174,7 @@ const ExploreModulesSection = () => {
 
             {/* Pagination controls */}
             {totalPages > 1 && (
-              <div style={{ display: "flex", justifyContent: "center", gap: "24px", marginBottom: "32px" }}>
+              <div className="flex justify-center gap-6 mb-8">
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
@@ -1697,7 +1191,7 @@ const ExploreModulesSection = () => {
                 >
                   Back
                 </button>
-                <span style={{ alignSelf: "center", fontWeight: "600", color: "#162040" }}>
+                <span className="self-center font-semibold text-navy">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button

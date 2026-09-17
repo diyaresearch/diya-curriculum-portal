@@ -89,35 +89,13 @@ const OverlayTileView = ({
 
   return (
     <div
-      className="fixed inset-0 flex justify-center items-center"
-      style={{
-        background: "rgba(246, 248, 250, 0.98)",
-        zIndex: 1000,
-        fontFamily: "Open Sans, sans-serif",
-      }}
+      className="fixed inset-0 flex justify-center items-center [background:rgba(246,_248,_250,_0.98)] z-[1000] font-sans"
     >
       <div
-        className="bg-white rounded-lg relative overflow-hidden overflow-y-auto"
-        style={{
-          width: "43%",
-          height: "94%",
-          border: "2px solid #e5e7eb",
-          boxShadow: "0 4px 24px rgba(22,32,64,0.10)",
-          color: "#111",
-          fontFamily: "Open Sans, sans-serif",
-        }}
+        className="bg-white rounded-lg relative overflow-hidden overflow-y-auto w-[43%] h-[94%] border-2 border-rule shadow-[0_4px_24px_rgba(22,32,64,0.10)] text-ink-strong font-sans"
       >
         <div
-          className="scale-container"
-          style={{
-            transform: "scale(0.97)",
-            transformOrigin: "top center",
-            padding: "32px 24px 24px 24px",
-            background: "#fff",
-            borderRadius: "12px",
-            color: "#111",
-            fontFamily: "Open Sans, sans-serif",
-          }}
+          className="scale-container [transform:scale(0.97)] origin-[top_center] pt-8 pr-6 pb-6 pl-6 bg-surface rounded-xl text-ink-strong font-sans"
         >
           <button
             onClick={onClose}
@@ -239,10 +217,10 @@ const OverlayTileView = ({
                         transition: "background 0.2s, border 0.2s",
                       }}
                     >
-                      <div style={{ fontWeight: 700, fontSize: "1.08rem", color: "#111" }}>
+                      <div className="font-bold text-label text-ink-strong">
                         {item.title || item.Title || "Untitled Lesson"}
                       </div>
-                      <div style={{ fontSize: "0.98rem", color: "#444" }}>
+                      <div className="text-[0.98rem] text-[#444]">
                         {item.description
                           ? (() => {
                               const plain = item.description.replace(/<[^>]+>/g, "");
@@ -253,14 +231,14 @@ const OverlayTileView = ({
                             ? item.summary.slice(0, 15) + (item.summary.length > 15 ? "..." : "")
                             : ""}
                       </div>
-                      <div style={{ fontSize: "0.92rem", color: "#888" }}>
+                      <div className="text-helper text-ink-faint">
                         {(Array.isArray(item.category) ? item.category.join(", ") : item.category) || ""}
                         {" \u00b7 "}
                         {(Array.isArray(item.type) ? item.type.join(", ") : item.type) || ""}
                         {" \u00b7 "}
                         {(Array.isArray(item.level) ? item.level.join(", ") : item.level) || ""}
                       </div>
-                      <div style={{ fontSize: "0.92rem", color: "#888" }}>
+                      <div className="text-helper text-ink-faint">
                         Created: {
                           item.createdAt
                             ? (
@@ -273,7 +251,7 @@ const OverlayTileView = ({
                             : ""
                         }
                       </div>
-                      <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                      <div className="flex gap-2 mt-2">
                         <button
                           onClick={() => {
                             if (isSelected) {
@@ -302,18 +280,7 @@ const OverlayTileView = ({
                           to={`/lesson-details/${item.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{
-                            background: "#fff",
-                            color: "#1a73e8",
-                            border: "1px solid #1a73e8",
-                            borderRadius: "6px",
-                            padding: "6px 14px",
-                            fontWeight: 600,
-                            fontFamily: "Open Sans, sans-serif",
-                            fontSize: "1.02rem",
-                            textDecoration: "none",
-                            display: "inline-block",
-                          }}
+                          className="bg-surface text-link border border-link rounded-md py-1.5 px-3.5 font-semibold font-sans text-[1.02rem] no-underline inline-block"
                         >
                           View
                         </Link>
@@ -343,12 +310,7 @@ const OverlayTileView = ({
               Prev
             </button>
             <span
-              className="p-2"
-              style={{
-                fontFamily: "Open Sans, sans-serif",
-                fontSize: "1.08rem",
-                color: "#111",
-              }}
+              className="p-2 font-sans text-label text-ink-strong"
             >
               Page {currentPage}
             </span>
@@ -374,19 +336,7 @@ const OverlayTileView = ({
             </button>
             <button
               onClick={onClose}
-              className="text-lg"
-              style={{
-                background: "#111C44",
-                color: "#fff",
-                border: "none",
-                borderRadius: "6px",
-                padding: "8px 18px",
-                fontWeight: 600,
-                fontFamily: "Open Sans, sans-serif",
-                fontSize: "1.08rem",
-                cursor: "pointer",
-                marginLeft: "12px",
-              }}
+              className="text-lg bg-navy-deep text-white border-0 rounded-md py-2 px-4.5 font-semibold font-sans text-label cursor-pointer ml-3"
             >
               Save
             </button>

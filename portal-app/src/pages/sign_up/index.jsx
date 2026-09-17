@@ -144,82 +144,35 @@ export function TeacherSignup() {
         />
         {showNoAccountPopup && (
           <div
-            style={{
-              position: "fixed",
-              top: 0, left: 0, right: 0, bottom: 0,
-              background: "rgba(0,0,0,0.45)",
-              zIndex: 9999,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
+            className="fixed top-0 left-0 right-0 bottom-0 [background:rgba(0,0,0,0.45)] z-[9999] flex items-center justify-center"
           >
             <div
-              style={{
-                background: "#fff",
-                borderRadius: 16,
-                padding: "40px 32px",
-                minWidth: 340,
-                maxWidth: 400,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-                textAlign: "center",
-                position: "relative"
-              }}
+              className="bg-surface rounded-2xl py-10 px-8 min-w-85 max-w-100 shadow-[0_8px_32px_rgba(0,0,0,0.18)] text-center relative"
             >
               <button
                 onClick={closeNoAccountPopup}
-                style={{
-                  position: "absolute",
-                  top: 12,
-                  right: 18,
-                  background: "none",
-                  border: "none",
-                  fontSize: "1.7rem",
-                  color: "#888",
-                  cursor: "pointer"
-                }}
+                className="absolute top-3 right-4.5 bg-none border-0 text-[1.7rem] text-ink-faint cursor-pointer"
                 aria-label="Close"
               >
                 ×
               </button>
-              <h2 style={{ color: "#c00", marginBottom: 18, fontWeight: 700, fontSize: "1.4rem" }}>
+              <h2 className="text-[#c00] mb-4.5 font-bold text-[1.4rem]">
                 Login Error
               </h2>
-              <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: 18 }}>
+              <div className="text-ink text-label mb-4.5">
                 No account exists for this Google account.
               </div>
-              <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-                <Link to="/student-signup" style={{ textDecoration: "none" }}>
+              <div className="mt-6 flex flex-col gap-3">
+                <Link to="/student-signup" className="no-underline">
                   <button
-                    style={{
-                      width: "100%",
-                      background: "#2563eb",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 6,
-                      padding: "12px 0",
-                      fontWeight: 600,
-                      fontSize: "1rem",
-                      cursor: "pointer",
-                      marginBottom: 8
-                    }}
+                    className="w-full bg-[#2563eb] text-white border-0 rounded-md py-3 px-0 font-semibold text-[1rem] cursor-pointer mb-2"
                   >
                     Sign Up as Student
                   </button>
                 </Link>
-                <Link to="/teacher-signup" style={{ textDecoration: "none" }}>
+                <Link to="/teacher-signup" className="no-underline">
                   <button
-                    style={{
-                      width: "100%",
-                      background: "#162040",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 6,
-                      padding: "12px 0",
-                      fontWeight: 600,
-                      fontSize: "1rem",
-                      cursor: "pointer"
-                    }}
+                    className="w-full bg-navy text-white border-0 rounded-md py-3 px-0 font-semibold text-[1rem] cursor-pointer"
                   >
                     Sign Up as Teacher
                   </button>
@@ -242,19 +195,7 @@ export function TeacherSignup() {
         <button
           type="button"
           onClick={() => handleGoogleLogin({ setError, returnTo })}
-          style={{
-            marginTop: 16,
-            background: "#FFC940",
-            color: "#222",
-            border: "1px solid #fff",
-            borderRadius: "6px",
-            padding: "10px 32px",
-            fontWeight: 600,
-            fontSize: "1rem",
-            cursor: "pointer",
-            boxSizing: "border-box",
-            display: "inline-block"
-          }}
+          className="mt-4 bg-accent-strong text-ink border border-white rounded-md py-2.5 px-8 font-semibold text-[1rem] cursor-pointer box-border inline-block"
         >
           Already have an account? Log in.
         </button>
@@ -279,18 +220,7 @@ export function TeacherSignup() {
               <button
                 type="button"
                 onClick={handleGoogleSignup}
-                style={{
-                  width: "100%",
-                  background: "#FFC940",
-                  color: "#222",
-                  border: "1px solid #bbb",
-                  borderRadius: "6px",
-                  padding: "10px 0",
-                  fontWeight: 600,
-                  fontSize: "1rem",
-                  cursor: "pointer",
-                  marginBottom: 8
-                }}
+                className="w-full bg-accent-strong text-ink border border-[#bbb] rounded-md py-2.5 px-0 font-semibold text-[1rem] cursor-pointer mb-2"
               >
                 Sign up with Google
               </button>
@@ -299,7 +229,7 @@ export function TeacherSignup() {
                 type="email"
                 value={email}
                 disabled
-                style={{ background: "#e3e8f0" }}
+                className="bg-[#e3e8f0]"
               />
             )}
 
@@ -336,7 +266,7 @@ export function TeacherSignup() {
               <label>I confirm that I am a teacher</label>
             </div>
 
-            {error && <div style={{ color: "red", marginBottom: 8 }}>{error}</div>}
+            {error && <div className="[color:red] mb-2">{error}</div>}
 
             <button type="submit" className="register-btn" disabled={loading || !googleUser}>
               {loading ? "Registering..." : "Register"}
@@ -346,48 +276,22 @@ export function TeacherSignup() {
       </div>
       {error === "No account exists for this Google account. Please sign up first." && (
         <div
-          style={{
-            position: "fixed",
-            top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.45)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}
+          className="fixed top-0 left-0 right-0 bottom-0 [background:rgba(0,0,0,0.45)] z-[9999] flex items-center justify-center"
         >
           <div
-            style={{
-              background: "#fff",
-              borderRadius: 16,
-              padding: "40px 32px",
-              minWidth: 340,
-              maxWidth: 400,
-              boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-              textAlign: "center",
-              position: "relative"
-            }}
+            className="bg-surface rounded-2xl py-10 px-8 min-w-85 max-w-100 shadow-[0_8px_32px_rgba(0,0,0,0.18)] text-center relative"
           >
             <button
               onClick={() => setError("")}
-              style={{
-                position: "absolute",
-                top: 12,
-                right: 18,
-                background: "none",
-                border: "none",
-                fontSize: "1.7rem",
-                color: "#888",
-                cursor: "pointer"
-              }}
+              className="absolute top-3 right-4.5 bg-none border-0 text-[1.7rem] text-ink-faint cursor-pointer"
               aria-label="Close"
             >
               ×
             </button>
-            <h2 style={{ color: "#c00", marginBottom: 18, fontWeight: 700, fontSize: "1.4rem" }}>
+            <h2 className="text-[#c00] mb-4.5 font-bold text-[1.4rem]">
               Login Error
             </h2>
-            <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: 18 }}>
+            <div className="text-ink text-label mb-4.5">
               No account exists for this Google account. Please sign up first.
             </div>
           </div>
@@ -501,82 +405,35 @@ export function StudentSignup() {
         />
         {showNoAccountPopup && (
           <div
-            style={{
-              position: "fixed",
-              top: 0, left: 0, right: 0, bottom: 0,
-              background: "rgba(0,0,0,0.45)",
-              zIndex: 9999,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
+            className="fixed top-0 left-0 right-0 bottom-0 [background:rgba(0,0,0,0.45)] z-[9999] flex items-center justify-center"
           >
             <div
-              style={{
-                background: "#fff",
-                borderRadius: 16,
-                padding: "40px 32px",
-                minWidth: 340,
-                maxWidth: 400,
-                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-                textAlign: "center",
-                position: "relative"
-              }}
+              className="bg-surface rounded-2xl py-10 px-8 min-w-85 max-w-100 shadow-[0_8px_32px_rgba(0,0,0,0.18)] text-center relative"
             >
               <button
                 onClick={closeNoAccountPopup}
-                style={{
-                  position: "absolute",
-                  top: 12,
-                  right: 18,
-                  background: "none",
-                  border: "none",
-                  fontSize: "1.7rem",
-                  color: "#888",
-                  cursor: "pointer"
-                }}
+                className="absolute top-3 right-4.5 bg-none border-0 text-[1.7rem] text-ink-faint cursor-pointer"
                 aria-label="Close"
               >
                 ×
               </button>
-              <h2 style={{ color: "#c00", marginBottom: 18, fontWeight: 700, fontSize: "1.4rem" }}>
+              <h2 className="text-[#c00] mb-4.5 font-bold text-[1.4rem]">
                 Login Error
               </h2>
-              <div style={{ color: "#222", fontSize: "1.08rem", marginBottom: 18 }}>
+              <div className="text-ink text-label mb-4.5">
                 No account exists for this Google account.
               </div>
-              <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-                <Link to="/student-signup" style={{ textDecoration: "none" }}>
+              <div className="mt-6 flex flex-col gap-3">
+                <Link to="/student-signup" className="no-underline">
                   <button
-                    style={{
-                      width: "100%",
-                      background: "#2563eb",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 6,
-                      padding: "12px 0",
-                      fontWeight: 600,
-                      fontSize: "1rem",
-                      cursor: "pointer",
-                      marginBottom: 8
-                    }}
+                    className="w-full bg-[#2563eb] text-white border-0 rounded-md py-3 px-0 font-semibold text-[1rem] cursor-pointer mb-2"
                   >
                     Sign Up as Student
                   </button>
                 </Link>
-                <Link to="/teacher-signup" style={{ textDecoration: "none" }}>
+                <Link to="/teacher-signup" className="no-underline">
                   <button
-                    style={{
-                      width: "100%",
-                      background: "#162040",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 6,
-                      padding: "12px 0",
-                      fontWeight: 600,
-                      fontSize: "1rem",
-                      cursor: "pointer"
-                    }}
+                    className="w-full bg-navy text-white border-0 rounded-md py-3 px-0 font-semibold text-[1rem] cursor-pointer"
                   >
                     Sign Up as Teacher
                   </button>
@@ -600,19 +457,7 @@ export function StudentSignup() {
         <button
           type="button"
           onClick={() => handleGoogleLogin({ setError, returnTo })}
-          style={{
-            marginTop: 16,
-            background: "#FFC940",
-            color: "#222",
-            border: "1px solid #fff",
-            borderRadius: "6px",
-            padding: "10px 32px",
-            fontWeight: 600,
-            fontSize: "1rem",
-            cursor: "pointer",
-            boxSizing: "border-box",
-            display: "inline-block"
-          }}
+          className="mt-4 bg-accent-strong text-ink border border-white rounded-md py-2.5 px-8 font-semibold text-[1rem] cursor-pointer box-border inline-block"
         >
           Already have an account? Log in.
         </button>
@@ -638,18 +483,7 @@ export function StudentSignup() {
               <button
                 type="button"
                 onClick={handleGoogleSignup}
-                style={{
-                  width: "100%",
-                  background: "#FFC940",
-                  color: "#222",
-                  border: "1px solid #bbb",
-                  borderRadius: "6px",
-                  padding: "10px 0",
-                  fontWeight: 600,
-                  fontSize: "1rem",
-                  cursor: "pointer",
-                  marginBottom: 8
-                }}
+                className="w-full bg-accent-strong text-ink border border-[#bbb] rounded-md py-2.5 px-0 font-semibold text-[1rem] cursor-pointer mb-2"
               >
                 Sign up with Google
               </button>
@@ -658,7 +492,7 @@ export function StudentSignup() {
                 type="email"
                 value={email}
                 disabled
-                style={{ background: "#e3e8f0" }}
+                className="bg-[#e3e8f0]"
               />
             )}
 
@@ -679,7 +513,7 @@ export function StudentSignup() {
               <label>I confirm that I am a student</label>
             </div>
 
-            {error && <div style={{ color: "red", marginBottom: 8 }}>{error}</div>}
+            {error && <div className="[color:red] mb-2">{error}</div>}
 
             <button type="submit" className="register-btn" disabled={loading || !googleUser}>
               {loading ? "Registering..." : "Register"}

@@ -87,54 +87,24 @@ const DraftsPage = ({
         fontFamily: "Open Sans, sans-serif"
       }}
     >
-      <div style={{ width: "100%", maxWidth: 700, marginBottom: 32, textAlign: "center" }}>
+      <div className="w-full max-w-175 mb-8 text-center">
         <h2
-          style={{
-            fontSize: "2.8rem",
-            fontWeight: "700",
-            color: "#111",
-            margin: 0,
-            letterSpacing: "1px",
-            fontFamily: "Open Sans, sans-serif"
-          }}
+          className="text-[2.8rem] font-bold text-ink-strong m-0 tracking-[1px] font-sans"
         >
           {heading}
         </h2>
         <p
-          style={{
-            marginTop: 16,
-            fontSize: "1.18rem",
-            color: "#111",
-            fontWeight: 500,
-            fontFamily: "Open Sans, sans-serif"
-          }}
+          className="mt-4 text-page-subtitle text-ink-strong font-medium font-sans"
         >
           {subheading}
         </p>
       </div>
       <div
-        style={{
-          width: "100%",
-          maxWidth: 900,
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)", // 3 cards per row
-          gap: "20px",
-          marginBottom: 32,
-        }}
+        className="w-full max-w-225 grid [grid-template-columns:repeat(3,_1fr)] gap-5 mb-8"
       >
         {drafts.length === 0 ? (
           <div
-            style={{
-              background: "#fff",
-              border: "2px solid #e5e7eb",
-              borderRadius: "12px",
-              boxShadow: "0 4px 24px rgba(22,32,64,0.10)",
-              padding: "40px",
-              textAlign: "center",
-              color: "#888",
-              fontSize: "1.15rem",
-              fontFamily: "Open Sans, sans-serif"
-            }}
+            className="bg-surface border-2 border-rule rounded-xl shadow-[0_4px_24px_rgba(22,32,64,0.10)] p-10 text-center text-ink-faint text-[1.15rem] font-sans"
           >
             No drafts found.
           </div>
@@ -142,22 +112,7 @@ const DraftsPage = ({
           drafts.map((draft) => (
             <div
               key={draft.id}
-              style={{
-                background: "#fff",
-                border: "2px solid #e5e7eb",
-                borderRadius: "10px",
-                boxShadow: "0 2px 8px rgba(22,32,64,0.08)",
-                padding: "16px 10px 14px 14px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-                fontFamily: "Open Sans, sans-serif",
-                minHeight: 140, // increased from 90 to 140
-                position: "relative",
-                cursor: "pointer",
-                transition: "box-shadow 0.2s, background 0.2s",
-                maxWidth: 260,
-              }}
+              className="bg-surface border-2 border-rule rounded-[10px] shadow-[0_2px_8px_rgba(22,32,64,0.08)] pt-4 pr-2.5 pb-3.5 pl-3.5 flex flex-col gap-2 font-sans min-h-35 relative cursor-pointer [transition:box-shadow_0.2s,_background_0.2s] max-w-65"
               onClick={() => handleEditDraft(draft)}
               onMouseOver={e => e.currentTarget.style.boxShadow = "0 8px 24px rgba(22,32,64,0.13)"}
               onMouseOut={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(22,32,64,0.08)"}
@@ -168,53 +123,28 @@ const DraftsPage = ({
                   e.stopPropagation();
                   handleDeleteDraft(draft.id);
                 }}
-                style={{
-                  position: "absolute",
-                  top: 8,
-                  right: 10,
-                  background: "none",
-                  border: "none",
-                  color: "#e74c3c",
-                  fontWeight: 700,
-                  fontSize: "1.1rem",
-                  cursor: "pointer",
-                  zIndex: 2,
-                }}
+                className="absolute top-2 right-2.5 bg-none border-0 text-[#e74c3c] font-bold text-[1.1rem] cursor-pointer z-[2]"
                 title="Delete Draft"
               >
                 &times;
               </button>
-              <div style={{ fontWeight: 700, fontSize: "1.02rem", color: "#111", marginBottom: 2 }}>
+              <div className="font-bold text-[1.02rem] text-ink-strong mb-0.5">
                 {draft.title || untitledLabel}
               </div>
-              <div style={{ color: "#666", fontSize: "0.92rem", marginBottom: 2 }}>
+              <div className="text-ink-muted text-helper mb-0.5">
                 {draft.category.join(", ")}
                 &middot; {draft.level.join(", ")}
                 &middot; {draft.type.join(", ")}
               </div>
-              <div style={{ display: "flex", gap: 8, marginTop: "auto", marginBottom: 18 }}>
+              <div className="flex gap-2 mt-auto mb-4.5">
                 <span
-                  style={{
-                    color: "#1a73e8",
-                    fontWeight: 600,
-                    fontSize: "0.93rem",
-                    textDecoration: "underline",
-                  }}
+                  className="text-link font-semibold text-[0.93rem] underline"
                 >
                   Continue Editing &rarr;
                 </span>
               </div>
               <div
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  bottom: 8,
-                  color: "#888",
-                  fontSize: "0.80rem",
-                  width: "calc(100% - 28px)",
-                  textAlign: "right",
-                  pointerEvents: "none"
-                }}
+                className="absolute left-3.5 bottom-2 text-ink-faint text-[0.80rem] w-[calc(100%_-_28px)] text-right pointer-events-none"
               >
                 Last updated:{" "}
                 {draft.updatedAt?.toDate
@@ -227,17 +157,7 @@ const DraftsPage = ({
       </div>
       <button
         onClick={() => navigate(builderPath)}
-        style={{
-          background: "#fff",
-          color: "#111",
-          border: "1px solid #111",
-          borderRadius: "6px",
-          padding: "10px 28px",
-          fontWeight: 600,
-          cursor: "pointer",
-          fontFamily: "Open Sans, sans-serif",
-          fontSize: "1.08rem"
-        }}
+        className="bg-surface text-ink-strong border border-ink-strong rounded-md py-2.5 px-7 font-semibold cursor-pointer font-sans text-label"
       >
         {createLabel}
       </button>
