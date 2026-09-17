@@ -10,7 +10,7 @@
  * lives on the instances this module exports.
  *
  * `getAuth()` is deliberately not covered here. It stays legal in
- * `utils/apiClient.js` and `auth/googleAuth.js`, and the rule that keeps it
+ * `utils/apiClient.ts` and `auth/googleAuth.ts`, and the rule that keeps it
  * out of components is a different one (#368: read auth state from
  * AuthProvider, not from the SDK) — see CLAUDE.md.
  */

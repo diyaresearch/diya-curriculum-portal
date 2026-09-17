@@ -163,3 +163,41 @@ export type ModuleListEntry = Module | LockedModule;
 export function isLockedModule(entry: ModuleListEntry): entry is LockedModule {
   return (entry as LockedModule).locked === true;
 }
+
+/* -------------------------------------------------------------------------
+ * The response envelope - functions/utils/responseHelpers.js
+ * ---------------------------------------------------------------------- */
+
+/**
+ * What `sendSuccess()` wraps a body in.
+ *
+ * Only `functions/routes/user.js` uses responseHelpers; the other 53
+ * responses are raw `res.json()`. That is why `apiClient` deliberately does
+ * not unwrap centrally (see CLAUDE.md) - unwrapping there would break every
+ * other route. So the `/api/user/*` callers have to name this shape, and
+ * every one of them that did not was reading `.firstName` off the envelope
+ * and getting `undefined`.
+ */
+export interface ApiEnvelope<T> {
+  success: boolean;
+  statusCode?: number;
+  message?: string;
+  data: T;
+  timestamp?: string;
+}
+
+/** A user as `GET /api/user/users` returns them: id merged in, dates as ISO. */
+export type AdminUserListEntry = UserDocument & WithId;
+
+/** The body of `GET /api/user/users`, inside the envelope. */
+export interface AdminUserListData {
+  users: AdminUserListEntry[];
+  pagination?: {
+    currentPage?: number;
+    totalPages?: number;
+    totalUsers?: number;
+    usersPerPage?: number;
+    hasNextPage?: boolean;
+    hasPreviousPage?: boolean;
+  };
+}
