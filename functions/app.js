@@ -150,19 +150,34 @@ function buildApp() {
   //
   // Registered ahead of ensureDatabase deliberately: this route's whole job is
   // to describe a broken database, so it must not be short-circuited by one.
+  //
+  // `projectId` and `emulator` are here so the frontend can check at boot that
+  // it is talking to a backend pointed at the same Firebase project it is
+  // (utils/verifyBackendProject.ts). The two halves pick their project from
+  // unrelated files - the browser from portal-app/.env*, this process from
+  // functions/.env.${NODE_ENV} - so they can disagree, and the symptom is a
+  // 401 from verifyIdToken (a token minted by one project, verified against
+  // another) that says nothing about the actual cause. Neither value is a
+  // secret: the project ID already ships in the frontend bundle.
   app.get("/api/health", async (req, res) => {
     const { db } = require("./config/firebaseConfig");
-    const { verifyCredential } = require("./config/credentials");
+    const { verifyCredential, PROJECT_ID } = require("./config/credentials");
+
+    const identity = {
+      projectId: PROJECT_ID,
+      emulator: Boolean(process.env.FIRESTORE_EMULATOR_HOST),
+    };
 
     const result = await verifyCredential(db);
     if (result.ok) {
-      return res.json({ status: "ok", firestore: "reachable" });
+      return res.json({ status: "ok", firestore: "reachable", ...identity });
     }
 
     return res.status(503).json({
       status: "degraded",
       firestore: "unreachable",
       error: result.error.message,
+      ...identity,
     });
   });
 
