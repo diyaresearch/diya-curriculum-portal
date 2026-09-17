@@ -16,7 +16,12 @@ import tseslint from "typescript-eslint";
 // `react-app` actually enforced in this codebase.
 export default [
   {
-    ignores: ["build/**", "node_modules/**", "coverage/**"],
+    // .codemod/ is the one-off Node tooling behind the #561 style conversion
+    // (analyze -> transform -> verify). It runs under `node`, not in the
+    // browser, and is not part of the app bundle - linting it with this
+    // config's browser globals only reports `process` and `console` as
+    // undefined.
+    ignores: ["build/**", "node_modules/**", "coverage/**", ".codemod/**"],
   },
   js.configs.recommended,
   reactHooks.configs.flat.recommended,

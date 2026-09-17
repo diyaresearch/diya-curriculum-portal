@@ -13,7 +13,7 @@ import { ROLES } from "@/constants/roles";
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
-  <span style={{ color: "red", marginLeft: 4 }}>*</span>
+  <span className="[color:red] ml-1">*</span>
 );
 
 export const UploadContent = ({
@@ -315,12 +315,12 @@ export const UploadContent = ({
   };
 
   return (
-    <div style={{ width: "100%" }}>
-      <form onSubmit={handleSubmit} style={{ width: "100%" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+    <div className="w-full">
+      <form onSubmit={handleSubmit} className="w-full">
+        <div className="flex flex-col gap-7">
           {/* Title */}
           <div>
-            <label htmlFor="Title" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
+            <label htmlFor="Title" className="block font-semibold mb-1.5 text-ink font-sans text-label">
               Title <RequiredAsterisk />
             </label>
             <input
@@ -329,30 +329,21 @@ export const UploadContent = ({
               placeholder="Enter the title of the nugget"
               value={formData.Title}
               onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "6px",
-                border: "1.5px solid #bbb",
-                fontSize: "1rem",
-                marginBottom: "2px",
-                background: "#fafbfc",
-                fontFamily: "Open Sans, sans-serif",
-              }}
+              className="w-full py-2.5 px-3.5 rounded-md border-[1.5px] border-[#bbb] text-[1rem] mb-0.5 bg-[#fafbfc] font-sans"
             />
             {fieldErrors.Title && (
-              <div style={{ color: "red", fontSize: "0.95rem" }}>
+              <div className="[color:red] text-meta">
                 Please fill out this field.
               </div>
             )}
-            <div style={{ fontSize: "0.92rem", color: "#888", fontFamily: "Open Sans, sans-serif" }}>
+            <div className="text-helper text-ink-faint font-sans">
               Provide a concise title for your content.
             </div>
           </div>
 
           {/* Description */}
           <div>
-            <label htmlFor="Abstract" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
+            <label htmlFor="Abstract" className="block font-semibold mb-1.5 text-ink font-sans text-label">
               Description <RequiredAsterisk />
             </label>
             <ReactQuill
@@ -360,20 +351,14 @@ export const UploadContent = ({
               theme="snow"
               value={formData.Abstract}
               onChange={handleAbstractChange}
-              className="bg-white"
-              style={{
-                background: "#fafbfc",
-                borderRadius: "6px",
-                marginBottom: "2px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
+              className="bg-white bg-[#fafbfc] rounded-md mb-0.5 font-sans"
             />
             {fieldErrors.Abstract && (
-              <div style={{ color: "red", fontSize: "0.95rem" }}>
+              <div className="[color:red] text-meta">
                 Please fill out this field.
               </div>
             )}
-            <div style={{ fontSize: "0.92rem", color: "#888", fontFamily: "Open Sans, sans-serif" }}>
+            <div className="text-helper text-ink-faint font-sans">
               Summarize the content of the nugget.
             </div>
           </div>
@@ -388,11 +373,11 @@ export const UploadContent = ({
               showRequired={true}
             />
             {fieldErrors.Category && (
-              <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
+              <div className="[color:red] text-meta mb-0">
                 Please fill out this field.
               </div>
             )}
-            <div style={{ fontSize: "0.92rem", color: "#888", marginTop: 0, marginBottom: 0 }}>
+            <div className="text-helper text-ink-faint mt-0 mb-0">
               Select a relevant category.
             </div>
           </div>
@@ -409,11 +394,11 @@ export const UploadContent = ({
           />
 
             {fieldErrors.Level && (
-              <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
+              <div className="[color:red] text-meta mb-0">
                 Please fill out this field.
               </div>
             )}
-            <div style={{ fontSize: "0.92rem", color: "#888", marginTop: 0, marginBottom: 0 }}>
+            <div className="text-helper text-ink-faint mt-0 mb-0">
               Choose the difficulty level.
             </div>
           </div>
@@ -430,18 +415,18 @@ export const UploadContent = ({
           />
 
             {fieldErrors.Type && (
-              <div style={{ color: "red", fontSize: "0.95rem", marginBottom: 0 }}>
+              <div className="[color:red] text-meta mb-0">
                 Please fill out this field.
               </div>
             )}
-            <div style={{ fontSize: "0.92rem", color: "#888", marginTop: 0, marginBottom: 0 }}>
+            <div className="text-helper text-ink-faint mt-0 mb-0">
               Select the content type.
             </div>
           </div>
 
           {/* Duration */}
           <div>
-            <label htmlFor="Duration" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+            <label htmlFor="Duration" className="block font-semibold mb-1.5 text-ink">
               Duration (minutes) <RequiredAsterisk />
             </label>
             <input
@@ -450,29 +435,21 @@ export const UploadContent = ({
               placeholder="Enter estimated duration"
               value={formData.Duration}
               onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "6px",
-                border: "1.5px solid #bbb",
-                fontSize: "1rem",
-                marginBottom: "2px",
-                background: "#fafbfc",
-              }}
+              className="w-full py-2.5 px-3.5 rounded-md border-[1.5px] border-[#bbb] text-[1rem] mb-0.5 bg-[#fafbfc]"
             />
             {fieldErrors.Duration && (
-              <div style={{ color: "red", fontSize: "0.95rem" }}>
+              <div className="[color:red] text-meta">
                 Please fill out this field.
               </div>
             )}
-            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+            <div className="text-helper text-ink-faint">
               How long will the content take to consume?
             </div>
           </div>
 
           {/* Attach Links */}
           <div>
-            <label style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222" }}>
+            <label className="block font-semibold mb-1.5 text-ink">
               Attach Links (Google Slides / Colab)
             </label>
 
@@ -481,14 +458,7 @@ export const UploadContent = ({
               placeholder="Optional title (e.g., Week 1 Slides)"
               value={attachmentTitle}
               onChange={(e) => setAttachmentTitle(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "6px",
-                border: "1.5px solid #bbb",
-                background: "#fafbfc",
-                marginBottom: 10,
-              }}
+              className="w-full py-2.5 px-3.5 rounded-md border-[1.5px] border-[#bbb] bg-[#fafbfc] mb-2.5"
             />
 
             <input
@@ -496,14 +466,7 @@ export const UploadContent = ({
               placeholder="Paste link (https://...)"
               value={attachmentUrl}
               onChange={(e) => setAttachmentUrl(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px 14px",
-                borderRadius: "6px",
-                border: "1.5px solid #bbb",
-                background: "#fafbfc",
-                marginBottom: 10,
-              }}
+              className="w-full py-2.5 px-3.5 rounded-md border-[1.5px] border-[#bbb] bg-[#fafbfc] mb-2.5"
             />
 
             <button
@@ -525,26 +488,18 @@ export const UploadContent = ({
                 setAttachmentTitle("");
                 setAttachmentUrl("");
               }}
-              style={{
-                background: "#fff",
-                color: "#111",
-                border: "1px solid #111",
-                borderRadius: "6px",
-                padding: "8px 14px",
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
+              className="bg-surface text-ink-strong border border-ink-strong rounded-md py-2 px-3.5 font-semibold cursor-pointer"
             >
               + Add Link
             </button>
 
             {pendingAttachments.length > 0 && (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontWeight: 600, marginBottom: 6 }}>Links added:</div>
-                <ul style={{ marginLeft: 18 }}>
+              <div className="mt-3">
+                <div className="font-semibold mb-1.5">Links added:</div>
+                <ul className="ml-4.5">
                   {pendingAttachments.map((a, idx) => (
-                    <li key={idx} style={{ marginBottom: 6 }}>
-                      <span style={{ fontWeight: 600 }}>
+                    <li key={idx} className="mb-1.5">
+                      <span className="font-semibold">
                         {a.title || (a.linkType === "slides" ? "Google Slides" : a.linkType === "colab" ? "Colab Notebook" : "Link")}
                       </span>
                       {" — "}
@@ -554,14 +509,7 @@ export const UploadContent = ({
                       <button
                         type="button"
                         onClick={() => setPendingAttachments((prev) => prev.filter((_, i) => i !== idx))}
-                        style={{
-                          marginLeft: 10,
-                          background: "none",
-                          border: "none",
-                          color: "#e74c3c",
-                          fontWeight: 700,
-                          cursor: "pointer",
-                        }}
+                        className="ml-2.5 bg-none border-0 text-[#e74c3c] font-bold cursor-pointer"
                         aria-label="Remove link"
                       >
                         ×
@@ -576,7 +524,7 @@ export const UploadContent = ({
 
           {/* Instructions/Notes */}
           <div>
-            <label htmlFor="Instructions" style={{ display: "block", fontWeight: 600, marginBottom: "6px", color: "#222", fontFamily: "Open Sans, sans-serif", fontSize: "1.08rem" }}>
+            <label htmlFor="Instructions" className="block font-semibold mb-1.5 text-ink font-sans text-label">
               Instructions/Notes
             </label>
             <ReactQuill
@@ -584,15 +532,9 @@ export const UploadContent = ({
               theme="snow"
               value={formData.Instructions}
               onChange={value => setFormData(prev => ({ ...prev, Instructions: value }))}
-              className="bg-white"
-              style={{
-                background: "#fafbfc",
-                borderRadius: "6px",
-                marginBottom: "2px",
-                fontFamily: "Open Sans, sans-serif",
-              }}
+              className="bg-white bg-[#fafbfc] rounded-md mb-0.5 font-sans"
             />
-            <div style={{ fontSize: "0.92rem", color: "#888" }}>
+            <div className="text-helper text-ink-faint">
               Use this area for each content's detailed instructions. You can add links, formatting, etc.
             </div>
           </div>
@@ -600,47 +542,18 @@ export const UploadContent = ({
 
         {/* Bottom row: Cancel and Save Nugget */}
         <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "24px",
-            marginTop: "32px",
-          }}
+          className="flex justify-center gap-6 mt-8"
         >
           <button
             type="button"
             onClick={handleCancel}
-            style={{
-              background: "#fff",
-              color: "#222",
-              border: "1.5px solid #222",
-              borderRadius: "6px",
-              padding: "12px 48px",
-              fontWeight: 600,
-              fontSize: "1.08rem",
-              cursor: "pointer",
-              minWidth: "180px",
-              transition: "background 0.2s, color 0.2s, border 0.2s",
-              fontFamily: "Open Sans, sans-serif",
-            }}
+            className="bg-surface text-ink border-[1.5px] border-ink rounded-md py-3 px-12 font-semibold text-label cursor-pointer min-w-45 [transition:background_0.2s,_color_0.2s,_border_0.2s] font-sans"
           >
             Cancel
           </button>
           <button
             type="submit"
-            style={{
-              background: "#162040",
-              color: "#fff",
-              border: "1.5px solid #162040",
-              borderRadius: "6px",
-              padding: "12px 48px",
-              fontWeight: 600,
-              fontSize: "1.08rem",
-              cursor: "pointer",
-              minWidth: "180px",
-              transition: "background 0.2s, color 0.2s, border 0.2s",
-              fontFamily: "Open Sans, sans-serif",
-            }}
+            className="bg-navy text-white border-[1.5px] border-navy rounded-md py-3 px-12 font-semibold text-label cursor-pointer min-w-45 [transition:background_0.2s,_color_0.2s,_border_0.2s] font-sans"
           >
             Save Nugget
           </button>

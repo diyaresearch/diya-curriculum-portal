@@ -31,13 +31,7 @@ const AudienceModal = ({ type, onClose }) => {
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
         <button
           onClick={onClose}
-          style={{
-            border: "none",
-            background: "transparent",
-            fontSize: "1.2rem",
-            float: "right",
-            cursor: "pointer",
-          }}
+          className="border-0 bg-transparent text-[1.2rem] float-right cursor-pointer"
         >
           ×
         </button>
@@ -53,63 +47,38 @@ const AudienceOverviewSection = () => {
 
   return (
     <section
-      style={{
-        padding: "56px 10%",
-        background: "#f5f7fb",
-        textAlign: "center",
-      }}
+      className="py-14 px-[10%] bg-[#f5f7fb] text-center"
     >
-      <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: 8 }}>
+      <h2 className="text-[2rem] font-bold mb-2">
         Who is this portal for?
       </h2>
-      <p style={{ marginBottom: 32, color: "#555" }}>
+      <p className="mb-8 text-[#555]">
         Explore what we offer for teachers and students.
       </p>
 
       <div
-        style={{
-          display: "flex",
-          gap: 48,
-          justifyContent: "center",
-          flexWrap: "wrap",
-          maxWidth: "1200px",
-          margin: "40px auto 0", 
-        }}
+        className="flex gap-12 justify-center flex-wrap max-w-300 mt-10 mx-auto mb-0"
       >
         {/* Teachers card – navy + gold */}
         <div
           onClick={() => setOpen("teacher")}
-          style={{
-            flex: "1 1 260px",
-            maxWidth: 500,
-            minHeight: 280,
-            borderRadius: 20,
-            padding: 24,
-            cursor: "pointer",
-            color: "#ffffff",
-            background:
-              "linear-gradient(135deg,rgb(70, 156, 159) 0%,rgb(28, 124, 119) 100%)",
-              //"linear-gradient(135deg,rgb(81, 224, 228) 0%,rgb(44, 160, 154) 100%)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
+          className="flex-[1_1_260px] max-w-125 min-h-70 rounded-[20px] p-6 cursor-pointer text-white [background:linear-gradient(135deg,rgb(70,_156,_159)_0%,rgb(28,_124,_119)_100%)] flex flex-col justify-between"
         >
-          <div style={{ textAlign: "left" }}>
-            <h3 style={{ fontSize: "2.1rem", fontWeight: 700 }}>
+          <div className="text-left">
+            <h3 className="text-[2.1rem] font-bold">
               For Teachers
             </h3>
-            <p style={{ marginTop: 8, fontSize: "1.28rem" }}>
+            <p className="mt-2 text-[1.28rem]">
               Planning tools
             </p>
-            <p style={{ marginTop: 8, fontSize: "1.28rem" }}>
+            <p className="mt-2 text-[1.28rem]">
               Classroom management
             </p>
-            <p style={{ marginTop: 8, fontSize: "1.28rem" }}>
+            <p className="mt-2 text-[1.28rem]">
               Ready-made modules.
             </p>
           </div>
-          <span style={{ marginTop: 16, textAlign: "left" }}>
+          <span className="mt-4 text-left">
             Learn More →
           </span>
         </div>
@@ -117,36 +86,23 @@ const AudienceOverviewSection = () => {
         {/* Students card – blue + soft gold */}
         <div
           onClick={() => setOpen("student")}
-          style={{
-            flex: "1 1 260px",
-            maxWidth: 500,
-            minHeight: 280,
-            borderRadius: 20,
-            padding: 24,
-            cursor: "pointer",
-            color: "#000000",
-            background:
-              "linear-gradient(135deg,rgb(243, 230, 113) 0%, #ffd56b 100%)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
+          className="flex-[1_1_260px] max-w-125 min-h-70 rounded-[20px] p-6 cursor-pointer text-black [background:linear-gradient(135deg,rgb(243,_230,_113)_0%,_#ffd56b_100%)] flex flex-col justify-between"
         >
-          <div style={{ textAlign: "left" }}>
-            <h3 style={{ fontSize: "2.1rem", fontWeight: 700 }}>
+          <div className="text-left">
+            <h3 className="text-[2.1rem] font-bold">
               For Students
             </h3>
-            <p style={{ marginTop: 8, fontSize: "1.28rem" }}>
+            <p className="mt-2 text-[1.28rem]">
               Interactive modules
             </p>
-            <p style={{ marginTop: 8, fontSize: "1.28rem" }}>
+            <p className="mt-2 text-[1.28rem]">
               Projects
             </p>
-            <p style={{ marginTop: 8, fontSize: "1.28rem" }}>
+            <p className="mt-2 text-[1.28rem]">
               Science fair ideas
             </p>
           </div>
-          <span style={{ marginTop: 16, textAlign: "left" }}>
+          <span className="mt-4 text-left">
             Learn More →
           </span>
         </div>

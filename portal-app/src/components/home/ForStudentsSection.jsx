@@ -10,39 +10,16 @@ import { ROLES } from "@/constants/roles";
 // rendered navigated with window.location.href (#442). Both removed.
 const SquareSection = ({ title, description, children }) => (
   <section
-    style={{
-      width: "100%",
-      background: "#FFFFFF",
-      padding: "60px 0 60px 0",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "flex-start"
-    }}
+    className="w-full bg-surface pt-15 pr-0 pb-15 pl-0 flex flex-col items-center justify-start"
   >
     <h2
-      style={{
-        fontSize: "2.5rem",
-        fontWeight: "700",
-        color: "#111",
-        fontFamily: "Open Sans, sans-serif",
-        textAlign: "center",
-        margin: 0,
-        letterSpacing: "1px"
-      }}
+      className="text-page-title font-bold text-ink-strong font-sans text-center m-0 tracking-[1px]"
     >
       {title}
     </h2>
     {description && (
       <p
-        style={{
-          marginTop: "18px",
-          fontSize: "1.15rem",
-          color: "#222",
-          textAlign: "center",
-          maxWidth: "600px",
-          fontWeight: 500,
-        }}
+        className="mt-4.5 text-[1.15rem] text-ink text-center max-w-150 font-medium"
       >
         {description}
       </p>
@@ -68,113 +45,47 @@ const StudentRectangles = () => {
 
   return (
     <div
-    style={{
-      display: "flex",
-      flexDirection: "column",     // stack vertically
-      alignItems: "center",
-      gap: "32px",
-      marginTop: "48px",
-      marginBottom: "32px",
-      width: "100%",
-      maxWidth: "600px",
-      marginInline: "auto",
-    }}
+    className="flex flex-col items-center gap-8 mt-12 mb-8 w-full max-w-150 mx-auto"
     >
       {/* Rectangle 1 */}
-      <a href="#explore-modules" style={{ textDecoration: "none" }} onClick={handleClick}>
+      <a href="#explore-modules" className="no-underline" onClick={handleClick}>
         <div
-          style={{
-            background: "#f3f3f1",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            border: "1px solid #e0dfdb",
-            width: "480px",
-            minHeight: "160px",
-            padding: "0",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            cursor: "pointer"
-          }}
+          className="bg-[#f3f3f1] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-[#e0dfdb] w-120 min-h-40 p-0 flex flex-row items-center cursor-pointer"
         >
-          <div style={{
-            width: "90px",
-            height: "90px",
-            marginLeft: "32px",
-            marginRight: "24px",
-            borderRadius: "8px",
-            background: "#e0dfdb",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden"
-          }}>
+          <div className="w-22.5 h-22.5 ml-8 mr-6 rounded-lg bg-[#e0dfdb] flex items-center justify-center overflow-hidden">
             <img
               src={textbooksImg}
               alt="Textbooks"
-              style={{
-                width: "80px",
-                height: "80px",
-                objectFit: "contain",
-                display: "block"
-              }}
+              className="w-20 h-20 object-contain block"
             />
           </div>
           <div>
-            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
+            <span className="font-bold text-section-title text-navy">
               Learning Modules
             </span>
-            <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
+            <div className="mt-2.5 text-ink text-label max-w-70">
               Interactive content to enhance your understanding.
             </div>
           </div>
         </div>
       </a>
       {/* Rectangle 2 */}
-      <a href="#explore-modules" style={{ textDecoration: "none" }} onClick={handleClick}>
+      <a href="#explore-modules" className="no-underline" onClick={handleClick}>
         <div
-          style={{
-            background: "#f3f3f1",
-            borderRadius: "12px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            border: "1px solid #e0dfdb",
-            width: "480px",
-            minHeight: "160px",
-            padding: "0",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            cursor: "pointer"
-          }}
+          className="bg-[#f3f3f1] rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-[#e0dfdb] w-120 min-h-40 p-0 flex flex-row items-center cursor-pointer"
         >
-          <div style={{
-            width: "90px",
-            height: "90px",
-            marginLeft: "32px",
-            marginRight: "24px",
-            borderRadius: "8px",
-            background: "#e0dfdb",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden"
-          }}>
+          <div className="w-22.5 h-22.5 ml-8 mr-6 rounded-lg bg-[#e0dfdb] flex items-center justify-center overflow-hidden">
             <img
               src={microscopeImg}
               alt="Microscope"
-              style={{
-                width: "80px",
-                height: "80px",
-                objectFit: "contain",
-                display: "block"
-              }}
+              className="w-20 h-20 object-contain block"
             />
           </div>
           <div>
-            <span style={{ fontWeight: "700", fontSize: "1.25rem", color: "#162040" }}>
+            <span className="font-bold text-section-title text-navy">
               Project Ideas for Science Fair
             </span>
-            <div style={{ marginTop: "10px", color: "#222", fontSize: "1.08rem", maxWidth: "280px" }}>
+            <div className="mt-2.5 text-ink text-label max-w-70">
               Get inspired with creative project ideas.
             </div>
           </div>
@@ -191,7 +102,7 @@ const ForStudentsSection = () => {
   // Only show For Students if NOT a teacher
   if (!role || ![ROLES.TEACHER_DEFAULT, ROLES.TEACHER_PLUS, ROLES.ADMIN].includes(role)) {
     return (
-      <div style={{ width: "100%" }}>
+      <div className="w-full">
         <SquareSection
           title="For Students"
           description="Discover engaging content tailored for your learning."

@@ -4,42 +4,20 @@ import { TYPO } from "@/constants/typography";
 
 const NuggetBuilderPage = (props) => (
   <div
-    style={{
-      minHeight: "100vh",
-      background: "#F6F8FA",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      paddingTop: "40px",
-      paddingBottom: "64px",
-      position: "relative"
-    }}
+    className="min-h-screen bg-surface-subtle flex flex-col items-center pt-10 pb-16 relative"
   >
     {/* Only show X button if onCancel is provided (i.e. in popup/modal) */}
     {props.onCancel && (
       <button
         onClick={props.onCancel}
-        style={{
-          position: "fixed",
-          top: 32,
-          right: 32,
-          background: "none",
-          border: "none",
-          fontSize: "2.2rem",
-          color: "#888",
-          cursor: "pointer",
-          zIndex: 2000,
-          fontWeight: 700,
-          lineHeight: 1,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.07)"
-        }}
+        className="fixed top-8 right-8 bg-none border-0 text-[2.2rem] text-ink-faint cursor-pointer z-[2000] font-bold leading-none shadow-[0_2px_8px_rgba(0,0,0,0.07)]"
         aria-label="Close"
         type="button"
       >
         &times;
       </button>
     )}
-    <div style={{ width: "100%", maxWidth: 1100, margin: "0 auto" }}>
+    <div className="w-full max-w-275 my-0 mx-auto">
       <h1
         style={{
           ...TYPO.pageTitle,
@@ -63,25 +41,10 @@ const NuggetBuilderPage = (props) => (
         Create and manage your nuggets of content easily.
       </p>
       <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          marginTop: "40px",
-        }}
+        className="flex flex-col items-center justify-center mt-10"
       >
         <div
-          style={{
-            width: "100%",
-            maxWidth: "600px",
-            background: "#fff",
-            borderRadius: "18px",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-            border: "1px solid #e0dfdb",
-            padding: "40px 32px",
-            minWidth: "320px"
-          }}
+          className="w-full max-w-150 bg-surface rounded-[18px] shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-[#e0dfdb] py-10 px-8 min-w-80"
         >
           <UploadContent
             title="Nugget Builder"

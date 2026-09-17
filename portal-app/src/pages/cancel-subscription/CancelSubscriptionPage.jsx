@@ -54,51 +54,17 @@ const CancelSubscriptionPage = () => {
     }
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: '#242B42',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '40px 20px',
-            color: 'white'
-        }}>
-            <div style={{
-                background: '#fff',
-                borderRadius: '12px',
-                padding: '60px',
-                maxWidth: '600px',
-                width: '90%',
-                textAlign: 'center',
-                color: '#333',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.18)'
-            }}>
-                <h1 style={{
-                    fontSize: '2rem',
-                    fontWeight: '700',
-                    color: '#242B42',
-                    marginBottom: '30px'
-                }}>
+        <div className="min-h-screen bg-navy-soft flex flex-col items-center justify-center py-10 px-5 text-white">
+            <div className="bg-surface rounded-xl p-15 max-w-150 w-[90%] text-center text-[#333] shadow-[0_4px_24px_rgba(0,0,0,0.18)]">
+                <h1 className="text-[2rem] font-bold text-navy-soft mb-7.5">
                     We're sorry to see you go!
                 </h1>
 
-                <p style={{
-                    fontSize: '1.1rem',
-                    color: '#666',
-                    marginBottom: '30px',
-                    lineHeight: 1.6
-                }}>
+                <p className="text-[1.1rem] text-ink-muted mb-7.5 leading-[1.6]">
                     Before you confirm, please note that by cancelling your Teacher Premium account, you will lose access to:
                 </p>
 
-                <ul style={{
-                    textAlign: 'left',
-                    maxWidth: '400px',
-                    margin: '0 auto 40px auto',
-                    color: '#666',
-                    lineHeight: 1.8
-                }}>
+                <ul className="text-left max-w-100 mt-0 mr-auto mb-10 ml-auto text-ink-muted leading-[1.8]">
                     <li>The ability to create your own modules, lessons, and nuggets</li>
                     <li>The full library of locked and unlocked teaching content</li>
                     <li>Exclusive premium teaching tools and resources</li>
@@ -106,25 +72,10 @@ const CancelSubscriptionPage = () => {
                     <li>Advanced classroom management features</li>
                 </ul>
 
-                <div style={{
-                    display: 'flex',
-                    gap: '20px',
-                    justifyContent: 'center',
-                    marginTop: '40px'
-                }}>
+                <div className="flex gap-5 justify-center mt-10">
                     <button
                         onClick={() => navigate('/')}
-                        style={{
-                            background: '#fff',
-                            color: '#242B42',
-                            border: '2px solid #242B42',
-                            borderRadius: '6px',
-                            padding: '12px 32px',
-                            fontSize: '1rem',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
+                        className="bg-surface text-navy-soft border-2 border-navy-soft rounded-md py-3 px-8 text-[1rem] font-semibold cursor-pointer [transition:all_0.2s]"
                         onMouseOver={(e) => {
                             e.target.style.background = '#f8f9fa';
                         }}
@@ -168,72 +119,25 @@ const CancelSubscriptionPage = () => {
 
             {/* Confirmation Modal */}
             {showConfirmModal && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 2000
-                }}>
-                    <div style={{
-                        background: '#fff',
-                        borderRadius: '12px',
-                        padding: '40px',
-                        maxWidth: '400px',
-                        width: '90%',
-                        textAlign: 'center',
-                        color: '#333'
-                    }}>
-                        <div style={{
-                            width: '60px',
-                            height: '60px',
-                            background: '#28a745',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            margin: '0 auto 20px auto'
-                        }}>
+                <div className="fixed top-0 left-0 right-0 bottom-0 [background:rgba(0,0,0,0.5)] flex items-center justify-center z-[2000]">
+                    <div className="bg-surface rounded-xl p-10 max-w-100 w-[90%] text-center text-[#333]">
+                        <div className="w-15 h-15 bg-success rounded-full flex items-center justify-center mt-0 mr-auto mb-5 ml-auto">
                             <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
                                 <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                         </div>
 
-                        <h3 style={{
-                            fontSize: '1.5rem',
-                            fontWeight: '700',
-                            color: '#242B42',
-                            marginBottom: '15px'
-                        }}>
+                        <h3 className="text-[1.5rem] font-bold text-navy-soft mb-[15px]">
                             Subscription Cancelled
                         </h3>
 
-                        <p style={{
-                            color: '#666',
-                            marginBottom: '30px',
-                            lineHeight: 1.6
-                        }}>
+                        <p className="text-ink-muted mb-7.5 leading-[1.6]">
                             Your subscription has been successfully cancelled. You now have access to the basic teacher features.
                         </p>
 
                         <button
                             onClick={handleModalOk}
-                            style={{
-                                background: '#242B42',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '6px',
-                                padding: '12px 32px',
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                                width: '100%'
-                            }}
+                            className="bg-navy-soft text-white border-0 rounded-md py-3 px-8 text-[1rem] font-semibold cursor-pointer w-full"
                         >
                             Continue
                         </button>

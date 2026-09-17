@@ -55,14 +55,14 @@ const LessonDetailsPage = () => {
   if (!lesson) return <div>Lesson not found.</div>;
 
   return (
-    <div style={{ maxWidth: 700, margin: "40px auto", background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", padding: 32 }}>
-      <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: 16 }}>
+    <div className="max-w-175 my-10 mx-auto bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-8">
+      <h2 className="text-[2rem] font-bold mb-4">
         {lesson.title || lesson.Title || "Untitled Lesson"}
       </h2>
 
       {/* Description AFTER title */}
       {lesson.description && typeof lesson.description === "string" && (
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-4">
           <strong>Description:</strong>
           <div
             className="rich-text-content"
@@ -73,14 +73,13 @@ const LessonDetailsPage = () => {
 
       {/* Objectives */}
       {Array.isArray(lesson.objectives) && lesson.objectives.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-4">
           <strong>Objectives:</strong>
           {lesson.objectives.map((obj, idx) => (
             <div
               key={idx}
-              className="rich-text-content"
+              className="rich-text-content mb-2"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(obj) }}
-              style={{ marginBottom: 8 }}
             />
           ))}
         </div>
@@ -110,14 +109,14 @@ const LessonDetailsPage = () => {
           }
           const formatted = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
           return (
-            <div key={key} style={{ marginBottom: 16 }}>
+            <div key={key} className="mb-4">
               <strong>Created At:</strong> {formatted}
             </div>
           );
         }
 
         return (
-          <div key={key} style={{ marginBottom: 16 }}>
+          <div key={key} className="mb-4">
             <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong>{" "}
             {Array.isArray(value) ? value.join(", ") : String(value)}
           </div>
@@ -126,28 +125,21 @@ const LessonDetailsPage = () => {
 
       {/* Duration LAST */}
       {lesson.duration && (
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-4">
           <strong>Duration:</strong> {lesson.duration} minutes
         </div>
       )}
 
       {/* Sections AT THE BOTTOM */}
       {Array.isArray(lesson.sections) && lesson.sections.length > 0 && (
-        <div style={{ marginTop: 8, marginBottom: 32 }}>
-          <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 12 }}>Sections:</h3>
+        <div className="mt-2 mb-8">
+          <h3 className="text-[1rem] font-bold mb-3">Sections:</h3>
           {lesson.sections.map((section, idx) => (
             <div
               key={idx}
-              style={{
-                marginBottom: 24,
-                padding: "18px 18px 12px 18px",
-                border: "1px solid #e5e7eb",
-                borderRadius: "10px",
-                background: "#f9fafb",
-                boxShadow: "0 2px 8px rgba(22,32,64,0.04)"
-              }}
+              className="mb-6 pt-4.5 pr-4.5 pb-3 pl-4.5 border border-rule rounded-[10px] bg-[#f9fafb] shadow-[0_2px_8px_rgba(22,32,64,0.04)]"
             >
-              <div style={{ fontWeight: 600, fontSize: "1rem", marginBottom: 8 }}>
+              <div className="font-semibold text-[1rem] mb-2">
                 {section.title || section.name || `Section ${idx + 1}`}
               </div>
               {section.intro && (
@@ -157,37 +149,21 @@ const LessonDetailsPage = () => {
                 />
               )}
               {Array.isArray(section.contentIds) && section.contentIds.length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+                <div className="flex flex-wrap gap-4">
                   {section.contentIds.map(contentId => {
                     const nugget = nuggets[contentId];
                     return (
                       <div
                         key={contentId}
-                        style={{
-                          background: "#f6f8fa",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "8px",
-                          padding: "12px 16px",
-                          minWidth: "180px",
-                          maxWidth: "260px",
-                          marginBottom: "8px",
-                          boxShadow: "0 2px 8px rgba(22,32,64,0.06)",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "flex-start"
-                        }}
+                        className="bg-surface-subtle border border-rule rounded-lg py-3 px-4 min-w-45 max-w-65 mb-2 shadow-[0_2px_8px_rgba(22,32,64,0.06)] flex flex-col items-start"
                       >
-                        <div style={{ fontWeight: 700, fontSize: "1.08rem", marginBottom: 6 }}>
+                        <div className="font-bold text-label mb-1.5">
                           {nugget ? (
                             <Link
                               to={`/view-content/${contentId}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              style={{
-                                color: "#1a73e8",
-                                textDecoration: "underline",
-                                cursor: "pointer"
-                              }}
+                              className="text-link underline cursor-pointer"
                               title="View Nugget Details"
                             >
                               {nugget.title || nugget.Title || "Untitled Nugget"}
@@ -201,7 +177,7 @@ const LessonDetailsPage = () => {
                   })}
                 </div>
               ) : (
-                <div style={{ color: "#888", fontStyle: "italic" }}>No nuggets in this section.</div>
+                <div className="text-ink-faint italic">No nuggets in this section.</div>
               )}
             </div>
           ))}

@@ -32,7 +32,7 @@ import { ROLES } from "@/constants/roles";
 
 // Add this helper for required asterisks
 const RequiredAsterisk = () => (
-  <span style={{ color: "red", marginLeft: 4 }}>*</span>
+  <span className="[color:red] ml-1">*</span>
 );
 
 function normalizeBoolean(value) {
@@ -601,10 +601,10 @@ const ModuleBuilder = ({ onCancel } = {}) => {
       }}
     >
       {/* Back button (match module page behavior) */}
-      <div style={{ width: "100%", maxWidth: 700, marginBottom: 8, padding: "0 8px" }}>
+      <div className="w-full max-w-175 mb-2 py-0 px-2">
         <BackButton onClick={handleBack} />
       </div>
-      <div style={{ width: "100%", maxWidth: 700, marginBottom: 32, textAlign: "center" }}>
+      <div className="w-full max-w-175 mb-8 text-center">
         <h2
           style={{
             ...TYPO.pageTitle,
@@ -623,26 +623,12 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         </p>
       </div>
       <div
-        className="w-full max-w-3xl relative"
-        style={{
-          background: "#fff",
-          border: "2px solid #e5e7eb",
-          borderRadius: "12px",
-          boxShadow: "0 4px 24px rgba(22,32,64,0.10)",
-          padding: "48px 40px 40px 40px",
-          marginBottom: "32px",
-          color: "#111",
-          fontFamily: "Open Sans, sans-serif"
-        }}
+        className="w-full max-w-3xl relative bg-surface border-2 border-rule rounded-xl shadow-[0_4px_24px_rgba(22,32,64,0.10)] pt-12 pr-10 pb-10 pl-10 mb-8 text-ink-strong font-sans"
       >
         <div className="absolute top-4 right-4 flex space-x-2">
           <button
             type="button"
-            className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100"
-            style={{
-              color: "#111",
-              fontFamily: "Open Sans, sans-serif"
-            }}
+            className="bg-white text-black py-2 px-4 rounded border border-black hover:bg-gray-100 text-ink-strong font-sans"
             onClick={() => navigate("/module_builder/drafts")}
           >
             Drafts
@@ -650,31 +636,14 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         </div>
         <form
           onSubmit={handleSubmit}
-          style={{
-            width: "100%",
-            maxWidth: 600,
-            margin: "0 auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px",
-            color: "#111",
-            fontFamily: "Open Sans, sans-serif"
-          }}
+          className="w-full max-w-150 my-0 mx-auto flex flex-col gap-6 text-ink-strong font-sans"
         >
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+            <label className="font-semibold text-ink-strong mb-1.5 block text-label">
               Title <RequiredAsterisk />
             </label>
             <input
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: 6,
-                border: "1px solid #bbb",
-                fontSize: "1.08rem",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif"
-              }}
+              className="w-full p-3 rounded-md border border-[#bbb] text-label text-ink-strong font-sans"
               id="title"
               type="text"
               placeholder="Module Title"
@@ -684,7 +653,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
             />
           </div>
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+            <label className="font-semibold text-ink-strong mb-1.5 block text-label">
               Description <RequiredAsterisk />
             </label>
             <ReactQuill
@@ -692,11 +661,11 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               theme="snow"
               value={formData.description}
               onChange={handleDescriptionChange}
-              style={{ background: "#fff", borderRadius: 6, color: "#111", fontFamily: "Open Sans, sans-serif" }}
+              className="bg-surface rounded-md text-ink-strong font-sans"
             />
           </div>
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+            <label className="font-semibold text-ink-strong mb-1.5 block text-label">
               Requirements <RequiredAsterisk />
             </label>
             <ReactQuill
@@ -704,13 +673,13 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               theme="snow"
               value={formData.requirements}
               onChange={handleRequirementsChange}
-              style={{ background: "#fff", borderRadius: 6, color: "#111", fontFamily: "Open Sans, sans-serif" }}
+              className="bg-surface rounded-md text-ink-strong font-sans"
 
             />
           </div>
 
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+            <label className="font-semibold text-ink-strong mb-1.5 block text-label">
               Learning Objectives <RequiredAsterisk />
             </label>
             <ReactQuill
@@ -718,7 +687,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               theme="snow"
               value={formData.learningObjectives}
               onChange={handleLearningObjectivesChange}
-              style={{ background: "#fff", borderRadius: 6, color: "#111", fontFamily: "Open Sans, sans-serif" }}
+              className="bg-surface rounded-md text-ink-strong font-sans"
             />
           </div>
           <div>
@@ -751,19 +720,11 @@ const ModuleBuilder = ({ onCancel } = {}) => {
             />
           </div>
           <div>
-            <label style={{ fontWeight: 600, color: "#111", marginBottom: 6, display: "block", fontSize: "1.08rem" }}>
+            <label className="font-semibold text-ink-strong mb-1.5 block text-label">
               Duration (minutes) <RequiredAsterisk />
             </label>
             <input
-              style={{
-                width: "100%",
-                padding: "12px",
-                borderRadius: 6,
-                border: "1px solid #bbb",
-                fontSize: "1.08rem",
-                color: "#111",
-                fontFamily: "Open Sans, sans-serif"
-              }}
+              className="w-full p-3 rounded-md border border-[#bbb] text-label text-ink-strong font-sans"
               id="Duration"
               type="text"
               placeholder="Duration"
@@ -772,70 +733,31 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               required
             />
           </div>
-          <div style={{ marginTop: 24 }}>
-            <div style={{ display: "flex", gap: 12 }}>
+          <div className="mt-6">
+            <div className="flex gap-3">
               <button
                 type="button"
-                style={{
-                  background: "#fff",
-                  color: "#111",
-                  border: "1px solid #111",
-                  borderRadius: "6px",
-                  padding: "8px 18px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "Open Sans, sans-serif"
-                }}
+                className="bg-surface text-ink-strong border border-ink-strong rounded-md py-2 px-4.5 font-semibold cursor-pointer font-sans"
                 onClick={() => setShowOverlay(true)}
               >
                 + Add Existing Lesson Plans
               </button>
               <button
                 type="button"
-                style={{
-                  background: "#111C44",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "6px",
-                  padding: "8px 18px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  fontFamily: "Open Sans, sans-serif",
-                  fontSize: "1.08rem"
-                }}
+                className="bg-navy-deep text-white border-0 rounded-md py-2 px-4.5 font-semibold cursor-pointer font-sans text-label"
                 onClick={() => setShowLessonPlanBuilderModal(true)}
               >
                 + Create New Lesson Plan
               </button>
             </div>
             <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "2px",
-                marginTop: 6,
-              }}
+              className="flex flex-wrap gap-0.5 mt-1.5"
             >
               {selectedMaterials.map((material) => {
                 return (
                   <div
                     key={material.id}
-                    style={{
-                      background: "#fafbfc",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "10px",
-                      padding: "8px 12px",
-                      color: "#111",
-                      fontFamily: "Open Sans, sans-serif",
-                      boxShadow: "0 2px 8px rgba(22,32,64,0.06)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      width: "fit-content",
-                      maxWidth: "320px",
-                      position: "relative",
-                      margin: "4px",
-                    }}
+                    className="bg-[#fafbfc] border border-rule rounded-[10px] py-2 px-3 text-ink-strong font-sans shadow-[0_2px_8px_rgba(22,32,64,0.06)] flex items-center gap-2 w-fit max-w-80 relative m-1"
                   >
                     <button
                       type="button"
@@ -844,39 +766,14 @@ const ModuleBuilder = ({ onCancel } = {}) => {
                           state: { returnTo: `${location.pathname}${location.search || ""}` },
                         })
                       }
-                      style={{
-                        color: "#1a73e8",
-                        textDecoration: "underline",
-                        fontWeight: 700,
-                        fontSize: "1.08rem",
-                        background: "none",
-                        border: "none",
-                        padding: 0,
-                        margin: 0,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        display: "inline-block",
-                        maxWidth: "90%",
-                        cursor: "pointer"
-                      }}
+                      className="text-link underline font-bold text-label bg-none border-0 p-0 m-0 overflow-hidden text-ellipsis whitespace-nowrap inline-block max-w-[90%] cursor-pointer"
                       title="View Lesson Details"
                     >
                       {material.title || material.Title || "Untitled Lesson"}
                     </button>
                     <button
                       onClick={() => removeMaterial(material.id)}
-                      style={{
-                        background: "none",
-                        color: "#e74c3c",
-                        border: "none",
-                        fontWeight: 700,
-                        fontSize: "1.1rem",
-                        marginLeft: 0,
-                        cursor: "pointer",
-                        fontFamily: "Open Sans, sans-serif",
-                        alignSelf: "flex-end"
-                      }}
+                      className="bg-none text-[#e74c3c] border-0 font-bold text-[1.1rem] ml-0 cursor-pointer font-sans self-end"
                       title="Remove"
                     >
                       &times;
@@ -886,21 +783,21 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               })}
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="flex items-center gap-2">
             <input
               type="checkbox"
               id="isPublic"
               checked={formData.isPublic}
               onChange={(e) => setFormData((prev) => ({ ...prev, isPublic: e.target.checked }))}
-              style={{ width: 18, height: 18 }}
+              className="w-4.5 h-4.5"
             />
-            <label htmlFor="isPublic" style={{ color: "#111", fontWeight: 600, fontSize: "1.08rem" }}>
+            <label htmlFor="isPublic" className="text-ink-strong font-semibold text-label">
               Make Public
             </label>
           </div>
           {userData?.role === ROLES.ADMIN && (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="isFeatured"
@@ -913,16 +810,16 @@ const ModuleBuilder = ({ onCancel } = {}) => {
                       ...(e.target.checked ? {} : { price: "" }),
                     }))
                   }
-                  style={{ width: 18, height: 18 }}
+                  className="w-4.5 h-4.5"
                 />
-                <label htmlFor="isFeatured" style={{ color: "#111", fontWeight: 600, fontSize: "1.08rem" }}>
+                <label htmlFor="isFeatured" className="text-ink-strong font-semibold text-label">
                   Featured (shows on homepage)
                 </label>
               </div>
 
               {formData.isFeatured === true && (
-                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                  <label htmlFor="price" style={{ color: "#111", fontWeight: 700, fontSize: "1.02rem" }}>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <label htmlFor="price" className="text-ink-strong font-bold text-[1.02rem]">
                     Price
                   </label>
                   <input
@@ -933,29 +830,13 @@ const ModuleBuilder = ({ onCancel } = {}) => {
                     value={formData.price}
                     onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
                     placeholder="0.00"
-                    style={{
-                      width: 140,
-                      padding: "10px 12px",
-                      borderRadius: 8,
-                      border: "1px solid #bbb",
-                      fontSize: "1rem",
-                      color: "#111",
-                      fontFamily: "Open Sans, sans-serif",
-                    }}
+                    className="w-35 py-2.5 px-3 rounded-lg border border-[#bbb] text-[1rem] text-ink-strong font-sans"
                   />
                   {Number(formData.price) > 0 && (
                     <button
                       type="button"
                       onClick={handleBuy}
-                      style={{
-                        background: "#162040",
-                        color: "#fff",
-                        border: "2px solid #162040",
-                        borderRadius: 8,
-                        padding: "10px 14px",
-                        fontWeight: 800,
-                        cursor: "pointer",
-                      }}
+                      className="bg-navy text-white border-2 border-navy rounded-lg py-2.5 px-3.5 font-extrabold cursor-pointer"
                     >
                       Buy
                     </button>
@@ -964,38 +845,18 @@ const ModuleBuilder = ({ onCancel } = {}) => {
               )}
             </>
           )}
-          <div style={{ display: "flex", gap: 16, marginTop: 16 }}>
+          <div className="flex gap-4 mt-4">
             <button
               type="button"
               onClick={handleCancel}
-              style={{
-                background: "#fff",
-                color: "#111",
-                border: "1px solid #111",
-                borderRadius: "6px",
-                padding: "8px 18px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "Open Sans, sans-serif",
-                fontSize: "1.08rem"
-              }}
+              className="bg-surface text-ink-strong border border-ink-strong rounded-md py-2 px-4.5 font-semibold cursor-pointer font-sans text-label"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveSession}
-              style={{
-                background: "#fff",
-                color: "#111",
-                border: "1px solid #111",
-                borderRadius: "6px",
-                padding: "8px 18px",
-                fontWeight: 600,
-                cursor: "pointer",
-                fontFamily: "Open Sans, sans-serif",
-                fontSize: "1.08rem"
-              }}
+              className="bg-surface text-ink-strong border border-ink-strong rounded-md py-2 px-4.5 font-semibold cursor-pointer font-sans text-label"
             >
               Save as Draft
             </button>
@@ -1100,19 +961,7 @@ const ModuleBuilder = ({ onCancel } = {}) => {
         {/* X button in top right */}
         <button
           onClick={() => setShowLessonPlanBuilderModal(false)}
-          style={{
-            position: "absolute",
-            top: 18,
-            right: 24,
-            background: "none",
-            border: "none",
-            fontSize: "2.2rem",
-            color: "#888",
-            cursor: "pointer",
-            zIndex: 2000,
-            fontWeight: 700,
-            lineHeight: 1,
-          }}
+          className="absolute top-4.5 right-6 bg-none border-0 text-[2.2rem] text-ink-faint cursor-pointer z-[2000] font-bold leading-none"
           aria-label="Close"
           type="button"
         >
