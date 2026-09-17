@@ -28,68 +28,24 @@ const HeroSection = () => {
     if (user) {
         return (
             <section
-                style={{
-                    width: "100%",
-                    minHeight: "200px",
-                    background: "#162040",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: "50px 0"
-                }}
+                className="w-full min-h-50 bg-navy flex items-center justify-center py-12.5 px-0"
             >
                 <div
-                    style={{
-                        width: "100%",
-                        maxWidth: "600px",
-                        margin: "0 auto",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
+                    className="w-full max-w-150 my-0 mx-auto flex flex-col items-center justify-center"
                 >
                     <h1
-                        style={{
-                            color: "#fff",
-                            fontSize: "2.5rem",
-                            fontWeight: "700",
-                            fontFamily: "Open Sans, sans-serif",
-                            textAlign: "center",
-                            letterSpacing: "1.2px",
-                            margin: 0,
-                            lineHeight: "1.2"
-                        }}
+                        className="text-white text-page-title font-bold font-sans text-center tracking-[1.2px] m-0 leading-[1.2]"
                     >
                         Welcome to your Dashboard
                     </h1>
                     <p
-                        style={{
-                            color: "#fff",
-                            fontSize: "1.15rem",
-                            fontWeight: "400",
-                            fontFamily: "Open Sans, sans-serif",
-                            textAlign: "center",
-                            marginTop: "28px",
-                            lineHeight: "1.6"
-                        }}
+                        className="text-white text-[1.15rem] font-normal font-sans text-center mt-7 leading-[1.6]"
                     >
                         Access educational content and enhance your classroom experience.
                     </p>
                     {role === ROLES.TEACHER_DEFAULT && (
                         <button
-                            style={{
-                                background: "#FFC940",
-                                color: "#000",
-                                border: "1px solid #fff",
-                                borderRadius: "6px",
-                                padding: "14px 32px",
-                                fontSize: "1.08rem",
-                                fontWeight: "600",
-                                cursor: "pointer",
-                                transition: "background 0.2s, color 0.2s, border 0.2s",
-                                marginTop: "40px"
-                            }}
+                            className="bg-accent-strong text-black border border-white rounded-md py-3.5 px-8 text-label font-semibold cursor-pointer [transition:background_0.2s,_color_0.2s,_border_0.2s] mt-10"
                             onClick={() => navigate("/upgrade")}
                         >
                             Upgrade Now
@@ -103,108 +59,37 @@ const HeroSection = () => {
     // Show signup section for non-logged in users
     return (
         <section
-            style={{
-                width: "100%",
-                minHeight: "200px",
-                background: "#162040",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "20px 0"
-            }}
+            className="w-full min-h-50 bg-navy flex items-center justify-center py-5 px-0"
         >
             <div
-                style={{
-                    width: "100%",
-                    maxWidth: "600px",
-                    margin: "0 auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}
+                className="w-full max-w-150 my-0 mx-auto flex flex-col items-center justify-center"
             >
                 <h1
-                    style={{
-                        color: "#fff",
-                        fontSize: "3rem",
-                        fontWeight: "700",
-                        fontFamily: "Open Sans, sans-serif",
-                        textAlign: "center",
-                        letterSpacing: "0.5px",
-                        margin: 0,
-                        lineHeight: "1.1",
-                        textShadow: "0 2px 4px rgba(0,0,0,0.3)"
-                    }}
+                    className="text-white text-[3rem] font-bold font-sans text-center tracking-[0.5px] m-0 leading-[1.1] [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]"
                 >
                     Empower the Future with AI &amp; Data Science
                 </h1>
                 <p
-                    style={{
-                        color: "#FDCB58",
-                        fontSize: "1.4rem",
-                        fontWeight: "600",
-                        fontFamily: "Open Sans, sans-serif",
-                        textAlign: "center",
-                        marginTop: "24px",
-                        marginBottom: "32px",
-                        lineHeight: "1.3",
-                        letterSpacing: "0.5px",
-                        textTransform: "uppercase"
-                    }}
+                    className="text-[#fdcb58] text-[1.4rem] font-semibold font-sans text-center mt-6 mb-8 leading-[1.3] tracking-[0.5px] uppercase"
                 >
                     Learn. Explore. Create with Data.
                 </p>
                 <p
-                    style={{
-                        color: "rgba(255, 255, 255, 0.9)",
-                        fontSize: "1.25rem",
-                        fontWeight: "400",
-                        fontFamily: "Open Sans, sans-serif",
-                        textAlign: "center",
-                        marginTop: "0",
-                        lineHeight: "1.7",
-                        maxWidth: "580px",
-                        margin: "0 auto"
-                    }}
+                    className="[color:rgba(255,_255,_255,_0.9)] text-section-title font-normal font-sans text-center mt-0 leading-[1.7] max-w-145 my-0 mx-auto"
                 >
                     Unlock potential through hands-on AI and Data Science learning experiences designed for K12 students and educators.
                 </p>
                 <div
-                    style={{
-                        display: "flex",
-                        gap: "24px",
-                        marginTop: "40px"
-                    }}
+                    className="flex gap-6 mt-10"
                 >
                     <button
-                        style={{
-                            background: "#FDCB58",
-                            color: "#162040",
-                            border: "none",
-                            borderRadius: "6px",
-                            padding: "14px 32px",
-                            fontSize: "1.08rem",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            transition: "background 0.2s, color 0.2s, border 0.2s",
-                        }}
+                        className="bg-[#fdcb58] text-navy border-0 rounded-md py-3.5 px-8 text-label font-semibold cursor-pointer [transition:background_0.2s,_color_0.2s,_border_0.2s]"
                         onClick={() => navigate("/teacher-signup")}
                     >
                         Sign Up as Teacher
                     </button>
                     <button
-                        style={{
-                            background: "transparent",
-                            color: "#FDCB58",
-                            border: "1px solid #FDCB58",
-                            borderRadius: "6px",
-                            padding: "14px 32px",
-                            fontSize: "1.08rem",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            transition: "background 0.2s, color 0.2s, border 0.2s",
-                        }}
+                        className="bg-transparent text-[#fdcb58] border border-[#fdcb58] rounded-md py-3.5 px-8 text-label font-semibold cursor-pointer [transition:background_0.2s,_color_0.2s,_border_0.2s]"
                         onClick={() => navigate("/student-signup")}
                     >
                         Sign Up as Student

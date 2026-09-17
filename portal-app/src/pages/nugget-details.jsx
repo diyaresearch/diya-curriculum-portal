@@ -53,10 +53,10 @@ const NuggetDetails = () => {
   if (loading) return <Loading variant="page" message="Loading nugget..." />;
 
   if (error) {
-    return <div style={{ padding: 24, color: "crimson" }}>{error}</div>;
+    return <div className="p-6 [color:crimson]">{error}</div>;
   }
 
-  if (!nugget) return <div style={{ padding: 24 }}>This nugget is no longer available.</div>;
+  if (!nugget) return <div className="p-6">This nugget is no longer available.</div>;
   
   // Custom styles for lists, links, and headings
   const customStyles = `
@@ -115,9 +115,9 @@ const NuggetDetails = () => {
   `;
 
   return (
-    <div style={{ background: "#fff", minHeight: "100vh" }}>
+    <div className="bg-surface min-h-screen">
       {/* Back control (match module page spacing) */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "18px 20px 0 20px" }}>
+      <div className="max-w-275 my-0 mx-auto pt-4.5 pr-5 pb-0 pl-5">
         <BackButton
           onClick={() => {
             if (window.history.length > 1) {
@@ -133,16 +133,11 @@ const NuggetDetails = () => {
 
       {/* Header (match module page) */}
       <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "10px 20px 0 20px",
-          textAlign: "center",
-        }}
+        className="max-w-275 my-0 mx-auto pt-2.5 pr-5 pb-0 pl-5 text-center"
       >
         <h1 style={{ ...TYPO.pageTitle, color: "#111" }}>{nugget.Title}</h1>
 
-        <div style={{ maxWidth: 820, margin: "10px auto 0 auto", textAlign: "left" }}>
+        <div className="max-w-205 mt-2.5 mr-auto mb-0 ml-auto text-left">
           <div
             className="nugget-rich-html"
             style={{ ...TYPO.pageSubtitle, color: "#222" }}
@@ -151,7 +146,7 @@ const NuggetDetails = () => {
         </div>
 
         <MetaChipsRow
-          style={{ marginTop: 18 }}
+          className="mt-4.5"
           items={[
             { label: "Author", value: nugget.Author || "—" },
             { label: "Category", value: nugget.Category },
@@ -163,11 +158,11 @@ const NuggetDetails = () => {
       </div>
 
       {/* Main content cards */}
-      <div style={{ maxWidth: 1100, margin: "28px auto 0 auto", padding: "0 20px 80px 20px" }}>
+      <div className="max-w-275 mt-7 mr-auto mb-0 ml-auto pt-0 pr-5 pb-20 pl-5">
 
       {Array.isArray(nugget.attachments) && nugget.attachments.length > 0 && (
         <SectionCard title="Attachments">
-          <ul style={{ marginLeft: 18, color: "#444" }}>
+          <ul className="ml-4.5 text-[#444]">
             {nugget.attachments
               .filter((a) => a && a.kind === "link" && a.url)
               .map((a, idx) => {
@@ -181,12 +176,12 @@ const NuggetDetails = () => {
                         : "Link";
 
                 return (
-                  <li key={a.id || idx} style={{ marginBottom: 8 }}>
+                  <li key={a.id || idx} className="mb-2">
                     <a
                       href={a.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: "#1a73e8", textDecoration: "underline" }}
+                      className="text-link underline"
                     >
                       {label}
                     </a>

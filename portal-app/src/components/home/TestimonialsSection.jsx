@@ -82,7 +82,7 @@ const ProfileImage = ({ src, alt, size = LAYOUT.AVATAR_SIZE }) => {
           loading="lazy"
           decoding="async"
           onError={() => setFailed(true)}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          className="w-full h-full object-cover"
         />
       )}
     </div>
@@ -130,13 +130,7 @@ const DotIndicators = ({ total, current, onDotClick, maxDots = CAROUSEL_CONFIG.M
   const startDot = Math.max(0, Math.min(current - Math.floor(maxDots / 2), total - maxDots));
 
   return (
-    <div style={{
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: "8px",
-      marginTop: "20px"
-    }}>
+    <div className="flex justify-center items-center gap-2 mt-5">
       {Array.from({ length: showDots }, (_, index) => {
         const dotIndex = startDot + index;
         const isActive = dotIndex === current;
@@ -227,27 +221,13 @@ const TestimonialPreviewCard = ({ testimonial, onClick }) => {
       >
         &quot;{truncated}&quot;
         {isTruncated && (
-          <span style={{
-            color: "#4a90e2",
-            fontSize: "0.9rem",
-            fontStyle: "normal",
-            fontWeight: "500",
-            marginLeft: "8px",
-            display: "block",
-            marginTop: "8px"
-          }}>
+          <span className="text-[#4a90e2] text-[0.9rem] not-italic font-medium ml-2 block mt-2">
             ... Click to read more
           </span>
         )}
       </div>
 
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "16px",
-        marginTop: "auto"
-      }}>
+      <div className="flex items-center justify-center gap-4 mt-auto">
         <ProfileImage
           src={testimonial.profileImage}
           alt={`${testimonial.Name} profile`}
@@ -289,15 +269,8 @@ const TestimonialDetail = ({ testimonial, open, onClose, onPrev, onNext, isFirst
       size="medium"
       contentLabel={`Testimonial from ${testimonial.Name}`}
     >
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          width: "100%",
-          marginBottom: "8px",
-          paddingRight: "36px"
-        }}>
+      <div className="flex flex-col items-center">
+        <div className="flex justify-between items-center w-full mb-2 pr-9">
           <button
             type="button"
             onClick={onPrev}
@@ -324,14 +297,7 @@ const TestimonialDetail = ({ testimonial, open, onClose, onPrev, onNext, isFirst
           size={LAYOUT.DETAIL_AVATAR_SIZE}
         />
 
-        <div style={{
-          color: "#343a40",
-          fontSize: "1.1rem",
-          margin: "24px 0 20px",
-          textAlign: "center",
-          lineHeight: 1.6,
-          fontStyle: "italic"
-        }}>
+        <div className="text-[#343a40] text-[1.1rem] mt-6 mx-0 mb-5 text-center leading-[1.6] italic">
           &quot;{testimonial.Text}&quot;
         </div>
 
@@ -456,23 +422,9 @@ const TestimonialsCarousel = ({ testimonials }) => {
       onMouseLeave={resume}
       onFocus={pause}
       onBlur={resume}
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: 0,
-        marginLeft: "40px",
-        gap: "24px"
-      }}
+      className="flex-[1] flex flex-col items-center justify-center min-w-0 ml-10 gap-6"
     >
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "24px"
-      }}>
+      <div className="flex items-center justify-center gap-6">
         <button
           type="button"
           onClick={handlePrev}
@@ -610,61 +562,24 @@ const TestimonialsSection = () => {
   }
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className="w-full">
       <section
-        style={{
-          width: "100%",
-          background: "#FFFFFF",
-          padding: "60px 0 60px 0",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "flex-start",
-          justifyContent: "center",
-          gap: "80px",
-          maxWidth: "1100px",
-          margin: "0 auto"
-        }}
+        className="w-full bg-surface pt-15 pr-0 pb-15 pl-0 flex flex-row items-start justify-center gap-20 max-w-275 my-0 mx-auto"
       >
         {/* Left: Title and Description */}
-        <div style={{
-          flex: "0 0 260px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          justifyContent: "center",
-          gap: "16px",
-          maxWidth: "100%"
-        }}>
-          <h2 style={{
-            fontSize: "2.5rem",
-            fontWeight: "700",
-            color: "#162040",
-            marginBottom: "18px",
-            textAlign: "center",
-            fontFamily: "Open Sans, sans-serif",
-            letterSpacing: "1px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis"
-          }}>
+        <div className="flex-[0_0_260px] flex flex-col items-start justify-center gap-4 max-w-full">
+          <h2 className="text-page-title font-bold text-navy mb-4.5 text-center font-sans tracking-[1px] whitespace-nowrap overflow-hidden text-ellipsis">
             Testimonials
           </h2>
           <p
-            style={{
-              fontSize: "1.15rem",
-              color: "#222",
-              maxWidth: "1000px",
-              lineHeight: 1.6,
-              margin: 0,
-              textAlign: "center"
-            }}
+            className="text-[1.15rem] text-ink max-w-250 leading-[1.6] m-0 text-center"
           >
             Discover how our platform has transformed the teaching and learning experience for educators and students alike.
           </p>
         </div>
 
         {/* Right: Testimonials Carousel */}
-        <div style={{ flex: "1 1 300px", position: "relative", width: "100%" }}>
+        <div className="flex-[1_1_300px] relative w-full">
           <TestimonialsCarousel testimonials={testimonials} />
         </div>
       </section>

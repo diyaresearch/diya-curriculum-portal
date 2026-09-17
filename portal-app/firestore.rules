@@ -136,8 +136,31 @@ service cloud.firestore {
       allow delete: if isSignedIn();
     }
 
+    // Lesson contents are what a paid module actually sells (#430).
+    //
+    // This was `allow read: if true`, which meant any anonymous client could
+    // read - and, worse, *list* - every lesson in the project straight from the
+    // SDK, whatever the API did. Gating the module endpoint could not help:
+    // this path never went near it.
+    //
+    // Rules cannot run the query that decides the question properly ("which
+    // modules list this lesson in lessonPlans, and is any of them paid?") -
+    // there are no queries in rules, and a lesson carries no back reference to
+    // its module. So this rule is the blunt half of the pair: it exposes only
+    // what is explicitly published, plus your own drafts. The entitlement logic
+    // lives in the API, the only path that can answer the real question - see
+    // `canAccessLesson` in functions/utils/entitlements.check.js.
+    //
+    // Consequence for callers: an unfiltered `getDocs(collection(db, 'lesson'))`
+    // is denied outright now rather than returning everything. A browse listing
+    // must ask for `where('isPublic', '==', true)` and an author's own list for
+    // `where('authorId', '==', uid)` - both of which the app now does. Rules are
+    // not filters: a query the rule cannot prove safe for every match fails as
+    // a whole.
     match /lesson/{lessonId} {
-      allow read: if true;
+      allow read: if resource.data.get('isPublic', false) == true
+                  || isOwner(resource.data.get('authorId', ''))
+                  || isAdmin();
       allow write: if isSignedIn();
     }
 

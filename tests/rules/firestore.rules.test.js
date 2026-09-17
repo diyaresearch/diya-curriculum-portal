@@ -12,7 +12,7 @@ const {
   assertFails,
   assertSucceeds,
 } = require("@firebase/rules-unit-testing");
-const { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } = require("firebase/firestore");
+const { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, where } = require("firebase/firestore");
 
 const RULES = fs.readFileSync(
   path.join(__dirname, "..", "..", "portal-app", "firestore.rules"),
@@ -43,6 +43,20 @@ beforeEach(async () => {
     const db = ctx.firestore();
     await setDoc(doc(db, "users", ALICE), { email: "alice@example.com", role: "teacherDefault" });
     await setDoc(doc(db, "module", "m1"), { title: "Public module", price: 10 });
+    // #430 lesson fixtures: one published, one private draft belonging to
+    // ALICE, and one private lesson sitting inside the paid module m1.
+    await setDoc(doc(db, "lesson", "public-lesson"), {
+      title: "Published", isPublic: true, authorId: BOB,
+    });
+    await setDoc(doc(db, "lesson", "alice-draft"), {
+      title: "Alice's draft", isPublic: false, authorId: ALICE,
+    });
+    await setDoc(doc(db, "lesson", "paid-lesson"), {
+      title: "Inside the paid module", isPublic: false, authorId: BOB,
+    });
+    await setDoc(doc(db, "module", "paid-module"), {
+      title: "Paid", price: 49, author: BOB, lessonPlans: ["paid-lesson"],
+    });
     await setDoc(doc(db, "testimonials", "t1"), { quote: "Real testimonial" });
     await setDoc(doc(db, "payment_logs", "p1"), { amount: 999 });
     await setDoc(doc(db, "subscriptions", "s1"), { plan: "teacherPlus" });
@@ -199,5 +213,57 @@ describe("#382 — money and PII collections are server-only", () => {
 
   test("profile documents cannot be deleted by their owner", async () => {
     await assertFails(deleteDoc(doc(as(ALICE), "users", ALICE)));
+  });
+});
+
+
+describe("#430 — paid lesson contents are not world-readable", () => {
+  test("anonymous listing of the whole lesson collection is denied", async () => {
+    // The leak: this used to return every lesson, contents and all.
+    await assertFails(getDocs(collection(anon(), "lesson")));
+  });
+
+  test("a signed-in user cannot list the whole lesson collection either", async () => {
+    await assertFails(getDocs(collection(as(BOB), "lesson")));
+  });
+
+  test("anonymous read of a private lesson in a paid module is denied", async () => {
+    await assertFails(getDoc(doc(anon(), "lesson", "paid-lesson")));
+  });
+
+  test("a signed-in stranger cannot read it either", async () => {
+    await assertFails(getDoc(doc(as(ALICE), "lesson", "paid-lesson")));
+  });
+
+  test("a published lesson is still readable anonymously", async () => {
+    await assertSucceeds(getDoc(doc(anon(), "lesson", "public-lesson")));
+  });
+
+  test("an author reads their own unpublished lesson", async () => {
+    await assertSucceeds(getDoc(doc(as(ALICE), "lesson", "alice-draft")));
+  });
+
+  test("a stranger cannot read someone else's unpublished lesson", async () => {
+    await assertFails(getDoc(doc(as(BOB), "lesson", "alice-draft")));
+  });
+
+  test("a browse query constrained to published lessons is allowed", async () => {
+    // What ExploreModulesSection and teacherplusPage now send.
+    await assertSucceeds(
+      getDocs(query(collection(anon(), "lesson"), where("isPublic", "==", true)))
+    );
+  });
+
+  test("an author's own-lessons query is allowed", async () => {
+    // What the module builder sends.
+    await assertSucceeds(
+      getDocs(query(collection(as(ALICE), "lesson"), where("authorId", "==", ALICE)))
+    );
+  });
+
+  test("querying someone else's lessons is denied", async () => {
+    await assertFails(
+      getDocs(query(collection(as(BOB), "lesson"), where("authorId", "==", ALICE)))
+    );
   });
 });

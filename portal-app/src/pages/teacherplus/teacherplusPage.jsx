@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/firebase/firebaseConfig';
 import { COLLECTIONS } from '@/firebase/collectionNames';
 
@@ -127,8 +127,9 @@ const TeacherPlusPage = () => {
             console.error("Error fetching modules:", error);
         });
 
-        // Fetch lessons and nuggets (keep existing code)
-        getDocs(collection(db, COLLECTIONS.lesson)).then(snapshot => {
+        // Published lessons only - the rules require the constraint (#430), and
+        // this dashboard already describes itself as showing what is published.
+        getDocs(query(collection(db, COLLECTIONS.lesson), where("isPublic", "==", true))).then(snapshot => {
             setLessons(snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
@@ -248,89 +249,33 @@ const TeacherPlusPage = () => {
 
     return (
         <div
-            style={{
-                width: "100%",
-                background: "#F6F8FA",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center"
-            }}
+            className="w-full bg-surface-subtle flex flex-col items-center"
         >
 
             {/* Header Section for TeacherPlus */}
             <section
-                style={{
-                    width: "100%",
-                    background: "#242B42",
-                    padding: "60px 0",
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "60px",
-                    color: "white"
-                }}
+                className="w-full bg-navy-soft py-15 px-0 flex flex-row items-center justify-center gap-15 text-white"
             >
-                <div style={{
-                    flex: "1",
-                    maxWidth: "500px",
-                    paddingLeft: "40px"
-                }}>
-                    <h1 style={{
-                        fontSize: "2.5rem",
-                        fontWeight: "700",
-                        marginBottom: "16px",
-                        color: "white"
-                    }}>
+                <div className="flex-[1] max-w-125 pl-10">
+                    <h1 className="text-page-title font-bold mb-4 text-white">
                         Welcome Back, {displayName}!
                     </h1>
-                    <p style={{
-                        fontSize: "1.1rem",
-                        marginBottom: "32px",
-                        color: "#e2e8f0"
-                    }}>
+                    <p className="text-[1.1rem] mb-8 text-surface-sunken">
                         Access advanced tools to enhance your teaching experience.
                     </p>
                     <button
                         onClick={() => navigate("/coming-soon?feature=Classroom%20Management")}
-                        style={{
-                            background: "#fbbf24",
-                            color: "#1a202c",
-                            border: "none",
-                            borderRadius: "6px",
-                            padding: "12px 32px",
-                            fontSize: "1rem",
-                            fontWeight: "600",
-                            cursor: "pointer"
-                        }}
+                        className="bg-[#fbbf24] text-[#1a202c] border-0 rounded-md py-3 px-8 text-[1rem] font-semibold cursor-pointer"
                     >
                         Manage My Classroom
                     </button>
                 </div>
-                <div style={{
-                    flex: "1",
-                    maxWidth: "400px",
-                    height: "300px",
-                    borderRadius: "8px",
-                    marginRight: "40px"
-                }}>
-                    <div style={{
-                        flex: "1",
-                        maxWidth: "400px",
-                        height: "300px",
-                        borderRadius: "8px",
-                        marginRight: "40px",
-                        overflow: "hidden"
-                    }}>
+                <div className="flex-[1] max-w-100 h-75 rounded-lg mr-10">
+                    <div className="flex-[1] max-w-100 h-75 rounded-lg mr-10 overflow-hidden">
                         <img
                             src={laptopImg}
                             alt="Teaching Tools"
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "cover",
-                                display: "block"
-                            }}
+                            className="w-full h-full object-cover block"
                         />
                     </div>
                 </div>
@@ -338,67 +283,26 @@ const TeacherPlusPage = () => {
 
             {/* Create New Section */}
             <section
-                style={{
-                    width: "100%",
-                    padding: "80px 0",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center"
-                }}
+                className="w-full py-20 px-0 flex flex-col items-center"
             >
                 <h2
-                    style={{
-                        fontSize: "2.5rem",
-                        fontWeight: "700",
-                        color: "#111",
-                        textAlign: "center",
-                        margin: 0,
-                        letterSpacing: "1px"
-                    }}
+                    className="text-page-title font-bold text-ink-strong text-center m-0 tracking-[1px]"
                 >
                     Create New
                 </h2>
                 <p
-                    style={{
-                        marginTop: "18px",
-                        fontSize: "1.15rem",
-                        color: "#222",
-                        textAlign: "center",
-                        maxWidth: "600px",
-                        fontWeight: 500,
-                        marginBottom: "60px"
-                    }}
+                    className="mt-4.5 text-[1.15rem] text-ink text-center max-w-150 font-medium mb-15"
                 >
                     Start creating your content now!
                 </p>
 
                 {/* Create New Tools */}
                 <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "40px",
-                        width: "100%",
-                        maxWidth: "1100px",
-                        flexWrap: "wrap"
-                    }}
+                    className="flex justify-center gap-10 w-full max-w-275 flex-wrap"
                 >
                     {/* Create Module */}
                     <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                            width: "340px",
-                            height: "320px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                            transition: "transform 0.2s, box-shadow 0.2s",
-                            border: "2px solid transparent"
-                        }}
+                        className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-85 h-80 flex flex-col items-center justify-center cursor-pointer [transition:transform_0.2s,_box-shadow_0.2s] border-2 border-transparent"
                         onClick={() => navigate("/module-builder")}
                         onMouseEnter={(e) => {
                             e.target.style.transform = "translateY(-4px)";
@@ -410,16 +314,7 @@ const TeacherPlusPage = () => {
                         }}
                     >
                         <div
-                            style={{
-                                width: "80px",
-                                height: "80px",
-                                background: "#000",
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginBottom: "24px"
-                            }}
+                            className="w-20 h-20 bg-black rounded-full flex items-center justify-center mb-6"
                         >
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
                                 <rect x="3" y="3" width="18" height="18" rx="2" stroke="white" strokeWidth="2" />
@@ -428,24 +323,12 @@ const TeacherPlusPage = () => {
                             </svg>
                         </div>
                         <h3
-                            style={{
-                                fontSize: "1.5rem",
-                                fontWeight: "700",
-                                color: "#222",
-                                marginBottom: "12px",
-                                textAlign: "center"
-                            }}
+                            className="text-[1.5rem] font-bold text-ink mb-3 text-center"
                         >
                             Create Module
                         </h3>
                         <p
-                            style={{
-                                fontSize: "1rem",
-                                color: "#666",
-                                textAlign: "center",
-                                maxWidth: "280px",
-                                lineHeight: "1.5"
-                            }}
+                            className="text-[1rem] text-ink-muted text-center max-w-70 leading-[1.5]"
                         >
                             Build a new module to teach.
                         </p>
@@ -453,20 +336,7 @@ const TeacherPlusPage = () => {
 
                     {/* Create Lesson Plan */}
                     <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                            width: "340px",
-                            height: "320px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                            transition: "transform 0.2s, box-shadow 0.2s",
-                            border: "2px solid transparent"
-                        }}
+                        className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-85 h-80 flex flex-col items-center justify-center cursor-pointer [transition:transform_0.2s,_box-shadow_0.2s] border-2 border-transparent"
                         onClick={() => navigate("/lesson-plans/builder")}
                         onMouseEnter={(e) => {
                             e.target.style.transform = "translateY(-4px)";
@@ -478,16 +348,7 @@ const TeacherPlusPage = () => {
                         }}
                     >
                         <div
-                            style={{
-                                width: "80px",
-                                height: "80px",
-                                background: "#162040",
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginBottom: "24px"
-                            }}
+                            className="w-20 h-20 bg-navy rounded-full flex items-center justify-center mb-6"
                         >
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="white" strokeWidth="2" />
@@ -498,24 +359,12 @@ const TeacherPlusPage = () => {
                             </svg>
                         </div>
                         <h3
-                            style={{
-                                fontSize: "1.5rem",
-                                fontWeight: "700",
-                                color: "#222",
-                                marginBottom: "12px",
-                                textAlign: "center"
-                            }}
+                            className="text-[1.5rem] font-bold text-ink mb-3 text-center"
                         >
                             Create Lesson Plan
                         </h3>
                         <p
-                            style={{
-                                fontSize: "1rem",
-                                color: "#666",
-                                textAlign: "center",
-                                maxWidth: "280px",
-                                lineHeight: "1.5"
-                            }}
+                            className="text-[1rem] text-ink-muted text-center max-w-70 leading-[1.5]"
                         >
                             Design a lesson plan for your classes.
                         </p>
@@ -523,20 +372,7 @@ const TeacherPlusPage = () => {
 
                     {/* Create Nugget */}
                     <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "12px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                            width: "340px",
-                            height: "320px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                            transition: "transform 0.2s, box-shadow 0.2s",
-                            border: "2px solid transparent"
-                        }}
+                        className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-85 h-80 flex flex-col items-center justify-center cursor-pointer [transition:transform_0.2s,_box-shadow_0.2s] border-2 border-transparent"
                         onClick={() => navigate("/nugget-builder")}
                         onMouseEnter={(e) => {
                             e.target.style.transform = "translateY(-4px)";
@@ -548,16 +384,7 @@ const TeacherPlusPage = () => {
                         }}
                     >
                         <div
-                            style={{
-                                width: "80px",
-                                height: "80px",
-                                background: "#fbbf24",
-                                borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                marginBottom: "24px"
-                            }}
+                            className="w-20 h-20 bg-[#fbbf24] rounded-full flex items-center justify-center mb-6"
                         >
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
                                 <circle cx="12" cy="12" r="3" stroke="white" strokeWidth="2" />
@@ -565,24 +392,12 @@ const TeacherPlusPage = () => {
                             </svg>
                         </div>
                         <h3
-                            style={{
-                                fontSize: "1.5rem",
-                                fontWeight: "700",
-                                color: "#222",
-                                marginBottom: "12px",
-                                textAlign: "center"
-                            }}
+                            className="text-[1.5rem] font-bold text-ink mb-3 text-center"
                         >
                             Create Nugget
                         </h3>
                         <p
-                            style={{
-                                fontSize: "1rem",
-                                color: "#666",
-                                textAlign: "center",
-                                maxWidth: "280px",
-                                lineHeight: "1.5"
-                            }}
+                            className="text-[1rem] text-ink-muted text-center max-w-70 leading-[1.5]"
                         >
                             Share concise learning nuggets.
                         </p>
@@ -593,124 +408,48 @@ const TeacherPlusPage = () => {
 
             {/* Featured Modules Section */}
             <section
-                style={{
-                    width: "100%",
-                    padding: "80px 0 0 0",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center"
-                }}
+                className="w-full pt-20 pr-0 pb-0 pl-0 flex flex-col items-center"
             >
                 <h2
-                    style={{
-                        fontSize: "2.5rem",
-                        fontWeight: "700",
-                        color: "#111",
-                        textAlign: "center",
-                        margin: 0,
-                        letterSpacing: "1px"
-                    }}
+                    className="text-page-title font-bold text-ink-strong text-center m-0 tracking-[1px]"
                 >
                     Featured Modules
                 </h2>
                 <p
-                    style={{
-                        marginTop: "18px",
-                        fontSize: "1.15rem",
-                        color: "#222",
-                        textAlign: "center",
-                        maxWidth: "600px",
-                        fontWeight: 500,
-                    }}
+                    className="mt-4.5 text-[1.15rem] text-ink text-center max-w-150 font-medium"
                 >
                     Explore the latest modules available for your class.
                 </p>
 
                 <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "40px",
-                        marginTop: "60px",
-                        width: "100%",
-                        maxWidth: "1100px",
-                        padding: "0 16px",
-                        boxSizing: "border-box",
-                        flexWrap: "wrap",
-                    }}
+                    className="flex justify-center gap-10 mt-15 w-full max-w-275 py-0 px-4 box-border flex-wrap"
                 >
                     {featuredModules.length === 0 ? (
-                        <div style={{ padding: "40px", textAlign: "center", color: "#666", fontSize: "1.1rem", fontStyle: "italic" }}>
+                        <div className="p-10 text-center text-ink-muted text-[1.1rem] italic">
                             No featured modules yet.
                         </div>
                     ) : (
                         featuredItems.map((m) => (
                             <div
                                 key={m.id}
-                                style={{
-                                    background: "#fff",
-                                    borderRadius: "12px",
-                                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                                    width: "340px",
-                                    height: "340px",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "flex-end",
-                                    overflow: "hidden",
-                                    cursor: "pointer",
-                                    position: "relative",
-                                }}
+                                className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-85 h-85 flex flex-col items-center justify-end overflow-hidden cursor-pointer relative"
                                 onClick={() => navigate(`/module/${m.id}`)}
                             >
-                                <div style={{
-                                    width: "100%",
-                                    height: "calc(100% - 70px)",
-                                    display: "flex",
-                                    alignItems: "stretch",
-                                    justifyContent: "center"
-                                }}>
+                                <div className="w-full h-[calc(100%_-_70px)] flex items-stretch justify-center">
                                     <img
                                         src={String(m.featuredImageUrl || "").trim() ? m.featuredImageUrl : laptopImg}
                                         alt={m.title || "Module"}
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                            display: "block"
-                                        }}
+                                        className="w-full h-full object-cover block"
                                     />
                                 </div>
-                                <div style={{
-                                    width: "100%",
-                                    height: "90px",
-                                    padding: "18px 0 0 0",
-                                    textAlign: "center",
-                                    background: "#fff"
-                                }}>
+                                <div className="w-full h-22.5 pt-4.5 pr-0 pb-0 pl-0 text-center bg-surface">
                                     <span
-                                        style={{
-                                            display: "block",
-                                            fontWeight: "600",
-                                            fontSize: "1.15rem",
-                                            color: "#162040",
-                                            letterSpacing: "1px"
-                                        }}
+                                        className="block font-semibold text-[1.15rem] text-navy tracking-[1px]"
                                     >
                                         {capitalizeWords(Array.isArray(m.level) ? m.level.join(", ") : m.level)}
                                     </span>
                                     <span
-                                        style={{
-                                            display: "block",
-                                            fontWeight: "700",
-                                            fontSize: "1.35rem",
-                                            color: "#222",
-                                            marginTop: "8px",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            overflow: "hidden",
-                                            padding: "0 10px"
-                                        }}
+                                        className="block font-bold text-[1.35rem] text-ink mt-2 text-ellipsis whitespace-nowrap overflow-hidden py-0 px-2.5"
                                     >
                                         {m.title || "Untitled Module"}
                                     </span>
@@ -721,7 +460,7 @@ const TeacherPlusPage = () => {
                 </div>
 
                 {featuredModules.length > FEATURED_PAGE_SIZE && (
-                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "18px", marginTop: "28px" }}>
+                    <div className="flex justify-center items-center gap-4.5 mt-7">
                         <button
                             type="button"
                             onClick={() => setFeaturedPage((p) => Math.max(1, p - 1))}
@@ -738,7 +477,7 @@ const TeacherPlusPage = () => {
                         >
                             Prev
                         </button>
-                        <div style={{ fontWeight: 700, color: "#162040" }}>
+                        <div className="font-bold text-navy">
                             Page {safeFeaturedPage} of {featuredTotalPages}
                         </div>
                         <button
@@ -764,145 +503,54 @@ const TeacherPlusPage = () => {
 
             {/* My Modules Section */}
             <section
-                style={{
-                    width: "100%",
-                    padding: "80px 0",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center"
-                }}
+                className="w-full py-20 px-0 flex flex-col items-center"
             >
                 <h2
-                    style={{
-                        fontSize: "2.5rem",
-                        fontWeight: "700",
-                        color: "#111",
-                        textAlign: "center",
-                        margin: 0,
-                        letterSpacing: "1px"
-                    }}
+                    className="text-page-title font-bold text-ink-strong text-center m-0 tracking-[1px]"
                 >
                     My Modules
                 </h2>
                 <p
-                    style={{
-                        marginTop: "18px",
-                        fontSize: "1.15rem",
-                        color: "#222",
-                        textAlign: "center",
-                        maxWidth: "600px",
-                        fontWeight: 500,
-                    }}
+                    className="mt-4.5 text-[1.15rem] text-ink text-center max-w-150 font-medium"
                 >
                     Your custom teaching modules.
                 </p>
                 <button
                     onClick={() => navigate("/module-builder")}
-                    style={{
-                        marginTop: "32px",
-                        background: "#000",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "6px",
-                        padding: "12px 32px",
-                        fontSize: "1rem",
-                        fontWeight: "600",
-                        cursor: "pointer"
-                    }}
+                    className="mt-8 bg-black text-white border-0 rounded-md py-3 px-8 text-[1rem] font-semibold cursor-pointer"
                 >
                     Add New Module
                 </button>
 
                 <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "40px",
-                        marginTop: "60px",
-                        width: "100%",
-                        maxWidth: "1100px",
-                        flexWrap: "wrap"
-                    }}
+                    className="flex justify-center gap-10 mt-15 w-full max-w-275 flex-wrap"
                 >
                     {userModules.length === 0 ? (
-                        <div style={{
-                            padding: "40px",
-                            textAlign: "center",
-                            color: "#666",
-                            fontSize: "1.1rem",
-                            fontStyle: "italic"
-                        }}>
+                        <div className="p-10 text-center text-ink-muted text-[1.1rem] italic">
                             No custom modules created yet. Click "Add New Module" to get started!
                         </div>
                     ) : (
                         userModules.map((module) => (
                             <div
                                 key={module.id}
-                                style={{
-                                    background: "#fff",
-                                    borderRadius: "12px",
-                                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                                    width: "340px",
-                                    height: "340px",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "flex-end",
-                                    overflow: "hidden",
-                                    cursor: "pointer",
-                                    position: "relative"
-                                }}
+                                className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-85 h-85 flex flex-col items-center justify-end overflow-hidden cursor-pointer relative"
                                 onClick={() => navigate(`/module/${module.id}`)}
                             >
-                                <div style={{
-                                    width: "100%",
-                                    height: "calc(100% - 70px)",
-                                    display: "flex",
-                                    alignItems: "stretch",
-                                    justifyContent: "center",
-                                    background: "#f0f0f0"
-                                }}>
+                                <div className="w-full h-[calc(100%_-_70px)] flex items-stretch justify-center bg-[#f0f0f0]">
                                     <img
                                         src={laptopImg} // You can use module.image if you have custom images
                                         alt={module.title}
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                            display: "block"
-                                        }}
+                                        className="w-full h-full object-cover block"
                                     />
                                 </div>
-                                <div style={{
-                                    width: "100%",
-                                    height: "90px",
-                                    padding: "18px 0 0 0",
-                                    textAlign: "center",
-                                    background: "#fff"
-                                }}>
+                                <div className="w-full h-22.5 pt-4.5 pr-0 pb-0 pl-0 text-center bg-surface">
                                     <span
-                                        style={{
-                                            display: "block",
-                                            fontWeight: "600",
-                                            fontSize: "1.15rem",
-                                            color: "#162040",
-                                            letterSpacing: "1px"
-                                        }}
+                                        className="block font-semibold text-[1.15rem] text-navy tracking-[1px]"
                                     >
                                         {capitalizeWords(Array.isArray(module.level) ? module.level.join(", ") : module.level)}
                                     </span>
                                     <span
-                                        style={{
-                                            display: "block",
-                                            fontWeight: "700",
-                                            fontSize: "1.35rem",
-                                            color: "#222",
-                                            marginTop: "8px",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            overflow: "hidden",
-                                            padding: "0 10px"
-                                        }}
+                                        className="block font-bold text-[1.35rem] text-ink mt-2 text-ellipsis whitespace-nowrap overflow-hidden py-0 px-2.5"
                                     >
                                         {module.title}
                                     </span>
@@ -915,61 +563,31 @@ const TeacherPlusPage = () => {
 
             {/* Filter and Search Section */}
             <section
-                style={{
-                    width: "100%",
-                    padding: "100px 0",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center"
-                }}
+                className="w-full py-25 px-0 flex flex-col items-center"
             >
                 <h2
-                    style={{
-                        fontSize: "2.5rem",
-                        fontWeight: "700",
-                        color: "#111",
-                        textAlign: "center",
-                        margin: 0,
-                        letterSpacing: "1px"
-                    }}
+                    className="text-page-title font-bold text-ink-strong text-center m-0 tracking-[1px]"
                 >
                     Filter and Search
                 </h2>
                 {/* Keyword Filter */}
-                <div style={{ marginBottom: "18px", width: "100%", maxWidth: 400 }}>
+                <div className="mb-4.5 w-full max-w-100">
                     <input
                         type="text"
                         value={keyword || ""}
                         onChange={e => setKeyword(e.target.value)}
                         placeholder="Type a keyword to search..."
-                        style={{
-                            width: "100%",
-                            padding: "8px 16px",
-                            borderRadius: 6,
-                            border: "1px solid #bbb",
-                            fontSize: "1rem",
-                            marginTop: 8
-                        }}
+                        className="w-full py-2 px-4 rounded-md border border-[#bbb] text-[1rem] mt-2"
                     />
                 </div>
-                <div style={{
-                    display: "flex",
-                    gap: "32px",
-                    flexWrap: "wrap",
-                    marginBottom: "18px"
-                }}>
+                <div className="flex gap-8 flex-wrap mb-4.5">
                     {/* Content Type Filter */}
                     <div>
-                        <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Content Type</label>
+                        <label className="font-semibold text-navy mr-2">Content Type</label>
                         <select
                             value={contentType}
                             onChange={e => setContentType(e.target.value)}
-                            style={{
-                                padding: "8px 16px",
-                                borderRadius: 6,
-                                border: "1px solid #bbb",
-                                fontSize: "1rem"
-                            }}
+                            className="py-2 px-4 rounded-md border border-[#bbb] text-[1rem]"
                         >
                             {["All", ...MODULE_CONTENT_TYPES].map(opt => (
                                 <option key={opt} value={opt}>{opt}</option>
@@ -979,16 +597,11 @@ const TeacherPlusPage = () => {
 
                     {/* Category Filter */}
                     <div>
-                        <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Category</label>
+                        <label className="font-semibold text-navy mr-2">Category</label>
                         <select
                             value={category}
                             onChange={e => setCategory(e.target.value)}
-                            style={{
-                                padding: "8px 16px",
-                                borderRadius: 6,
-                                border: "1px solid #bbb",
-                                fontSize: "1rem"
-                            }}
+                            className="py-2 px-4 rounded-md border border-[#bbb] text-[1rem]"
                         >
                             {MODULE_CATEGORIES.map(opt => (
                                 <option key={opt} value={opt}>{opt}</option>
@@ -998,16 +611,11 @@ const TeacherPlusPage = () => {
 
                     {/* Level Filter */}
                     <div>
-                        <label style={{ fontWeight: "600", color: "#162040", marginRight: 8 }}>Level</label>
+                        <label className="font-semibold text-navy mr-2">Level</label>
                         <select
                             value={level}
                             onChange={e => setLevel(e.target.value)}
-                            style={{
-                                padding: "8px 16px",
-                                borderRadius: 6,
-                                border: "1px solid #bbb",
-                                fontSize: "1rem"
-                            }}
+                            className="py-2 px-4 rounded-md border border-[#bbb] text-[1rem]"
                         >
                             {MODULE_LEVELS.map(opt => (
                                 <option key={opt} value={opt}>{opt}</option>
@@ -1018,36 +626,18 @@ const TeacherPlusPage = () => {
                 </div>
 
                 {/* Filter Actions */}
-                <div style={{ display: "flex", gap: "16px", marginBottom: "24px" }}>
+                <div className="flex gap-4 mb-6">
                     <button
                         type="button"
                         onClick={handleResetFilters}
-                        style={{
-                            padding: "8px 28px",
-                            borderRadius: 6,
-                            border: "1px solid #bbb",
-                            background: "#fff",
-                            color: "#222",
-                            fontWeight: "600",
-                            fontSize: "1rem",
-                            cursor: "pointer"
-                        }}
+                        className="py-2 px-7 rounded-md border border-[#bbb] bg-surface text-ink font-semibold text-[1rem] cursor-pointer"
                     >
                         Reset Filters
                     </button>
                     <button
                         type="button"
                         onClick={handleApplyFilters}
-                        style={{
-                            padding: "8px 28px",
-                            borderRadius: 6,
-                            border: "none",
-                            background: "#162040",
-                            color: "#fff",
-                            fontWeight: "600",
-                            fontSize: "1rem",
-                            cursor: "pointer"
-                        }}
+                        className="py-2 px-7 rounded-md border-0 bg-navy text-white font-semibold text-[1rem] cursor-pointer"
                     >
                         Apply Filters
                     </button>
@@ -1055,55 +645,17 @@ const TeacherPlusPage = () => {
 
                 {/* Results Grid */}
                 <div
-                    style={{
-                        width: "100%",
-                        minHeight: "60px",
-                        background: "#f6f8fa",
-                        borderRadius: "8px",
-                        border: "1px dashed #bbb",
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, 380px)",
-                        gridTemplateRows: "repeat(2, 380px)",
-                        gap: "40px",
-                        padding: "40px",
-                        justifyContent: "center",
-                        alignItems: "start",
-                        color: "#888",
-                        fontSize: "1.05rem",
-                        fontStyle: "italic",
-                        marginBottom: "16px",
-                        boxSizing: "border-box",
-                        maxWidth: "1300px",
-                        margin: "0 auto"
-                    }}
+                    className="w-full min-h-15 bg-surface-subtle rounded-lg [border:1px_dashed_#bbb] grid [grid-template-columns:repeat(3,_380px)] [grid-template-rows:repeat(2,_380px)] gap-10 p-10 justify-center items-start text-ink-faint text-body italic mb-4 box-border max-w-325 my-0 mx-auto"
                 >
                     {paginatedItems.length === 0 ? (
-                        <div style={{
-                            gridColumn: "1 / -1",
-                            width: "100%",
-                            textAlign: "center"
-                        }}>
+                        <div className="[grid-column:1_/_-1] w-full text-center">
                             No modules found.
                         </div>
                     ) : (
                         paginatedItems.map((item) => (
                             <div
                                 key={item.id}
-                                style={{
-                                    background: "#fff",
-                                    borderRadius: "12px",
-                                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                                    width: "380px",
-                                    height: "380px",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "flex-end",
-                                    overflow: "hidden",
-                                    cursor: "pointer",
-                                    position: "relative",
-                                    transition: "box-shadow 0.2s"
-                                }}
+                                className="bg-surface rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.06)] w-95 h-95 flex flex-col items-center justify-end overflow-hidden cursor-pointer relative [transition:box-shadow_0.2s]"
                                 onClick={() => {
                                     const returnTo = `${location.pathname}${location.search || ""}`;
                                     if (item._type === "Module") {
@@ -1116,66 +668,26 @@ const TeacherPlusPage = () => {
                                 }}
                             >
 
-                                <div style={{
-                                    width: "100%",
-                                    height: "calc(100% - 70px)",
-                                    display: "flex",
-                                    alignItems: "stretch",
-                                    justifyContent: "center",
-                                    background: "#f0f0f0"
-                                }}>
+                                <div className="w-full h-[calc(100%_-_70px)] flex items-stretch justify-center bg-[#f0f0f0]">
                                     <img
                                         src={laptopImg}
                                         alt="Module"
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                            display: "block"
-                                        }}
+                                        className="w-full h-full object-cover block"
                                     />
                                 </div>
-                                <div style={{
-                                    width: "100%",
-                                    height: "100px",
-                                    padding: "12px 0 0 0",
-                                    textAlign: "center",
-                                    background: "#fff"
-                                }}>
+                                <div className="w-full h-25 pt-3 pr-0 pb-0 pl-0 text-center bg-surface">
                                     <span
-                                        style={{
-                                            display: "block",
-                                            fontWeight: "700",
-                                            fontSize: "1.15rem",
-                                            color: "#222",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            overflow: "hidden"
-                                        }}
+                                        className="block font-bold text-[1.15rem] text-ink text-ellipsis whitespace-nowrap overflow-hidden"
                                     >
                                         {item.title || item.Title}
                                     </span>
                                     <span
-                                        style={{
-                                            display: "block",
-                                            fontWeight: "600",
-                                            fontSize: "1rem",
-                                            color: "#162040",
-                                            letterSpacing: "1px",
-                                            marginTop: "2px"
-                                        }}
+                                        className="block font-semibold text-[1rem] text-navy tracking-[1px] mt-0.5"
                                     >
                                         {capitalizeWords(item.level || item.Level || "N/A")}
                                     </span>
                                     <span
-                                        style={{
-                                            display: "block",
-                                            fontWeight: "600",
-                                            fontSize: "1rem",
-                                            color: "#162040",
-                                            letterSpacing: "1px",
-                                            marginTop: "2px"
-                                        }}
+                                        className="block font-semibold text-[1rem] text-navy tracking-[1px] mt-0.5"
                                     >
                                         {item._type}
                                     </span>
@@ -1187,7 +699,7 @@ const TeacherPlusPage = () => {
 
                 {/* Pagination controls */}
                 {totalPages > 1 && (
-                    <div style={{ display: "flex", justifyContent: "center", gap: "24px", marginBottom: "32px" }}>
+                    <div className="flex justify-center gap-6 mb-8">
                         <button
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
@@ -1204,7 +716,7 @@ const TeacherPlusPage = () => {
                         >
                             Back
                         </button>
-                        <span style={{ alignSelf: "center", fontWeight: "600", color: "#162040" }}>
+                        <span className="self-center font-semibold text-navy">
                             Page {currentPage} of {totalPages}
                         </span>
                         <button

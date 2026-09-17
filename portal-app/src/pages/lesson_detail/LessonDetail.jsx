@@ -32,23 +32,14 @@ const LessonDetail = () => {
 
     if (!resource) {
         return (
-            <div style={{ padding: "100px 20px", textAlign: "center" }}>
+            <div className="py-25 px-5 text-center">
                 <h2>Lesson not found</h2>
-                <p style={{ marginTop: 12, color: "#555" }}>
+                <p className="mt-3 text-[#555]">
                     This lesson is no longer part of the module.
                 </p>
                 <button
                     onClick={backToModule}
-                    style={{
-                        marginTop: 24,
-                        background: "#162040",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 6,
-                        padding: "12px 24px",
-                        fontSize: "1rem",
-                        cursor: "pointer"
-                    }}
+                    className="mt-6 bg-navy text-white border-0 rounded-md py-3 px-6 text-[1rem] cursor-pointer"
                 >
                     Back to Module
                 </button>
@@ -64,106 +55,58 @@ const LessonDetail = () => {
     ].filter(([, value]) => !!value);
 
     return (
-        <div style={{
-            fontFamily: "Open Sans, Arial, sans-serif",
-            background: "#fff",
-            minHeight: "100vh",
-            padding: "40px 20px"
-        }}>
-            <div style={{
-                maxWidth: 800,
-                margin: "0 auto"
-            }}>
+        <div className="font-sans bg-surface min-h-screen py-10 px-5">
+            <div className="max-w-200 my-0 mx-auto">
                 {/* Header with Back Button */}
-                <div style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: 40
-                }}>
-                    <h1 style={{
-                        fontSize: "2rem",
-                        fontWeight: "700",
-                        color: "#111",
-                        margin: 0
-                    }}>
+                <div className="flex justify-between items-center mb-10">
+                    <h1 className="text-[2rem] font-bold text-ink-strong m-0">
                         Lesson Plan
                     </h1>
                     <button
                         onClick={backToModule}
-                        style={{
-                            background: "#162040",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 6,
-                            padding: "12px 24px",
-                            fontSize: "1rem",
-                            fontWeight: 600,
-                            cursor: "pointer"
-                        }}
+                        className="bg-navy text-white border-0 rounded-md py-3 px-6 text-[1rem] font-semibold cursor-pointer"
                     >
                         Back to Module
                     </button>
                 </div>
 
                 {/* Lesson Title */}
-                <h2 style={{
-                    fontSize: "1.8rem",
-                    fontWeight: "600",
-                    color: "#222",
-                    marginBottom: 8,
-                    textAlign: "center"
-                }}>
+                <h2 className="text-[1.8rem] font-semibold text-ink mb-2 text-center">
                     {resource.title || `Lesson ${index + 1}`}
                 </h2>
 
                 {moduleTitle && (
-                    <div style={{
-                        textAlign: "center",
-                        color: "#666",
-                        fontSize: "0.95rem",
-                        marginBottom: 40
-                    }}>
+                    <div className="text-center text-ink-muted text-meta mb-10">
                         {moduleTitle}
                     </div>
                 )}
 
                 {fields.map(([label, value]) => (
-                    <div key={label} style={{ marginBottom: 24 }}>
-                        <strong style={{ fontSize: "1.1rem", color: "#162040" }}>{label}:</strong>
-                        <div style={{ marginTop: 8, fontSize: "1rem", color: "#222" }}>
+                    <div key={label} className="mb-6">
+                        <strong className="text-[1.1rem] text-navy">{label}:</strong>
+                        <div className="mt-2 text-[1rem] text-ink">
                             {value}
                         </div>
                     </div>
                 ))}
 
                 {(resource.desc || resource.description) && (
-                    <div style={{ marginBottom: 32 }}>
-                        <strong style={{ fontSize: "1.1rem", color: "#162040" }}>
+                    <div className="mb-8">
+                        <strong className="text-[1.1rem] text-navy">
                             Lesson Description:
                         </strong>
-                        <div style={{
-                            marginTop: 8,
-                            fontSize: "1rem",
-                            color: "#222",
-                            lineHeight: 1.6
-                        }}>
+                        <div className="mt-2 text-[1rem] text-ink leading-[1.6]">
                             {resource.desc || resource.description}
                         </div>
                     </div>
                 )}
 
                 {module?.learningObjectives && (
-                    <div style={{ marginBottom: 32 }}>
-                        <strong style={{ fontSize: "1.1rem", color: "#162040" }}>
+                    <div className="mb-8">
+                        <strong className="text-[1.1rem] text-navy">
                             Module Objectives:
                         </strong>
-                        <div style={{
-                            marginTop: 8,
-                            fontSize: "1rem",
-                            color: "#222",
-                            lineHeight: 1.6
-                        }}>
+                        <div className="mt-2 text-[1rem] text-ink leading-[1.6]">
                             {module.learningObjectives}
                         </div>
                     </div>

@@ -200,18 +200,10 @@ export const LessonDetail = () => {
       : author?.fullName || author?.email || "—";
 
   return (
-    <div style={{ background: "#fff", minHeight: "100vh" }}>
+    <div className="bg-surface min-h-screen">
       {/* Back + Edit controls (match module page) */}
       <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "18px 20px 0 20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
+        className="max-w-275 my-0 mx-auto pt-4.5 pr-5 pb-0 pl-5 flex items-center justify-between gap-3"
       >
         <BackButton
           to={returnTo || undefined}
@@ -219,7 +211,7 @@ export const LessonDetail = () => {
           fallbackTo="/"
         />
         {canManage && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="flex items-center gap-2.5">
             <EditButton
               onClick={() =>
                 navigate("/lesson-plans/builder", {
@@ -239,16 +231,11 @@ export const LessonDetail = () => {
 
       {/* Header (match module page) */}
       <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "10px 20px 0 20px",
-          textAlign: "center",
-        }}
+        className="max-w-275 my-0 mx-auto pt-2.5 pr-5 pb-0 pl-5 text-center"
       >
         <h1 style={TYPO.pageTitle}>{title}</h1>
         <MetaChipsRow
-          style={{ marginTop: 18 }}
+          className="mt-4.5"
           items={[
             { label: "Author", value: authorName },
             { label: "Category", value: category },
@@ -260,8 +247,8 @@ export const LessonDetail = () => {
       </div>
 
       {/* Main content cards */}
-      <div style={{ maxWidth: 1100, margin: "28px auto 0 auto", padding: "0 20px 80px 20px" }}>
-        <SectionCard title="Description" style={{ marginTop: 0 }}>
+      <div className="max-w-275 mt-7 mr-auto mb-0 ml-auto pt-0 pr-5 pb-20 pl-5">
+        <SectionCard title="Description" className="mt-0">
           <div
             className="rich-text-content text-gray-700"
             style={TYPO.body}
@@ -288,7 +275,7 @@ export const LessonDetail = () => {
                 }}
               />
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div className="flex flex-col gap-3.5">
                 {(Array.isArray(section?.contentIds) ? section.contentIds : []).map((contentId, contentIndex) => {
                   const content = contentDetails[contentId];
                   if (!content) return null;
@@ -296,12 +283,7 @@ export const LessonDetail = () => {
                   return (
                     <div
                       key={contentIndex}
-                      style={{
-                        border: "1px solid #e5e7eb",
-                        borderRadius: 14,
-                        padding: "14px 16px",
-                        background: "#fff",
-                      }}
+                      className="border border-rule rounded-[14px] py-3.5 px-4 bg-surface"
                     >
                       <div style={{ ...TYPO.sectionTitle, fontSize: "1.05rem", fontWeight: 600 }}>
                         {content.Title || content.title || `Content ${contentIndex + 1}`}

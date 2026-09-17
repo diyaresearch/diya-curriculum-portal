@@ -13,6 +13,7 @@
 const PDFDocument = require("pdfkit");
 const { databaseService } = require("../services/databaseService");
 const { canMutate } = require("../utils/ownership");
+const { canAccessLesson } = require("../utils/entitlements.check");
 const { sanitizeHtml, sanitizeArray } = require("../utils/sanitizeHtml");
 const {
   sendError,
@@ -24,6 +25,45 @@ const {
 // Define the collections
 const TABLE_CONTENT = "content";
 const TABLE_LESSON = "lesson";
+const TABLE_MODULE = "module";
+const TABLE_ENTITLEMENTS = "entitlements";
+
+/** Tables canAccessLesson needs to answer "which paid module gates this?" */
+const ENTITLEMENT_TABLES = {
+  modulesTable: TABLE_MODULE,
+  entitlementsTable: TABLE_ENTITLEMENTS,
+};
+
+/**
+ * Refuse a lesson the caller has not paid for (#430).
+ *
+ * Shared by the two routes that serve a lesson's contents - the JSON read and
+ * the PDF download. Both were completely open before this: no auth, no
+ * ownership check, no entitlement check, so knowing an id was enough to read
+ * any lesson in any paid module. Both mount `optionalAuth`, so `req.user` is
+ * set when a token was sent and absent otherwise; an anonymous caller gets 401
+ * rather than 403, because signing in is what might actually fix it.
+ *
+ * @returns {Promise<boolean>} true when the response has already been sent
+ */
+async function denyUnlessEntitled(req, res, db, lessonId, lessonData) {
+  const access = await canAccessLesson(
+    db,
+    ENTITLEMENT_TABLES,
+    req.user && req.user.uid,
+    lessonId,
+    lessonData
+  );
+
+  if (access.allowed) return false;
+
+  if (access.reason === "authentication required") {
+    sendAuthError(res, "Sign in to view this lesson");
+  } else {
+    sendAuthorizationError(res, "This lesson is part of a module you have not purchased");
+  }
+  return true;
+}
 
 // Get all public lessons
 const getAllLessons = async (req, res) => {
@@ -82,7 +122,10 @@ const getLessonById = async (req, res) => {
       return sendNotFoundError(res, "Lesson");
     }
 
-    res.status(200).json({ id: doc.id, ...doc.data() });
+    const lessonData = doc.data();
+    if (await denyUnlessEntitled(req, res, db, lessonId, lessonData)) return;
+
+    res.status(200).json({ id: doc.id, ...lessonData });
   } catch (error) {
     console.error("Error fetching lesson:", error);
     sendError(res, 'Failed to fetch lesson', 500, 'LESSON_FETCH_ERROR', error.message);
@@ -251,6 +294,10 @@ const downloadPDF = async (req, res) => {
     }
 
     const lessonData = doc.data();
+
+    // Before a single PDF byte is written - once the response is piped there
+    // is no way to turn it back into a 403.
+    if (await denyUnlessEntitled(req, res, db, lessonId, lessonData)) return;
 
     const docPdf = new PDFDocument();
 

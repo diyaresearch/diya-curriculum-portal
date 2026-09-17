@@ -105,6 +105,16 @@ export default [
     },
   },
   {
+    // The .codemod/ scripts that drive the inline-style conversion (#561) are
+    // one-shot Node tools, not app code: they read and rewrite files and
+    // report to stdout. Linted, because a broken codemod silently mangles
+    // source - but with Node globals rather than the browser's.
+    files: [".codemod/**/*.mjs"],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
+  {
     files: ["src/**/*.{test,spec}.{js,jsx,ts,tsx}", "src/setupTests.js"],
     ...testingLibrary.configs["flat/react"],
     languageOptions: {
