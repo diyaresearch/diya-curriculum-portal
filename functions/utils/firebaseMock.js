@@ -217,8 +217,15 @@ class MockQuery {
             return fieldValue < filter.value;
           case '<=':
             return fieldValue <= filter.value;
+          case 'array-contains':
+            return Array.isArray(fieldValue) && fieldValue.includes(filter.value);
           default:
-            return true;
+            // An operator this mock does not implement must not silently
+            // widen the result set to everything - that turns a missing
+            // feature into a data leak in whatever code is being exercised.
+            throw new Error(
+              `firebaseMock: unsupported query operator "${filter.operator}"`
+            );
         }
       });
     });

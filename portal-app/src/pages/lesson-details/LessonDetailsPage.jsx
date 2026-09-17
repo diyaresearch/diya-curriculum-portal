@@ -5,23 +5,37 @@ import { db } from "@/firebase/firebaseConfig";
 import DOMPurify from "dompurify";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import Loading from "@/components/ui/Loading";
+import { api, ApiError } from "@/utils/apiClient";
+import { toUserMessage } from "@/utils/errorMessage";
 
 const LessonDetailsPage = () => {
   const { id } = useParams();
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [nuggets, setNuggets] = useState({});
 
+  // Read through the API, not straight out of Firestore (#430).
+  //
+  // This route is the "direct URL navigation to a paid module's lessons" the
+  // issue describes: it took an id from the URL and read the document, so a
+  // link to a lesson inside a module nobody had paid for rendered it in full.
+  // Only the API can answer whether the caller is entitled - that needs a
+  // query over the modules containing this lesson, which security rules cannot
+  // express - so the fetch goes through it and a refusal is rendered as one.
   useEffect(() => {
     let cancelled = false;
     const fetchLesson = async () => {
-      const lessonRef = doc(db, COLLECTIONS.lesson, id);
-      const lessonSnap = await getDoc(lessonRef);
-      if (cancelled) return;
-      if (lessonSnap.exists()) {
-        setLesson(lessonSnap.data());
+      try {
+        const data = await api.get(`/api/lesson/${id}`);
+        if (cancelled) return;
+        setLesson(data);
+      } catch (err) {
+        if (cancelled) return;
+        setError(err);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     };
     fetchLesson();
 
@@ -52,6 +66,27 @@ const LessonDetailsPage = () => {
   }, [lesson]);
 
   if (loading) return <Loading variant="page" message="Loading lesson..." />;
+
+  // 401/403 means the lesson exists but belongs to a module this visitor has
+  // not bought - say so, rather than the "not found" that every other failure
+  // gets, which would send a paying customer looking for a broken link.
+  if (error instanceof ApiError && error.isAuthError) {
+    return (
+      <div style={{ maxWidth: 700, margin: "40px auto", padding: 32, textAlign: "center" }}>
+        <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 12 }}>
+          This lesson is part of a paid module
+        </h2>
+        <p style={{ marginBottom: 20 }}>
+          {error.status === 401
+            ? "Sign in with the account that purchased it to read this lesson."
+            : "Purchase the module it belongs to to read this lesson."}
+        </p>
+        <Link to="/">Back to modules</Link>
+      </div>
+    );
+  }
+
+  if (error) return <div>{toUserMessage(error, "Could not load this lesson.")}</div>;
   if (!lesson) return <div>Lesson not found.</div>;
 
   return (

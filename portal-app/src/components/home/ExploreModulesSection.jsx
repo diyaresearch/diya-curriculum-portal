@@ -620,8 +620,12 @@ const ExploreModulesSection = () => {
       console.error("Error fetching modules:", error);
     });
 
-    // Fetch lessons
-    getDocs(collection(db, COLLECTIONS.lesson)).then(snapshot => {
+    // Fetch lessons. Constrained to published ones because the rules now
+    // require it (#430): an unfiltered read of this collection returned every
+    // lesson's full contents to anyone, including the ones a paid module
+    // sells. This matches what GET /api/lessons has always returned, so the
+    // browse list shows the same set the API would have given it.
+    getDocs(query(collection(db, COLLECTIONS.lesson), where("isPublic", "==", true))).then(snapshot => {
       setLessons(snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),

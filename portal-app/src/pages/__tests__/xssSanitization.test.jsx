@@ -17,6 +17,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { vi } from "vitest";
 import { getDoc } from "firebase/firestore";
+import { api } from "@/utils/apiClient";
 
 const XSS_PAYLOAD = '<img src=x onerror="window.__xss=true">safe text<script>window.__xss=true</script>';
 
@@ -28,6 +29,15 @@ vi.mock("firebase/firestore", () => ({
 }));
 
 vi.mock("@/firebase/firebaseConfig", () => ({ app: {}, db: {} }));
+
+// LessonDetailsPage reads its lesson through the API rather than Firestore
+// since #430, so the entitlement check runs. ApiError is kept real - the page
+// branches on `instanceof ApiError` to tell "you have not paid for this" apart
+// from every other failure.
+vi.mock("@/utils/apiClient", async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, api: { ...actual.api, get: vi.fn() } };
+});
 
 // The factory's return value is the module namespace, so the hook has to be
 // handed back as `default` rather than as the factory's bare return.
@@ -111,7 +121,8 @@ describe("#381 — dangerouslySetInnerHTML sinks sanitize before rendering", () 
 
   test("pages/lesson-details/LessonDetailsPage.jsx", async () => {
     const { default: LessonDetailsPage } = await import("@/pages/lesson-details/LessonDetailsPage");
-    mockDocData({
+    api.get.mockResolvedValueOnce({
+      id: "test-id",
       title: "t",
       description: XSS_PAYLOAD,
       objectives: [XSS_PAYLOAD],

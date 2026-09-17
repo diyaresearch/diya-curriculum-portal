@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useUserData from '@/hooks/useUserData';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/firebase/firebaseConfig';
 import { COLLECTIONS } from '@/firebase/collectionNames';
 
@@ -127,8 +127,9 @@ const TeacherPlusPage = () => {
             console.error("Error fetching modules:", error);
         });
 
-        // Fetch lessons and nuggets (keep existing code)
-        getDocs(collection(db, COLLECTIONS.lesson)).then(snapshot => {
+        // Published lessons only - the rules require the constraint (#430), and
+        // this dashboard already describes itself as showing what is published.
+        getDocs(query(collection(db, COLLECTIONS.lesson), where("isPublic", "==", true))).then(snapshot => {
             setLessons(snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
