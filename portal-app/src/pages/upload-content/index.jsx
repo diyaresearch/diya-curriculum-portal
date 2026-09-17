@@ -329,7 +329,7 @@ export const UploadContent = ({
               placeholder="Enter the title of the nugget"
               value={formData.Title}
               onChange={handleChange}
-              className="w-full py-2.5 px-3.5 rounded-md border-1.5 border-[#bbb] text-[1rem] mb-0.5 bg-[#fafbfc] font-sans"
+              className="w-full py-2.5 px-3.5 rounded-md border-[1.5px] border-[#bbb] text-[1rem] mb-0.5 bg-[#fafbfc] font-sans"
             />
             {fieldErrors.Title && (
               <div className="[color:red] text-meta">
@@ -435,7 +435,7 @@ export const UploadContent = ({
               placeholder="Enter estimated duration"
               value={formData.Duration}
               onChange={handleChange}
-              className="w-full py-2.5 px-3.5 rounded-md border-1.5 border-[#bbb] text-[1rem] mb-0.5 bg-[#fafbfc]"
+              className="w-full py-2.5 px-3.5 rounded-md border-[1.5px] border-[#bbb] text-[1rem] mb-0.5 bg-[#fafbfc]"
             />
             {fieldErrors.Duration && (
               <div className="[color:red] text-meta">
@@ -458,7 +458,7 @@ export const UploadContent = ({
               placeholder="Optional title (e.g., Week 1 Slides)"
               value={attachmentTitle}
               onChange={(e) => setAttachmentTitle(e.target.value)}
-              className="w-full py-2.5 px-3.5 rounded-md border-1.5 border-[#bbb] bg-[#fafbfc] mb-2.5"
+              className="w-full py-2.5 px-3.5 rounded-md border-[1.5px] border-[#bbb] bg-[#fafbfc] mb-2.5"
             />
 
             <input
@@ -466,7 +466,7 @@ export const UploadContent = ({
               placeholder="Paste link (https://...)"
               value={attachmentUrl}
               onChange={(e) => setAttachmentUrl(e.target.value)}
-              className="w-full py-2.5 px-3.5 rounded-md border-1.5 border-[#bbb] bg-[#fafbfc] mb-2.5"
+              className="w-full py-2.5 px-3.5 rounded-md border-[1.5px] border-[#bbb] bg-[#fafbfc] mb-2.5"
             />
 
             <button
@@ -547,13 +547,13 @@ export const UploadContent = ({
           <button
             type="button"
             onClick={handleCancel}
-            className="bg-surface text-ink border-1.5 border-ink rounded-md py-3 px-12 font-semibold text-label cursor-pointer min-w-45 [transition:background_0.2s,_color_0.2s,_border_0.2s] font-sans"
+            className="bg-surface text-ink border-[1.5px] border-ink rounded-md py-3 px-12 font-semibold text-label cursor-pointer min-w-45 [transition:background_0.2s,_color_0.2s,_border_0.2s] font-sans"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="bg-navy text-white border-1.5 border-navy rounded-md py-3 px-12 font-semibold text-label cursor-pointer min-w-45 [transition:background_0.2s,_color_0.2s,_border_0.2s] font-sans"
+            className="bg-navy text-white border-[1.5px] border-navy rounded-md py-3 px-12 font-semibold text-label cursor-pointer min-w-45 [transition:background_0.2s,_color_0.2s,_border_0.2s] font-sans"
           >
             Save Nugget
           </button>
