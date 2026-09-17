@@ -113,13 +113,7 @@ const PaymentForm = () => {
 
     if (loading) {
         return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '1.2rem'
-            }}>
+            <div className="min-h-screen flex items-center justify-center text-[1.2rem]">
                 Loading...
             </div>
         );
@@ -127,44 +121,16 @@ const PaymentForm = () => {
 
     if (paymentSuccess) {
         return (
-            <div style={{
-                minHeight: '100vh',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: '#F6F8FA'
-            }}>
-                <div style={{
-                    background: '#fff',
-                    borderRadius: '12px',
-                    padding: '40px',
-                    textAlign: 'center',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    maxWidth: '500px'
-                }}>
-                    <div style={{
-                        fontSize: '3rem',
-                        marginBottom: '20px'
-                    }}>🎉</div>
-                    <h2 style={{
-                        color: '#28a745',
-                        fontSize: '1.8rem',
-                        fontWeight: '700',
-                        marginBottom: '15px'
-                    }}>
+            <div className="min-h-screen flex items-center justify-center bg-surface-subtle">
+                <div className="bg-surface rounded-xl p-10 text-center shadow-[0_4px_20px_rgba(0,0,0,0.1)] max-w-125">
+                    <div className="text-[3rem] mb-5">🎉</div>
+                    <h2 className="text-success text-[1.8rem] font-bold mb-[15px]">
                         Payment Successful!
                     </h2>
-                    <p style={{
-                        color: '#666',
-                        fontSize: '1.1rem',
-                        marginBottom: '20px'
-                    }}>
+                    <p className="text-ink-muted text-[1.1rem] mb-5">
                         Welcome to Yearly Premium! You now have access to all premium features.
                     </p>
-                    <p style={{
-                        color: '#888',
-                        fontSize: '0.9rem'
-                    }}>
+                    <p className="text-ink-faint text-[0.9rem]">
                         Redirecting to your dashboard...
                     </p>
                 </div>
@@ -173,77 +139,32 @@ const PaymentForm = () => {
     }
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            background: '#F6F8FA',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '40px 20px'
-        }}>
-            <div style={{
-                maxWidth: '900px',
-                width: '100%',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '40px',
-                alignItems: 'stretch'
-            }}>
+        <div className="min-h-screen bg-surface-subtle flex items-center justify-center py-10 px-5">
+            <div className="max-w-225 w-full grid [grid-template-columns:1fr_1fr] gap-10 items-stretch">
                 {/* Left Side - Plan Info */}
-                <div style={{
-                    background: '#242B42',
-                    borderRadius: '12px',
-                    padding: '40px',
-                    color: 'white',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}>
-                    <h2 style={{
-                        fontSize: '1.8rem',
-                        fontWeight: '700',
-                        marginBottom: '20px',
-                        color: 'white'
-                    }}>
+                <div className="bg-navy-soft rounded-xl p-10 text-white h-full flex flex-col">
+                    <h2 className="text-[1.8rem] font-bold mb-5 text-white">
                         Upgrade to Yearly Premium
                     </h2>
 
-                    <p style={{
-                        color: '#B8C5D6',
-                        marginBottom: '30px',
-                        lineHeight: 1.6
-                    }}>
+                    <p className="text-[#b8c5d6] mb-7.5 leading-[1.6]">
                         Join our premium platform to access enhanced AI and Data Science resources for your classrooms. Save $20 per year!
                     </p>
 
                     <BackButton to="/upgrade" label="Back to Plans" className="mb-6" />
 
-                    <div style={{
-                        background: 'rgba(255,255,255,0.1)',
-                        borderRadius: '8px',
-                        padding: '20px',
-                        flex: 1
-                    }}>
-                        <h3 style={{
-                            fontSize: '1.2rem',
-                            fontWeight: '600',
-                            marginBottom: '15px',
-                            color: 'white'
-                        }}>
+                    <div className="[background:rgba(255,255,255,0.1)] rounded-lg p-5 flex-[1]">
+                        <h3 className="text-[1.2rem] font-semibold mb-[15px] text-white">
                             Yearly Premium Benefits
                         </h3>
-                        <ul style={{
-                            color: '#B8C5D6',
-                            lineHeight: 1.8,
-                            paddingLeft: '20px'
-                        }}>
+                        <ul className="text-[#b8c5d6] leading-[1.8] pl-5">
                             <li>Comprehensive lesson module creation</li>
                             <li>Advanced AI lesson generator</li>
                             <li>Community sharing and collaboration</li>
                             <li>Access to premium templates</li>
                             <li>Unlimited lesson generation</li>
                             <li>Priority customer support</li>
-                            <li style={{ color: '#F9C74F', fontWeight: '600' }}>
+                            <li className="text-accent font-semibold">
                                 Save $20 per year compared to monthly billing
                             </li>
                         </ul>
@@ -251,70 +172,28 @@ const PaymentForm = () => {
                 </div>
 
                 {/* Right Side - Payment Form */}
-                <div style={{
-                    background: '#fff',
-                    borderRadius: '12px',
-                    padding: '40px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}>
-                    <div style={{
-                        background: '#242B42',
-                        borderRadius: '8px',
-                        padding: '20px',
-                        marginBottom: '30px',
-                        textAlign: 'center'
-                    }}>
-                        <h3 style={{
-                            color: 'white',
-                            fontSize: '1.3rem',
-                            fontWeight: '600',
-                            marginBottom: '10px'
-                        }}>
+                <div className="bg-surface rounded-xl p-10 shadow-[0_4px_20px_rgba(0,0,0,0.1)] h-full flex flex-col">
+                    <div className="bg-navy-soft rounded-lg p-5 mb-7.5 text-center">
+                        <h3 className="text-white text-[1.3rem] font-semibold mb-2.5">
                             Yearly Premium
                         </h3>
-                        <div style={{
-                            color: '#F9C74F',
-                            fontSize: '2rem',
-                            fontWeight: '700'
-                        }}>
+                        <div className="text-accent text-[2rem] font-bold">
                             $100.00
-                            <span style={{
-                                fontSize: '1rem',
-                                color: '#B8C5D6',
-                                fontWeight: '400'
-                            }}>
+                            <span className="text-[1rem] text-[#b8c5d6] font-normal">
                                 /year
                             </span>
                         </div>
-                        <div style={{
-                            color: '#28a745',
-                            fontSize: '0.9rem',
-                            fontWeight: '600',
-                            marginTop: '5px'
-                        }}>
+                        <div className="text-success text-[0.9rem] font-semibold mt-[5px]">
                             ($8.33/month - Save 17%)
                         </div>
                     </div>
 
                     <form onSubmit={handlePayment}>
-                        <div style={{ marginBottom: '20px' }}>
-                            <label style={{
-                                display: 'block',
-                                fontWeight: '600',
-                                marginBottom: '8px',
-                                color: '#333'
-                            }}>
+                        <div className="mb-5">
+                            <label className="block font-semibold mb-2 text-[#333]">
                                 Card Information
                             </label>
-                            <div style={{
-                                border: '2px solid #e1e5e9',
-                                borderRadius: '6px',
-                                padding: '12px',
-                                background: '#fff'
-                            }}>
+                            <div className="border-2 border-[#e1e5e9] rounded-md p-3 bg-surface">
                                 <CardElement
                                     options={{
                                         style: {
@@ -335,14 +214,7 @@ const PaymentForm = () => {
                         </div>
 
                         {paymentError && (
-                            <div style={{
-                                background: '#f8d7da',
-                                color: '#721c24',
-                                padding: '12px',
-                                borderRadius: '6px',
-                                marginBottom: '20px',
-                                border: '1px solid #f5c6cb'
-                            }}>
+                            <div className="bg-[#f8d7da] text-[#721c24] p-3 rounded-md mb-5 border border-[#f5c6cb]">
                                 {paymentError}
                             </div>
                         )}
@@ -377,39 +249,18 @@ const PaymentForm = () => {
                             {isProcessing ? 'Processing...' : 'Complete Payment - $100.00'}
                         </button>
 
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '10px',
-                            marginTop: '20px',
-                            color: '#666',
-                            fontSize: '0.9rem'
-                        }}>
+                        <div className="flex items-center justify-center gap-2.5 mt-5 text-ink-muted text-[0.9rem]">
                             <span>🔒</span>
                             <span>SSL Secured</span>
                             <span>🔒</span>
                             <span>Stripe Secured</span>
                         </div>
 
-                        <p style={{
-                            textAlign: 'center',
-                            color: '#888',
-                            fontSize: '0.85rem',
-                            marginTop: '15px',
-                            lineHeight: 1.4
-                        }}>
+                        <p className="text-center text-ink-faint text-[0.85rem] mt-[15px] leading-[1.4]">
                             Your payment information is secure and encrypted by Stripe. You can cancel anytime from your account settings.
                         </p>
 
-                        <div style={{
-                            background: '#f8f9fa',
-                            borderRadius: '6px',
-                            padding: '15px',
-                            marginTop: '20px',
-                            fontSize: '0.85rem',
-                            color: '#666'
-                        }}>
+                        <div className="bg-[#f8f9fa] rounded-md p-[15px] mt-5 text-[0.85rem] text-ink-muted">
                             <strong>Test Card Numbers:</strong>
                             <br />
                             • 4242 4242 4242 4242 (Visa)

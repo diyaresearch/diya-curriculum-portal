@@ -442,26 +442,11 @@ const ModuleDetail = () => {
 
   if (error) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '1.2rem'
-      }}>
+      <div className="min-h-screen flex flex-col items-center justify-center text-[1.2rem]">
         <p>{error}</p>
         <button
           onClick={() => navigate('/teacher-plus')}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            backgroundColor: '#162040',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
+          className="mt-5 py-2.5 px-5 bg-navy text-white border-0 rounded-sm cursor-pointer"
         >
           Back to Modules
         </button>
@@ -472,26 +457,11 @@ const ModuleDetail = () => {
   // If no module data, show error
   if (!moduleData) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '1.2rem'
-      }}>
+      <div className="min-h-screen flex flex-col items-center justify-center text-[1.2rem]">
         <p>Module not found</p>
         <button
           onClick={() => navigate('/teacher-plus')}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            backgroundColor: '#162040',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
+          className="mt-5 py-2.5 px-5 bg-navy text-white border-0 rounded-sm cursor-pointer"
         >
           Back to Modules
         </button>
@@ -577,11 +547,7 @@ const ModuleDetail = () => {
 
 
   return (
-    <div style={{
-      background: "#fff",
-      minHeight: "100vh",
-      padding: 0
-    }}>
+    <div className="bg-surface min-h-screen p-0">
       <style>
         {`
         .resource-card:hover {
@@ -597,20 +563,12 @@ const ModuleDetail = () => {
 
       {/* Back + Edit controls */}
       <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "18px 20px 0 20px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
+        className="max-w-275 my-0 mx-auto pt-4.5 pr-5 pb-0 pl-5 flex items-center justify-between gap-3"
       >
         <BackButton to={returnTo || undefined} fallbackTo="/" />
 
         {canEdit && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="flex items-center gap-2.5">
             <EditButton
               label="Edit Module"
               onClick={() =>
@@ -631,42 +589,22 @@ const ModuleDetail = () => {
 
       {canEdit && isDeleteModalOpen && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.45)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
-          }}
+          className="fixed top-0 left-0 right-0 bottom-0 [background:rgba(0,0,0,0.45)] z-[9999] flex items-center justify-center p-5"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget && !isDeleting) setIsDeleteModalOpen(false);
           }}
         >
           <div
-            style={{
-              width: "100%",
-              maxWidth: 520,
-              background: "#fff",
-              borderRadius: 16,
-              padding: "24px 22px",
-              boxShadow: "0 18px 60px rgba(0,0,0,0.2)",
-              border: "1px solid #e5e7eb",
-            }}
+            className="w-full max-w-130 bg-surface rounded-2xl py-6 px-5.5 shadow-[0_18px_60px_rgba(0,0,0,0.2)] border border-rule"
           >
-            <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#111" }}>
+            <div className="text-[1.2rem] font-black text-ink-strong">
               Are you sure you want to delete the module?
             </div>
-            <div style={{ marginTop: 10, color: "#444", lineHeight: 1.5 }}>
+            <div className="mt-2.5 text-[#444] leading-[1.5]">
               This action cannot be undone.
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 18 }}>
+            <div className="flex justify-end gap-2.5 mt-4.5">
               <button
                 type="button"
                 disabled={isDeleting}
@@ -708,12 +646,7 @@ const ModuleDetail = () => {
 
       {/* Header (match screenshot) */}
       <div
-        style={{
-          maxWidth: 1100,
-          margin: "0 auto",
-          padding: "10px 20px 0 20px",
-          textAlign: "center",
-        }}
+        className="max-w-275 my-0 mx-auto pt-2.5 pr-5 pb-0 pl-5 text-center"
       >
         <div
           style={{
@@ -726,7 +659,7 @@ const ModuleDetail = () => {
         >
           {module.title}
         </div>
-        <div style={{ maxWidth: 820, margin: "0 auto", textAlign: "left" }}>
+        <div className="max-w-205 my-0 mx-auto text-left">
           <div
             ref={descRef}
             style={{
@@ -748,15 +681,7 @@ const ModuleDetail = () => {
             <button
               type="button"
               onClick={() => setIsDescExpanded(true)}
-              style={{
-                marginTop: 6,
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                color: "#162040",
-                fontWeight: 800,
-              }}
+              className="mt-1.5 bg-none border-0 p-0 cursor-pointer text-navy font-extrabold"
             >
               Show More
             </button>
@@ -772,7 +697,7 @@ const ModuleDetail = () => {
 
           return (
             <MetaChipsRow
-              style={{ marginTop: 18 }}
+              className="mt-4.5"
               items={[
                 { label: "Category", value: category },
                 { label: "Level", value: level },
@@ -786,18 +711,7 @@ const ModuleDetail = () => {
         {/* Featured purchase block (only when Featured is on) */}
         {moduleData?._meta?.isFeatured === true && (
           <div
-            style={{
-              maxWidth: 820,
-              margin: "16px auto 0 auto",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 14,
-              padding: "14px 16px",
-              borderRadius: 12,
-              border: "1px solid #e5e7eb",
-              background: "#f8fafc",
-            }}
+            className="max-w-205 mt-4 mr-auto mb-0 ml-auto flex items-center justify-between gap-3.5 py-3.5 px-4 rounded-xl border border-rule bg-[#f8fafc]"
           >
             {(() => {
               const priceNum = Number(moduleData?._meta?.price);
@@ -806,27 +720,27 @@ const ModuleDetail = () => {
 
               return (
                 <>
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ fontWeight: 900, color: "#111" }}>Price</div>
-                    <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 4 }}>
-                      <div style={{ color: "#111", fontWeight: 900, fontSize: "2rem", lineHeight: 1 }}>
+                  <div className="text-left">
+                    <div className="font-black text-ink-strong">Price</div>
+                    <div className="flex items-baseline gap-2.5 mt-1">
+                      <div className="text-ink-strong font-black text-[2rem] leading-none">
                         {priceLabel}
                       </div>
                       {hasPrice && (
-                        <div style={{ color: "#6b7280", fontWeight: 800, fontSize: "0.95rem" }}>
+                        <div className="text-[#6b7280] font-extrabold text-meta">
                           one-time
                         </div>
                       )}
                     </div>
                     {hasPrice && (
-                      <div style={{ marginTop: 8, color: "#6b7280", fontWeight: 700, fontSize: "0.95rem" }}>
+                      <div className="mt-2 text-[#6b7280] font-bold text-meta">
                         Secure checkout
                       </div>
                     )}
                   </div>
 
                   {hasPrice && (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                    <div className="flex flex-col items-end gap-2">
                       <button
                         type="button"
                         onClick={handleBuy}
@@ -845,7 +759,7 @@ const ModuleDetail = () => {
                       >
                         {isStartingCheckout ? "Starting checkout..." : `Buy for ${priceLabel}`}
                       </button>
-                      <div style={{ color: "#6b7280", fontWeight: 700, fontSize: "0.95rem" }}>
+                      <div className="text-[#6b7280] font-bold text-meta">
                         Instant access
                       </div>
                     </div>
@@ -859,7 +773,7 @@ const ModuleDetail = () => {
 
 
       {/* Main content cards */}
-      <div style={{ maxWidth: 1100, margin: "28px auto 0 auto", padding: "0 20px" }}>
+      <div className="max-w-275 mt-7 mr-auto mb-0 ml-auto py-0 px-5">
         {(() => {
           const cardStyle = {
             border: "1px solid #e5e7eb",
@@ -895,14 +809,7 @@ const ModuleDetail = () => {
                     {(objectivesBullets || []).map((b, i) => (
                       <li key={i} style={{ display: "flex", gap: 10, marginTop: i === 0 ? 0 : 10 }}>
                         <span
-                          style={{
-                            width: 8,
-                            height: 8,
-                            marginTop: 9,
-                            borderRadius: 999,
-                            background: "#1d4ed8",
-                            flex: "0 0 8px",
-                          }}
+                          className="w-2 h-2 mt-[9px] rounded-full bg-[#1d4ed8] flex-[0_0_8px]"
                         />
                         <span>{b}</span>
                       </li>
@@ -928,8 +835,8 @@ const ModuleDetail = () => {
       </div>
 
       {/* Lesson plans section (match screenshot) */}
-      <div style={{ maxWidth: 1100, margin: "26px auto 0 auto", padding: "0 20px 80px 20px" }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+      <div className="max-w-275 mt-6.5 mr-auto mb-0 ml-auto pt-0 pr-5 pb-20 pl-5">
+        <div className="flex items-baseline gap-2">
           <div style={{ ...TYPO.sectionTitle, color: "#222" }}>
             Lesson plans ({module.resources?.length || 0})
           </div>
@@ -940,16 +847,9 @@ const ModuleDetail = () => {
 
         {moduleLocked && (
           <div
-            style={{
-              marginTop: 16,
-              padding: "24px",
-              border: "1px solid #e5e7eb",
-              borderRadius: 12,
-              background: "#F9FAFB",
-              textAlign: "center",
-            }}
+            className="mt-4 p-6 border border-rule rounded-xl bg-[#f9fafb] text-center"
           >
-            <div style={{ fontSize: "1.6rem", marginBottom: 8 }}>🔒</div>
+            <div className="text-[1.6rem] mb-2">🔒</div>
             <div style={{ ...TYPO.body, fontWeight: 800, color: "#222", marginBottom: 6 }}>
               Purchase this module to view its lessons
             </div>
@@ -959,7 +859,7 @@ const ModuleDetail = () => {
           </div>
         )}
 
-        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="mt-4 flex flex-col gap-3.5">
           {(module.resources || []).map((res, idx) => {
             const durationText = normalizeLessonDuration(res.duration);
             const subtitle = `${res.type || "Lesson"}${durationText ? ` • ${durationText}` : ""}`;
@@ -976,18 +876,7 @@ const ModuleDetail = () => {
                     handleLessonClick(res, idx);
                   }
                 }}
-                style={{
-                  border: "1px solid #e5e7eb",
-                  borderRadius: 14,
-                  padding: "14px 16px",
-                  background: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  cursor: "pointer",
-                  transition: "transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease",
-                }}
+                className="border border-rule rounded-[14px] py-3.5 px-4 bg-surface flex items-center justify-between gap-4 cursor-pointer [transition:transform_0.15s_ease,_box-shadow_0.15s_ease,_border-color_0.15s_ease]"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.08)";
                   e.currentTarget.style.transform = "translateY(-1px)";
@@ -999,32 +888,20 @@ const ModuleDetail = () => {
                   e.currentTarget.style.borderColor = "#e5e7eb";
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+                <div className="flex items-center gap-3.5 min-w-0">
                   <div
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 10,
-                      border: "1px solid #d1d5db",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 700,
-                      color: "#111",
-                      background: "#f9fafb",
-                      flex: "0 0 34px",
-                    }}
+                    className="w-8.5 h-8.5 rounded-[10px] border border-[#d1d5db] flex items-center justify-center font-bold text-ink-strong bg-[#f9fafb] flex-[0_0_34px]"
                   >
                     {idx + 1}
                   </div>
-                  <div style={{ minWidth: 0 }}>
+                  <div className="min-w-0">
                     <div style={{ ...TYPO.body, fontWeight: 800, color: "#222", lineHeight: 1.2 }}>
                       {`Lesson ${idx + 1}. ${res.title || "Untitled Lesson"}`}
                     </div>
                     <div style={{ ...TYPO.meta, color: "#666", marginTop: 4 }}>{subtitle}</div>
                   </div>
                 </div>
-                <div style={{ width: 12 }} />
+                <div className="w-3" />
               </div>
             );
           })}
@@ -1051,7 +928,7 @@ const ModuleDetail = () => {
             },
           }}
         >
-          <div id="checkout-container" style={{ height: "100%" }} />
+          <div id="checkout-container" className="h-full" />
         </Modal>
       )}
 
@@ -1079,28 +956,20 @@ const ModuleDetail = () => {
           }}
           title="Purchase successful"
         >
-          <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "#111" }}>
+          <div className="text-[1.35rem] font-black text-ink-strong">
             Purchase successful
           </div>
-          <div style={{ marginTop: 12, color: "#333", fontSize: "1.05rem", lineHeight: 1.5 }}>
+          <div className="mt-3 text-[#333] text-body leading-[1.5]">
             You should be able to access the module.
           </div>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
+          <div className="flex justify-end mt-4.5">
             <button
               type="button"
               onClick={() => {
                 setShowPurchaseSuccess(false);
                 navigate("/", { replace: true });
               }}
-              style={{
-                background: "#162040",
-                color: "#fff",
-                border: "2px solid #162040",
-                borderRadius: 10,
-                padding: "10px 16px",
-                cursor: "pointer",
-                fontWeight: 900,
-              }}
+              className="bg-navy text-white border-2 border-navy rounded-[10px] py-2.5 px-4 cursor-pointer font-black"
             >
               OK
             </button>

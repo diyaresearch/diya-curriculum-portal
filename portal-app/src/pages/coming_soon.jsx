@@ -18,15 +18,7 @@ const ComingSoon = () => {
 
   return (
     <div
-      style={{
-        minHeight: "60vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "48px 24px",
-        textAlign: "center",
-      }}
+      className="min-h-[60vh] flex flex-col items-center justify-center py-12 px-6 text-center"
     >
       <h1 style={{ ...TYPO.pageTitle, marginBottom: "16px" }}>
         {feature ? `${feature} is coming soon` : "Coming soon"}
@@ -39,15 +31,7 @@ const ComingSoon = () => {
 
       <Link
         to="/"
-        style={{
-          background: "#111",
-          color: "#fff",
-          padding: "12px 28px",
-          borderRadius: "8px",
-          textDecoration: "none",
-          fontFamily: "var(--font-sans)",
-          fontWeight: 600,
-        }}
+        className="bg-ink-strong text-white py-3 px-7 rounded-lg no-underline font-sans font-semibold"
       >
         Back to home
       </Link>
