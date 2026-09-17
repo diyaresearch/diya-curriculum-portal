@@ -338,11 +338,13 @@ The audit, the remaining work (775 sites across `pages/` and
 
 ### TypeScript (portal-app/)
 
-The app is **mid-migration** (#365): 18 files are TypeScript, ~82 are still
-JavaScript, and both compile in the same build. `tsconfig.json` is what makes
-that work — `allowJs: true` with `checkJs: false` means tsc resolves the
-`.js`/`.jsx` files so a converted module can import one, without reporting
-errors inside them.
+The app is **mid-migration** (#365, continued in #562): 49 source files are
+TypeScript, 30 are still JavaScript, and both compile in the same build.
+`tsconfig.json` is what makes that work — `allowJs: true` with
+`checkJs: false` means tsc resolves the `.js`/`.jsx` files so a converted
+module can import one, without reporting errors inside them. Turning
+`allowJs` off is the real completion signal, and it is what the last `.jsx`
+is blocking.
 
 `strict` is on and applies to the converted files. That is the point: a file
 arrives fully typed when it moves, rather than arriving as implicit `any`.
@@ -352,10 +354,24 @@ strips types without looking at them, so a type error compiles and ships. Only
 `npm run typecheck` (`tsc --noEmit`) catches it, and CI runs it as a step of
 the required `portal-app` job.
 
-Converted so far — the priority list from the issue: `firebase/`, the API
-utilities (`apiClient`, `apiOrigin`, `errorMessage`, `errorReporter`,
-`validators`, `paymentsApi`), `constants/roles`, all four `hooks/`,
-`context/AuthProvider`, and `components/ui/{FieldError,Loading}`.
+Converted so far: `firebase/`, the API utilities (`apiClient`, `apiOrigin`,
+`errorMessage`, `errorReporter`, `validators`, `paymentsApi`), all four
+`hooks/`, `context/AuthProvider` (#365); then all of `constants/`,
+`auth/googleAuth`, `reportWebVitals`, `index.tsx`, every `components/ui/`
+component, all of `components/layout/`, `components/home/HomePage`, and the
+`edit_content` / `my_plan` / `profile_detail` / `home` / drafts pages (#562).
+
+What is left is `App.jsx`, `pages/edit_lesson/`, `setupTests.js`, and the
+`components/home/`, `components/content/` and `pages/` files that #561 is
+converting from inline styles at the same time — the two passes touch the
+same files, so each one is done once, in whichever PR reaches it first.
+
+**Convert leaves before their importers.** A `.tsx` that imports an
+unconverted `.jsx` does not get `any` at the boundary — tsc infers the
+component's props from the JS, and every destructured parameter without a
+default comes out *required*. So `<UploadContent />` fails to compile from a
+converted caller purely because `upload-content/index.jsx` has not moved yet.
+That is why `App.tsx` and `edit_lesson` are last: they are roots.
 
 Two files carry the shared types:
 
@@ -365,7 +381,10 @@ Two files carry the shared types:
   validation, so a document written before a field existed simply lacks it.
   Note the `content` collection uses `Capitalized` keys while `lesson` and
   `module` use camelCase — that is real, and these types are what stop a
-  caller guessing. Keep them in step with `functions/controllers/`.
+  caller guessing. Keep them in step with `functions/controllers/`. It also
+  holds `ApiEnvelope<T>`, the `{ success, data }` wrapper that
+  `functions/utils/responseHelpers.js` puts around the `/api/user/*`
+  responses and nothing else — see below.
 - `src/vite-env.d.ts` — the `VITE_*` variables, all optional (Vite only
   inlines what the current mode's .env defines). Keep in sync with
   `.env.example`.
@@ -379,6 +398,19 @@ const lesson = await api.get<Lesson>(`/api/lesson/${id}`);
 The default is `unknown` rather than `any` because the client deliberately
 does not unwrap a response envelope — the body is whatever the route sent, so
 a caller that does not say what it expects is made to narrow it.
+
+**The `/api/user/*` routes are the ones that send an envelope.** They are the
+only users of `responseHelpers.js`, so their body sits under `.data`:
+
+```ts
+const response = await api.get<ApiEnvelope<UserDocument>>("/api/user/me");
+setFormData(toFormState(response.data));      // not response
+```
+
+Reading a field straight off the response yields `undefined` for all of them.
+That is what the user profile page did before #562 typed it, which is why the
+form rendered blank and, `role` being undefined, the admin section never
+appeared for an admin.
 
 When converting a file: `git mv` it (so history follows), type it properly
 rather than reaching for `any` — `@typescript-eslint/no-explicit-any` is an

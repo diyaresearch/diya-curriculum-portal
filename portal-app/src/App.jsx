@@ -42,7 +42,7 @@ function App() {
     // component that throws during render loses that page but keeps the
     // navbar - the user can always get somewhere else (#367), and reaching
     // another page clears the error rather than carrying it along (#378).
-    // index.jsx holds a second boundary above all of this, for a throw in the
+    // index.tsx holds a second boundary above all of this, for a throw in the
     // providers themselves.
     <ToastProvider>
       <BrowserRouter>
