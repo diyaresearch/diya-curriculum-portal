@@ -42,9 +42,19 @@ async function checkFirestoreOnBoot() {
   let db;
   let source = "unknown";
   try {
-    const { resolveCredential, verifyCredential } = require("./config/credentials");
+    const { resolveCredential, verifyCredential, PROJECT_ID } = require("./config/credentials");
     source = resolveCredential().source;
     db = require("./config/firebaseConfig").db;
+
+    // Name the project, not just "development". `NODE_ENV=development` maps to
+    // functions/.env.development, which points at PRODUCTION - so the reassuring
+    // word in the line above this one is exactly the wrong thing to read it by.
+    // A developer pointed at the wrong project should see it in the first lines
+    // of output rather than infer it from a 401 an hour later.
+    const target = process.env.FIRESTORE_EMULATOR_HOST
+      ? `emulator at ${process.env.FIRESTORE_EMULATOR_HOST} (project ${PROJECT_ID})`
+      : `Firebase project ${PROJECT_ID}`;
+    console.log(`Firestore target: ${target}`);
 
     const result = await verifyCredential(db);
     if (result.ok) {
