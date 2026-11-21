@@ -58,6 +58,13 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.get('role', '') == 'admin';
     }
 
+    // Lessons record their owner under two names: the API writes `authorId`
+    // (lessonsController.postLesson), the builder's draft save writes `author`
+    // (and the drafts page queries by it). Either one naming the caller counts.
+    function ownsLesson(data) {
+      return isOwner(data.get('authorId', '')) || isOwner(data.get('author', ''));
+    }
+
     function isAdmin() {
       return hasAdminClaim() || (isSignedIn() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
@@ -159,9 +166,22 @@ service cloud.firestore {
     // a whole.
     match /lesson/{lessonId} {
       allow read: if resource.data.get('isPublic', false) == true
-                  || isOwner(resource.data.get('authorId', ''))
+                  || ownsLesson(resource.data)
                   || isAdmin();
-      allow write: if isSignedIn();
+
+      // Writes were `if isSignedIn()`: any account could overwrite or delete
+      // anyone's lesson straight from the SDK. The API writes through the
+      // Admin SDK and is unaffected; what this governs is the lesson builder's
+      // draft save (setDoc/addDoc) and the draft delete, both client-side.
+      //
+      // A new lesson must name the writer as its owner. An update must keep
+      // the writer as owner on both sides, so ownership cannot be handed to
+      // someone else or taken over. A lesson that records no owner at all
+      // (legacy) can only be changed by an admin.
+      allow create: if isSignedIn() && (ownsLesson(request.resource.data) || isAdmin());
+      allow update: if isSignedIn() && (isAdmin() ||
+                    (ownsLesson(resource.data) && ownsLesson(request.resource.data)));
+      allow delete: if isSignedIn() && (ownsLesson(resource.data) || isAdmin());
     }
 
     // --------------------------------------------------------- testimonials

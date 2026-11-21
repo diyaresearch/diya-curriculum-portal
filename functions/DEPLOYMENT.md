@@ -123,8 +123,11 @@ What the script sets up:
   the security boundary.** Without it any GitHub repository in the world
   could mint tokens against the pool.
 - A `firestore-config-deployer` service account in each project, holding only
-  `roles/firebaserules.admin` and `roles/datastore.indexAdmin` — what a
-  rules+indexes deploy needs and nothing more. One per project, so a
+  `roles/firebaserules.admin`, `roles/datastore.indexAdmin` and
+  `roles/serviceusage.serviceUsageConsumer` (firebase-tools checks that
+  `firestore.googleapis.com` is enabled before deploying, and fails with a 403
+  from `serviceusage.googleapis.com` without it) — what a rules+indexes
+  deploy needs and nothing more. One per project, so a
   staging deploy cannot reach production.
 - `roles/iam.workloadIdentityUser` on each, restricted to that same
   principalSet.
