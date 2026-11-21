@@ -267,3 +267,92 @@ describe("#430 — paid lesson contents are not world-readable", () => {
     );
   });
 });
+
+describe("lesson writes are owner-or-admin, not any signed-in user", () => {
+  const ADMIN = "admin-uid";
+  const asAdmin = () => testEnv.authenticatedContext(ADMIN, { role: "admin" }).firestore();
+
+  beforeEach(async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const db = ctx.firestore();
+      // The builder's draft save writes `author`, not `authorId`.
+      await setDoc(doc(db, "lesson", "alice-builder-draft"), {
+        title: "Builder draft", author: ALICE, isDraft: true,
+      });
+      // Legacy lesson that records no owner at all.
+      await setDoc(doc(db, "lesson", "orphan"), { title: "No owner", isPublic: true });
+    });
+  });
+
+  test("a stranger cannot overwrite someone else's lesson", async () => {
+    await assertFails(setDoc(doc(as(BOB), "lesson", "alice-draft"), { title: "pwned", authorId: BOB }));
+    await assertFails(updateDoc(doc(as(BOB), "lesson", "alice-draft"), { title: "pwned" }));
+  });
+
+  test("a stranger cannot edit a published lesson they do not own", async () => {
+    await assertFails(updateDoc(doc(as(ALICE), "lesson", "public-lesson"), { title: "pwned" }));
+  });
+
+  test("a stranger cannot delete someone else's lesson", async () => {
+    await assertFails(deleteDoc(doc(as(BOB), "lesson", "alice-draft")));
+    await assertFails(deleteDoc(doc(as(BOB), "lesson", "alice-builder-draft")));
+  });
+
+  test("anonymous writes are denied", async () => {
+    await assertFails(setDoc(doc(anon(), "lesson", "new"), { title: "x", author: ALICE }));
+    await assertFails(deleteDoc(doc(anon(), "lesson", "public-lesson")));
+  });
+
+  test("creating a lesson in someone else's name is denied", async () => {
+    await assertFails(setDoc(doc(as(BOB), "lesson", "forged"), { title: "x", author: ALICE }));
+    await assertFails(setDoc(doc(as(BOB), "lesson", "forged2"), { title: "x", authorId: ALICE }));
+  });
+
+  test("creating a lesson that names no owner is denied", async () => {
+    await assertFails(setDoc(doc(as(BOB), "lesson", "ownerless"), { title: "x" }));
+  });
+
+  test("an owner cannot hand their lesson to someone else", async () => {
+    await assertFails(
+      updateDoc(doc(as(ALICE), "lesson", "alice-builder-draft"), { author: BOB })
+    );
+  });
+
+  test("an owner can edit and delete their own lesson (authorId)", async () => {
+    await assertSucceeds(updateDoc(doc(as(ALICE), "lesson", "alice-draft"), { title: "Edited" }));
+    await assertSucceeds(deleteDoc(doc(as(ALICE), "lesson", "alice-draft")));
+  });
+
+  // These mirror the client calls in pages/lesson-plans/builder.jsx and
+  // pages/drafts/DraftsPage.jsx, so the tightening cannot break them.
+  test("the builder's draft save still works: addDoc and setDoc with author", async () => {
+    const draft = { title: "Draft", author: BOB, isDraft: true };
+    await assertSucceeds(setDoc(doc(as(BOB), "lesson", "bob-new-draft"), draft));
+    await assertSucceeds(setDoc(doc(as(ALICE), "lesson", "alice-builder-draft"), {
+      title: "Resaved", author: ALICE, isDraft: true,
+    }));
+  });
+
+  test("the drafts page can list and delete the caller's own drafts", async () => {
+    await assertSucceeds(
+      getDocs(query(collection(as(ALICE), "lesson"),
+        where("author", "==", ALICE), where("isDraft", "==", true)))
+    );
+    await assertSucceeds(deleteDoc(doc(as(ALICE), "lesson", "alice-builder-draft")));
+  });
+
+  test("an author reads their own builder draft (owner recorded as `author`)", async () => {
+    await assertSucceeds(getDoc(doc(as(ALICE), "lesson", "alice-builder-draft")));
+    await assertFails(getDoc(doc(as(BOB), "lesson", "alice-builder-draft")));
+  });
+
+  test("an ownerless legacy lesson can only be changed by an admin", async () => {
+    await assertFails(updateDoc(doc(as(BOB), "lesson", "orphan"), { title: "mine now", author: BOB }));
+    await assertSucceeds(updateDoc(doc(asAdmin(), "lesson", "orphan"), { title: "Fixed" }));
+  });
+
+  test("an admin can edit and delete any lesson", async () => {
+    await assertSucceeds(updateDoc(doc(asAdmin(), "lesson", "alice-draft"), { title: "Moderated" }));
+    await assertSucceeds(deleteDoc(doc(asAdmin(), "lesson", "public-lesson")));
+  });
+});
