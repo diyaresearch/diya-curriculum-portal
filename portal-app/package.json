@@ -19,9 +19,10 @@
     "react-router-dom": "^7.18.3",
     "web-vitals": "^6.2.1"
   },
-  "_overrides_note": "firebase@10 pins undici to exactly 6.19.7, which carries a batch of high-severity advisories (GHSA-c76h-2ccp-4975 and friends). undici is only reachable from @firebase/*'s Node builds - it is not in the browser bundle this app ships - but it still fails `npm audit --audit-level=high`, which the CI dependency-audit job blocks on as of #503. Pinning forward within undici 6.x clears it without a firebase major bump.",
+  "_overrides_note": "firebase@10 pins undici to exactly 6.19.7, which carries a batch of high-severity advisories (GHSA-c76h-2ccp-4975 and friends). undici is only reachable from @firebase/*'s Node builds - it is not in the browser bundle this app ships - but it still fails `npm audit --audit-level=high`, which the CI dependency-audit job blocks on as of #503. Pinning forward within undici 6.x clears it without a firebase major bump. The same applies to @grpc/grpc-js: @firebase/firestore@4 (firebase@10) pins ~1.9, which carries high-severity advisories; it is likewise Node-only, and is pinned forward within 1.x. Both overrides go away with the firebase major bump (#559).",
   "overrides": {
-    "undici": "^6.28.1"
+    "undici": "^6.28.1",
+    "@grpc/grpc-js": "^1.14.7"
   },
   "scripts": {
     "start": "vite",
