@@ -33,7 +33,10 @@ PROVIDER="github"
 SA_NAME="firestore-config-deployer"
 
 # Only what a rules+indexes deploy actually needs. Not Editor, not Owner.
-DEPLOY_ROLES=("roles/firebaserules.admin" "roles/datastore.indexAdmin")
+# serviceUsageConsumer: firebase-tools checks that firestore.googleapis.com is
+# enabled before deploying, and that read needs serviceusage.services.get —
+# without it the deploy fails with a 403 from serviceusage.googleapis.com.
+DEPLOY_ROLES=("roles/firebaserules.admin" "roles/datastore.indexAdmin" "roles/serviceusage.serviceUsageConsumer")
 
 info() { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
 
