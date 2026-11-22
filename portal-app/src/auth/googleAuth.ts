@@ -3,7 +3,6 @@ import {
   GoogleAuthProvider,
   getRedirectResult,
   signInWithPopup,
-  signInWithRedirect,
   signOut,
   type User,
   type UserCredential,
@@ -84,8 +83,10 @@ interface SignInOptions {
   promptSelectAccount?: boolean;
 }
 
-// Popup-based sign-in for the signup pages specifically. Unlike
-// startGoogleRedirect(), this never navigates away, so it sidesteps a real
+// Popup-based sign-in for the signup pages' own "Sign up with Google" step:
+// it only signs in, with none of signInWithGoogle()'s post-auth routing,
+// because the page continues with its form. Being a popup, it never
+// navigates away, so it sidesteps a real
 // production failure mode of signInWithRedirect: the auth result silently
 // failing to persist across the redirect round-trip (no thrown error, just
 // getRedirectResult() coming back empty), which made Google sign-in on the
@@ -99,34 +100,63 @@ export async function signInForSignup({ promptSelectAccount = false }: SignInOpt
   return result.user;
 }
 
-interface StartGoogleRedirectOptions extends SignInOptions {
+interface SignInWithGoogleOptions extends SignInOptions {
   /** Path (with search/hash) to return to once auth completes. */
   returnTo?: string;
   action?: PostAuthAction;
+  navigate: NavigateFunction;
 }
 
-export async function startGoogleRedirect({
+// Error codes that mean the person closed or superseded the popup - not a
+// failure worth reporting.
+const POPUP_DISMISSED = new Set([
+  "auth/popup-closed-by-user",
+  "auth/cancelled-popup-request",
+  "auth/user-cancelled",
+]);
+
+/**
+ * Google sign-in for every "Log in" entry point: a popup, then the same
+ * post-auth routing the redirect flow used (account check, role-based
+ * landing page, the signup form's registerUser action).
+ *
+ * This used signInWithRedirect everywhere except localhost, and in
+ * production it silently did nothing: the site is served from
+ * learn.diyaresearch.org while VITE_FIREBASE_AUTH_DOMAIN is
+ * curriculum-portal-1ce8f.firebaseapp.com, and browsers that partition
+ * third-party storage (current Chrome, Safari, Firefox) lose the auth
+ * result across that cross-site round trip. getRedirectResult() comes back
+ * empty with no error, so "Log in" just reloaded the page signed out.
+ * signInForSignup() above switched the signup pages to a popup for the same
+ * reason; this does it for the rest.
+ */
+export async function signInWithGoogle({
   returnTo,
   promptSelectAccount = false,
   action,
-}: StartGoogleRedirectOptions = {}): Promise<void> {
+  navigate,
+}: SignInWithGoogleOptions): Promise<void> {
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+  if (promptSelectAccount) provider.setCustomParameters({ prompt: "select_account" });
+
+  let user: User;
   try {
-    if (returnTo) setPostAuthReturnTo(returnTo);
-    if (action) setPostAuthAction(action);
-
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-    if (promptSelectAccount) provider.setCustomParameters({ prompt: "select_account" });
-
-    if (window.location.hostname === "localhost") {
-      await signInWithPopup(auth, provider);
-    } else {
-      await signInWithRedirect(auth, provider);
-    }
+    user = (await signInWithPopup(auth, provider)).user;
   } catch (err) {
-    console.error("googleAuth: startGoogleRedirect failed", err);
+    const code = (err as { code?: string } | null)?.code;
+    if (code && POPUP_DISMISSED.has(code)) return;
+    if (code === "auth/popup-blocked") {
+      throw new Error(
+        "Your browser blocked the Google sign-in window. Allow pop-ups for this site and try again.",
+        { cause: err }
+      );
+    }
+    console.error("googleAuth: signInWithGoogle failed", err);
     throw err;
   }
+
+  await completeGoogleSignIn({ user, returnTo: returnTo || "/", action: action || null, navigate });
 }
 
 export interface RedirectResult {
@@ -221,14 +251,42 @@ async function runRegisterUserAction({
   }
 }
 
+/**
+ * Finishes a redirect sign-in, if one is pending. Nothing starts a redirect
+ * any more (see signInWithGoogle), but this stays so that anyone who was
+ * mid-redirect when the popup flow shipped still lands correctly, and so an
+ * empty result stays a cheap no-op on every page load.
+ */
 export async function handleGoogleRedirectOnce(navigate: NavigateFunction): Promise<void> {
   const { result } = await consumeGoogleRedirectResult();
   const user = result?.user;
   if (!user) return;
 
-  const returnTo = consumePostAuthReturnTo() || "/";
-  const action = consumePostAuthAction();
+  await completeGoogleSignIn({
+    user,
+    returnTo: consumePostAuthReturnTo() || "/",
+    action: consumePostAuthAction(),
+    navigate,
+  });
+}
 
+/**
+ * Where a freshly signed-in Google user goes: run the signup form's register
+ * action if there is one, sign out anyone with no account (unless they are
+ * on a signup page, mid-signup), and send admins and TeacherPlus users to
+ * their landing pages.
+ */
+async function completeGoogleSignIn({
+  user,
+  returnTo,
+  action,
+  navigate,
+}: {
+  user: User;
+  returnTo: string;
+  action: PostAuthAction | null;
+  navigate: NavigateFunction;
+}): Promise<void> {
   if (action?.type === "registerUser") {
     const reg = await runRegisterUserAction({ user, payload: action.payload || {} });
     if (!reg.ok) {

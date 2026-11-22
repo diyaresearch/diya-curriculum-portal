@@ -5,7 +5,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { MultiSelectDropdown, SingleSelectDropdown } from "@/components/ui/Dropdowns";
 import SignupSuccess from "@/components/ui/SignupSuccess";
-import { startGoogleRedirect, signInForSignup } from "@/auth/googleAuth";
+import { signInWithGoogle, signInForSignup } from "@/auth/googleAuth";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { useAuth } from "@/context/AuthProvider";
 import { ROLES } from "@/constants/roles";
@@ -22,10 +22,10 @@ const SUBJECT_OPTIONS = [
 
 const GRADE_OPTIONS = ["5 or lower", "6–8", "9–12"];
 
-async function handleGoogleLogin({ setError, returnTo }) {
+async function handleGoogleLogin({ setError, returnTo, navigate }) {
   setError("");
   try {
-    await startGoogleRedirect({ returnTo });
+    await signInWithGoogle({ returnTo, navigate });
   } catch (error) {
     setError(error?.message || "Login failed. Please try again.");
   }
@@ -140,7 +140,7 @@ export function TeacherSignup() {
           name={registeredName}
           type="Teacher"
           onLogin={async () => {
-            await handleGoogleLogin({ setError, returnTo });
+            await handleGoogleLogin({ setError, returnTo, navigate });
           }}
         />
         {showNoAccountPopup && (
@@ -195,7 +195,7 @@ export function TeacherSignup() {
         </p>
         <button
           type="button"
-          onClick={() => handleGoogleLogin({ setError, returnTo })}
+          onClick={() => handleGoogleLogin({ setError, returnTo, navigate })}
           className="mt-4 bg-accent-strong text-ink border border-white rounded-md py-2.5 px-8 font-semibold text-[1rem] cursor-pointer box-border inline-block"
         >
           Already have an account? Log in.
@@ -402,7 +402,7 @@ export function StudentSignup() {
           name={registeredName}
           type="Student"
           onLogin={async () => {
-            await handleGoogleLogin({ setError, returnTo });
+            await handleGoogleLogin({ setError, returnTo, navigate });
           }}
         />
         {showNoAccountPopup && (
@@ -458,7 +458,7 @@ export function StudentSignup() {
         </p>
         <button
           type="button"
-          onClick={() => handleGoogleLogin({ setError, returnTo })}
+          onClick={() => handleGoogleLogin({ setError, returnTo, navigate })}
           className="mt-4 bg-accent-strong text-ink border border-white rounded-md py-2.5 px-8 font-semibold text-[1rem] cursor-pointer box-border inline-block"
         >
           Already have an account? Log in.
