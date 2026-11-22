@@ -9,7 +9,7 @@ import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "@/firebase/firebaseConfig";
 import { COLLECTIONS } from "@/firebase/collectionNames";
 import { useLocation, useNavigate } from "react-router-dom";
-import { startGoogleRedirect } from "@/auth/googleAuth";
+import { signInWithGoogle } from "@/auth/googleAuth";
 import useUserRole from "@/hooks/useUserRole";
 import { useToast } from "@/components/ui/ToastProvider";
 import Modal from "@/components/ui/Modal";
@@ -106,15 +106,17 @@ function capitalizeWords(str) {
 function ModuleLoginPrompt({ open, onClose, moduleTitle, summary }) {
   const toast = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
   if (!open) return null;
 
   const handleGoogleLogin = async () => {
     try {
-      await startGoogleRedirect({
+      await signInWithGoogle({
+        navigate,
         returnTo: `${location.pathname}${location.search || ""}`,
       });
     } catch (error) {
-      toast.error("Login failed. Please try again.");
+      toast.error(error?.message || "Login failed. Please try again.");
     }
   };
   

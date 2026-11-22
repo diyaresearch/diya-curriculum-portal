@@ -4,7 +4,7 @@ import logo from "@/assets/DIYA_Logo.png";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthProvider";
 import defaultUserIcon from "@/assets/default_user_icon.png";
-import { startGoogleRedirect } from "@/auth/googleAuth";
+import { signInWithGoogle } from "@/auth/googleAuth";
 import { useToast } from "@/components/ui/ToastProvider";
 import { ROLES } from "@/constants/roles";
 
@@ -79,7 +79,8 @@ const Navbar = () => {
   const handleSignUpSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await startGoogleRedirect({
+      await signInWithGoogle({
+        navigate,
         returnTo: `${location.pathname}${location.search || ""}`,
         promptSelectAccount: true,
         action: {
@@ -134,7 +135,8 @@ const Navbar = () => {
   const handleGoogleLogin = async () => {
     setLoginError("");
     try {
-      await startGoogleRedirect({
+      await signInWithGoogle({
+        navigate,
         returnTo: `${location.pathname}${location.search || ""}`,
       });
     } catch (error) {
