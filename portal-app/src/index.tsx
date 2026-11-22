@@ -28,3 +28,14 @@ root.render(
 // to log results (for example: reportWebVitals(console.log))
 // or send to an analytics endpoint. Learn more: https://github.com/GoogleChrome/web-vitals
 reportWebVitals();
+
+// Dev only: warn loudly when this bundle and the backend are pointed at
+// different Firebase projects. The two read their project from unrelated
+// files, so they can disagree, and the symptom is a 401 that blames the
+// token. Deliberately not awaited - it must never delay the first paint -
+// and never runs in a production build, where both halves ship together.
+if (import.meta.env.DEV) {
+  import("@/utils/verifyBackendProject")
+    .then(({ verifyBackendProject }) => verifyBackendProject())
+    .catch(() => {});
+}

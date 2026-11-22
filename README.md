@@ -225,17 +225,57 @@ Firestore setup (Native mode, `nam5`) and Auth setup (Email/Password only,
 nothing else enabled) but is on the free Spark plan — no Cloud Functions, so
 the Stripe webhook-dependent payment routes aren't exercised there yet.
 
-- **Backend:** create `functions/.env.staging` (`FIREBASE_PROJECT_ID=curriculum-portal-staging`)
-  and run `NODE_ENV=staging npm start`. Credentials come from the same
-  `gcloud auth application-default login` account as production — no new key
-  file — as long as that account has access to the staging project too.
-- **Frontend:** Vite's dev server runs in `development` mode, so there's no
-  `.env.staging` for the frontend the way there is for the backend. Instead,
-  override the six `VITE_FIREBASE_*` keys in `portal-app/.env.development.local`
-  (gitignored) with the staging project's web app config, from Firebase Console →
-  Project Settings → curriculum-portal-staging → Your apps.
-- `firebase use staging` (via the `staging` alias in `.firebaserc`) targets this
-  project for `firebase deploy`/`firebase firestore:indexes` etc.
+Run it with **`./start.sh --staging`** from the repo root. One flag, both
+halves — see "Pick an environment once" below for why that matters. It needs
+two gitignored files, created once per machine:
+
+- `functions/.env.staging` — `NODE_ENV=staging` and
+  `FIREBASE_PROJECT_ID=curriculum-portal-staging`. Credentials come from the
+  same `gcloud auth application-default login` account as production — no new
+  key file — as long as that account has access to the staging project too.
+- `portal-app/.env.staging` — the staging project's web app config, from
+  Firebase Console → Project Settings → curriculum-portal-staging → Your apps.
+  It must be **self-contained**: `vite --mode staging` loads `.env` and then
+  `.env.staging`, and never `.env.development`, so `VITE_SERVER_ORIGIN_URL` and
+  the Stripe key belong in it too. `portal-app/.env.example` lists the full set.
+
+`./start.sh --staging` exits with a message naming the missing file rather than
+starting half-configured. `firebase use staging` (via the `staging` alias in
+`.firebaserc`) targets this project for `firebase deploy` /
+`firebase firestore:indexes` etc.
+
+> Google sign-in is the only auth method the app offers, and this project was
+> set up with Email/Password only. Enable the Google provider in the staging
+> console before testing sign-up there, or the popup fails with
+> `auth/operation-not-allowed`.
+
+#### Pick an environment once, not twice
+
+The frontend and the backend read their Firebase project from unrelated files:
+the browser from `portal-app/.env*`, the API from `functions/.env.${NODE_ENV}`.
+Nothing links them, so moving one and forgetting the other is silent — and the
+resulting failure points somewhere else entirely. The browser writes to one
+project while the API reads another, and the first symptom is
+`401 Invalid or expired token` from `middleware/authenticateUser.js`, because
+`verifyIdToken` rejects a token minted by project A when the Admin SDK is
+configured for project B. Sign-up itself still appears to work, since it is a
+direct client-side `setDoc` that never reaches the backend, so the error
+surfaces later and looks like an auth bug.
+
+`./start.sh` is the fix: it sets both sides from one flag.
+
+```bash
+./start.sh              # production  (curriculum-portal-1ce8f)
+./start.sh --staging    # curriculum-portal-staging
+./start.sh --emulator   # local emulator suite, as demo-diya-portal
+```
+
+Two guards back that up. `./start.sh` refuses to start if
+`portal-app/.env.development.local` overrides the frontend's project — the old
+way of pointing at staging, which moves only the browser. And in dev builds
+`portal-app/src/utils/verifyBackendProject.ts` compares this bundle's project
+against `/api/health`'s `projectId` at boot and prints both, so a mismatch
+arriving any other way names itself in the console.
 
 This is one slice of the larger #428 epic. `DATABASE_SCHEMA_QUALIFIER` and the
 split `teachers`/`students` collections it required have since been retired —

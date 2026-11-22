@@ -169,10 +169,26 @@ entirely. Two tests fail if either consolidation regresses:
 
 ### Quick Start
 ```bash
-# Start both frontend and backend
+# Start both frontend and backend, pointed at the same Firebase project
 chmod +x start.sh
-./start.sh
+./start.sh              # production (curriculum-portal-1ce8f)
+./start.sh --staging    # curriculum-portal-staging
+./start.sh --emulator   # local emulator suite, as demo-diya-portal
 ```
+
+**Always start both halves from this script, not from two `npm start`s.** The
+frontend takes its Firebase project from `portal-app/.env*` and the backend
+takes its own from `functions/.env.${NODE_ENV}`; nothing links the two files,
+so pointing one at staging and leaving the other on production is silent and
+easy. The resulting failure names the wrong thing — `verifyIdToken` rejects a
+token minted by one project when the Admin SDK is configured for another, so
+every authenticated call returns `401 Invalid or expired token`, while signup
+appears to succeed because it is a client-side `setDoc` that never reaches the
+backend. `start.sh` sets both sides from one flag, refuses to run when
+`portal-app/.env.development.local` overrides the frontend's project (the old
+pre-#428 way of selecting staging, which moves only the browser), and
+`portal-app/src/utils/verifyBackendProject.ts` compares the two against
+`/api/health`'s `projectId` at dev boot and prints both if they differ.
 
 ### Frontend (portal-app/)
 ```bash
@@ -705,6 +721,17 @@ the deployed function reads secrets from Secret Manager and loads no .env file.
 Dev, staging, and production are separate Firebase projects (see the README's
 "Staging project" section) rather than a shared project split by a collection
 prefix — that scheme (`DATABASE_SCHEMA_QUALIFIER`) was retired in #428.
+
+Which project each half talks to is decided in two unrelated files —
+`portal-app/.env.${mode}` for the browser, `functions/.env.${NODE_ENV}` for the
+API — so they select it together via `./start.sh`'s flag rather than
+separately. Note that `functions/.env.development` names **production**: for
+the backend, "development" is a config file, not a safer target. Frontend
+staging config lives in `portal-app/.env.staging` (loaded by
+`vite --mode staging`), which must be self-contained — that mode loads `.env`
+and `.env.staging` only, never `.env.development` — so it carries
+`VITE_SERVER_ORIGIN_URL` and the Stripe key alongside the six
+`VITE_FIREBASE_*` keys.
 
 ### Security Notes
 - See `SECURITY.md` for security best practices
