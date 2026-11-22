@@ -8,7 +8,7 @@
     "@stripe/react-stripe-js": "^6.9.0",
     "@stripe/stripe-js": "^9.15.0",
     "dompurify": "^3.2.4",
-    "firebase": "^10.12.2",
+    "firebase": "^12.19.0",
     "jspdf": "^4.2.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -19,9 +19,8 @@
     "react-router-dom": "^7.18.6",
     "web-vitals": "^6.2.3"
   },
-  "_overrides_note": "firebase@10 pins undici to exactly 6.19.7, which carries a batch of high-severity advisories (GHSA-c76h-2ccp-4975 and friends). undici is only reachable from @firebase/*'s Node builds - it is not in the browser bundle this app ships - but it still fails `npm audit --audit-level=high`, which the CI dependency-audit job blocks on as of #503. Pinning forward within undici 6.x clears it without a firebase major bump. The same applies to @grpc/grpc-js: @firebase/firestore@4 (firebase@10) pins ~1.9, which carries high-severity advisories; it is likewise Node-only, and is pinned forward within 1.x. Both overrides go away with the firebase major bump (#559).",
+  "_overrides_note": "@firebase/firestore (still, as of firebase@12.19) pins @grpc/grpc-js ~1.9, which carries high-severity advisories and fails `npm audit --audit-level=high` - the CI dependency-audit job blocks on that as of #503. grpc-js is reachable only from @firebase/*'s Node builds, not the browser bundle this app ships, so it is pinned forward within 1.x. Drop the override once firebase's own range reaches a patched grpc-js. (firebase@10 needed the same for undici; firebase@12 ships a patched undici, so that override was removed.)",
   "overrides": {
-    "undici": "^6.28.1",
     "@grpc/grpc-js": "^1.14.7"
   },
   "scripts": {
