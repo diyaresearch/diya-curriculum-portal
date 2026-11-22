@@ -48,6 +48,12 @@ export default [
           varsIgnorePattern: "^React$",
         },
       ],
+      // Same as the JS rule below; the TS-aware version understands
+      // type-only references.
+      "@typescript-eslint/no-use-before-define": [
+        "error",
+        { functions: false, classes: true, variables: false, typedefs: false },
+      ],
     },
     languageOptions: {
       globals: {
@@ -84,6 +90,18 @@ export default [
           ignoreRestSiblings: true,
           varsIgnorePattern: "^React$",
         },
+      ],
+      // A `const`/`let` read above its declaration in the same scope throws
+      // a ReferenceError the moment that code runs - for a component, on
+      // first render. Both signup pages shipped that way. `variables: false`
+      // still reports same-scope use (the bug) but allows a reference from
+      // an inner function to a later declaration in an outer scope, e.g. a
+      // handler calling a function declared further down the component, or
+      // JSX reading a module-level constant declared at the bottom - those
+      // only run after the declaration exists.
+      "no-use-before-define": [
+        "error",
+        { functions: false, classes: true, variables: false },
       ],
     },
     languageOptions: {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { setDoc, doc } from "firebase/firestore";
 import { db } from '@/firebase/firebaseConfig';
 import { getAuth, signOut } from "firebase/auth";
@@ -37,6 +37,12 @@ export function TeacherSignup() {
   const [subjects, setSubjects] = useState([]);
   const [grades, setGrades] = useState([]);
   const [fullName, setFullName] = useState("");
+  // The signed-in Google account comes from the shared provider (#368); this
+  // page used to run its own auth listener for it, in each of the two forms.
+  // It must be declared before `email` below, which reads it: a `const` read
+  // above its declaration throws at render, and that crashed both signup
+  // pages in production. `no-use-before-define` now catches it in lint.
+  const { user: googleUser } = useAuth();
   const [typedEmail] = useState("");
   // Falls back to the signed-in Google address rather than copying it into
   // state on an effect: it is already available during render, and mirroring
@@ -48,21 +54,16 @@ export function TeacherSignup() {
   const [error, setError] = useState("");
   const [signedUp, setSignedUp] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
-  // The signed-in Google account comes from the shared provider (#368); this
-  // page used to run its own auth listener for it, in each of the two forms.
-  const { user: googleUser } = useAuth();
-  const [showNoAccountPopup, setShowNoAccountPopup] = useState(false);
+  // Shown while the URL carries ?showSignUpPopup=1 (set when a login finds no
+  // account). Derived from the URL rather than mirrored into state by an
+  // effect; closing it removes the parameter, which hides it.
+  const showNoAccountPopup =
+    new URLSearchParams(location.search).get("showSignUpPopup") === "1";
 
   const returnTo = `${location.pathname}${location.search || ""}`;
 
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    setShowNoAccountPopup(params.get("showSignUpPopup") === "1");
-  }, [location.search]);
-
   const closeNoAccountPopup = () => {
-    setShowNoAccountPopup(false);
     const params = new URLSearchParams(location.search);
     params.delete("showSignUpPopup");
     navigate(
@@ -305,6 +306,12 @@ export function StudentSignup() {
   const location = useLocation();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
+  // The signed-in Google account comes from the shared provider (#368); this
+  // page used to run its own auth listener for it, in each of the two forms.
+  // It must be declared before `email` below, which reads it: a `const` read
+  // above its declaration throws at render, and that crashed both signup
+  // pages in production. `no-use-before-define` now catches it in lint.
+  const { user: googleUser } = useAuth();
   const [typedEmail] = useState("");
   // Falls back to the signed-in Google address rather than copying it into
   // state on an effect: it is already available during render, and mirroring
@@ -316,21 +323,16 @@ export function StudentSignup() {
   const [error, setError] = useState("");
   const [signedUp, setSignedUp] = useState(false);
   const [registeredName, setRegisteredName] = useState("");
-  // The signed-in Google account comes from the shared provider (#368); this
-  // page used to run its own auth listener for it, in each of the two forms.
-  const { user: googleUser } = useAuth();
-  const [showNoAccountPopup, setShowNoAccountPopup] = useState(false);
+  // Shown while the URL carries ?showSignUpPopup=1 (set when a login finds no
+  // account). Derived from the URL rather than mirrored into state by an
+  // effect; closing it removes the parameter, which hides it.
+  const showNoAccountPopup =
+    new URLSearchParams(location.search).get("showSignUpPopup") === "1";
 
   const returnTo = `${location.pathname}${location.search || ""}`;
 
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    setShowNoAccountPopup(params.get("showSignUpPopup") === "1");
-  }, [location.search]);
-
   const closeNoAccountPopup = () => {
-    setShowNoAccountPopup(false);
     const params = new URLSearchParams(location.search);
     params.delete("showSignUpPopup");
     navigate(
